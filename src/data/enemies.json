@@ -1,0 +1,74 @@
+[
+  { "id": "moss_slime", "name": "모스 슬라임", "tier": "normal", "element": "forest", "hp": 18, "shield": 2,
+    "pattern": [
+      { "name": "몸통박치기", "actions": [{ "type": "attack", "dmg": 6, "target": "front" }] },
+      { "name": "끈적이기", "actions": [{ "type": "weak", "turns": 1, "target": "front" }] }
+    ] },
+  { "id": "bramble_rat", "name": "브램블 랫", "tier": "normal", "element": "forest", "hp": 14, "shield": 1,
+    "pattern": [
+      { "name": "물어뜯기", "actions": [{ "type": "attack", "dmg": 4, "hits": 2, "target": "random" }] },
+      { "name": "숨기", "actions": [{ "type": "block", "value": 6 }] }
+    ] },
+  { "id": "wisp", "name": "위스프", "tier": "normal", "element": "fire", "hp": 9, "shield": 1,
+    "pattern": [
+      { "name": "찌르기", "actions": [{ "type": "attack", "dmg": 3, "target": "random", "pierce": true }] }
+    ] },
+  { "id": "rubble_shell", "name": "러블 셸", "tier": "normal", "element": "water", "hp": 30, "shield": 3,
+    "pattern": [
+      { "name": "웅크리기", "actions": [{ "type": "block", "value": 10 }] },
+      { "name": "짓누르기", "actions": [{ "type": "attack", "dmg": 10, "target": "front" }] }
+    ] },
+  { "id": "tempest_crow", "name": "템페스트 크로우", "tier": "normal", "element": "wind", "hp": 18, "shield": 0,
+    "pattern": [
+      { "name": "낚아채기", "actions": [{ "type": "attack", "dmg": 4, "hits": 2, "target": "lowest" }] },
+      { "name": "깃털 날리기", "actions": [{ "type": "attack", "dmg": 3, "target": "all" }] }
+    ] },
+  { "id": "sporecap", "name": "스포어캡", "tier": "normal", "element": "forest", "hp": 22, "shield": 2,
+    "pattern": [
+      { "name": "포자 뿌리기", "actions": [{ "type": "weak", "turns": 2, "target": "all" }] },
+      { "name": "박치기", "actions": [{ "type": "attack", "dmg": 6, "target": "front" }] },
+      { "name": "박치기", "actions": [{ "type": "attack", "dmg": 6, "target": "front" }] }
+    ] },
+  { "id": "rust_golem", "name": "러스트 골렘", "tier": "normal", "element": "fire", "hp": 26, "shield": 3,
+    "pattern": [
+      { "name": "강타", "charge": true, "actions": [{ "type": "attack", "dmg": 18, "target": "front" }] },
+      { "name": "잿불 뿜기", "actions": [{ "type": "burn", "value": 2, "target": "all" }] }
+    ] },
+  { "id": "bog_witch", "name": "보그 위치", "tier": "elite", "element": "water", "hp": 55, "shield": 4,
+    "pattern": [
+      { "name": "혀 채찍", "actions": [{ "type": "attack", "dmg": 5, "hits": 3, "target": "random" }] },
+      { "name": "저주 울음", "actions": [{ "type": "vulnerable", "turns": 2, "target": "all" }] },
+      { "name": "삼키기", "charge": true, "actions": [{ "type": "attack", "dmg": 16, "target": "front", "pierce": true }] }
+    ] },
+  { "id": "frostfang", "name": "프로스트팡", "tier": "elite", "element": "water", "hp": 60, "shield": 4,
+    "pattern": [
+      { "name": "울부짖기", "actions": [{ "type": "buffMinions", "value": 3 }] },
+      { "name": "찢기", "actions": [{ "type": "attack", "dmg": 6, "hits": 2, "target": "front" }] }
+    ] },
+  { "id": "frost_pup", "name": "프로스트팡 새끼", "tier": "minion", "element": "water", "hp": 12, "shield": 1,
+    "pattern": [
+      { "name": "물기", "actions": [{ "type": "attack", "dmg": 5, "target": "random" }] }
+    ] },
+  { "id": "cinder_imp", "name": "신더 임프", "tier": "elite", "element": "fire", "hp": 50, "shield": 4,
+    "pattern": [
+      { "name": "도깨비불", "actions": [{ "type": "burn", "value": 3, "target": "all" }] },
+      { "name": "방망이", "charge": true, "actions": [{ "type": "attack", "dmg": 20, "target": "front" }] },
+      { "name": "장난", "actions": [{ "type": "costUp", "value": 1 }, { "type": "attack", "dmg": 6, "target": "random" }] }
+    ] },
+  { "id": "grimbark", "name": "그림바크", "tier": "boss", "element": "forest", "hp": 160, "shield": 6,
+    "desc": "시든 정원을 지키던 고목 정령",
+    "pattern": [
+      { "name": "가지 내리치기", "actions": [{ "type": "attack", "dmg": 14, "target": "front" }] },
+      { "name": "가시 비", "actions": [{ "type": "attack", "dmg": 4, "hits": 3, "target": "random" }] },
+      { "name": "뿌리 휘감기", "actions": [{ "type": "sealCards", "count": 2 }] }
+    ],
+    "phase2": {
+      "hpBelow": 0.5, "shield": 8, "turnStartBlock": 12,
+      "pattern": [
+        { "name": "낙엽 폭풍", "actions": [{ "type": "attack", "dmg": 8, "target": "all" }] },
+        { "name": "뿌리 꿰뚫기", "actions": [{ "type": "attack", "dmg": 10, "target": "front", "pierce": true }] },
+        { "name": "수액 흡수", "actions": [{ "type": "sapHeal", "value": 15 }] },
+        { "name": "대지 가르기", "charge": true, "actions": [{ "type": "attack", "dmg": 24, "target": "front" }] }
+      ]
+    } }
+]

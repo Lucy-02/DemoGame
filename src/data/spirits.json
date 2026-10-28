@@ -1,0 +1,23 @@
+[
+  {
+    "id": "igni", "name": "이그니", "etym": "ignis (불)", "element": "fire", "role": "attack", "body": "winged",
+    "motif": "꼬리가 불씨인 아기 새",
+    "stats": { "hp": 24, "power": 13, "guard": 8, "focus": 10, "sync": 10 },
+    "adultMain": ["power", "focus"],
+    "awaken": { "name": "인페르노", "nameEn": "Inferno", "desc": "이그니의 피해 +50%, 부여하는 화상 2배" }
+  },
+  {
+    "id": "testu", "name": "테스투", "etym": "testudo (거북)", "element": "water", "role": "guard", "body": "quadruped",
+    "motif": "등껍질이 조약돌인 아기 거북",
+    "stats": { "hp": 34, "power": 8, "guard": 13, "focus": 9, "sync": 9 },
+    "adultMain": ["guard", "hp"],
+    "awaken": { "name": "글라시에스", "nameEn": "Glacies", "desc": "모든 단일 공격을 테스투가 받고, 테스투의 방어도가 턴 시작에 사라지지 않음" }
+  },
+  {
+    "id": "silva", "name": "실바", "etym": "silva (숲)", "element": "forest", "role": "support", "body": "floating",
+    "motif": "떠다니는 씨앗 꼭지 요정",
+    "stats": { "hp": 26, "power": 8, "guard": 9, "focus": 12, "sync": 12 },
+    "adultMain": ["focus", "sync"],
+    "awaken": { "name": "플로레스", "nameEn": "Flores", "desc": "실바 카드 비용 -1 (최소 0), 회복량 +50%" }
+  }
+]

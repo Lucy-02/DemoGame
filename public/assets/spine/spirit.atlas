@@ -1,0 +1,13 @@
+spirit.png
+size:839,256
+filter:Linear,Linear
+legA
+bounds:2,2,58,70
+legB
+bounds:62,2,77,70
+legC
+bounds:141,2,63,73
+body
+bounds:206,2,315,252
+head
+bounds:523,2,314,233

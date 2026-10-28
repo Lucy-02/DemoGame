@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "리뷰 지적 카드",
+  "description": "리뷰어가 내고 종합자가 정리해 리뷰 보드 db의 cards 컬렉션에 쓰는 카드. 보드 필드명은 round, option, persona, severity, heuristic_id, title, standard, gap, evidence, suggestion, pin, status를 그대로 써요.",
+  "type": "object",
+  "required": ["id", "round", "option", "persona", "severity", "target_element", "title", "standard", "gap", "evidence", "suggestion", "status"],
+  "properties": {
+    "id": { "type": "string", "description": "R03-UX-002 형식" },
+    "round": { "type": "string" },
+    "stage": { "enum": ["P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"] },
+    "option": { "type": "string", "description": "보드 options 문서 ID" },
+    "persona": { "enum": ["game-ux", "art-director", "brand", "a11y", "player"] },
+    "dissent_role": { "type": "boolean" },
+    "conflict": { "type": "boolean", "description": "리뷰어끼리 충돌하는 지적을 묶은 카드" },
+    "heuristic_id": { "type": "string", "description": "PIN-8, NN-1, SD-TXT, GAG-B-3 등" },
+    "severity": { "type": "integer", "minimum": 0, "maximum": 4 },
+    "target_element": { "type": "string", "description": "레이아웃 덤프의 요소 ID" },
+    "pin": {
+      "type": "object",
+      "description": "이미지 기준 0~1 정규화 좌표. 레이아웃 덤프에서 계산하고 모델이 추정하지 않아요",
+      "required": ["x", "y", "source"],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "w": { "type": "number", "minimum": 0, "maximum": 1 },
+        "h": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "const": "layout-dump" }
+      }
+    },
+    "title": { "type": "string", "description": "한 줄 요약" },
+    "standard": { "type": "string", "description": "기대 기준" },
+    "gap": { "type": "string", "description": "관찰된 차이" },
+    "evidence": { "type": "string", "description": "이미지·덤프에서 확인 가능한 근거" },
+    "suggestion": { "type": "string", "description": "구조·행동 제안. 색·폰트·크기 값은 쓰지 않음" },
+    "confidence": { "enum": ["low", "medium", "high"] },
+    "status": { "enum": ["open", "accepted", "rejected", "deferred", "superseded"] },
+    "duplicates": { "type": "array", "items": { "type": "string" } }
+  }
+}
