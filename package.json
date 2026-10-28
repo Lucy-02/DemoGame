@@ -1,0 +1,25 @@
+{
+  "name": "demogame",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "sim": "tsx tools/sim.ts",
+    "tokens": "tsx scripts/build-tokens.ts",
+    "check:design": "tsx scripts/check-literals.ts",
+    "check:assets": "tsx scripts/check-assets.ts"
+  },
+  "dependencies": {
+    "@esotericsoftware/spine-phaser-v4": "^4.2.120",
+    "phaser": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}

@@ -1,0 +1,13 @@
+[
+  { "id": "e_moss", "tier": "normal", "floors": [1, 3], "enemies": ["moss_slime"] },
+  { "id": "e_rats", "tier": "normal", "floors": [1, 3], "enemies": ["bramble_rat", "bramble_rat"] },
+  { "id": "e_wisps", "tier": "normal", "floors": [2, 5], "enemies": ["wisp", "wisp", "wisp"] },
+  { "id": "e_shell", "tier": "normal", "floors": [2, 5], "enemies": ["rubble_shell"] },
+  { "id": "e_crow", "tier": "normal", "floors": [3, 6], "enemies": ["tempest_crow"] },
+  { "id": "e_spore", "tier": "normal", "floors": [3, 6], "enemies": ["sporecap"] },
+  { "id": "e_golem", "tier": "normal", "floors": [4, 6], "enemies": ["rust_golem"] },
+  { "id": "x_witch", "tier": "elite", "floors": [1, 99], "enemies": ["bog_witch"] },
+  { "id": "x_frostfang", "tier": "elite", "floors": [1, 99], "enemies": ["frost_pup", "frostfang", "frost_pup"] },
+  { "id": "x_imp", "tier": "elite", "floors": [1, 99], "enemies": ["cinder_imp"] },
+  { "id": "b_grimbark", "tier": "boss", "floors": [1, 99], "enemies": ["grimbark"] }
+]

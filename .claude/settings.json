@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'test -d node_modules || exit 0; npx tsx scripts/check-literals.ts 1>&2 || exit 2'"
+          }
+        ]
+      }
+    ]
+  }
+}

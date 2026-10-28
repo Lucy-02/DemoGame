@@ -1,0 +1,22 @@
+[
+  { "id": "ev_spring", "title": "맑은 샘", "text": "이끼 낀 바위 틈에서 맑은 샘물이 솟아요. 정령들이 목을 축이고 싶어 해요.",
+    "options": [
+      { "label": "물을 마신다", "desc": "모든 정령 HP 25% 회복", "outcome": [{ "type": "healPct", "value": 0.25 }] },
+      { "label": "샘 바닥을 뒤진다", "desc": "골드 +40, 모든 정령 피해 3", "outcome": [{ "type": "gold", "value": 40 }, { "type": "damageAll", "value": 3 }] }
+    ] },
+  { "id": "ev_scroll", "title": "바람에 날린 두루마리", "text": "낡은 주문 두루마리가 나뭇가지에 걸려 펄럭여요.",
+    "options": [
+      { "label": "읽어 본다", "desc": "무작위 카드 1장 선택 보상", "outcome": [{ "type": "cardReward" }] },
+      { "label": "태워 버린다", "desc": "덱에서 카드 1장 제거", "outcome": [{ "type": "removeCard" }] }
+    ] },
+  { "id": "ev_merchant", "title": "길 잃은 행상", "text": "짐을 잔뜩 진 너구리 행상이 길을 묻고 있어요.",
+    "options": [
+      { "label": "길을 알려준다", "desc": "골드 +25", "outcome": [{ "type": "gold", "value": 25 }] },
+      { "label": "짐을 들어준다", "desc": "앞열 정령 피해 6, 고급 카드 1장 선택 보상", "outcome": [{ "type": "damageFront", "value": 6 }, { "type": "cardReward", "rarity": "advanced" }] }
+    ] },
+  { "id": "ev_shrine", "title": "시든 사당", "text": "정령을 모시던 작은 사당이 시들어 있어요. 아직 희미한 기운이 남아 있어요.",
+    "options": [
+      { "label": "기도한다", "desc": "모든 정령 최대 HP +3", "outcome": [{ "type": "maxHpAll", "value": 3 }] },
+      { "label": "지나친다", "desc": "아무 일도 없어요", "outcome": [] }
+    ] }
+]

@@ -1,0 +1,89 @@
+{
+  "mana_per_turn": 3,
+  "hand_draw": 5,
+  "hand_max": 10,
+  "party_size": 3,
+  "stat_base": 10,
+  "sync_per_card": 10,
+  "sync_combo_min_cards": 2,
+  "sync_combo_bonus": 15,
+  "awaken_duration": 2,
+  "vuln_base": 0.25,
+  "vuln_focus_step": 0.05,
+  "vuln_cap": 0.6,
+  "weak_mult": 0.75,
+  "chill_threshold": {
+    "normal": 5,
+    "elite": 7,
+    "boss": 10
+  },
+  "downed_return_hp": 1,
+  "affinity_weak": 1.5,
+  "affinity_resist": 0.75,
+  "affinity_beats": {
+    "water": "fire",
+    "fire": "forest",
+    "forest": "water"
+  },
+  "break_crit_bonus": 0.2,
+  "crit_base": 0.05,
+  "crit_mult": 1.5,
+  "crit_pity": 0.02,
+  "awaken_damage_mult": {
+    "igni": 1.5
+  },
+  "awaken_burn_mult": {
+    "igni": 2
+  },
+  "awaken_heal_mult": {
+    "silva": 1.5
+  },
+  "adult_hp_bonus": 6,
+  "reward": {
+    "gold_normal": [
+      15,
+      25
+    ],
+    "gold_elite": [
+      35,
+      45
+    ],
+    "gold_boss": [
+      80,
+      100
+    ],
+    "rarity_normal": {
+      "common": 0.6,
+      "advanced": 0.35,
+      "rare": 0.05
+    },
+    "rarity_elite": {
+      "common": 0.3,
+      "advanced": 0.55,
+      "rare": 0.15
+    }
+  },
+  "shop": {
+    "price": {
+      "common": 50,
+      "advanced": 80,
+      "rare": 150
+    },
+    "remove_price": 75,
+    "heal_price": 40,
+    "heal_pct": 0.3,
+    "card_count": 5
+  },
+  "rest_heal_pct": 0.3,
+  "start_gold": 60,
+  "awaken_taunt": [
+    "testu"
+  ],
+  "awaken_keep_block": [
+    "testu"
+  ],
+  "awaken_cost_down": {
+    "silva": 1
+  },
+  "cheerful_sync": 30
+}
