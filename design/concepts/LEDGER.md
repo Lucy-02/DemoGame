@@ -74,6 +74,7 @@
 - 자세히: reviews/r4-synthesis.md
 
 ## 6. 링크
+- **정본 페이지 (캡처 포함): https://claude.ai/artifact/6mauUwAoRT9KSmGidBnWx3** · 원본 캡처 전체: archive/<컨셉>/ (_full.jpg, fNN.jpg)
 - 지금 시안: R4 https://claude.ai/artifact/NMVaQPmBkfaJrpX1A4MGWZ (v4)
 - 전체 이력: LINKS.md
 - 지울 수 있는 사본 (Lucy OK 필요): 77TT6mxLdzDiJc3f93vfpE, Bt3GB4qLxnbyCHjqk5sQKL
