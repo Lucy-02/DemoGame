@@ -72,3 +72,8 @@
 - 세 안 한 아티팩트: https://claude.ai/artifact/Kqa9pCZnjAs6juuboj1wRh (A 정돈된 R3 A / B 정령 무대 / C 판단 동선). 브리프 rounds/battle-r4-brief.md. 캡처 archive/battle4-{a,b,c}/
 - Lucy (19:07): C가 좋음, 기믹 감당 가능하면 C. 호버 3배 과함 → 위에 따로 띄우기 검토, 확대 시 집중 효과 필요. → R5: C 뼈대 + 호버 3방식 비교 + 기믹 스트레스 프레임. 미리보기 예산 규칙: 필드엔 조준 대상 결과 + 아군 받을 피해 변화만.
 - R5 (같은 아티팩트 r5/page.html): C 뼈대 + 리뷰 반영 + 호버 H1/H2/H3 + 기믹 스트레스. 에이전트 추천 H1. 무작위 다단 히트에서 범위 표시가 바빠짐, 지연 카드는 필드에 아무것도 안 그려 "효과 없음"처럼 보일 수 있음. 캡처 archive/battle5/
+
+## 덱 보기 레이어 (공용 조각)
+- 세 안 한 아티팩트: https://claude.ai/artifact/4HcCn3u5CQ5AcoGVwN7juL (A 정령별 세 줄 / B 한 장의 그리드 / C 정령과 함께 보는 덱). 캡처 archive/deck-{a,b,c}/
+- 덱 보기 레이어 R1 (리뷰 종합 포함): https://claude.ai/artifact/4HcCn3u5CQ5AcoGVwN7juL
+- 자라는 순간 R1: https://claude.ai/artifact/NEXhRQajDWBmH3WUwRoRAV
