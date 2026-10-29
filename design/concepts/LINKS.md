@@ -13,3 +13,17 @@
 - R2 지도 선택: C (가까운 길 + 전체 미니맵 + 슬림 파티 패널, 글래스) — Lucy 2026-10-28
 - R2 전투 3안: https://claude.ai/artifact/NwNBZbSRLx6nV6FeD9THBf
 - R2 전투 선택: B (주인 묶음 손패). 피드백: 카드 하단 바 높이 큼, 아직 과밀, 우상단 기록 자리 → 리졸브 테이블(모식화 아이콘, 가볍게). 플레이어 시선 = 손패·적·내 정령.
+- 카드 피드백 (Lucy): 효과 설명은 기본 숨김/흐리게, 호버 시 표시. 정령 타입은 플레이어가 앎 → 카드에 SD 프로필 자리(나중에). 타입 암시 색 강조는 낮춤. 카드 디자인은 앞으로 함께 고민.
+- R3 전투 3안: https://claude.ai/artifact/7prddshU7MfLNo5CchNdTb
+- R3 카드 4안: https://claude.ai/artifact/HdJxgfwitAWZUJX6oti3q5
+- R3 피드백 (Lucy): 카드 위계는 이 정도 OK. 카드 비율 이상함. 2/4 턴 종료 짜침 → 에이전트 리뷰. 큰 숫자 의미 불명(무엇의 수치인지 표시 없음). → 카드 디자인 라운드로.
+- 카드 결정 (Lucy): R3 카드 B(그림 창+얇은 이름 띠) 베이스로 디벨롭. 일러스트 필수. 차별화 축 탐색: 반짝임(shimmer), 속성별 재질·질감·테마, 정령 테마.
+- 마력·턴 종료 (Lucy): 가. 관례형 분리 — 마력 손패 왼쪽 끝, 턴 종료 오른쪽 단독, 낼 카드 남으면 차분/없으면 강조, 남은 채 누르면 확인(설정에서 끔).
+- 카드 차별화: 반짝임·등급 https://claude.ai/artifact/SfHaCDpAZoYZPNZswacPH4
+- 카드 차별화: 정령 테마 https://claude.ai/artifact/7HTW9rhW3bGqGsfmf4D6Bx
+- 카드 차별화: 속성 재질·질감 https://claude.ai/artifact/PrZPu2FmxkhHXS32oy7LEq
+- 카드 선택 (Lucy): 정령 테마(7HTW…)의 (가) 손패 띠 + 속성 재질(PrZP…)의 (나) 4속성 손패·호버만 마음에 듦. 나머지 별로. 쉬머 등 효과는 나중에. 이 둘로 디벨롭.
+- 카드 합본 3안 (재질 강도): https://claude.ai/artifact/T8ZR2MUxJzzNrzZ962wrE7
+- 카드 재질 다듬기 (C 기반, CSS vs SVG, 리뷰 반영): https://claude.ai/artifact/YHKJdT8VaCDMgJXNN2X1et
+- 불 재질 (Lucy): 구운 흙 반점 별로 → 용암 암석 방향 검토 (경/중 + 숯·그을린 종이 대안 비교)
+- 불 재질 결정 (Lucy 2026-10-29): (a) 밝은 용암석. 카드 디자인 라운드 마무리.
