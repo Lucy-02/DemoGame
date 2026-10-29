@@ -67,3 +67,6 @@
 - **Lucy 결정 (10:00): Orbit 채택.** R4 전체를 Orbit 단일 글꼴로, 빠진 음절은 Pretendard 대체.
 - **Lucy 결정 (11:56): 탭은 목록과 무대 방식.** 위쪽 정령|출전 편성 바 제거, 편성은 띠 왼쪽 버튼, 탭 개요·성장 길·카드 n/m·유대 n/3, 키우기는 성장 길. R4 v4 반영. 남은 질문: 먹이기·성격 다시 뽑기 위치.
 - R4 v5 (12:50): A·B·C·G 복원 반영. 요약 카드 = 다음 단계 · 덱 n/m · 할 일(있을 때만). 최종 단계는 중립 링+별 칩. 개요 탭은 보정 막대+할 일 버튼만 남아 존치 여부 질문. 캡처: archive/spirit4-dark/v5-f01~05.jpg
+
+## 전투 R4 (2026-10-29 밤)
+- 세 안 한 아티팩트: https://claude.ai/artifact/Kqa9pCZnjAs6juuboj1wRh (A 정돈된 R3 A / B 정령 무대 / C 판단 동선). 브리프 rounds/battle-r4-brief.md. 캡처 archive/battle4-{a,b,c}/
