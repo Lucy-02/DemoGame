@@ -27,3 +27,42 @@
 - 카드 재질 다듬기 (C 기반, CSS vs SVG, 리뷰 반영): https://claude.ai/artifact/YHKJdT8VaCDMgJXNN2X1et
 - 불 재질 (Lucy): 구운 흙 반점 별로 → 용암 암석 방향 검토 (경/중 + 숯·그을린 종이 대안 비교)
 - 불 재질 결정 (Lucy 2026-10-29): (a) 밝은 용암석. 카드 디자인 라운드 마무리.
+
+## 정령 관리 R1
+- 자라는 덱: https://claude.ai/artifact/HHAy6dLxZKou34AJH5Woni
+- 정령 도감: https://claude.ai/artifact/1AvPGiwZymMmWnRVA6FgD9
+- 보관함과 편성: https://claude.ai/artifact/BRijdmQSWVYSRDHG6jmERK
+- 정원 속 정령: https://claude.ai/artifact/NFgZzeYDrCjoQGG6anEuTs
+- R1 피드백: 유대 상시X, 정원 목록은 모델링 의존 보류, 성장 길은 상세 탭으로, 한눈에 전체 상태, 보관함 과밀 기각, 도감 빈칸 기각(만남≠보유) → 프레시 리빌드
+
+## 정령 관리 R2
+- 목록과 무대: https://claude.ai/artifact/MSfJpBdeygrk3CgvUmYaYK
+- 캐릭터 선택 화면: https://claude.ai/artifact/9gBAp8Nd6gG7gD9AhFC9Ab
+- 나란히 선 정령 패널: https://claude.ai/artifact/WqKSDasivWmrZ4thMtZz2W
+- 오늘의 돌봄판: https://claude.ai/artifact/9uQPWtXmUufSxKVWocDh2h
+- R2 피드백 (Lucy): 3 돌봄판 기각. 4 캐릭터 선택 레이아웃 전체적으로 좋음 + 2 목록과 무대의 탭 구성·정령 섹션 배치만 차용 (좌측 리스트는 별로). 정령 일러스트가 아트 어필 포인트 → 크게. Lucy가 정령 에셋 제공 예정.
+- 에셋 (Lucy 2026-10-29): 각성체 전신 일러스트 3종 — 불(여우), 별, 해파리(물). design-concepts/assets/{fire,star,jelly}-awakened.png, 832×1216, 흰 배경. TTI 생성물 → 저장소에 넣을 때 provenance 기록 필요.
+
+## 정령 관리 R3
+- 실제 일러스트 합본 3안: https://claude.ai/artifact/WThvH4UVhrGWdxTnvjebGS
+- R3 피드백 (Lucy): "이 방향 괜찮아" (C 전면 일러스트+유리로 해석, 확인 요청함). 글래스모피즘으로 가려면 팔레트·브랜딩 먼저 → 팔레트 라운드. 브랜드 슬라이더 조정 결정 카드 보냄(추천: 단계별 다르게).
+- 브랜드 (Lucy): 단계별로 다르게 — 유체·성체 귀엽고 아늑, 각성체 우아·장엄. BRAND_BRIEF.md 갱신.
+- 정령의 밤: https://claude.ai/artifact/YNjTMH4tWxfyNNia9h6ZbC
+- 메모: 각성체 일러스트 자체에 밝은 외곽선(스티커형 테두리·글로우)이 그려져 있음 → 어두운 팔레트에서 밝은 테두리로 보임. cut3는 흰 배경 섞임만 제거(색 복원), 외곽선 자체는 그림 일부라 유지.
+- 무채 유리 + 한 가지 강조: https://claude.ai/artifact/XNTiXd7rMxccVSYhP3mD3F
+- 정원의 아침: https://claude.ai/artifact/TwZb1gxW5x1niDjyWbEEb1
+- 정령 따라 물드는 유리: https://claude.ai/artifact/83koongRWNJQSfzMUxuoBW
+- 팔레트 피드백 (Lucy): 무채 유리 + 정원의 아침 둘 다 마음에 듦. 라이트/다크 분기 고민 → 비교 보드(L/D/혼합 H) 제작 중.
+- 팔레트 결정 (Lucy 2026-10-29): 기본은 다크 (무채 유리 + 한 가지 강조 계열). 비교 보드 중단. 다음: 정령 화면 정보 구성 재정리 (개발 메모 문구 제거, 업계 표준·유저 여정 기준).
+
+## 정령 관리 R4
+- 다크 + 새 정보 구성 (라벨 A안, 기획 메모 레이어): https://claude.ai/artifact/NMVaQPmBkfaJrpX1A4MGWZ
+- R4 피드백 (Lucy): 흐름 OK. 하단 보유 정령 띠 구분감 부족 → 디바이더. 카드 탭 잠김 카드 펼침은 잉여 → 한쪽에 겹친 더미로 장수 표시. 폰트 정하자 → 폰트 라운드.
+
+## 폰트 라운드
+- 명조 제목 + 고딕 본문 (MaruBuri + Pretendard): https://claude.ai/artifact/UEFHAzEVEDtyixAz1rbxRU — MaruBuri 라이선스 네이버 원문 재확인 필요
+- 정돈된 고딕 (Pretendard 단일): https://claude.ai/artifact/Xp8CPiYgr3vtEctnh36sev — 서브셋은 이름 변경 필요(OFL), 비트맵 폰트화 라이선스 미확인
+- 둥근 손맛 제목 + 고딕 본문 (Gowun Dodum + Noto Sans KR): https://claude.ai/artifact/LXm3uX8pLuDzoaUvLUFcJo — 제목 굵기 1종뿐
+- 글꼴 갤러리 16종 (한 페이지, 통일/제목만 전환): https://claude.ai/artifact/NyhF7ynC3Gca837uc6BXjL — 10종은 한글 일부 음절만(약 2,350~2,790)
+- **Lucy 결정 (10:00): Orbit 채택.** R4 전체를 Orbit 단일 글꼴로, 빠진 음절은 Pretendard 대체.
+- **Lucy 결정 (11:56): 탭은 목록과 무대 방식.** 위쪽 정령|출전 편성 바 제거, 편성은 띠 왼쪽 버튼, 탭 개요·성장 길·카드 n/m·유대 n/3, 키우기는 성장 길. R4 v4 반영. 남은 질문: 먹이기·성격 다시 뽑기 위치.
