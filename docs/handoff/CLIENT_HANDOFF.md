@@ -106,7 +106,7 @@ src/presentation/card/
   layout.ts                    HAND_CARD, WINDOW_PATH(정령별 창 윗선 SVG path), BUBBLE
   viewmodel.ts                 CardVM(key, detail…), CardDetailVM {text, calc?, why?, owner}, RichText
 src/presentation/style/        CSS 재현 도우미 (6절)
-src/presentation/placeholder/  예전 임시 UI. 디자인 확정 후 통째로 삭제
+src/presentation/placeholder/  예전 임시 UI. 새 화면이 규칙에 연결될 때마다 해당 화면을 지움
 src/core, src/data             게임 로직·데이터. UI 작업에서 건드리지 않음. 바꾸면 골든 스냅샷 이유를 PR에
 src/platform, electron/        저장·창. 렌더러는 Electron을 직접 import하지 않음(window.platformBridge)
 tools/visual/compare.ts        pnpm visual
@@ -196,4 +196,4 @@ pnpm visual --hover <cardKey>   # H1 비교 (다른 .fig는 숨기고 카드에 
 3. **모션 디테일**: 지금 모션 값은 `provisional.motion.hover` 하나뿐이에요. 들기·밀림·말풍선·카드 사용(결정 0009 "가벼운 종이", 0010 "빛 한 번 쓸기")의 길이·곡선은 Lucy가 정할 값이에요. 선택지를 만들어 보여 주고 고르게 해요.
 4. 기믹·차징(`frame-gimmick.png`), H3.
 5. 고해상도 화면(devicePixelRatio) 대응. 글자·구운 텍스처 해상도까지 같이 다뤄야 해요.
-6. 레거시 UI(`src/presentation/placeholder`, `?screen=legacy`) 삭제 시점은 Lucy 확인 후.
+6. 레거시 UI(`src/presentation/placeholder`, `?screen=legacy`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 레거시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 규칙으로 끝까지 플레이되는 화면은 레거시뿐이에요. 예: 2번 session 층으로 새 전투 화면이 실제 전투를 돌리면 `placeholder/scenes/BattleScene.ts`를 지우고 레거시 흐름(지도 → 전투)을 새 전투로 잇거나, 흐름째 정리해요.
