@@ -11,7 +11,7 @@ async function start() {
   const params = new URLSearchParams(location.search);
   const game = params.get("screen") === "legacy"
     ? await startPlaceholderGame("game")
-    : await startGame("game", { hover: params.get("hover") ?? undefined, scene: params.get("scene") ?? undefined, lift: params.get("lift") ?? undefined });
+    : await startGame("game", { hover: params.get("hover") ?? undefined, scene: params.get("scene") ?? undefined, lift: params.get("lift") ?? undefined, lines: params.get("lines") ?? undefined });
   Object.assign(window, { game });
   if (platform.kind === "web") mountDevWindow(platform);
 }

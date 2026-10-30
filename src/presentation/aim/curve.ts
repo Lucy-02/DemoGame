@@ -110,3 +110,19 @@ export function routeCurves(rule: CurveRule, origin: Pt, targets: Pt[], route?: 
   const offset = lengthOf(stem);
   return [{ curve: stem, dashOffset: 0 }, ...branches.map((curve) => ({ curve, dashOffset: offset }))];
 }
+
+/** 왼쪽 길 (Lucy 비교용 후보 가, 확정 전): 판 사이 빈틈(lane)까지 정본 방향을 좌우로 뒤집어 나가 곧게 올라오고,
+ *  거기서 대상마다 왼쪽에서 들어가요. lane = 빈틈 가운데 x, 갈림 높이 y */
+export function laneCurves(example: Cubic, origin: Pt, targets: Pt[], lane: Pt): Stroke[] {
+  if (targets.length === 0) return [];
+  const out = { x: -(example.c1.x - example.p0.x), y: example.c1.y - example.p0.y };
+  const into = { x: -(example.c2.x - example.p3.x), y: example.c2.y - example.p3.y };
+  // 빈틈엔 세로로 들어와요: 조절점을 갈림점 아래로 오른 높이의 절반만큼
+  const stem: Cubic = { p0: origin, c1: add(origin, out), c2: { x: lane.x, y: lane.y + (origin.y - lane.y) / 2 }, p3: lane };
+  const offset = lengthOf(stem);
+  const branches = targets.map((p) => {
+    const reach = Math.hypot(p.x - lane.x, p.y - lane.y) / 3;
+    return { curve: { p0: lane, c1: { x: lane.x, y: lane.y - reach }, c2: add(p, into), p3: p }, dashOffset: offset };
+  });
+  return [{ curve: stem, dashOffset: 0 }, ...branches];
+}

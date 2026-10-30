@@ -44,6 +44,8 @@ export const exampleAimPick: BattleVM = {
       { enemy: 0, hits: [3], block: { from: 4, to: 1 }, hp: { from: 18, to: 18 } },
       { enemy: 2, hits: [3], block: { from: 4, to: 1 }, hp: { from: 41, to: 41 }, shieldBreak: 1 },
     ],
+    // 거북을 고른 뒤 게를 가리키는 중
+    focus: 0,
     candidates: [1],
     incoming: [undefined, undefined, undefined],
   },

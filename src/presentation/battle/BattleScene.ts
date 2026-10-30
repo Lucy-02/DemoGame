@@ -12,7 +12,8 @@ import { GLASS } from "../tooltip/skins";
 import { drawTooltip } from "../tooltip/Tooltip";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
-import { AIM_ANCHOR, ETIP, FRAME, LIFT_STYLES, SYS } from "./layout";
+import { AIM_LINE_STYLES } from "../aim/layout";
+import { ALLY, AIM_ANCHOR, ENEMY, ETIP, FRAME, INFO, LIFT_STYLES, SYS } from "./layout";
 import { SYS_ICONS, drawSys, drawWhere } from "./views/topbar";
 import { drawAlly, drawEnemy, preloadUnits } from "./views/units";
 import type { AimVM, BattleVM } from "./viewmodel";
@@ -32,10 +33,14 @@ export class BattleScene extends Phaser.Scene {
   /** 들기 크기 바꿔 보기 (?lift=h1 정본) */
   private lift?: string;
 
-  init(data: { vm?: BattleVM; hover?: string; lift?: string }) {
+  /** 여러 대상 조준선 후보 비교 (?lines=trunk|side|focus|side-focus) */
+  private lineStyle?: string;
+
+  init(data: { vm?: BattleVM; hover?: string; lift?: string; lines?: string }) {
     if (data.vm) this.vm = data.vm;
     this.hover = data.hover;
     this.lift = data.lift;
+    this.lineStyle = data.lines;
   }
 
   preload() {
@@ -78,7 +83,7 @@ export class BattleScene extends Phaser.Scene {
     // 조준선 시작점은 집은 카드가 들린 자리에서 하나로 모아요 (대상이 여럿이어도)
     const corner = hand.heldCorner();
     if (preview && corner) {
-      preview.lines.set({ x: corner.x + AIM_ANCHOR.origin.dx, y: corner.y + AIM_ANCHOR.origin.dy }, preview.ends, preview.route);
+      preview.lines.set({ x: corner.x + AIM_ANCHOR.origin.dx, y: corner.y + AIM_ANCHOR.origin.dy }, preview.ends, preview.route, preview.left);
     }
     hand.setHover(this.hover ?? null, true);
     Object.assign(window, { __screenReady: BATTLE_SCENE });
@@ -91,6 +96,11 @@ export class BattleScene extends Phaser.Scene {
     const cutOrders = new Set(aim.targets.filter((t) => t.cut).map((t) => this.vm.enemies[t.enemy].intent.order));
     const ends: Pt[] = [];
     let route: Route | undefined;
+    const style = AIM_LINE_STYLES[this.lineStyle ?? "trunk"] ?? AIM_LINE_STYLES.trunk;
+    // 후보 가: 왼쪽 길은 아군 판 오른쪽 끝과 첫 적 판 왼쪽 끝 사이 가운데. 오른쪽 길(정본)은 마지막 적 판 오른쪽 끝
+    const laneL = (ALLY.xs[ALLY.xs.length - 1] + INFO.allyW / 2 + ENEMY.xs[0] - INFO.enemyW / 2) / 2;
+    const laneR = ENEMY.xs[ENEMY.xs.length - 1] + INFO.enemyW / 2;
+    const left = { targets: [] as Pt[], lane: { x: laneL, y: 0 } };
     let lines!: ReturnType<typeof createAimLines>;
     const root = gather(this, 0, 0, () => {
       drawOrder(this, { ...this.vm.order, slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: true } : s)) });
@@ -99,13 +109,18 @@ export class BattleScene extends Phaser.Scene {
         const target = targets.get(i);
         const { foot } = drawEnemy(this, e, i, { target, candidate: aim.candidates.includes(i) });
         const end = { x: foot.x + AIM_ANCHOR.target.dx, y: foot.y + AIM_ANCHOR.target.dy };
-        if (target && aim.targeting === "pick") ends.push(end);
+        const lined = target && aim.targeting === "pick" && (!style.focus || aim.focus === undefined || aim.focus === i);
+        if (lined && style.side && foot.x < (laneL + laneR) / 2) {
+          // 왼쪽에서 들어가니 끝점도 정본 끝점을 좌우로 뒤집어요
+          left.targets.push({ x: foot.x - AIM_ANCHOR.target.dx, y: end.y });
+        } else if (lined) ends.push(end);
+        left.lane.y = foot.y + AIM_ANCHOR.branchDy;
         // 줄기는 가장 오른쪽 적 자리로 올라가 정보판 위 끝에서 갈라져요
         route = { via: end, branchY: foot.y + AIM_ANCHOR.branchDy };
       });
       lines = createAimLines(this, FRAME.w, FRAME.h);
     });
     root.setVisible(false);
-    return { root, lines, ends, route };
+    return { root, lines, ends, route, left };
   }
 }

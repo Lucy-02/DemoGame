@@ -98,6 +98,8 @@ export interface AimVM {
   targeting: "pick" | "all" | "random";
   /** 조준한 대상. 전체 대상 카드면 여럿이고, 조준선은 모두 같은 시작점에서 나가요. */
   targets: AimTargetVM[];
+  /** 고른 대상 중 지금 가리키는 대상 (enemies 인덱스). 조준선 후보 나에서 줄은 이 대상에만 */
+  focus?: number;
   /** 조준하지 않은 대상 후보 (점선 고리만, enemies 인덱스) */
   candidates: number[];
   /** 아군마다 받을 피해 a→b (allies 순서). 비어 있으면 그 아군은 쉬는 상태 그대로 */

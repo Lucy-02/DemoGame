@@ -2,15 +2,16 @@
 // WebGL 선은 안티앨리어싱이 없어 점선 곡선이 거칠어서, 화면 크기 canvas에 굽고 바뀔 때마다 다시 그려요.
 import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
-import { routeCurves, trunkRule, type Pt, type Route } from "./curve";
+import { laneCurves, routeCurves, trunkRule, type Pt, type Route } from "./curve";
 import { AIM_EXAMPLE, AIM_LINE } from "./layout";
 
 const P = tokens.provisional.palette;
 
 export interface AimLines {
   image: Phaser.GameObjects.Image;
-  /** 시작점 하나와 대상 끝점들. 대상이 없으면 지워요. route가 있으면 줄기 하나에서 갈라져요. */
-  set(origin: Pt, targets: Pt[], route?: Route): void;
+  /** 시작점 하나와 대상 끝점들. 대상이 없으면 지워요. route가 있으면 줄기 하나에서 갈라져요.
+   *  left는 왼쪽 길로 가는 대상들 (후보 가) */
+  set(origin: Pt, targets: Pt[], route?: Route, left?: { targets: Pt[]; lane: Pt }): void;
 }
 
 let serial = 0;
@@ -21,13 +22,14 @@ export function createAimLines(scene: Phaser.Scene, w: number, h: number): AimLi
   const tex = scene.textures.createCanvas(key, w, h)!;
   const ctx = tex.getContext();
   const image = scene.add.image(0, 0, key).setOrigin(0, 0);
-  const set = (origin: Pt, targets: Pt[], route?: Route) => {
+  const set = (origin: Pt, targets: Pt[], route?: Route, left?: { targets: Pt[]; lane: Pt }) => {
     ctx.clearRect(0, 0, w, h);
     ctx.strokeStyle = P.accHi;
     ctx.fillStyle = P.accHi;
     ctx.lineWidth = AIM_LINE.width;
     ctx.lineCap = "round";
-    for (const { curve: c, dashOffset } of routeCurves(rule, origin, targets, route)) {
+    const strokes = [...routeCurves(rule, origin, targets, route), ...(left ? laneCurves(AIM_EXAMPLE, origin, left.targets, left.lane) : [])];
+    for (const { curve: c, dashOffset } of strokes) {
       ctx.setLineDash(AIM_LINE.dash);
       ctx.lineDashOffset = dashOffset;
       ctx.beginPath();
@@ -36,7 +38,7 @@ export function createAimLines(scene: Phaser.Scene, w: number, h: number): AimLi
       ctx.stroke();
     }
     ctx.setLineDash([]);
-    for (const t of targets) {
+    for (const t of [...targets, ...(left?.targets ?? [])]) {
       ctx.beginPath();
       ctx.arc(t.x, t.y, AIM_LINE.dot, 0, Math.PI * 2);
       ctx.fill();

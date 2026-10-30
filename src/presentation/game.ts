@@ -14,6 +14,8 @@ export interface GameOptions {
   scene?: string;
   /** 들기 크기 바꿔 보기 (battle/layout LIFT_STYLES) */
   lift?: string;
+  /** 여러 대상 조준선 후보 비교 (aim/layout AIM_LINE_STYLES) */
+  lines?: string;
 }
 
 export async function startGame(parent: string, opts: GameOptions = {}): Promise<Phaser.Game> {
@@ -28,7 +30,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
     scale: { mode: Phaser.Scale.NONE },
     scene: [],
     callbacks: {
-      postBoot: (game) => game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, lift: opts.lift }),
+      postBoot: (game) => game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, lift: opts.lift, lines: opts.lines }),
     },
   });
 }
