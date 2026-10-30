@@ -18,7 +18,7 @@ export function runHud(scene: Phaser.Scene) {
     const d = spiritDef(s.id);
     const max = maxHpOf(s);
     const front = run.frontId === s.id ? "▶" : "";
-    const pers = s.adult ? personalityDef(s.personality).name : "???";
+    const pers = s.stage !== "baby" ? personalityDef(s.personality).name : "???";
     c.add(txt(scene, x, 22, `${front}${d.name}`, 15).setOrigin(0, 0.5));
     c.add(bar(scene, x + 64, 22, 110, 16, s.hp / max, COLORS.hp, `${s.hp}/${max}`));
     c.add(txt(scene, x + 180, 22, pers, 12, COLORS.dim).setOrigin(0, 0.5));

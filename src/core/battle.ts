@@ -132,7 +132,7 @@ export class Battle {
       this.spirits.push({
         id: rs.id, def: spiritDef(rs.id), run: rs, personality: activePersonality(rs),
         hp: rs.hp, maxHp: maxHpOf(rs), block: 0, thorns: 0, taunt: false, empower: 0,
-        status: newStatus(), sync: 0, awaken: 0, critPity: 0, downed: rs.hp <= 0,
+        status: newStatus(), sync: rs.startSync, awaken: 0, critPity: 0, downed: rs.hp <= 0,
         auras: new Map(), playedThisTurn: 0, stubbornUsed: false,
       });
     }
