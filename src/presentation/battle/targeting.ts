@@ -1,6 +1,7 @@
 // 카드 대상 고르기 (그리기 없음, 순수 함수). 결정 0013: 조준선 없이, 카드를 대상에 끌어 대거나(끌기)
 // 카드를 클릭해 집고 대상을 클릭해요(집기). 둘 다 "카드 + 포인터가 있는 곳"에서 같은 강조 상태를 만들어요.
-//   - 대상이면 글로우, 고를 수 있는 대상은 점선 고리, 나머지는 흐리게
+//   - 대상이면 그림·정보판에 빛, 나머지는 어둡게. 대상 위가 아니면 고를 수 있는 대상만 밝고 나머지는 어둡게
+//     (발밑 고리는 없어요. 강조는 나중에 그림 아웃라인으로)
 //   - 결과가 바뀌는 캐릭터(예: 차징이 끊겨 받을 피해가 줄어드는 아군)는 흐리게 하지 않아요 (미리보기 예산 ②)
 import type { OutcomeVM, PlayVM, Side, UnitRef } from "./viewmodel";
 
@@ -12,9 +13,9 @@ export interface Focus {
   outcome?: OutcomeVM;
   /** 글로우로 강조할 대상 */
   lit: UnitRef[];
-  /** 고를 수 있다는 점선 고리 */
+  /** 고를 수 있는 대상 (어둡게 하지 않아요) */
   cand: UnitRef[];
-  /** 강조·결과가 없는 나머지를 흐리게 */
+  /** 강조·고를 수 있음·결과가 없는 나머지를 어둡게 */
   dim: boolean;
   /** 지금 놓거나 클릭하면 낼 수 있어요. target은 고른 대상 (pick만) */
   ready?: { target?: UnitRef };
@@ -37,10 +38,10 @@ export function focusFor(card: string, play: PlayVM, over: Over, counts: Counts)
         ready: { target: over }, key: `${card}:${side}${over.i}`,
       };
     }
-    return { lit: [], cand: all(side, counts), dim: false, key: `${card}:cand` };
+    return { lit: [], cand: all(side, counts), dim: true, key: `${card}:cand` };
   }
-  if (!onField) return { lit: [], cand: all(side, counts), dim: false, key: `${card}:cand` };
-  // 전체는 모두 강조, 무작위는 누가 맞을지 모르니 점선 고리만 (정본 규칙 상태 3: 카드가 대상을 정해요)
+  if (!onField) return { lit: [], cand: all(side, counts), dim: true, key: `${card}:cand` };
+  // 전체는 모두 강조, 무작위는 누가 맞을지 모르니 강조 없이 그 편만 밝게 (정본 규칙 상태 3: 카드가 대상을 정해요)
   const units = all(side, counts);
   return {
     outcome: play.outcomes?.all,
