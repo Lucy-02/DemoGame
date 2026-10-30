@@ -1,5 +1,6 @@
 // 글자 스타일과 줄 배치. 정본(브라우저)과 같은 자리에 글자가 오도록 CSS 인라인 배치 규칙을 그대로 따라요.
 import type * as Phaser from "phaser";
+import { rgba } from "./color";
 import { FONT_STACK } from "./fonts";
 
 /** 정본 프레임의 line-height (.frame line-height:1.25) */
@@ -48,7 +49,12 @@ export interface Span {
   /** CSS margin-left / margin-right (px) */
   ml?: number;
   mr?: number;
+  /** text-decoration: underline dotted (text-underline-offset px) */
+  dotted?: { offset: number; color: string };
 }
+
+/** 점선 밑줄: 1px 점을 2px 간격으로 (Chrome dotted 밑줄과 같은 결) */
+const DOT = { size: 1, step: 2 };
 
 export interface PlacedLine {
   width: number;
@@ -82,7 +88,13 @@ export function inlineLine(
     cx += s.ml ?? 0;
     const t = scene.add.text(cx, baseline - fontBox(px(s.size)).ascent, s.text, textStyle(s.size, s.color));
     // Phaser Text 너비는 정수로 올림돼서, 다음 조각 위치는 실제 글자 폭으로 계산해요.
-    cx += measure(s.text, s.size) + (s.mr ?? 0);
+    const w = measure(s.text, s.size);
+    if (s.dotted) {
+      const c = rgba(s.dotted.color);
+      const g = scene.add.graphics().fillStyle(c.color, c.alpha);
+      for (let dx = 0; dx + DOT.size <= w; dx += DOT.step) g.fillRect(Math.round(cx + dx), Math.round(baseline + s.dotted.offset), DOT.size, DOT.size);
+    }
+    cx += w + (s.mr ?? 0);
     return t;
   });
   return { width: cx - x, height: above + below, baseline, objects };
@@ -129,7 +141,7 @@ export function wrapSpans(spans: Span[], maxW: number): Span[][] {
   // 같은 모양의 이웃 조각은 다시 합쳐요 (글자 사이 간격이 브라우저와 같아지게)
   return lines.map((line) => line.reduce<Span[]>((acc, u) => {
     const last = acc[acc.length - 1];
-    if (last && last.size === u.size && last.color === u.color) last.text += u.text;
+    if (last && last.size === u.size && last.color === u.color && !!last.dotted === !!u.dotted) last.text += u.text;
     else acc.push({ ...u });
     return acc;
   }, []));

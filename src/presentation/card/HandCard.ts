@@ -4,12 +4,14 @@ import { tokens } from "../../design/tokens";
 import { rgba } from "../style/color";
 import { box, circle } from "../style/draw";
 import { place, render, size, type Node } from "../style/flex";
+import { gather } from "../style/gather";
 import { icon, loadIcon } from "../style/icons";
 import { placeholderArt } from "../style/placeholder";
+import { shadowTexture } from "../style/shadow";
 import { px } from "../style/text";
 import { faceKey } from "../faces";
 import { HAND_CARD as C } from "./layout";
-import { bandTexture, windowTexture } from "./materials";
+import { bandTexture, liftedBodyTexture, windowTexture } from "./materials";
 import type { CardVM } from "./viewmodel";
 
 const P = tokens.provisional.palette;
@@ -45,14 +47,51 @@ function plate(c: CardVM): Node {
   };
 }
 
-/** (x, y) = 카드 바깥 왼쪽 위 */
-export function drawHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: number) {
+export interface HandCardView {
+  /** 원점 = 카드 아래 가운데 (정본 transform-origin 50% 100%) */
+  root: Phaser.GameObjects.Container;
+  /** 들린 상태(.cd.act): 몸 전체 재질과 그림자 */
+  setLifted(on: boolean): void;
+  /** 카드 전체 불투명도 (CSS opacity처럼 다 그린 뒤 한 번에). 1이면 필터를 꺼서 글자가 선명해요 */
+  opacity: number;
+}
+
+/** (x, y) = 쉬는 자리의 카드 바깥 왼쪽 위 */
+export function createHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: number): HandCardView {
+  const lifted: (Phaser.GameObjects.Image)[] = [];
+  const root = gather(scene, x + C.w / 2, y + C.h, () => {
+    const sh = shadowTexture(scene, C.w, C.h, C.radius, { ...C.liftShadow, color: P.cardLiftShadow });
+    lifted.push(scene.add.image(-C.w / 2 - sh.margin, -C.h - sh.margin, sh.key).setOrigin(0, 0));
+    drawHandCard(scene, c, -C.w / 2, -C.h, (img) => lifted.push(img));
+  });
+  const setLifted = (on: boolean) => lifted.forEach((o) => o.setVisible(on));
+  setLifted(false);
+  // 컨테이너 alpha는 겹친 조각마다 따로 먹어서 CSS opacity와 달라요. 한 장으로 그린 뒤 알파를 곱하는 필터를 써요.
+  const fx = root.enableFilters().filters!.internal.addColorMatrix();
+  let opacity = 1;
+  const apply = () => {
+    fx.colorMatrix.set([1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, opacity, 0]);
+    fx.active = opacity < 1;
+  };
+  apply();
+  return {
+    root, setLifted,
+    get opacity() { return opacity; },
+    set opacity(v: number) { opacity = v; apply(); },
+  };
+}
+
+/** (x, y) = 카드 바깥 왼쪽 위. onLifted: 들린 상태에만 보일 몸 그림을 넘겨받아요. */
+function drawHandCard(
+  scene: Phaser.Scene, c: CardVM, x: number, y: number, onLifted: (img: Phaser.GameObjects.Image) => void,
+) {
   const g = scene.add.graphics();
   const off = !!c.off;
   box(g, x, y, C.w, C.h, C.radius, {
     fill: off ? P.cardOff : P.paper,
     ring: { width: C.border, color: off ? P.cardOffLine : P.cardLine },
   });
+  onLifted(scene.add.image(x, y, liftedBodyTexture(scene, c.material, off)).setOrigin(0, 0));
   scene.add.image(x + C.win.x, y + C.win.y, windowTexture(scene, c.owner, off)).setOrigin(0, 0);
   const art = placeholderArt(
     scene, x + C.win.x + (C.win.contentW - C.art.size) / 2, y + C.win.y + (C.win.h - C.art.size - C.art.mb) / 2,

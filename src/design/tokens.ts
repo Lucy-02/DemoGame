@@ -184,7 +184,13 @@ export const tokens = {
       "manaLine": "rgba(246,241,233,.22)",
       "endCalm": "rgba(246,241,233,.06)",
       "endCalmLine": "rgba(246,241,233,.28)",
-      "tipShadow": "rgba(0,0,0,.4)"
+      "tipShadow": "rgba(0,0,0,.4)",
+      "bubble": "#f2efe9",
+      "bubbleSub": "#4c4844",
+      "bubbleWhy": "#7a2f24",
+      "bubbleShadow": "rgba(0,0,0,.45)",
+      "cardLiftShadow": "rgba(0,0,0,.5)",
+      "cardLiftShine": "rgba(255,255,255,.6)"
     },
     "text": {
       "battle": {
@@ -225,7 +231,13 @@ export const tokens = {
         "tipBody": "12.5px",
         "tipTitle": "15px",
         "tipChip": "12px",
-        "tipStrong": "14px"
+        "tipStrong": "14px",
+        "bubbleText": "13px",
+        "bubbleStrong": "14.5px",
+        "bubbleCalc": "12px",
+        "bubbleCalcStrong": "13px",
+        "bubbleWhy": "12.5px",
+        "bubbleOwner": "12px"
       }
     },
     "pattern": {
@@ -389,6 +401,17 @@ export const tokens = {
               ]
             ]
           }
+        ]
+      }
+    },
+    "motion": {
+      "hover": {
+        "duration": "160ms",
+        "easing": [
+          0.2,
+          0.7,
+          0.2,
+          1
         ]
       }
     }

@@ -239,6 +239,7 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number) {
   render(scene, allyInfo(a), cx - I.allyW / 2, bodyBottom + I.mt);
 }
 
+/** 호버 고리는 돌려줘요 (카드에 마우스가 가면 숨겨요) */
 export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number) {
   const cx = ENEMY.xs[i];
   const intentN = intentNode(e.intent);
@@ -248,8 +249,10 @@ export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number) {
   const bodyBottom = bodyTop + ENEMY.body.h;
   placeholderArt(scene, cx - ENEMY.art.w / 2, bodyBottom - ENEMY.art.h, ENEMY.art.w, ENEMY.art.h, P.ink3);
   ground(scene, cx, bodyBottom);
+  let ring: Phaser.GameObjects.Image | undefined;
   if (e.hovered) {
-    scene.add.image(cx, bodyBottom - HOVER_RING.bottom - HOVER_RING.h / 2, hoverRingTexture(scene));
+    ring = scene.add.image(cx, bodyBottom - HOVER_RING.bottom - HOVER_RING.h / 2, hoverRingTexture(scene));
   }
   render(scene, enemyInfo(e), cx - I.enemyW / 2, bodyBottom + I.mt);
+  return { ring };
 }

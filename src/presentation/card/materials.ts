@@ -93,3 +93,30 @@ export function windowTexture(scene: Phaser.Scene, owner: FaceId, off: boolean):
   tex.refresh();
   return key;
 }
+
+/** 들린 카드(.cd.act) 몸 전체: 재질 바탕 + 위 반사선 + 1px 테. off는 회색 몸에 반사선만. */
+export function liftedBodyTexture(scene: Phaser.Scene, m: Material, off: boolean): string {
+  const key = `card:lifted:${m}:${off ? "off" : "on"}`;
+  if (scene.textures.exists(key)) return key;
+  const { w, h, radius, border } = C;
+  const tex = scene.textures.createCanvas(key, w, h)!;
+  const ctx = tex.getContext();
+  ctx.beginPath();
+  ctx.roundRect(0, 0, w, h, radius);
+  ctx.save();
+  ctx.clip();
+  ctx.fillStyle = off ? P.cardOff : MATERIAL_FILL[m].fill;
+  ctx.fillRect(0, 0, w, h);
+  if (!off) paintPattern(ctx, w, h, m);
+  // inset 0 1px 0 반사선 (테 안쪽)
+  ctx.fillStyle = P.cardLiftShine;
+  ctx.fillRect(border, border, w - border * 2, 1);
+  ctx.restore();
+  ctx.strokeStyle = off ? P.cardOffLine : MATERIAL_FILL[m].edge;
+  ctx.lineWidth = border;
+  ctx.beginPath();
+  ctx.roundRect(border / 2, border / 2, w - border, h - border, radius - border / 2);
+  ctx.stroke();
+  tex.refresh();
+  return key;
+}

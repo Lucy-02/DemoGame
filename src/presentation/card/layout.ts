@@ -24,6 +24,8 @@ export const HAND_CARD = {
   mark: { right: 3, y: 45, h: 16, padX: 4, radius: 8, icon: 10 },
   /** .h .why top 36 padding 1 6 radius 5 line-height 1.3, 가운데 */
   why: { y: 37, pad: [1, 6, 1, 6] as [number, number, number, number], radius: 5, lh: 1.3 },
+  /** .cd.act box-shadow 0 10px 24px */
+  liftShadow: { y: 10, blur: 24 },
   /** .nm letter-spacing -.02em */
   nameLetterSpacing: -0.02,
 };
@@ -33,4 +35,16 @@ export const WINDOW_PATH: Record<FaceId, string> = {
   star: "M0 11 L14.9 11 L21.0 0 L27.1 11 L36.0 11 L42.0 0 L48.0 11 L57.0 11 L63.0 0 L69.0 11 L84 85 Q84 90 79 90 L5 90 Q0 90 0 85 Z",
   fire: "M0 11 Q2.5 11 7.6 4.4 Q11.8 6.1 16.8 11 Q19.3 11 24.4 0.6 Q28.6 6.1 33.6 11 Q36.1 11 41.2 4.4 Q45.4 6.1 50.4 11 Q52.9 11 58.0 0.6 Q62.2 6.1 67.2 11 Q69.7 11 74.8 4.4 Q79.0 6.1 84.0 11 L84 85 Q84 90 79 90 L5 90 Q0 90 0 85 Z",
   jelly: "M0 11 Q10.5 -2.8 21.0 11 Q31.5 -2.8 42.0 11 Q52.5 -2.8 63.0 11 Q73.5 -2.8 84.0 11 L84 85 Q84 90 79 90 L5 90 Q0 90 0 85 Z",
+};
+
+/** 손패 호버 말풍선 (.bub): width 240, padding 9 11 8, radius 10, gap 5, 테 1, 그림자 0 10 24
+ *  ::after 14×14 45° 회전, bottom -7, 아래 두 변에 1px 선 · .txt line-height 1.5 · .kw 밑줄 offset 3
+ *  .calc padding-top 5 (border-top은 정본에서도 안 그려짐) · 바뀔 때 translateY(6)에서 올라옴 */
+export const BUBBLE = {
+  w: 240, pad: [9, 11, 8, 11] as [number, number, number, number], radius: 10, gap: 5, ring: 1,
+  shadow: { y: 10, blur: 24 },
+  arrow: { size: 14, line: 1 },
+  textLh: 1.5, termOffset: 3,
+  calcRule: { padTop: 5 },
+  enterY: 6,
 };
