@@ -18,7 +18,8 @@
     "sim": "tsx tools/sim.ts",
     "tokens": "tsx scripts/build-tokens.ts",
     "check:design": "tsx scripts/check-literals.ts",
-    "check:assets": "tsx scripts/check-assets.ts"
+    "check:assets": "tsx scripts/check-assets.ts",
+    "visual": "tsx tools/visual/compare.ts"
   },
   "devDependencies": {
     "@esotericsoftware/spine-phaser-v4": "^4.2.120",
