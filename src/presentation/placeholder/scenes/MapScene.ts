@@ -55,7 +55,7 @@ export class MapScene extends Phaser.Scene {
     txt(this, 24, 70, "다음 칸을 고르세요", 20).setOrigin(0, 0.5);
     const legend = Object.values(NODE_STYLE).map((s) => s.label).join(" · ");
     txt(this, 24, 100, legend, 13, COLORS.dim).setOrigin(0, 0.5);
-    txt(this, 24, 140, "상성: 물 > 불 > 숲 > 물 (×1.5)\n테스투(물)는 불 적을\n이그니(불)는 숲 적을\n실바(숲)는 물 적을 맡아요.\n바람은 중립이에요.", 13, COLORS.dim, { lineSpacing: 4 }).setOrigin(0, 0);
+    txt(this, 24, 140, "상성: 물 > 불 > 숲 > 물 (×1.5)\n안개 고양이(물)는 불 적을\n불여우·유리 도롱뇽(불)은 숲 적을 맡아요.\n바람 적은 상성이 없어 빙결로 끊어요.", 13, COLORS.dim, { lineSpacing: 4 }).setOrigin(0, 0);
   }
 
   private enter(n: MapNode) {
