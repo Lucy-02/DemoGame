@@ -6,6 +6,7 @@ import { drawBackdrop } from "./views/backdrop";
 import { drawOrder, preloadOrder } from "./views/order";
 import { SYS } from "./layout";
 import { SYS_ICONS, drawSys, drawWhere } from "./views/topbar";
+import { drawAlly, drawEnemy, preloadUnits } from "./views/units";
 import type { BattleVM } from "./viewmodel";
 
 export const BATTLE_SCENE = "battle";
@@ -24,6 +25,7 @@ export class BattleScene extends Phaser.Scene {
   preload() {
     for (const id of SYS_ICONS) loadIcon(this, id, SYS.icon);
     preloadOrder(this, this.vm.order);
+    preloadUnits(this, this.vm);
   }
 
   create() {
@@ -31,6 +33,8 @@ export class BattleScene extends Phaser.Scene {
     drawWhere(this, this.vm.where);
     drawSys(this);
     drawOrder(this, this.vm.order);
+    this.vm.allies.forEach((a, i) => drawAlly(this, a, i));
+    this.vm.enemies.forEach((e, i) => drawEnemy(this, e, i));
     Object.assign(window, { __screenReady: BATTLE_SCENE });
   }
 }

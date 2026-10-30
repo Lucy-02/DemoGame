@@ -30,3 +30,60 @@ export const ORDER = {
   /** .rsa 13px padding 1 margin-left -8 margin-top 12 */
   action: { size: 13, pad: 1, ml: -8, mt: 12 },
 };
+
+/** .ally style="left:…" (가운데 x), top:206 · .ally width 176 margin-left -88 */
+export const ALLY = {
+  xs: [150, 322, 494], top: 206,
+  /** .ally .body 110×132, .silsvg */
+  body: { w: 110, h: 132 },
+};
+
+/** .enemy style="left:…", top:168, width 196 · .enemy .body 132×106 margin-top 38, .ensvg 120×96 */
+export const ENEMY = {
+  xs: [752, 941, 1130], top: 168,
+  body: { w: 132, h: 106, mt: 38 }, art: { w: 120, h: 96 },
+};
+
+/** .ground left 50% bottom -6 120×14, radial-gradient(closest-side, shade, transparent) */
+export const GROUND = { w: 120, h: 14, bottom: -6 };
+/** .enemy.hov .body .ring bottom -12 150×26 border 1.5 */
+export const HOVER_RING = { w: 150, h: 26, bottom: -12, width: 1.5 };
+
+/** .info (R5): margin-top 12, width 168 / 184, gap 5, padding 7 8 8, radius 10 */
+export const INFO = {
+  mt: 12, allyW: 168, enemyW: 184, gap: 5, pad: [7, 8, 8, 8] as [number, number, number, number], radius: 10,
+  /** .rA height 20 gap 6 · .rB min-height 22 gap 6 · .r2 min-height 20 gap 5 · .r3 gap 6 */
+  rowA: { h: 20, gap: 6 }, rowB: { minH: 22, gap: 6 }, row2: { minH: 20, gap: 5 }, row3: { gap: 6 },
+  /** .bar height 5 radius 3 min-width 26 */
+  bar: { h: 5, radius: 3 },
+  /** .shd height 22 padding 0 6 0 4 radius 11 gap 2, .shi 13 */
+  block: { h: 22, pad: [0, 6, 0, 4] as [number, number, number, number], radius: 11, gap: 2, icon: 13 },
+  /** .inc height 22 padding 2 8 0 radius 11 gap 3 */
+  incoming: { h: 22, pad: [2, 8, 0, 8] as [number, number, number, number], radius: 11, gap: 3 },
+  /** .hpn gap 2 */
+  hpGap: 2,
+  /** .st height 20 padding 0 6 0 4 radius 10 gap 2, .sti 12 */
+  status: { h: 20, pad: [0, 6, 0, 4] as [number, number, number, number], radius: 10, gap: 2, icon: 12 },
+  /** .sync gap 2 */
+  syncGap: 2,
+  /** .front padding 1 7 radius 9 */
+  front: { pad: [1, 7, 1, 7] as [number, number, number, number], radius: 9 },
+  /** .el 20 원 */
+  element: 20,
+  /** .weak height 20 padding 0 6 radius 10 gap 2 */
+  weak: { h: 20, pad: [0, 6, 0, 6] as [number, number, number, number], radius: 10, gap: 2 },
+  /** .slots gap 3, .sl 12 radius 2 ring 1.5 */
+  slots: { gap: 3, size: 12, radius: 2, ring: 1.5 },
+};
+
+/** .intent height 32 padding 0 10 0 5 radius 16 gap 5 (.debuff radius 6) */
+export const INTENT = {
+  h: 32, pad: [0, 10, 0, 5] as [number, number, number, number], radius: 16, debuffRadius: 6, gap: 5,
+  ring: 1, chargeRing: 1.5, debuffRing: 1.5,
+  /** .ord 20 원 (.debuff 는 radius 5) */
+  order: 20, orderDebuffRadius: 5,
+  /** .inti 16 */
+  icon: 16,
+  /** .tface 22, 바깥 테 1.5 */
+  face: 22, faceRing: 1.5,
+};

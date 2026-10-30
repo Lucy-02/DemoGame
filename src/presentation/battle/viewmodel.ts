@@ -13,7 +13,49 @@ export interface OrderSlotVM {
   state?: "now" | "cut";
 }
 
+export interface StatusVM {
+  icon: IconId;
+  n: number;
+}
+
+/** 정령 얼굴 그림 이름 (assets/ui/faces/<face>-face.webp) */
+export type FaceId = "star" | "fire" | "jelly";
+
+export interface AllyVM {
+  face: FaceId;
+  /** 필드 그림 (지금은 정본의 임시 실루엣 sil-*) */
+  art: IconId;
+  hp: number;
+  maxHp: number;
+  block?: number;
+  /** 이번 적 차례에 받을 피해 합계 */
+  incoming?: number;
+  statuses: StatusVM[];
+  sync: number;
+  front?: boolean;
+}
+
+export type IntentVM =
+  | { kind: "attack" | "charge"; order: number; icon: IconId; amount: string; target: FaceId | "all" }
+  | { kind: "debuff"; order: number; icon: IconId; label: string; amount: string; target: FaceId | "all" };
+
+export interface EnemyVM {
+  art: IconId;
+  hp: number;
+  maxHp: number;
+  block?: number;
+  element: IconId;
+  weakTo: IconId;
+  statuses: StatusVM[];
+  intent: IntentVM;
+  /** 차징 중인 적의 실드 칸: broken칸 깨짐 / total칸 */
+  shield?: { broken: number; total: number };
+  hovered?: boolean;
+}
+
 export interface BattleVM {
   where: { area: string; floor: number; turn: number };
   order: { slots: OrderSlotVM[]; nextTurn: number };
+  allies: AllyVM[];
+  enemies: EnemyVM[];
 }

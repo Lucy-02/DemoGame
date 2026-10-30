@@ -16,7 +16,9 @@ for (const [, id, viewBox, body] of html.matchAll(SYMBOL)) {
   const multicolor = /fill="#/.test(body);
   const fill = multicolor ? "" : ' fill="#ffffff"';
   const [, , w, h] = viewBox.split(" ");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="${w}" height="${h}"${fill}>${body}</svg>\n`;
+  // currentColor는 CSS color(= 칠할 색)를 따르니 흰색으로 바꿔 틴트에 맡겨요.
+  const inner = multicolor ? body : body.replaceAll("currentColor", "#ffffff");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="${w}" height="${h}"${fill}>${inner}</svg>\n`;
   writeFileSync(join(outDir, `${id}.svg`), svg);
   ids.push(id);
 }
