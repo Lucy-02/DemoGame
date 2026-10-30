@@ -46,8 +46,6 @@ export const ENEMY = {
 
 /** .ground left 50% bottom -6 120×14, radial-gradient(closest-side, shade, transparent) */
 export const GROUND = { w: 120, h: 14, bottom: -6 };
-/** .enemy.hov .body .ring bottom -12 150×26 border 1.5 */
-export const HOVER_RING = { w: 150, h: 26, bottom: -12, width: 1.5 };
 
 /** .info (R5): margin-top 12, width 168 / 184, gap 5, padding 7 8 8, radius 10 */
 export const INFO = {
@@ -113,9 +111,8 @@ export const ETIP = { x: 872, y: 478 };
 
 /** 집음·조준 미리보기 (.fld-pv, page.html·r5.css) */
 export const PREVIEW = {
-  /** .ring bottom -12 150×26 · .ring.aim border 2, box-shadow 0 0 14 · .ring.cand border 1.5 dashed
-   *  (Chrome 타원 점선 4.5/3은 정본 캡처 frame-h1.png에서 잰 값) */
-  ring: { w: 150, h: 26, bottom: -12, aim: 2, glow: 14, cand: 1.5, dash: [4.5, 3] },
+  /** 대상 강조: 정본 .ring.aim의 테 2와 바깥 빛(box-shadow 0 0 14)을 정보판·그림에 써요. 발밑 고리(타원)는 0013 후속으로 뺐어요 */
+  lit: { ring: 2, glow: 14 },
   /** .hits left -14 top -6 gap 4 · .hit height 24 padding 0 8 0 6 radius 13 gap 2, translateX(d×14) · .hti 13 */
   hits: { left: -14, top: -6, gap: 4, h: 24, pad: [0, 8, 0, 6] as [number, number, number, number], radius: 13, inGap: 2, step: 14, icon: 13 },
   /** .arr margin 0 1 */

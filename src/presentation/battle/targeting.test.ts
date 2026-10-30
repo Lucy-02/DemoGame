@@ -15,12 +15,13 @@ describe("대상 고르기", () => {
     expect(f.ready).toEqual({ target: turtle });
   });
 
-  it("대상이 아닌 곳이면 고를 수 있는 대상에 점선 고리만, 낼 수 없어요", () => {
+  it("대상이 아닌 곳이면 고를 수 있는 대상만 밝고, 낼 수 없어요", () => {
     for (const over of ["field", "hand", { side: "ally", i: 0 }] as const) {
       const f = focusFor("drops", drops, over, counts);
       expect(f.lit).toEqual([]);
       expect(f.cand).toHaveLength(3);
-      expect(f.dim).toBe(false);
+      expect(dimmed(f, { side: "enemy", i: 1 })).toBe(false);
+      expect(dimmed(f, { side: "ally", i: 1 })).toBe(true);
       expect(f.ready).toBeUndefined();
     }
   });
@@ -32,7 +33,7 @@ describe("대상 고르기", () => {
     expect(focusFor("wave", { target: { kind: "all", side: "enemy" } }, "hand", counts).ready).toBeUndefined();
   });
 
-  it("무작위 카드는 필드로 올려도 고리만 (누가 맞을지 모름)", () => {
+  it("무작위 카드는 필드로 올려도 강조 없이 그 편만 밝게 (누가 맞을지 모름)", () => {
     const f = focusFor("meteor", { target: { kind: "random", side: "enemy" } }, "field", counts);
     expect(f.lit).toEqual([]);
     expect(f.cand).toHaveLength(3);

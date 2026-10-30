@@ -224,10 +224,7 @@ export class BattleScene extends Phaser.Scene {
   /** 필드 한 장: 순서표·아군·적. focus가 있으면 그 강조·결과로, 없으면 쉬는 필드 */
   private drawField(f: Focus | null): Phaser.GameObjects.Container {
     const o = f?.outcome;
-    const ring = (ref: UnitRef) => {
-      const same = (r: UnitRef) => r.side === ref.side && r.i === ref.i;
-      return f?.lit.some(same) ? "aim" : f?.cand.some(same) ? "cand" : undefined;
-    };
+    const lit = (ref: UnitRef) => !!f?.lit.some((r) => r.side === ref.side && r.i === ref.i);
     // 캐릭터마다 한 덩어리로 모아서 한 번에 어둡게 해요
     const unit = (ref: UnitRef, draw: () => void) => {
       const c = gather(this, 0, 0, draw);
@@ -239,18 +236,15 @@ export class BattleScene extends Phaser.Scene {
       this.vm.allies.forEach((a, i) => {
         const ref = { side: "ally", i } as const;
         unit(ref, () => {
-          const box = drawAlly(this, a, i, { outcome: o?.incoming[i], ring: ring(ref) });
+          const box = drawAlly(this, a, i, { outcome: o?.incoming[i], lit: lit(ref) });
           if (!f) this.bounds.push({ ref, box });
         });
       });
       this.vm.enemies.forEach((e, i) => {
         const ref = { side: "enemy", i } as const;
         unit(ref, () => {
-          const { ring: hoverRing, bounds: box } = drawEnemy(this, e, i, { outcome: o?.enemies[i], ring: ring(ref) });
-          if (!f) {
-            this.bounds.push({ ref, box });
-            if (hoverRing) this.enemyHover.push(hoverRing);
-          }
+          const box = drawEnemy(this, e, i, { outcome: o?.enemies[i], lit: lit(ref) });
+          if (!f) this.bounds.push({ ref, box });
         });
       });
     });
