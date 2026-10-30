@@ -1,5 +1,6 @@
 // 시각 검증: 정본 프레임과 Phaser 화면을 같은 1280×800으로 찍어 나란히·겹침·차이 이미지를 만들어요.
-// 사용: pnpm visual [--crop x,y,w,h] [--frame rest]
+// 사용: pnpm visual [--crop x,y,w,h] [--frame rest] [--hover <카드 key>]
+//   --hover: 정본 H1 프레임에서 그 카드에 마우스를 올린 상태와, 게임의 같은 호버 상태를 비교해요.
 //   결과: test-results/visual/{canon,game,side,overlay,diff}.png (+ crop-*.png)
 // 처음 한 번: pnpm exec playwright install chromium (맥·윈도우). GPU 없는 리눅스도 소프트웨어 WebGL로 돌아요.
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -14,7 +15,8 @@ const opt = (name: string) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const frameId = opt("frame") ?? "rest";
+const hover = opt("hover");
+const frameId = opt("frame") ?? (hover ? "h1" : "rest");
 const crop = opt("crop")?.split(",").map(Number) as [number, number, number, number] | undefined;
 const outDir = resolve("test-results/visual");
 mkdirSync(outDir, { recursive: true });
@@ -40,11 +42,24 @@ async function shootCanon(page: Page): Promise<Buffer> {
   await page.mouse.move(1, 1);
   const el = await page.$(`#${frameId}`);
   if (!el) throw new Error(`정본에 #${frameId} 프레임이 없어요`);
+  if (hover) {
+    // H1~H3은 나란히 놓인 그림이라, 고른 프레임 말고는 숨겨서 겹치지 않게 해요
+    await page.evaluate((f) => {
+      document.querySelectorAll<HTMLElement>(".fig").forEach((fig) => {
+        if (!fig.querySelector(`#${f}`)) fig.style.display = "none";
+        else fig.style.gridColumn = "1 / -1";
+      });
+    }, frameId);
+    await page.evaluate(({ f, k }) => {
+      document.querySelector(`#${f} .cd[data-key="${k}"]`)?.dispatchEvent(new MouseEvent("mouseenter"));
+    }, { f: frameId, k: hover });
+    await page.waitForTimeout(600);
+  }
   return el.screenshot();
 }
 
 async function shootGame(page: Page, base: string): Promise<Buffer> {
-  await page.goto(`${base}?screen=battle&pixel`);
+  await page.goto(`${base}?pixel${hover ? `&hover=${hover}` : ""}`);
   await page.waitForFunction(() => (window as { __screenReady?: string }).__screenReady === "battle", null, { timeout: 30_000 });
   await page.waitForTimeout(200);
   const canvas = await page.$("#game canvas");

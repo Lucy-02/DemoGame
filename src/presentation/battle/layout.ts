@@ -115,3 +115,10 @@ export const ETIP = {
   ring: 1, shadow: { y: 10, blur: 26 },
   title: { gap: 6 }, rank: { padX: 6, radius: 8, ring: 1 },
 };
+
+/** 손패 호버 H1 (r5 스크립트 "시안 값"): 든 카드 translateY(-30) scale(1.2), 같은 묶음 옆 카드 ±12,
+ *  옆 묶음 ±10, 나머지 카드 opacity .62. 말풍선 아래 끝 y 598, 화면 가장자리 여백 8 */
+export const HOVER = {
+  lift: 30, scale: 1.2, shiftIn: 12, shiftGroup: 10, dim: 0.62,
+  bubbleBottom: 598, edge: 8,
+};

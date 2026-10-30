@@ -4,7 +4,7 @@ import { loadIcon } from "../style/icons";
 import { canonRest } from "./fixtures/canonRest";
 import { drawBackdrop } from "./views/backdrop";
 import { drawEnemyTip } from "./views/enemyTip";
-import { drawBand, drawEnd, drawHand, drawMana, preloadHand } from "./views/hand";
+import { createHand, drawBand, drawEnd, drawMana, preloadHand } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
 import { SYS } from "./layout";
 import { SYS_ICONS, drawSys, drawWhere } from "./views/topbar";
@@ -20,8 +20,12 @@ export class BattleScene extends Phaser.Scene {
     super(BATTLE_SCENE);
   }
 
-  init(data: { vm?: BattleVM }) {
+  /** 시각 검증용: 처음부터 이 카드에 호버한 상태로 */
+  private hover?: string;
+
+  init(data: { vm?: BattleVM; hover?: string }) {
     if (data.vm) this.vm = data.vm;
+    this.hover = data.hover;
   }
 
   preload() {
@@ -37,13 +41,21 @@ export class BattleScene extends Phaser.Scene {
     drawSys(this);
     drawOrder(this, this.vm.order);
     this.vm.allies.forEach((a, i) => drawAlly(this, a, i));
-    this.vm.enemies.forEach((e, i) => drawEnemy(this, e, i));
+    // 적 호버 표시(고리·설명판)는 마우스가 손패로 가면 숨겨요. 마우스는 한 곳에만 있으니까요.
+    const enemyHover: (Phaser.GameObjects.Image | Phaser.GameObjects.Container)[] = [];
+    this.vm.enemies.forEach((e, i) => {
+      const { ring } = drawEnemy(this, e, i);
+      if (ring) enemyHover.push(ring);
+    });
     drawBand(this);
     drawMana(this, this.vm.mana);
-    drawHand(this, this.vm.hand);
     drawEnd(this, this.vm);
     const tip = this.vm.enemies.find((e) => e.hovered)?.tip;
-    if (tip) drawEnemyTip(this, tip);
+    if (tip) enemyHover.push(drawEnemyTip(this, tip));
+    const hand = createHand(this, this.vm.hand, (key) => {
+      enemyHover.forEach((o) => o.setVisible(key === null));
+    });
+    if (this.hover) hand.setHover(this.hover, true);
     Object.assign(window, { __screenReady: BATTLE_SCENE });
   }
 }
