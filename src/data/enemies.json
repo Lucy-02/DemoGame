@@ -13,7 +13,7 @@
     "pattern": [
       { "name": "찌르기", "actions": [{ "type": "attack", "dmg": 3, "target": "random", "pierce": true }] }
     ] },
-  { "id": "rubble_shell", "name": "러블 셸", "tier": "normal", "element": "water", "hp": 30, "shield": 3,
+  { "id": "rubble_shell", "name": "러블 셸", "tier": "normal", "element": "forest", "hp": 30, "shield": 3,
     "pattern": [
       { "name": "웅크리기", "actions": [{ "type": "block", "value": 10 }] },
       { "name": "짓누르기", "actions": [{ "type": "attack", "dmg": 10, "target": "front" }] }
@@ -34,18 +34,18 @@
       { "name": "강타", "charge": true, "actions": [{ "type": "attack", "dmg": 18, "target": "front" }] },
       { "name": "잿불 뿜기", "actions": [{ "type": "burn", "value": 2, "target": "all" }] }
     ] },
-  { "id": "bog_witch", "name": "보그 위치", "tier": "elite", "element": "water", "hp": 55, "shield": 4,
+  { "id": "bog_witch", "name": "보그 위치", "tier": "elite", "element": "forest", "hp": 55, "shield": 4,
     "pattern": [
       { "name": "혀 채찍", "actions": [{ "type": "attack", "dmg": 5, "hits": 3, "target": "random" }] },
       { "name": "저주 울음", "actions": [{ "type": "vulnerable", "turns": 2, "target": "all" }] },
       { "name": "삼키기", "charge": true, "actions": [{ "type": "attack", "dmg": 16, "target": "front", "pierce": true }] }
     ] },
-  { "id": "frostfang", "name": "프로스트팡", "tier": "elite", "element": "water", "hp": 60, "shield": 4,
+  { "id": "frostfang", "name": "프로스트팡", "tier": "elite", "element": "wind", "hp": 60, "shield": 4,
     "pattern": [
       { "name": "울부짖기", "actions": [{ "type": "buffMinions", "value": 3 }] },
       { "name": "찢기", "actions": [{ "type": "attack", "dmg": 6, "hits": 2, "target": "front" }] }
     ] },
-  { "id": "frost_pup", "name": "프로스트팡 새끼", "tier": "minion", "element": "water", "hp": 12, "shield": 1,
+  { "id": "frost_pup", "name": "프로스트팡 새끼", "tier": "minion", "element": "wind", "hp": 12, "shield": 1,
     "pattern": [
       { "name": "물기", "actions": [{ "type": "attack", "dmg": 5, "target": "random" }] }
     ] },

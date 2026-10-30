@@ -30,7 +30,7 @@ export interface AutoBattleResult {
 
 /** 시드 i로 런을 만들고 인카운터 하나를 끝까지(최대 40턴) 자동으로 싸워요. 같은 i면 항상 같은 결과예요. */
 export function autoBattle(enemies: string[], i: number): AutoBattleResult {
-  const run = new Run({ seed: 1000 + i, frontId: "testu", adult: false, unlockAll: false });
+  const run = new Run({ seed: 1000 + i, frontId: "glass_salamander", adult: false, unlockAll: false });
   const rng = new Rng(i * 7 + 3);
   const b = new Battle(run.spirits, run.deck, enemies, run.frontId, rng);
   const events: BattleEvent[] = [];

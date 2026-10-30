@@ -30,14 +30,12 @@
   "crit_mult": 1.5,
   "crit_pity": 0.02,
   "awaken_damage_mult": {
-    "igni": 1.5
+    "fire_fox": 1.5
   },
   "awaken_burn_mult": {
-    "igni": 2
+    "fire_fox": 2
   },
-  "awaken_heal_mult": {
-    "silva": 1.5
-  },
+  "awaken_heal_mult": {},
   "adult_hp_bonus": 6,
   "reward": {
     "gold_normal": [
@@ -77,13 +75,14 @@
   "rest_heal_pct": 0.3,
   "start_gold": 60,
   "awaken_taunt": [
-    "testu"
+    "glass_salamander"
   ],
   "awaken_keep_block": [
-    "testu"
+    "glass_salamander"
   ],
-  "awaken_cost_down": {
-    "silva": 1
-  },
-  "cheerful_sync": 30
+  "awaken_cost_down": {},
+  "cheerful_sync": 30,
+  "awaken_chill_mult": {
+    "mist_cat": 2
+  }
 }

@@ -1,7 +1,7 @@
 # MVP 정령 데이터 재설계 제안 (불여우·유리 도롱뇽·안개 고양이)
 
 - 날짜: 2026-10-30
-- 상태: 제안 (Lucy 확인 대기). 리뷰용 사본: https://claude.ai/artifact/9GBdupcj9FyaBpa2mdsDXU
+- 상태: 수락됨 (Lucy 2026-10-30 14:40 "이대로 쭉 진행", 추천안 = 카드 가안 · 적 A안 · 각성 ②안). `src/data` 반영 PR 참고. 리뷰용 사본: https://claude.ai/artifact/9GBdupcj9FyaBpa2mdsDXU
 - 근거 결정: `docs/design-decisions/0015-mvp-spirits.md`
 
 ## 한눈에

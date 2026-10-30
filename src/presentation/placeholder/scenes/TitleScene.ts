@@ -6,7 +6,7 @@ import { makeVisual } from "../ui/visual";
 import { COLORS, H, W, bgFill, button, txt } from "../ui/widgets";
 
 export class TitleScene extends Phaser.Scene {
-  private frontId = "testu";
+  private frontId = "glass_salamander";
   private adult = false;
   private unlockAll = false;
   private seed = Math.floor(Math.random() * 1e6);

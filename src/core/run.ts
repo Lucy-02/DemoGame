@@ -50,7 +50,7 @@ export class Run {
     // 시작 덱: 정령 카드의 start 수만큼
     for (const card of CARDS) {
       if (!card.start) continue;
-      const owner = SPIRITS.find((s) => s.element === card.element);
+      const owner = SPIRITS.find((s) => s.id === card.startOwner) ?? SPIRITS.find((s) => s.element === card.element);
       if (!owner) continue;
       for (let i = 0; i < card.start; i++) this.addCard(card.id, owner.id);
     }
