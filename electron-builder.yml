@@ -1,0 +1,15 @@
+# 배포 패키징 설정. 게임 이름·아이콘은 브랜딩 결정 전이라 저장소 이름을 임시로 써요.
+appId: dev.demogame.client
+productName: demogame
+directories:
+  output: release
+files:
+  - out/**
+  - package.json
+asar: true
+win:
+  target: dir
+mac:
+  target: dir
+linux:
+  target: dir

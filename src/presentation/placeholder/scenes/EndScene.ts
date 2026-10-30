@@ -1,6 +1,6 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
-import { getRun } from "../core/run";
+import { getRun } from "../../../core/run";
 import { COLORS, H, W, bgFill, button, txt } from "../ui/widgets";
 
 export class EndScene extends Phaser.Scene {

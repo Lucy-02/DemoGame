@@ -20,10 +20,13 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 - 라운드가 끝나면 `docs/design-decisions/NNNN-주제.md`를 남기고 `docs/handoff/DECISIONS.md`에 한 줄 요약을 더해요.
 
 ## 코드 구조
-- `src/core`, `src/data`: 게임 로직과 데이터. UI 작업에서 건드리지 않아요.
-- `src/scenes`, `src/ui`: 지금은 임시 플레이스홀더 UI. 디자인 확정 후 통째로 교체해요.
+- 구조와 의존 방향: `docs/architecture/0001-client-architecture.md`. `npm run lint:deps`가 강제해요.
+- `src/core`, `src/data`: 게임 로직과 데이터. UI 작업에서 건드리지 않아요. 규칙을 바꾸면 골든 테스트 스냅샷이 바뀌니 PR에 이유를 적어요.
+- `src/presentation/placeholder`: 지금은 임시 플레이스홀더 UI. 디자인 확정 후 통째로 교체해요.
+- `src/platform`, `electron/`: 저장·창 같은 바깥 세계. 렌더러는 Electron을 직접 import하지 않아요.
 - `src/design/tokens.ts`: `design/tokens/tokens.json`에서 `npm run tokens`로 생성. 손으로 고치지 않아요.
 - `npm run check:design`: 리터럴 값 검사. `design/strict-paths.txt`에 적힌 경로는 위반 시 실패해요.
+- `npm run check`: 타입·의존 규칙·테스트·리터럴을 한 번에. `npm run test:e2e`: Electron 스모크.
 
 ## 에셋
 - TTI(NovelAI Diffusion V5/V4.5)로 만든 파일은 모두 `assets/provenance.jsonl`에 기록해요 (`assets/PROVENANCE.md` 참고). 생성은 Lucy가 하고, Claude는 프롬프트 시트·후처리·기록을 맡아요.
