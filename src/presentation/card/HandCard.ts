@@ -6,6 +6,7 @@ import { box, circle } from "../style/draw";
 import { place, render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
 import { icon, loadIcon } from "../style/icons";
+import { opacityOf } from "../style/opacity";
 import { placeholderArt } from "../style/placeholder";
 import { shadowTexture } from "../style/shadow";
 import { px } from "../style/text";
@@ -72,18 +73,11 @@ export function createHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: num
   const setLifted = (on: boolean) => lifted.forEach((o) => o.setVisible(on));
   const setHeld = (on: boolean) => held.setVisible(on);
   setLifted(false);
-  // 컨테이너 alpha는 겹친 조각마다 따로 먹어서 CSS opacity와 달라요. 한 장으로 그린 뒤 알파를 곱하는 필터를 써요.
-  const fx = root.enableFilters().filters!.internal.addColorMatrix();
-  let opacity = 1;
-  const apply = () => {
-    fx.colorMatrix.set([1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, opacity, 0]);
-    fx.active = opacity < 1;
-  };
-  apply();
+  const fade = opacityOf(root);
   return {
     root, setLifted, setHeld,
-    get opacity() { return opacity; },
-    set opacity(v: number) { opacity = v; apply(); },
+    get opacity() { return fade.value; },
+    set opacity(v: number) { fade.value = v; },
   };
 }
 

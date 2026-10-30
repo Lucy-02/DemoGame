@@ -8,5 +8,4 @@ src/presentation/battle/
 src/presentation/game.ts
 src/presentation/card/
 src/presentation/faces.ts
-src/presentation/aim/
 src/presentation/tooltip/

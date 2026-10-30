@@ -135,19 +135,19 @@ export const PREVIEW = {
   ghost: { deg: -45, stripe: 3 },
 };
 
-/** 조준선 끝점들. 정본 .aimline 시작 (1026, 650) = H1 든 카드 상자(오른쪽 1022.2, 위 606.2)에서 (3.8, 43.8),
- *  끝 (1170, 322) = 거북 발밑 가운데 (1130, 344)에서 (40, -22). 대상이 여럿이어도 시작점은 하나예요.
- *  여럿을 고르면 줄기가 정보판 위 끝(발밑 + .info margin-top 12)에서 갈라져요 (Lucy 판정 1 ①). */
-export const AIM_ANCHOR = { origin: { dx: 3.8, dy: 43.8 }, target: { dx: 40, dy: -22 }, branchDy: INFO.mt };
-
 /** 손패 호버 H1 (r5 스크립트 "시안 값"): 든 카드 translateY(-30) scale(1.2), 같은 묶음 옆 카드 ±12,
  *  옆 묶음 ±10, 나머지 카드 opacity .62. 말풍선 아래 끝 y 598, 화면 가장자리 여백 8 */
 export const HOVER = {
   lift: 30, scale: 1.2, shiftIn: 12, shiftGroup: 10, dim: 0.62,
   bubbleBottom: 598, edge: 8,
-  /** 집은 카드는 말풍선을 왼쪽으로 비켜 조준선 자리를 비워요: left = cx - 폭 × .75 (정본 스크립트) */
-  heldBubble: 0.75,
 };
+
+/** 대상 고르기 (결정 0013, 정본 아님 · Lucy 확인 전 임시 값).
+ *  dim: 대상이 아닌 캐릭터를 어둡게 (밝기 배수) = 손패 호버 흐림 .62를 그대로 써요.
+ *  drag: 끄는 카드. threshold = 누른 채 이만큼 움직이면 끌기(그 전에 떼면 클릭으로 집기), scale = 필드 위에서 크기,
+ *  overTarget = 대상 위에서 불투명도(흐림과 같은 값), depth = 맨 위 */
+export const TARGETING = { dim: HOVER.dim };
+export const DRAG = { threshold: 6, scale: 0.6, overTarget: HOVER.dim, depth: 1000 };
 
 /** 든 카드 크기·밀림. 말풍선은 들린 카드 위에서 정본과 같은 거리에 따라 올라가요. */
 export interface LiftStyle {
