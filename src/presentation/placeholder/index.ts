@@ -1,4 +1,4 @@
-// ⚠ 임시 플레이스홀더 UI의 진입점. 디자인 확정 후 이 폴더째 교체해요.
+// ⚠ 임시 플레이스홀더 UI의 진입점. 새 화면이 src/core 규칙에 연결될 때마다 해당 장면을 지워요(Lucy 2026-10-31).
 import * as Phaser from "phaser";
 import { SpinePlugin } from "@esotericsoftware/spine-phaser-v4";
 import { BootScene } from "./scenes/BootScene";
