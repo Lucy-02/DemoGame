@@ -59,7 +59,7 @@ async function shootCanon(page: Page): Promise<Buffer> {
 }
 
 async function shootGame(page: Page, base: string): Promise<Buffer> {
-  await page.goto(`${base}?pixel${hover ? `&hover=${hover}` : ""}`);
+  await page.goto(`${base}${hover ? `?hover=${hover}` : ""}`);
   await page.waitForFunction(() => (window as { __screenReady?: string }).__screenReady === "battle", null, { timeout: 30_000 });
   await page.waitForTimeout(200);
   const canvas = await page.$("#game canvas");

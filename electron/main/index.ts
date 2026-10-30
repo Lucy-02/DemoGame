@@ -45,8 +45,9 @@ function registerIpc() {
 
 function createWindow() {
   const win = new BrowserWindow({
+    // 게임 기준 해상도(1280×800)와 같은 크기
     width: 1280,
-    height: 720,
+    height: 800,
     useContentSize: true,
     show: false,
     autoHideMenuBar: true,

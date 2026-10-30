@@ -11,7 +11,16 @@ async function start() {
   const params = new URLSearchParams(location.search);
   const game = params.get("screen") === "legacy"
     ? await startPlaceholderGame("game")
-    : await startGame("game", { pixelExact: params.has("pixel"), hover: params.get("hover") ?? undefined });
+    : await startGame("game", { hover: params.get("hover") ?? undefined });
   Object.assign(window, { game });
+  if (platform.kind === "web") mountDevWindow(platform);
+}
+
+/** 브라우저 개발 화면에서 게임을 데스크톱 창처럼 보이게 하는 틀(index.html의 #dev-window)을 켜요. */
+function mountDevWindow(platform: ReturnType<typeof getPlatform>) {
+  document.body.classList.add("dev-window");
+  document.querySelector("[data-dev=fullscreen]")?.addEventListener("click", () => platform.setFullscreen(true));
+  document.querySelector("[data-dev=close]")?.addEventListener("click", () => document.body.classList.add("dev-closed"));
+  document.querySelector("[data-dev=reopen]")?.addEventListener("click", () => document.body.classList.remove("dev-closed"));
 }
 start();
