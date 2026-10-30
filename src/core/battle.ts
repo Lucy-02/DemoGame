@@ -31,6 +31,8 @@ export interface BSpirit {
   block: number;
   thorns: number;
   taunt: boolean;
+  /** 이번 전투 동안 방어도가 턴 시작에 사라지지 않아요 (희귀 수호 카드). */
+  keepBlock: boolean;
   empower: number;
   status: Status;
   sync: number;
@@ -131,7 +133,7 @@ export class Battle {
     for (const rs of runSpirits) {
       this.spirits.push({
         id: rs.id, def: spiritDef(rs.id), run: rs, personality: activePersonality(rs),
-        hp: rs.hp, maxHp: maxHpOf(rs), block: 0, thorns: 0, taunt: false, empower: 0,
+        hp: rs.hp, maxHp: maxHpOf(rs), block: 0, thorns: 0, taunt: false, keepBlock: false, empower: 0,
         status: newStatus(), sync: 0, awaken: 0, critPity: 0, downed: rs.hp <= 0,
         auras: new Map(), playedThisTurn: 0, stubbornUsed: false,
       });
@@ -255,7 +257,7 @@ export class Battle {
     this.playedThisTurn = [];
     this.log(`── ${this.turn}턴 ──`);
     for (const s of this.aliveSpirits()) {
-      const keep = s.awaken > 0 && (C.awaken_keep_block as string[]).includes(s.id);
+      const keep = s.keepBlock || (s.awaken > 0 && (C.awaken_keep_block as string[]).includes(s.id));
       if (!keep) s.block = 0;
       s.thorns = 0;
       s.taunt = false;
@@ -689,6 +691,11 @@ export class Battle {
         }
         break;
       }
+      case "keepBlock":
+        owner.keepBlock = true;
+        this.events.push({ k: "status", ref: { side: "s", id: owner.id }, text: "방어도 유지" });
+        this.log(`${owner.def.name}의 방어도가 이번 전투 동안 사라지지 않아요.`);
+        break;
       case "taunt":
         owner.taunt = true;
         this.events.push({ k: "status", ref: { side: "s", id: owner.id }, text: "도발" });

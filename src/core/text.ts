@@ -60,6 +60,7 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
         }
         return "지속";
       case "damageFromBlock": return "현재 방어도만큼 피해 (파워 보정 없음)";
+      case "keepBlock": return "이번 전투 동안 방어도가 턴 시작에 사라지지 않음";
       case "burnMultiply": return `대상의 화상 ${op.value}배`;
       case "damagePerPlayed": {
         const per = st ? `${ELEMENT_NAME[op.element]} 카드 1장당 피해 ${op.value}×파워` : `${ELEMENT_NAME[op.element]} 카드 1장당 피해 ${op.value}`;

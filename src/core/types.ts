@@ -48,6 +48,7 @@ export type CardOp =
   | { op: "sync"; value: number }
   | { op: "aura"; aura: AuraId; value: number }
   | { op: "damageFromBlock" }
+  | { op: "keepBlock" }
   | { op: "burnMultiply"; value: number }
   | { op: "damagePerPlayed"; element: Element; value: number }
   | { op: "repeatNext"; maxCost: number }
