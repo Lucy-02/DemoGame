@@ -10,6 +10,8 @@ Electron + Vite + TypeScript + Phaser 4 + Spine. 구조는 `docs/architecture/00
 - `pnpm check`: 타입 검사 + 의존 방향 검사 + 테스트 + 리터럴 검사
 - `pnpm test:e2e`: Electron 스모크 테스트 (GPU 없는 리눅스는 `xvfb-run -a` 앞에 붙이기)
 - `pnpm sim 200`: 헤드리스 전투 시뮬레이터
+- `pnpm dev:web` 후 `?screen=battle`: 정본 기준으로 새로 만드는 전투 화면
+- `pnpm visual`: 정본과 새 화면을 겹쳐 비교 (`design/canon/README.md`)
 
 ## 구조
 - `electron/main`, `electron/preload`: 창, `app://` 프로토콜, 저장 파일 IPC. 렌더러에는 `window.platformBridge`만 노출

@@ -1,24 +1,24 @@
-// 자동 생성: npm run tokens (원본 design/tokens/tokens.json). 직접 고치지 마세요.
+// 자동 생성: pnpm tokens (원본 design/tokens/tokens.json). 직접 고치지 마세요.
 export const TODO_TOKEN = 'TODO_TOKEN' as const;
 
 export const tokens = {
   "color": {
     "bg": {
-      "base": "TODO_TOKEN",
-      "panel": "TODO_TOKEN"
+      "base": "#232120",
+      "panel": "rgba(24,23,22,.74)"
     },
     "text": {
-      "primary": "TODO_TOKEN",
-      "secondary": "TODO_TOKEN",
+      "primary": "#f3efe8",
+      "secondary": "#cbc4ba",
       "disabled": "TODO_TOKEN"
     },
-    "accent": "TODO_TOKEN",
+    "accent": "#7a4577",
     "element": {
-      "fire": "TODO_TOKEN",
-      "water": "TODO_TOKEN",
-      "forest": "TODO_TOKEN",
-      "wind": "TODO_TOKEN",
-      "neutral": "TODO_TOKEN"
+      "fire": "#c99a88",
+      "water": "#8eaab0",
+      "forest": "#9eab8b",
+      "wind": "#b4b8b0",
+      "neutral": "#a59f96"
     },
     "role": {
       "guard": "TODO_TOKEN",
@@ -27,11 +27,11 @@ export const tokens = {
       "disrupt": "TODO_TOKEN"
     },
     "stat": {
-      "hp": "TODO_TOKEN",
+      "hp": "#e6dfd3",
       "block": "TODO_TOKEN",
-      "shield": "TODO_TOKEN",
+      "shield": "#d6ad62",
       "sync": "TODO_TOKEN",
-      "mana": "TODO_TOKEN"
+      "mana": "#34302c"
     },
     "feedback": {
       "damage": "TODO_TOKEN",
@@ -60,11 +60,11 @@ export const tokens = {
     }
   },
   "font": {
-    "display": "TODO_TOKEN",
-    "title": "TODO_TOKEN",
-    "body": "TODO_TOKEN",
-    "number": "TODO_TOKEN",
-    "caption": "TODO_TOKEN"
+    "display": "Orbit, Pretendard, sans-serif",
+    "title": "Orbit, Pretendard, sans-serif",
+    "body": "Orbit, Pretendard, sans-serif",
+    "number": "Orbit, Pretendard, sans-serif",
+    "caption": "Orbit, Pretendard, sans-serif"
   },
   "size": {
     "text": {
@@ -94,34 +94,90 @@ export const tokens = {
   },
   "screen": {
     "base": {
-      "width": "TODO_TOKEN",
-      "height": "TODO_TOKEN"
+      "width": "1280px",
+      "height": "800px"
+    }
+  },
+  "palette": {
+    "floor": "#232120",
+    "wall": "#4a4743",
+    "wallHi": "#56524d",
+    "wallLo": "#2e2c2a",
+    "ink": "#f3efe8",
+    "ink2": "#cbc4ba",
+    "ink3": "#b5aea4",
+    "acc": "#7a4577",
+    "accHi": "#c99bc4",
+    "onAcc": "#fbf3fa",
+    "onAccHi": "#2a1c29",
+    "danger": "#d9786a",
+    "onDanger": "#241614",
+    "ok": "#9dbb93",
+    "warn": "#d6ad62",
+    "onWarn": "#2a2214",
+    "hp": "#e6dfd3",
+    "glass": "rgba(31,29,27,.76)",
+    "glassD": "rgba(31,29,27,.86)",
+    "glassLine": "rgba(246,241,233,.14)",
+    "plate": "rgba(24,23,22,.74)",
+    "chip": "#46423e",
+    "face": "#3a3734",
+    "paper": "#e9e6df",
+    "paper2": "#dcd8cf",
+    "paperInk": "#2a2724",
+    "pMute": "#6d6862",
+    "cardLine": "#c6c0b5",
+    "art": "#b7b1a6",
+    "off": "#aaa69f",
+    "off2": "#9c9891",
+    "offLine": "#7d7a75",
+    "offInk": "#55524e",
+    "mana": "#34302c",
+    "manaInk": "#f3efe8",
+    "material": {
+      "fire": "#e9e0d7",
+      "fireEdge": "#c4b2a4",
+      "water": "#dfe3e1",
+      "waterEdge": "#adbab7",
+      "wind": "#e6e5e1",
+      "windEdge": "#c2c3bf",
+      "wood": "#e2e3d9",
+      "woodEdge": "#b7bba6"
+    },
+    "el": {
+      "fire": "#c99a88",
+      "water": "#8eaab0",
+      "wood": "#9eab8b",
+      "wind": "#b4b8b0",
+      "light": "#c9bb93",
+      "none": "#a59f96"
+    },
+    "sil": {
+      "star": "#8c887f",
+      "fire": "#8f817b",
+      "jelly": "#7f898b"
+    },
+    "glassThin": "rgba(31,29,27,.5)"
+  },
+  "text": {
+    "battle": {
+      "where": "14px",
+      "whereNum": "15px",
+      "orderLabel": "13px",
+      "orderNum": "12px"
     }
   }
 } as const;
 
 /** 아직 Lucy가 정하지 않은 토큰 경로 */
 export const todoTokens: readonly string[] = [
-  "color.bg.base",
-  "color.bg.panel",
-  "color.text.primary",
-  "color.text.secondary",
   "color.text.disabled",
-  "color.accent",
-  "color.element.fire",
-  "color.element.water",
-  "color.element.forest",
-  "color.element.wind",
-  "color.element.neutral",
   "color.role.guard",
   "color.role.attack",
   "color.role.support",
   "color.role.disrupt",
-  "color.stat.hp",
   "color.stat.block",
-  "color.stat.shield",
   "color.stat.sync",
-  "color.stat.mana",
   "color.feedback.damage",
   "color.feedback.heal",
   "color.feedback.crit",
@@ -139,11 +195,6 @@ export const todoTokens: readonly string[] = [
   "color.mapnode.shop",
   "color.mapnode.rest",
   "color.mapnode.boss",
-  "font.display",
-  "font.title",
-  "font.body",
-  "font.number",
-  "font.caption",
   "size.text.display",
   "size.text.title",
   "size.text.body",
@@ -157,9 +208,7 @@ export const todoTokens: readonly string[] = [
   "size.border.width",
   "motion.fast",
   "motion.normal",
-  "motion.emphasis",
-  "screen.base.width",
-  "screen.base.height"
+  "motion.emphasis"
 ];
 
 export function isTodo(v: unknown): v is typeof TODO_TOKEN {
