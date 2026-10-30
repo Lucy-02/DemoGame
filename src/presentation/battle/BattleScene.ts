@@ -1,7 +1,7 @@
 // 전투 화면 (정본: 전투 R5 "판단 동선"). 뷰모델을 받아 그리기만 해요.
 // 필드는 두 장: 쉬는 필드(.fld-rest)와 조준 미리보기 필드(.fld-pv). 집은 카드가 앞에 있으면 미리보기, 아니면 쉬는 필드예요.
 import * as Phaser from "phaser";
-import type { CurveRuleName } from "../aim/curve";
+import type { Pt, Route } from "../aim/curve";
 import { createAimLines } from "../aim/lines";
 import { gather } from "../style/gather";
 import { loadIcon } from "../style/icons";
@@ -29,16 +29,12 @@ export class BattleScene extends Phaser.Scene {
   /** 시각 검증용: 처음부터 이 카드에 호버한 상태로 */
   private hover?: string;
 
-  /** 조준선 곡선 규칙 비교용 (?curve=mirror|trunk) */
-  private curve?: CurveRuleName;
-
   /** 들기 크기 바꿔 보기 (?lift=h1 정본) */
   private lift?: string;
 
-  init(data: { vm?: BattleVM; hover?: string; curve?: CurveRuleName; lift?: string }) {
+  init(data: { vm?: BattleVM; hover?: string; lift?: string }) {
     if (data.vm) this.vm = data.vm;
     this.hover = data.hover;
-    this.curve = data.curve;
     this.lift = data.lift;
   }
 
@@ -82,17 +78,19 @@ export class BattleScene extends Phaser.Scene {
     // 조준선 시작점은 집은 카드가 들린 자리에서 하나로 모아요 (대상이 여럿이어도)
     const corner = hand.heldCorner();
     if (preview && corner) {
-      preview.lines.set({ x: corner.x + AIM_ANCHOR.origin.dx, y: corner.y + AIM_ANCHOR.origin.dy }, preview.ends);
+      preview.lines.set({ x: corner.x + AIM_ANCHOR.origin.dx, y: corner.y + AIM_ANCHOR.origin.dy }, preview.ends, preview.route);
     }
     hand.setHover(this.hover ?? null, true);
     Object.assign(window, { __screenReady: BATTLE_SCENE });
   }
 
-  /** 미리보기 필드 (.fld-pv): 순서표·아군·적을 미리보기 값으로 다시 그리고, 맨 위에 조준선 */
+  /** 미리보기 필드 (.fld-pv): 순서표·아군·적을 미리보기 값으로 다시 그리고, 맨 위에 조준선.
+   *  조준선은 대상을 고르는 카드만 그어요. 전체·무작위 카드는 카드가 스스로 대상을 정해서 고리와 결과만 보여요 (Lucy 판정 1 ①). */
   private drawPreview(aim: AimVM) {
     const targets = new Map(aim.targets.map((t) => [t.enemy, t]));
     const cutOrders = new Set(aim.targets.filter((t) => t.cut).map((t) => this.vm.enemies[t.enemy].intent.order));
-    const ends: { x: number; y: number }[] = [];
+    const ends: Pt[] = [];
+    let route: Route | undefined;
     let lines!: ReturnType<typeof createAimLines>;
     const root = gather(this, 0, 0, () => {
       drawOrder(this, { ...this.vm.order, slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: true } : s)) });
@@ -100,11 +98,14 @@ export class BattleScene extends Phaser.Scene {
       this.vm.enemies.forEach((e, i) => {
         const target = targets.get(i);
         const { foot } = drawEnemy(this, e, i, { target, candidate: aim.candidates.includes(i) });
-        if (target) ends.push({ x: foot.x + AIM_ANCHOR.target.dx, y: foot.y + AIM_ANCHOR.target.dy });
+        const end = { x: foot.x + AIM_ANCHOR.target.dx, y: foot.y + AIM_ANCHOR.target.dy };
+        if (target && aim.targeting === "pick") ends.push(end);
+        // 줄기는 가장 오른쪽 적 자리로 올라가 정보판 위 끝에서 갈라져요
+        route = { via: end, branchY: foot.y + AIM_ANCHOR.branchDy };
       });
-      lines = createAimLines(this, FRAME.w, FRAME.h, this.curve);
+      lines = createAimLines(this, FRAME.w, FRAME.h);
     });
     root.setVisible(false);
-    return { root, lines, ends };
+    return { root, lines, ends, route };
   }
 }

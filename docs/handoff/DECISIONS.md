@@ -82,4 +82,5 @@
 ## 9. 클라이언트 구조 (2026-10-30~)
 
 - ✅ Electron + Vite, 게임 화면은 전부 Phaser · DOM은 앱 메뉴만(C안), 레이어 의존 규칙, 시드 고정 골든 테스트 → `docs/architecture/0001-client-architecture.md`
+- ✅ 조준선: 전체·무작위 카드는 줄 없음, 고르는 카드는 정본 방향 줄기 하나가 정보판 위에서 갈라짐 (`aim/curve.ts` routeCurves) — PR #15
 - ✅ 손패 들기 크기 b: 1.4배 · 옆 카드 ±10, 들린 카드가 옆 카드를 살짝 덮음 (정본 H1 1.2배 대체, `battle/layout.ts` LIFT) — PR #15

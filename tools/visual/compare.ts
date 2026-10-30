@@ -66,8 +66,6 @@ async function shootGame(page: Page, base: string): Promise<Buffer> {
   const q = new URLSearchParams();
   if (hover) q.set("hover", hover);
   if (scene) q.set("scene", scene);
-  const curve = opt("curve");
-  if (curve) q.set("curve", curve);
   // 정본 H1 프레임과 비교할 땐 들기 크기도 정본 값으로 (게임 기본은 Lucy가 고른 b)
   const lift = opt("lift") ?? (frameId === "h1" ? "h1" : undefined);
   if (lift) q.set("lift", lift);

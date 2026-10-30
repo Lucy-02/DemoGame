@@ -94,6 +94,8 @@ export interface Change {
 export interface AimVM {
   /** 집은 카드 key */
   card: string;
+  /** 대상 고르기: pick = 플레이어가 고름(조준선), all·random = 카드가 스스로 정함(조준선 없음, 정본 규칙 상태 3) */
+  targeting: "pick" | "all" | "random";
   /** 조준한 대상. 전체 대상 카드면 여럿이고, 조준선은 모두 같은 시작점에서 나가요. */
   targets: AimTargetVM[];
   /** 조준하지 않은 대상 후보 (점선 고리만, enemies 인덱스) */
