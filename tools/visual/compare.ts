@@ -68,6 +68,8 @@ async function shootGame(page: Page, base: string): Promise<Buffer> {
   if (scene) q.set("scene", scene);
   const curve = opt("curve");
   if (curve) q.set("curve", curve);
+  const lift = opt("lift");
+  if (lift) q.set("lift", lift);
   await page.goto(`${base}${q.size ? `?${q}` : ""}`);
   await page.waitForFunction(() => (window as { __screenReady?: string }).__screenReady === "battle", null, { timeout: 30_000 });
   await page.waitForTimeout(200);

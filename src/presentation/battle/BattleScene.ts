@@ -7,10 +7,12 @@ import { gather } from "../style/gather";
 import { loadIcon } from "../style/icons";
 import { canonRest } from "./fixtures/canonRest";
 import { drawBackdrop } from "./views/backdrop";
-import { drawEnemyTip } from "./views/enemyTip";
+import { enemyTipContent } from "./views/enemyTip";
+import { GLASS } from "../tooltip/skins";
+import { drawTooltip } from "../tooltip/Tooltip";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
-import { AIM_ANCHOR, FRAME, SYS } from "./layout";
+import { AIM_ANCHOR, ETIP, FRAME, LIFT_CANDIDATES, SYS } from "./layout";
 import { SYS_ICONS, drawSys, drawWhere } from "./views/topbar";
 import { drawAlly, drawEnemy, preloadUnits } from "./views/units";
 import type { AimVM, BattleVM } from "./viewmodel";
@@ -30,10 +32,14 @@ export class BattleScene extends Phaser.Scene {
   /** 조준선 곡선 규칙 비교용 (?curve=mirror|trunk) */
   private curve?: CurveRuleName;
 
-  init(data: { vm?: BattleVM; hover?: string; curve?: CurveRuleName }) {
+  /** 들기 크기 후보 비교용 (?lift=a|b|c) */
+  private lift?: string;
+
+  init(data: { vm?: BattleVM; hover?: string; curve?: CurveRuleName; lift?: string }) {
     if (data.vm) this.vm = data.vm;
     this.hover = data.hover;
     this.curve = data.curve;
+    this.lift = data.lift;
   }
 
   preload() {
@@ -63,9 +69,10 @@ export class BattleScene extends Phaser.Scene {
     drawMana(this, this.vm.mana);
     drawEnd(this, this.vm);
     const tip = this.vm.enemies.find((e) => e.hovered)?.tip;
-    if (tip) enemyHover.push(drawEnemyTip(this, tip));
+    if (tip) enemyHover.push(drawTooltip(this, { skin: GLASS, content: enemyTipContent(tip), at: { left: ETIP.x, top: ETIP.y } }));
     const hand = createHand(this, this.vm.hand, {
       held: aim?.card,
+      lift: this.lift ? LIFT_CANDIDATES[this.lift] : undefined,
       onChange: (key, held) => {
         rest.setVisible(!held);
         preview?.root.setVisible(held);

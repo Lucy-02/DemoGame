@@ -1,6 +1,7 @@
 // 전투 화면이 그리는 값. 화면은 이 모양만 알고 Battle 객체는 몰라요.
 // 지금은 정본 고정 장면(fixtures/)으로 채우고, session 층이 생기면 Battle 상태에서 만들어요.
 import type { CardVM } from "../card/viewmodel";
+import type { RichText } from "../tooltip/content";
 import type { FaceId, IconId } from "../faces";
 
 export type { FaceId, IconId };
@@ -57,7 +58,7 @@ export interface EnemyVM {
 }
 
 /** 설명 한 줄: 보통 글과 강조 숫자(b)의 조각 */
-export type TipLine = { text: string; strong?: boolean }[];
+export type TipLine = RichText;
 
 export interface EnemyTipVM {
   name: string;

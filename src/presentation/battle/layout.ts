@@ -108,13 +108,8 @@ export const END = {
   piles: { pad: [2, 4, 0, 4] as [number, number, number, number], gap: 3, icon: 13 },
 };
 
-/** .etip left 872 top 478 width 262 radius 12 padding 10 12 11 gap 5 line-height 1.45, 그림자 0 10 26
- *  .etip h4 gap 6 · h4 span padding 0 6 radius 8 테 1 */
-export const ETIP = {
-  x: 872, y: 478, w: 262, radius: 12, pad: [10, 12, 11, 12] as [number, number, number, number], gap: 5, lh: 1.45,
-  ring: 1, shadow: { y: 10, blur: 26 },
-  title: { gap: 6 }, rank: { padX: 6, radius: 8, ring: 1 },
-};
+/** .etip left 872 top 478 (모양은 툴팁 공용 스킨 GLASS, src/presentation/tooltip/skins.ts) */
+export const ETIP = { x: 872, y: 478 };
 
 /** 집음·조준 미리보기 (.fld-pv, page.html·r5.css) */
 export const PREVIEW = {
@@ -151,4 +146,20 @@ export const HOVER = {
   bubbleBottom: 598, edge: 8,
   /** 집은 카드는 말풍선을 왼쪽으로 비켜 조준선 자리를 비워요: left = cx - 폭 × .75 (정본 스크립트) */
   heldBubble: 0.75,
+};
+
+/** 든 카드 크기·밀림. 말풍선은 들린 카드 위에서 정본과 같은 거리에 따라 올라가요. */
+export interface LiftStyle {
+  lift: number;
+  scale: number;
+  shiftIn: number;
+  shiftGroup: number;
+}
+
+/** Lucy 비교용 후보 (정본 아님, 확정 전 임시 · ?lift=a|b|c). 들린 카드가 같은 묶음 옆 카드를 살짝 덮어요.
+ *  덮는 폭 = 카드 폭 92 × (scale - 1) / 2 - (카드 사이 4 + shiftIn): a 1.8px, b 4.4px, c 7px (정본 H1은 6.8px 떨어짐) */
+export const LIFT_CANDIDATES: Record<string, LiftStyle> = {
+  a: { lift: 30, scale: 1.3, shiftIn: 8, shiftGroup: 8 },
+  b: { lift: 30, scale: 1.4, shiftIn: 10, shiftGroup: 10 },
+  c: { lift: 30, scale: 1.5, shiftIn: 12, shiftGroup: 12 },
 };

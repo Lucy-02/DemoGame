@@ -15,6 +15,8 @@ export interface GameOptions {
   scene?: string;
   /** 조준선 곡선 규칙 비교용 */
   curve?: CurveRuleName;
+  /** 들기 크기 후보 비교용 (battle/layout LIFT_CANDIDATES) */
+  lift?: string;
 }
 
 export async function startGame(parent: string, opts: GameOptions = {}): Promise<Phaser.Game> {
@@ -29,7 +31,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
     scale: { mode: Phaser.Scale.NONE },
     scene: [],
     callbacks: {
-      postBoot: (game) => game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, curve: opts.curve }),
+      postBoot: (game) => game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, curve: opts.curve, lift: opts.lift }),
     },
   });
 }
