@@ -1,0 +1,53 @@
+# 확보 정령 43종 (Lucy, 2026-10-30, 9속성 재배정 반영)
+# 출처: Lucy가 코어 기획 스레드에 올린 목록을 그대로 옮김. 이름은 작업용이고 네이밍 확정이 아니에요.
+# 속성 9종: 불 물 숲 바람 빛 그림자 땅 전기 얼음 (기획서 v0.2는 6종이라 상성 규칙 갱신 필요, 코어 기획 S3에서 다룸)
+# 계보: 초기 12 · 동물 12 · 추상 13 · 정통 판타지 6
+# 진화 나무의 재료로 쓸지, 각각 독립 정령으로 둘지는 Lucy 답 대기 (2026-10-30)
+spirits:
+  # 초기 12
+  - {key: fire-fox,         name: 불여우,       element: 불,     lineage: 초기}
+  - {key: glass-salamander, name: 유리 도롱뇽,  element: 불,     lineage: 초기}
+  - {key: jellyfish,        name: 해파리,       element: 물,     lineage: 초기}
+  - {key: mist-cat,         name: 안개 고양이,  element: 물,     lineage: 초기}
+  - {key: forest-deer,      name: 숲 사슴,      element: 숲,     lineage: 초기}
+  - {key: amber-squirrel,   name: 호박 다람쥐,  element: 숲,     lineage: 초기}
+  - {key: wind-rabbit,      name: 홀씨 토끼,    element: 바람,   lineage: 초기}
+  - {key: rain-swallow,     name: 비제비,       element: 바람,   lineage: 초기}
+  - {key: star-spirit,      name: 별 정령,      element: 빛,     lineage: 초기}
+  - {key: pearl-oyster,     name: 진주조개,     element: 빛,     lineage: 초기}
+  - {key: shadow-moth,      name: 그림자 나방,  element: 그림자, lineage: 초기}
+  - {key: shadow-pangolin,  name: 그늘 천산갑,  element: 그림자, lineage: 초기}
+  # 동물 12
+  - {key: river-otter,      name: 수달,         element: 물,     lineage: 동물}
+  - {key: kelp-seahorse,    name: 해마,         element: 물,     lineage: 동물}
+  - {key: sun-lion,         name: 사자,         element: 불,     lineage: 동물, gender: 남}
+  - {key: magma-ibex,       name: 산양,         element: 땅,     lineage: 동물}
+  - {key: night-owl,        name: 부엉이,       element: 숲,     lineage: 동물, gender: 남}
+  - {key: honey-bee,        name: 꿀벌,         element: 숲,     lineage: 동물}
+  - {key: prism-chameleon,  name: 카멜레온,     element: 숲,     lineage: 동물}
+  - {key: echo-bat,         name: 박쥐,         element: 바람,   lineage: 동물}
+  - {key: gale-wolf,        name: 늑대,         element: 바람,   lineage: 동물}
+  - {key: mirror-peacock,   name: 공작,         element: 빛,     lineage: 동물}
+  - {key: ash-crow,         name: 까마귀,       element: 그림자, lineage: 동물, gender: 남}
+  - {key: eclipse-serpent,  name: 일식 뱀,      element: 그림자, lineage: 동물}
+  # 추상 13
+  - {key: wave,             name: 파도,         element: 물,     lineage: 추상}
+  - {key: tears,            name: 눈물,         element: 물,     lineage: 추상}
+  - {key: mirage,           name: 신기루,       element: 불,     lineage: 추상}
+  - {key: bonfire,          name: 화톳불,       element: 불,     lineage: 추상}
+  - {key: sacred-tree,      name: 서낭 신목,    element: 숲,     lineage: 추상}
+  - {key: flash,            name: 섬광,         element: 전기,   lineage: 추상}
+  - {key: flutter,          name: 설렘,         element: 바람,   lineage: 추상}
+  - {key: nightmare,        name: 악몽,         element: 그림자, lineage: 추상}
+  - {key: festival,         name: 환희,         element: 빛,     lineage: 추상}
+  - {key: stone-lantern,    name: 석등,         element: 땅,     lineage: 추상}
+  - {key: wind-chime,       name: 풍경,         element: 바람,   lineage: 추상}
+  - {key: jealousy,         name: 질투,         element: 그림자, lineage: 추상}
+  - {key: first-snow,       name: 첫눈,         element: 얼음,   lineage: 추상}
+  # 정통 판타지 6
+  - {key: quake,            name: 지진,         element: 땅,     lineage: 정통 판타지}
+  - {key: aurora,           name: 오로라,       element: 빛,     lineage: 정통 판타지}
+  - {key: rune,             name: 룬,           element: 땅,     lineage: 정통 판타지}
+  - {key: winter-queen,     name: 겨울 여왕,    element: 얼음,   lineage: 정통 판타지}
+  - {key: storm-maiden,     name: 뇌우의 무녀,  element: 전기,   lineage: 정통 판타지}
+  - {key: psyche,           name: 사념,         element: 전기,   lineage: 정통 판타지}
