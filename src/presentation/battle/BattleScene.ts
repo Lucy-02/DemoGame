@@ -1,15 +1,21 @@
 // 전투 화면 (정본: 전투 R5 "판단 동선"). 뷰모델을 받아 그리기만 해요.
+// 필드는 두 장: 쉬는 필드(.fld-rest)와 조준 미리보기 필드(.fld-pv). 집은 카드가 앞에 있으면 미리보기, 아니면 쉬는 필드예요.
 import * as Phaser from "phaser";
+import type { Pt, Route } from "../aim/curve";
+import { createAimLines } from "../aim/lines";
+import { gather } from "../style/gather";
 import { loadIcon } from "../style/icons";
 import { canonRest } from "./fixtures/canonRest";
 import { drawBackdrop } from "./views/backdrop";
-import { drawEnemyTip } from "./views/enemyTip";
+import { enemyTipContent } from "./views/enemyTip";
+import { GLASS } from "../tooltip/skins";
+import { drawTooltip } from "../tooltip/Tooltip";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
-import { SYS } from "./layout";
+import { AIM_ANCHOR, ETIP, FRAME, LIFT_STYLES, SYS } from "./layout";
 import { SYS_ICONS, drawSys, drawWhere } from "./views/topbar";
 import { drawAlly, drawEnemy, preloadUnits } from "./views/units";
-import type { BattleVM } from "./viewmodel";
+import type { AimVM, BattleVM } from "./viewmodel";
 
 export const BATTLE_SCENE = "battle";
 
@@ -23,9 +29,13 @@ export class BattleScene extends Phaser.Scene {
   /** 시각 검증용: 처음부터 이 카드에 호버한 상태로 */
   private hover?: string;
 
-  init(data: { vm?: BattleVM; hover?: string }) {
+  /** 들기 크기 바꿔 보기 (?lift=h1 정본) */
+  private lift?: string;
+
+  init(data: { vm?: BattleVM; hover?: string; lift?: string }) {
     if (data.vm) this.vm = data.vm;
     this.hover = data.hover;
+    this.lift = data.lift;
   }
 
   preload() {
@@ -39,23 +49,63 @@ export class BattleScene extends Phaser.Scene {
     drawBackdrop(this);
     drawWhere(this, this.vm.where);
     drawSys(this);
-    drawOrder(this, this.vm.order);
-    this.vm.allies.forEach((a, i) => drawAlly(this, a, i));
     // 적 호버 표시(고리·설명판)는 마우스가 손패로 가면 숨겨요. 마우스는 한 곳에만 있으니까요.
     const enemyHover: (Phaser.GameObjects.Image | Phaser.GameObjects.Container)[] = [];
-    this.vm.enemies.forEach((e, i) => {
-      const { ring } = drawEnemy(this, e, i);
-      if (ring) enemyHover.push(ring);
+    const rest = gather(this, 0, 0, () => {
+      drawOrder(this, this.vm.order);
+      this.vm.allies.forEach((a, i) => drawAlly(this, a, i));
+      this.vm.enemies.forEach((e, i) => {
+        const { ring } = drawEnemy(this, e, i);
+        if (ring) enemyHover.push(ring);
+      });
     });
+    const aim = this.vm.aim;
+    const preview = aim ? this.drawPreview(aim) : null;
     drawBand(this);
     drawMana(this, this.vm.mana);
     drawEnd(this, this.vm);
     const tip = this.vm.enemies.find((e) => e.hovered)?.tip;
-    if (tip) enemyHover.push(drawEnemyTip(this, tip));
-    const hand = createHand(this, this.vm.hand, (key) => {
-      enemyHover.forEach((o) => o.setVisible(key === null));
+    if (tip) enemyHover.push(drawTooltip(this, { skin: GLASS, content: enemyTipContent(tip), at: { left: ETIP.x, top: ETIP.y } }));
+    const hand = createHand(this, this.vm.hand, {
+      held: aim?.card,
+      lift: this.lift ? LIFT_STYLES[this.lift] : undefined,
+      onChange: (key, held) => {
+        rest.setVisible(!held);
+        preview?.root.setVisible(held);
+        enemyHover.forEach((o) => o.setVisible(key === null));
+      },
     });
-    if (this.hover) hand.setHover(this.hover, true);
+    // 조준선 시작점은 집은 카드가 들린 자리에서 하나로 모아요 (대상이 여럿이어도)
+    const corner = hand.heldCorner();
+    if (preview && corner) {
+      preview.lines.set({ x: corner.x + AIM_ANCHOR.origin.dx, y: corner.y + AIM_ANCHOR.origin.dy }, preview.ends, preview.route);
+    }
+    hand.setHover(this.hover ?? null, true);
     Object.assign(window, { __screenReady: BATTLE_SCENE });
+  }
+
+  /** 미리보기 필드 (.fld-pv): 순서표·아군·적을 미리보기 값으로 다시 그리고, 맨 위에 조준선.
+   *  조준선은 대상을 고르는 카드만 그어요. 전체·무작위 카드는 카드가 스스로 대상을 정해서 고리와 결과만 보여요 (Lucy 판정 1 ①). */
+  private drawPreview(aim: AimVM) {
+    const targets = new Map(aim.targets.map((t) => [t.enemy, t]));
+    const cutOrders = new Set(aim.targets.filter((t) => t.cut).map((t) => this.vm.enemies[t.enemy].intent.order));
+    const ends: Pt[] = [];
+    let route: Route | undefined;
+    let lines!: ReturnType<typeof createAimLines>;
+    const root = gather(this, 0, 0, () => {
+      drawOrder(this, { ...this.vm.order, slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: true } : s)) });
+      this.vm.allies.forEach((a, i) => drawAlly(this, a, i, aim.incoming[i]));
+      this.vm.enemies.forEach((e, i) => {
+        const target = targets.get(i);
+        const { foot } = drawEnemy(this, e, i, { target, candidate: aim.candidates.includes(i) });
+        const end = { x: foot.x + AIM_ANCHOR.target.dx, y: foot.y + AIM_ANCHOR.target.dy };
+        if (target && aim.targeting === "pick") ends.push(end);
+        // 줄기는 가장 오른쪽 적 자리로 올라가 정보판 위 끝에서 갈라져요
+        route = { via: end, branchY: foot.y + AIM_ANCHOR.branchDy };
+      });
+      lines = createAimLines(this, FRAME.w, FRAME.h);
+    });
+    root.setVisible(false);
+    return { root, lines, ends, route };
   }
 }

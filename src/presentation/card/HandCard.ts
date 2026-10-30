@@ -52,6 +52,8 @@ export interface HandCardView {
   root: Phaser.GameObjects.Container;
   /** 들린 상태(.cd.act): 몸 전체 재질과 그림자 */
   setLifted(on: boolean): void;
+  /** 집은 상태(.cd.act.held): 바깥 테 */
+  setHeld(on: boolean): void;
   /** 카드 전체 불투명도 (CSS opacity처럼 다 그린 뒤 한 번에). 1이면 필터를 꺼서 글자가 선명해요 */
   opacity: number;
 }
@@ -64,7 +66,11 @@ export function createHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: num
     lifted.push(scene.add.image(-C.w / 2 - sh.margin, -C.h - sh.margin, sh.key).setOrigin(0, 0));
     drawHandCard(scene, c, -C.w / 2, -C.h, (img) => lifted.push(img));
   });
+  const m = C.held.offset + C.held.width;
+  const held = scene.add.image(-C.w / 2 - m, -C.h - m, heldOutlineTexture(scene)).setOrigin(0, 0).setVisible(false);
+  root.add(held);
   const setLifted = (on: boolean) => lifted.forEach((o) => o.setVisible(on));
+  const setHeld = (on: boolean) => held.setVisible(on);
   setLifted(false);
   // 컨테이너 alpha는 겹친 조각마다 따로 먹어서 CSS opacity와 달라요. 한 장으로 그린 뒤 알파를 곱하는 필터를 써요.
   const fx = root.enableFilters().filters!.internal.addColorMatrix();
@@ -75,10 +81,28 @@ export function createHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: num
   };
   apply();
   return {
-    root, setLifted,
+    root, setLifted, setHeld,
     get opacity() { return opacity; },
     set opacity(v: number) { opacity = v; apply(); },
   };
+}
+
+/** 집은 카드 바깥 테: 카드 상자에서 offset 띄우고 width 굵기, 모서리는 border-radius + offset 기준으로 둥글게.
+ *  WebGL 선은 둥근 모서리가 거칠어서 canvas에 구워요. */
+function heldOutlineTexture(scene: Phaser.Scene): string {
+  const key = "card:held-outline";
+  if (scene.textures.exists(key)) return key;
+  const { width, offset } = C.held;
+  const m = offset + width;
+  const tex = scene.textures.createCanvas(key, C.w + m * 2, C.h + m * 2)!;
+  const ctx = tex.getContext();
+  ctx.strokeStyle = P.accHi;
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  ctx.roundRect(width / 2, width / 2, C.w + m * 2 - width, C.h + m * 2 - width, C.radius + offset + width / 2);
+  ctx.stroke();
+  tex.refresh();
+  return key;
 }
 
 /** (x, y) = 카드 바깥 왼쪽 위. onLifted: 들린 상태에만 보일 몸 그림을 넘겨받아요. */

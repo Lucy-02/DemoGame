@@ -12,6 +12,7 @@ export const COPY = {
   maxPrefix: "/",
   shieldLeft: "끊기까지 ",
   shieldUnit: "칸",
+  cut: "끊김",
   mana: "마력",
   endTurn: "턴 종료",
   playable: "낼 수 있는 카드 ",

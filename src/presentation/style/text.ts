@@ -29,6 +29,15 @@ export function fontBox(px: number): FontBox {
 
 export const px = (size: string) => parseFloat(size);
 
+/** Orbit OS/2 yStrikeoutPosition 300, yStrikeoutSize 50 (unitsPerEm 1000). 브라우저 line-through가 이 값을 써요. */
+const STRIKE = { position: 0.3, size: 0.05 };
+
+/** 취소선: 기준선 위 중심 높이와 굵기. 굵기를 주면(text-decoration-thickness) 같은 중심에서 그 굵기로 */
+export function strikeLine(fontPx: number, width?: number) {
+  const w = width ?? Math.max(1, Math.round(fontPx * STRIKE.size));
+  return { center: fontPx * STRIKE.position - (fontPx * STRIKE.size) / 2, width: w };
+}
+
 /** Phaser Text 스타일. metrics를 직접 넣어 글자 상자 = 브라우저의 인라인 상자가 되게 해요. */
 export function textStyle(size: string, color: string, letterSpacing = 0): Phaser.Types.GameObjects.Text.TextStyle {
   const s = px(size);
