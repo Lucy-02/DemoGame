@@ -9,10 +9,10 @@ export interface Shadow {
 
 /** w×h 둥근 상자의 그림자 텍스처. 돌려주는 margin만큼 상자 왼쪽 위에서 빼서 놓아요. */
 export function shadowTexture(
-  scene: Phaser.Scene, w: number, h: number, radius: number, s: Shadow,
+  scene: Phaser.Scene, w: number, h: number, radius: number, s: Shadow, hollow = false,
 ): { key: string; margin: number } {
   const margin = s.blur + Math.abs(s.y);
-  const key = `shadow:${w}x${h}r${radius}:${s.y},${s.blur},${s.color}`;
+  const key = `shadow:${w}x${h}r${radius}:${s.y},${s.blur},${s.color}${hollow ? ":hollow" : ""}`;
   if (!scene.textures.exists(key)) {
     const tex = scene.textures.createCanvas(key, w + margin * 2, h + margin * 2)!;
     const ctx = tex.getContext();
@@ -25,6 +25,16 @@ export function shadowTexture(
     ctx.beginPath();
     ctx.roundRect(margin - shift, margin, w, h, radius);
     ctx.fill();
+    // hollow: 상자 안쪽 그림자는 지워요 (속이 비치는 그림 뒤에 깔 때)
+    if (hollow) {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.beginPath();
+      ctx.roundRect(margin, margin + s.y, w, h, radius);
+      ctx.fill();
+    }
     tex.refresh();
   }
   return { key, margin };

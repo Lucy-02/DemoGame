@@ -2,6 +2,7 @@
 // 시각 검증(pnpm visual)은 이 장면을 정본 스크린샷과 겹쳐 봐요.
 import type { CardVM } from "../../card/viewmodel";
 import type { BattleVM } from "../viewmodel";
+import { examplePlays } from "./plays";
 
 const star = (c: Omit<CardVM, "owner">): CardVM => ({ ...c, owner: "star" });
 const fire = (c: Omit<CardVM, "owner">): CardVM => ({ ...c, owner: "fire" });
@@ -86,4 +87,5 @@ export const canonRest: BattleVM = {
   ],
   playable: 8,
   piles: { draw: 9, discard: 2, exhaust: 1 },
+  plays: examplePlays,
 };
