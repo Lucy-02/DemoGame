@@ -1,5 +1,5 @@
 // 렌더러 진입점. 플랫폼을 고르고 화면을 띄우는 일만 해요.
-// 기본은 정본 기준 새 전투 화면. ?screen=legacy 면 예전 임시 UI(디자인 확정 후 삭제 예정)를 띄워요.
+// 기본은 정본 기준 새 전투 화면(?scene=aim 처럼 고정 장면 고르기). ?screen=legacy 면 예전 임시 UI(디자인 확정 후 삭제 예정)를 띄워요.
 import { getPlatform } from "../platform";
 import { startGame } from "../presentation/game";
 import { startPlaceholderGame } from "../presentation/placeholder";
@@ -11,7 +11,7 @@ async function start() {
   const params = new URLSearchParams(location.search);
   const game = params.get("screen") === "legacy"
     ? await startPlaceholderGame("game")
-    : await startGame("game", { hover: params.get("hover") ?? undefined });
+    : await startGame("game", { hover: params.get("hover") ?? undefined, scene: params.get("scene") ?? undefined, lift: params.get("lift") ?? undefined });
   Object.assign(window, { game });
   if (platform.kind === "web") mountDevWindow(platform);
 }

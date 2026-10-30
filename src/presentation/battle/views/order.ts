@@ -6,7 +6,7 @@ import { icon, loadIcon } from "../../style/icons";
 import { placeholderArt } from "../../style/placeholder";
 import { LINE_HEIGHT, fontBox, measure, px, textStyle } from "../../style/text";
 import { COPY } from "../copy";
-import { ORDER as O } from "../layout";
+import { ORDER as O, PREVIEW } from "../layout";
 import type { BattleVM } from "../viewmodel";
 
 const P = tokens.provisional.palette;
@@ -21,6 +21,24 @@ export function preloadOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   for (const s of vm.slots) {
     loadIcon(scene, s.action, O.action.size - O.action.pad * 2);
   }
+}
+
+/** 끊김 사선 (.rs-slot.cut::after): 칸 좌우 inset, 위 50%에서 아래로 높이만큼, 가운데 기준 회전.
+ *  WebGL 사선은 계단이 져서 canvas에 구워요. */
+function cutMark(scene: Phaser.Scene, x: number, top: number) {
+  const C = PREVIEW.orderCut;
+  const w = slotW - C.inset * 2;
+  const key = "order:cut";
+  if (!scene.textures.exists(key)) {
+    const tex = scene.textures.createCanvas(key, w, w)!;
+    const ctx = tex.getContext();
+    ctx.translate(w / 2, w / 2);
+    ctx.rotate((C.deg * Math.PI) / 180);
+    ctx.fillStyle = P.accHi;
+    ctx.fillRect(-w / 2, -C.h / 2, w, C.h);
+    tex.refresh();
+  }
+  scene.add.image(x + slotW / 2, top + O.slot.h / 2 + C.h / 2, key);
 }
 
 /** 한 줄 글자의 줄 상자 높이 안에서 글자 상자 위치 (CSS: 줄 높이 = 크기 × 1.25, 글자는 가운데) */
@@ -77,6 +95,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
     circle(g, sx + O.action.size / 2, aTop + O.action.size / 2, O.action.size, { fill: P.face });
     const inner = O.action.size - O.action.pad * 2;
     icon(scene, sx + O.action.pad, aTop + O.action.pad, s.action, inner, inner, s.state === "now" ? P.warn : P.ink2);
+    if (s.cut) cutMark(scene, x, top);
     x += slotW;
   }
   line();

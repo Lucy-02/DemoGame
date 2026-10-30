@@ -190,7 +190,12 @@ export const tokens = {
       "bubbleWhy": "#7a2f24",
       "bubbleShadow": "rgba(0,0,0,.45)",
       "cardLiftShadow": "rgba(0,0,0,.5)",
-      "cardLiftShine": "rgba(255,255,255,.6)"
+      "cardLiftShine": "rgba(255,255,255,.6)",
+      "pvFill": "rgba(122,69,119,.26)",
+      "pvBlockFill": "rgba(122,69,119,.28)",
+      "aimGlow": "rgba(201,155,196,.45)",
+      "candRing": "rgba(246,241,233,.55)",
+      "ghostStripe": "rgba(217,120,106,.35)"
     },
     "text": {
       "battle": {
@@ -237,7 +242,13 @@ export const tokens = {
         "bubbleCalc": "12px",
         "bubbleCalcStrong": "13px",
         "bubbleWhy": "12.5px",
-        "bubbleOwner": "12px"
+        "bubbleOwner": "12px",
+        "pvFrom": "12px",
+        "pvIncomingFrom": "13px",
+        "pvArrow": "12px",
+        "pvHp": "17px",
+        "hit": "16px",
+        "cutTag": "13px"
       }
     },
     "pattern": {

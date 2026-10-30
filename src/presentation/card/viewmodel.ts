@@ -13,8 +13,9 @@ export interface CardValueVM {
   up?: boolean;
 }
 
-/** 설명 글 조각: 보통 글, 강조 숫자(b), 용어(밑줄 점선) */
-export type RichText = { text: string; strong?: boolean; term?: boolean }[];
+import type { RichText } from "../tooltip/content";
+
+export type { RichText };
 
 /** 호버 말풍선에 들어가는 글 (정본 .bub: .txt, .calc, .bwhy, .ownl) */
 export interface CardDetailVM {
