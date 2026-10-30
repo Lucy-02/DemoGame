@@ -116,9 +116,39 @@ export const ETIP = {
   title: { gap: 6 }, rank: { padX: 6, radius: 8, ring: 1 },
 };
 
+/** 집음·조준 미리보기 (.fld-pv, page.html·r5.css) */
+export const PREVIEW = {
+  /** .ring bottom -12 150×26 · .ring.aim border 2, box-shadow 0 0 14 · .ring.cand border 1.5 dashed
+   *  (Chrome 타원 점선 4.5/3은 정본 캡처 frame-h1.png에서 잰 값) */
+  ring: { w: 150, h: 26, bottom: -12, aim: 2, glow: 14, cand: 1.5, dash: [4.5, 3] },
+  /** .hits left -14 top -6 gap 4 · .hit height 24 padding 0 8 0 6 radius 13 gap 2, translateX(d×14) · .hti 13 */
+  hits: { left: -14, top: -6, gap: 4, h: 24, pad: [0, 8, 0, 6] as [number, number, number, number], radius: 13, inGap: 2, step: 14, icon: 13 },
+  /** .arr margin 0 1 */
+  arrowMargin: 1,
+  /** .shd.pv padding 0 5 0 3, inset 1.5 · .inc.pv inset 1.5 */
+  block: { pad: [0, 5, 0, 3] as [number, number, number, number], ring: 1.5 },
+  incomingRing: 1.5,
+  /** .sl.pvon repeating-linear-gradient(45deg, acc-hi 0 2px, transparent 2px 4px), inset 1.5 */
+  slotHatch: { deg: 45, stripe: 2, ring: 1.5 },
+  /** .sll.pvt padding 0 7 radius 9 */
+  cutTag: { pad: [0, 7, 0, 7] as [number, number, number, number], radius: 9 },
+  /** .intent.cut inset 1.5, .amt text-decoration-thickness 2 */
+  intentCut: { ring: 1.5, strike: 2 },
+  /** .rs-slot.cut::after left 2 right 2 top 50% height 2 rotate(-14deg) */
+  orderCut: { inset: 2, h: 2, deg: -14 },
+  /** .bar .ghost repeating-linear-gradient(-45deg, danger 0 3px, ghostStripe 3px 6px) */
+  ghost: { deg: -45, stripe: 3 },
+};
+
+/** 조준선 끝점들. 정본 .aimline 시작 (1026, 650) = H1 든 카드 상자(오른쪽 1022.2, 위 606.2)에서 (3.8, 43.8),
+ *  끝 (1170, 322) = 거북 발밑 가운데 (1130, 344)에서 (40, -22). 대상이 여럿이어도 시작점은 하나예요. */
+export const AIM_ANCHOR = { origin: { dx: 3.8, dy: 43.8 }, target: { dx: 40, dy: -22 } };
+
 /** 손패 호버 H1 (r5 스크립트 "시안 값"): 든 카드 translateY(-30) scale(1.2), 같은 묶음 옆 카드 ±12,
  *  옆 묶음 ±10, 나머지 카드 opacity .62. 말풍선 아래 끝 y 598, 화면 가장자리 여백 8 */
 export const HOVER = {
   lift: 30, scale: 1.2, shiftIn: 12, shiftGroup: 10, dim: 0.62,
   bubbleBottom: 598, edge: 8,
+  /** 집은 카드는 말풍선을 왼쪽으로 비켜 조준선 자리를 비워요: left = cx - 폭 × .75 (정본 스크립트) */
+  heldBubble: 0.75,
 };

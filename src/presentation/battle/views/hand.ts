@@ -50,15 +50,23 @@ export function drawMana(scene: Phaser.Scene, mana: BattleVM["mana"]) {
 }
 
 export interface HandView {
-  /** 카드 위에 포인터가 있으면 그 카드 key, 없으면 null. instant면 움직임 없이 바로 */
+  /** 카드 위에 포인터가 있으면 그 카드 key, 없으면 null(집은 카드가 있으면 그 카드로 돌아가요). instant면 움직임 없이 바로 */
   setHover(key: string | null, instant?: boolean): void;
+  /** 집은 카드가 들렸을 때 상자의 오른쪽 위 (조준선 시작점 기준). 집은 카드가 없으면 null */
+  heldCorner(): { x: number; y: number } | null;
+}
+
+export interface HandOptions {
+  /** 집은 카드 key (정본 data-pin). 손패에서 벗어나면 이 카드로 돌아와요 */
+  held?: string;
+  /** 앞에 나선 카드가 바뀔 때. held = 그 카드가 집은 카드인지 (필드를 미리보기로 바꾸려고) */
+  onChange?: (key: string | null, held: boolean) => void;
 }
 
 const ease = cubicBezier(tokens.provisional.motion.hover.easing);
 const duration = ms(tokens.provisional.motion.hover.duration);
 
-/** onHover: 호버한 카드가 바뀔 때 (필드 쪽 호버 표시를 끄고 켜려고) */
-export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], onHover?: (key: string | null) => void): HandView {
+export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: HandOptions = {}): HandView {
   const { group: G, face: F } = HAND;
   const groups: { root: Phaser.GameObjects.Container; face: Phaser.GameObjects.GameObject[]; cards: { vm: CardVM; view: HandCardView; x: number; y: number }[] }[] = [];
   let x = HAND.x;
@@ -93,10 +101,13 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], onHover?
     else scene.tweens.add({ targets: target, ...props, duration, ease });
   };
 
-  const setHover = (key: string | null, instant = false) => {
+  const setHover = (pointer: string | null, instant = false) => {
+    // 정본 스크립트: 다른 카드에 올리면 "호버만", 손패에서 벗어나면 집어 둔 카드로 돌아와요
+    const key = pointer ?? opts.held ?? null;
     if (key === current) return;
     current = key;
-    onHover?.(key);
+    const held = key !== null && key === opts.held;
+    opts.onChange?.(key, held);
     const gi = groups.findIndex((g) => g.cards.some((c) => c.vm.key === key));
     groups.forEach((g, i) => {
       to(g.root, { x: gi < 0 || i === gi ? 0 : i < gi ? -HOVER.shiftGroup : HOVER.shiftGroup }, instant);
@@ -104,6 +115,7 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], onHover?
       g.cards.forEach((c, j) => {
         const on = j === ci;
         c.view.setLifted(on);
+        c.view.setHeld(on && held);
         to(c.view.root, {
           x: c.x + (i !== gi || on ? 0 : j < ci ? -HOVER.shiftIn : HOVER.shiftIn),
           y: c.y - (on ? HOVER.lift : 0),
@@ -124,7 +136,7 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], onHover?
     const card = groups[gi].cards.find((c) => c.vm.key === key)!;
     // 말풍선은 든 카드의 쉬는 자리 가운데를 가리켜요 (옆 카드 밀림 전 기준, 정본 offsetLeft와 같음)
     const cx = card.x;
-    const left = Math.max(HOVER.edge, Math.min(FRAME.w - HOVER.edge - BUBBLE.w, cx - BUBBLE.w / 2));
+    const left = Math.max(HOVER.edge, Math.min(FRAME.w - HOVER.edge - BUBBLE.w, cx - BUBBLE.w * (held ? HOVER.heldBubble : 0.5)));
     bubble = drawCardBubble(scene, card.vm.detail, left, HOVER.bubbleBottom, cx - left);
     if (!instant) {
       const y = bubble.y;
@@ -142,7 +154,12 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], onHover?
       c.view.root.on("pointerout", () => { leave?.remove(); leave = scene.time.delayedCall(1, () => setHover(null)); });
     }
   }
-  return { setHover };
+  const heldCorner = () => {
+    const card = groups.flatMap((g) => g.cards).find((c) => c.vm.key === opts.held);
+    if (!card) return null;
+    return { x: card.x + (HAND_CARD.w * HOVER.scale) / 2, y: card.y - HOVER.lift - HAND_CARD.h * HOVER.scale };
+  };
+  return { setHover, heldCorner };
 }
 
 export function drawEnd(scene: Phaser.Scene, vm: BattleVM) {

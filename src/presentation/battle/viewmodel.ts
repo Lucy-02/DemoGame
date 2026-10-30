@@ -11,8 +11,10 @@ export interface OrderSlotVM {
   art: IconId;
   /** 행동 기호 (i-*) */
   action: IconId;
-  /** now = 지금 차징 완료(곧 해결), cut = 끊김 */
-  state?: "now" | "cut";
+  /** now = 지금 차징 완료(곧 해결) */
+  state?: "now";
+  /** 미리보기에서 끊김 (사선, .rs-slot.cut). now와 함께 올 수 있어요 */
+  cut?: boolean;
 }
 
 export interface StatusVM {
@@ -75,4 +77,39 @@ export interface BattleVM {
   /** 지금 낼 수 있는 카드 수 */
   playable: number;
   piles: { draw: number; discard: number; exhaust: number };
+  /** 카드를 집어 조준한 상태. 없으면 쉬는 상태 */
+  aim?: AimVM;
+}
+
+/** 바뀌기 전 → 뒤 */
+export interface Change {
+  from: number;
+  to: number;
+}
+
+/** 집은 카드로 조준했을 때 필드에 그리는 결과 (정본 .fld-pv, 결정 0007 "미리보기 예산").
+ *  필드엔 ① 조준한 대상의 결과 ② 아군마다 받을 피해 a→b 두 가지만. 연쇄·지연·다음 턴 효과는 카드 설명에만.
+ *  값은 아직 전투 규칙(src/core)에서 계산하지 않아요. session 층이 생기면 거기서 채워요. */
+export interface AimVM {
+  /** 집은 카드 key */
+  card: string;
+  /** 조준한 대상. 전체 대상 카드면 여럿이고, 조준선은 모두 같은 시작점에서 나가요. */
+  targets: AimTargetVM[];
+  /** 조준하지 않은 대상 후보 (점선 고리만, enemies 인덱스) */
+  candidates: number[];
+  /** 아군마다 받을 피해 a→b (allies 순서). 비어 있으면 그 아군은 쉬는 상태 그대로 */
+  incoming: (Change | undefined)[];
+}
+
+export interface AimTargetVM {
+  /** enemies 인덱스 */
+  enemy: number;
+  /** 대상 머리 위 타격 알약 (때리는 순서대로) */
+  hits: number[];
+  block?: Change;
+  hp: Change;
+  /** 이번에 깰 실드 칸 수 */
+  shieldBreak?: number;
+  /** 차징이 끊기면 의도 알약·순서표에 끊김 표시 */
+  cut?: boolean;
 }

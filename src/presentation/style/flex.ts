@@ -4,7 +4,8 @@
 import type * as Phaser from "phaser";
 import { box, circle, type BoxStyle } from "./draw";
 import { icon as drawIcon } from "./icons";
-import { LINE_HEIGHT, fontBox, measure, px, textStyle } from "./text";
+import { rgba } from "./color";
+import { LINE_HEIGHT, fontBox, measure, px, strikeLine, textStyle } from "./text";
 
 interface Margins {
   ml?: number | "auto";
@@ -26,6 +27,8 @@ export interface TextNode extends Margins {
   lh?: number;
   /** letter-spacing (px) */
   ls?: number;
+  /** text-decoration: line-through. 색을 안 주면 글자색, 굵기를 안 주면 글꼴 값 */
+  strike?: { color?: string; width?: number };
 }
 
 export interface IconNode extends Margins {
@@ -139,7 +142,14 @@ export function place(
       const b = fontBox(px(n.size));
       const top = y + (H - (b.ascent + b.descent)) / 2;
       const tw = measure(n.text, n.size, n.ls);
-      scene.add.text(n.w ? x + (n.w - tw) / 2 : x, top, n.text, textStyle(n.size, n.color, n.ls));
+      const tx = n.w ? x + (n.w - tw) / 2 : x;
+      scene.add.text(tx, top, n.text, textStyle(n.size, n.color, n.ls));
+      if (n.strike) {
+        const st = strikeLine(px(n.size), n.strike.width);
+        const c = rgba(n.strike.color ?? n.color);
+        // 취소선은 글자 위에 (같은 Graphics면 글자 아래로 가요)
+        scene.add.graphics().fillStyle(c.color, c.alpha).fillRect(tx, top + b.ascent - st.center - st.width / 2, tw, st.width);
+      }
       return;
     }
     case "icon":

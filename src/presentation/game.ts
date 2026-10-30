@@ -3,12 +3,18 @@
 import * as Phaser from "phaser";
 import { tokens } from "../design/tokens";
 import { BATTLE_SCENE, BattleScene } from "./battle/BattleScene";
+import type { CurveRuleName } from "./aim/curve";
+import { FIXTURES } from "./battle/fixtures";
 import { FRAME } from "./battle/layout";
 import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
   /** 시각 검증용: 이 key의 손패 카드에 호버한 상태로 시작 */
   hover?: string;
+  /** 고정 장면 이름 (battle/fixtures FIXTURES). 없으면 정본 쉬는 상태 */
+  scene?: string;
+  /** 조준선 곡선 규칙 비교용 */
+  curve?: CurveRuleName;
 }
 
 export async function startGame(parent: string, opts: GameOptions = {}): Promise<Phaser.Game> {
@@ -23,7 +29,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
     scale: { mode: Phaser.Scale.NONE },
     scene: [],
     callbacks: {
-      postBoot: (game) => game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover }),
+      postBoot: (game) => game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, curve: opts.curve }),
     },
   });
 }

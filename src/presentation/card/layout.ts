@@ -26,6 +26,8 @@ export const HAND_CARD = {
   why: { y: 37, pad: [1, 6, 1, 6] as [number, number, number, number], radius: 5, lh: 1.3 },
   /** .cd.act box-shadow 0 10px 24px */
   liftShadow: { y: 10, blur: 24 },
+  /** .cd.act.held outline 2 offset 2 (outline은 border-radius를 따라 둥글어요) */
+  held: { width: 2, offset: 2 },
   /** .nm letter-spacing -.02em */
   nameLetterSpacing: -0.02,
 };
