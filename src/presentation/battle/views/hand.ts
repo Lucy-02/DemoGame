@@ -13,7 +13,7 @@ import { PAPER } from "../../tooltip/skins";
 import { TooltipHost, clampLeft } from "../../tooltip/Tooltip";
 import type { CardVM } from "../../card/viewmodel";
 import { COPY } from "../copy";
-import { BAND, END, FRAME, HAND, HOVER, MANA, type LiftStyle } from "../layout";
+import { BAND, END, FRAME, HAND, HOVER, LIFT, MANA, type LiftStyle } from "../layout";
 import type { BattleVM } from "../viewmodel";
 import { faceKey } from "../../faces";
 
@@ -97,7 +97,7 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
     x += w + HAND.gap;
   }
 
-  const L = opts.lift ?? HOVER;
+  const L = opts.lift ?? LIFT;
   const tips = new TooltipHost(scene);
   // 말풍선 아래 끝은 들린 카드 위에서 정본과 같은 거리 (정본: 카드 위 606.2, 말풍선 598)
   const restBottom = HAND.y + HAND.group.pad + HAND_CARD.h;

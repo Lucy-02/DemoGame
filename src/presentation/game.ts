@@ -15,7 +15,7 @@ export interface GameOptions {
   scene?: string;
   /** 조준선 곡선 규칙 비교용 */
   curve?: CurveRuleName;
-  /** 들기 크기 후보 비교용 (battle/layout LIFT_CANDIDATES) */
+  /** 들기 크기 바꿔 보기 (battle/layout LIFT_STYLES) */
   lift?: string;
 }
 

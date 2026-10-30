@@ -156,10 +156,12 @@ export interface LiftStyle {
   shiftGroup: number;
 }
 
-/** Lucy 비교용 후보 (정본 아님, 확정 전 임시 · ?lift=a|b|c). 들린 카드가 같은 묶음 옆 카드를 살짝 덮어요.
- *  덮는 폭 = 카드 폭 92 × (scale - 1) / 2 - (카드 사이 4 + shiftIn): a 1.8px, b 4.4px, c 7px (정본 H1은 6.8px 떨어짐) */
-export const LIFT_CANDIDATES: Record<string, LiftStyle> = {
-  a: { lift: 30, scale: 1.3, shiftIn: 8, shiftGroup: 8 },
+/** 들기 크기. 정본 H1(1.2배, ±12, ±10)은 옆 카드와 6.8px 떨어져서, Lucy가 들린 카드가 옆 카드를 살짝 덮는 b를 골랐어요
+ *  (2026-10-30, 정본 아님 · 비교 후보 a 1.3/±8, c 1.5/±12는 뺐어요).
+ *  덮는 폭 = 카드 폭 92 × (scale - 1) / 2 - (카드 사이 4 + shiftIn): b 4.4px. 떠오름 30은 정본 그대로.
+ *  ?lift=h1 은 정본 값이에요 (pnpm visual 이 정본 프레임과 비교할 때 써요). */
+export const LIFT_STYLES: Record<string, LiftStyle> = {
+  h1: { lift: HOVER.lift, scale: HOVER.scale, shiftIn: HOVER.shiftIn, shiftGroup: HOVER.shiftGroup },
   b: { lift: 30, scale: 1.4, shiftIn: 10, shiftGroup: 10 },
-  c: { lift: 30, scale: 1.5, shiftIn: 12, shiftGroup: 12 },
 };
+export const LIFT: LiftStyle = LIFT_STYLES.b;

@@ -12,7 +12,7 @@ import { GLASS } from "../tooltip/skins";
 import { drawTooltip } from "../tooltip/Tooltip";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
-import { AIM_ANCHOR, ETIP, FRAME, LIFT_CANDIDATES, SYS } from "./layout";
+import { AIM_ANCHOR, ETIP, FRAME, LIFT_STYLES, SYS } from "./layout";
 import { SYS_ICONS, drawSys, drawWhere } from "./views/topbar";
 import { drawAlly, drawEnemy, preloadUnits } from "./views/units";
 import type { AimVM, BattleVM } from "./viewmodel";
@@ -32,7 +32,7 @@ export class BattleScene extends Phaser.Scene {
   /** 조준선 곡선 규칙 비교용 (?curve=mirror|trunk) */
   private curve?: CurveRuleName;
 
-  /** 들기 크기 후보 비교용 (?lift=a|b|c) */
+  /** 들기 크기 바꿔 보기 (?lift=h1 정본) */
   private lift?: string;
 
   init(data: { vm?: BattleVM; hover?: string; curve?: CurveRuleName; lift?: string }) {
@@ -72,7 +72,7 @@ export class BattleScene extends Phaser.Scene {
     if (tip) enemyHover.push(drawTooltip(this, { skin: GLASS, content: enemyTipContent(tip), at: { left: ETIP.x, top: ETIP.y } }));
     const hand = createHand(this, this.vm.hand, {
       held: aim?.card,
-      lift: this.lift ? LIFT_CANDIDATES[this.lift] : undefined,
+      lift: this.lift ? LIFT_STYLES[this.lift] : undefined,
       onChange: (key, held) => {
         rest.setVisible(!held);
         preview?.root.setVisible(held);
