@@ -1,10 +1,9 @@
 {
   "_comment": "type: shape | image | spine. 실제 아트가 나오면 여기서 type과 경로만 바꾸면 돼요.",
   "spirits": {
-    "igni":  { "type": "shape", "shape": "bird", "color": "#ff7a3d", "size": 90 },
-    "testu": { "type": "shape", "shape": "turtle", "color": "#4aa3ff", "size": 100 },
-    "silva": { "type": "spine", "skeleton": "assets/spine/spirit.json", "atlas": "assets/spine/spirit.atlas", "scale": 0.3, "offsetY": 48, "size": 110,
-               "anims": { "idle": "idle", "attack": "attack", "hit": "hit", "death": "death" }, "fallback": { "type": "shape", "shape": "seed", "color": "#6fd17a", "size": 90 } }
+    "fire_fox":         { "type": "shape", "shape": "wolf", "color": "#ff7a3d", "size": 90 },
+    "glass_salamander": { "type": "shape", "shape": "turtle", "color": "#ffb347", "size": 100 },
+    "mist_cat":         { "type": "shape", "shape": "wolf", "color": "#a9d6ff", "size": 85 }
   },
   "enemies": {
     "moss_slime":   { "type": "shape", "shape": "blob", "color": "#5fae5a", "size": 80 },

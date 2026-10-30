@@ -644,7 +644,8 @@ export class Battle {
         }
         break;
       case "chill": {
-        const v = scale(withGrow(op.value), focus);
+        let v = scale(withGrow(op.value), focus);
+        if (owner.awaken > 0) v *= (C.awaken_chill_mult as Record<string, number>)[owner.id] ?? 1;
         for (const e of tg.enemies) if (!e.dead) this.addChill(e, v);
         break;
       }

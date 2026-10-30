@@ -1,0 +1,70 @@
+# 카드 40장 1차 이름 시안 (2026-10-30)
+
+- 규칙: `design/canon/naming/CARD_NAMING.md` (0018). 시트: `design/canon/naming/cards.csv`
+- 상태: Lucy "이대로 쭉 진행"(2026-10-30 14:40)으로 **1안을 가안으로 `src/data/cards.json`에 반영**했어요. 카드별로 2안이나 새 이름을 주시면 그때 바꿔요.
+- 전부 예시이고, `TODO_NAME`은 세계관(S3)이 정해진 뒤 고유명으로 바꿀 자리예요. 길이 상한은 이름 띠 실측 뒤(TODO_TOKEN).
+
+| id | 속성 | 등급 | 공용/전용 | 효과 | 한국어 1안 | 한국어 2안 | 영어 1안 | 영어 2안 | 메모 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| fire_claw | 불 | 기본 | 공용 | 피해 6 | 불꽃 발톱 | 불꽃 할퀴기 | Flame Claw | Flame Swipe | 불여우 시작 ×2 |
+| ember_scatter | 불 | 기본 | 공용 | 피해 3 + 화상 3 | 불씨 뿌리기 | 불티 흩기 | Ember Scatter | Spark Shower | 불여우 시작 ×2 |
+| fire_guard | 불 | 기본 | 공용 | 방어도 5 | 열기 막 | 불꽃 가림 | Heat Veil | Flame Cover | 도롱뇽 시작 ×2. 옛 wing_cover |
+| glass_skin | 불 | 기본 | 공용 | 방어도 4 + 가시 2 | 잉걸 껍질 | 불똥 갑옷 | Ember Shell | Cinder Mail | 도롱뇽 시작 ×2. 공용이라 '유리'를 못 씀 |
+| double_strike | 불 | 일반 | 공용 | 피해 3 × 2회 | 두 번 할퀴기 | 겹불꽃 | Double Swipe | Twin Flame | 옛 double_peck |
+| ember_flick | 불 | 일반 | 공용 | 화상 2, 비용 0 | 불티 | 불씨 튕기기 | Spark | Ember Flick |  |
+| ignite | 불 | 일반 | 공용 | 피해 2 + 화상 폭발 | 불붙이기 | 부싯돌 | Kindle | Flint | 예약어 '점화' 회피 |
+| molten_stance | 불 | 일반 | 공용 | 도발 + 방어도 6 | 불길 앞막이 | 달군 방패 | Firewall Stance | Heated Shield | '버티기' 회피 |
+| blaze_aura | 불 | 고급 | 공용 | 지속: 화상 부여마다 +1 | 불길 기운 | 잉걸불 | Blazing Aura | Smolder | 옛 blaze_wing |
+| backfire | 불 | 고급 | 불여우 Lv2 | 피해 8, 화상 중이면 한 번 더 | 맞불 | 여우불 역습 | Backfire | Foxfire Riposte | 정령 어휘 허용 |
+| fire_storm | 불 | 고급 | 불여우 Lv3 | 적 전체 피해 5 + 화상 3 | 꼬리 불바다 | 여우불 소나기 | Tail Inferno | Foxfire Rain | 정령 어휘 허용 |
+| glass_shatter | 불 | 고급 | 도롱뇽 Lv2 | 현재 방어도만큼 피해 | 유리 파편 | 깨진 비늘 | Glass Shards | Shattered Scale | 정령 어휘 허용 |
+| tempered_glass | 불 | 고급 | 도롱뇽 Lv3 | 아군 전체 방어도 5 + 가시 2 | 담금질 유리 | 유리 갑주 | Tempered Glass | Glass Plate | 정령 어휘 허용 |
+| phoenix_breath | 불 | 희귀 | 불여우 성체 | 화상 2배 + 폭발, 소멸 | 불사의 숨결 | 요화 (妖火) | Undying Breath | Foxfire | TODO_NAME: 세계관 고유명 후보 자리 |
+| mist_breath | 물 | 기본 | 공용 | 냉기 3 | 입김 | 안개 숨 | Puff | Mist Breath | 고양이 시작 ×2 |
+| paw_splash | 물 | 기본 | 공용 | 피해 4 + 냉기 1 | 물장구 | 물방울 튕기기 | Splash | Droplet Flick | 고양이 시작 ×1 |
+| bubble_shield | 물 | 기본 | 공용 | 아군 방어도 5 | 물거품 막 | 물방울 방패 | Bubble Veil | Bubble Shield | 고양이 시작 ×1 |
+| frost_breath | 물 | 일반 | 공용 | 피해 3 + 냉기 2 | 찬 입김 | 서리 숨결 | Cold Puff | Frost Breath | '서리'는 얼음 속성과 경계(상성 결정 때 확인) |
+| fog | 물 | 일반 | 공용 | 적 전체 약화 1턴 | 안개 이불 | 짙은 안개 | Fog Blanket | Thick Fog |  |
+| whisker_twitch | 물 | 일반 | 공용 | 드로우 1, 비용 0 | 잔물결 | 물결 읽기 | Ripple | Read the Current | 공용이라 '수염'을 못 씀 |
+| ice_wall | 물 | 고급 | 공용 | 아군 전체 방어도 6 | 물벽 | 안개 장막 | Water Wall | Mist Curtain | 옛 '프로스트 바스티온'(음차) 교체 |
+| chill_wave | 물 | 고급 | 고양이 Lv2 | 적 전체 냉기 3 + 약화 1턴 | 수염 서릿발 | 안개 한파 | Whisker Frost | Mist Coldsnap | 정령 어휘 허용 |
+| frost_bite | 물 | 고급 | 고양이 Lv3 | 피해 2 + 취약 2턴 + 냉기 1 | 찬 발톱 | 서리 발자국 | Cold Claw | Frost Pawprint | 정령 어휘 허용 |
+| eternal_ice | 물 | 희귀 | 고양이 성체 | 즉시 빙결(보스는 냉기 5), 소멸 | 만년설 | 고양이의 첫눈 | Everfrost | First Snow | TODO_NAME: 세계관 고유명 후보 자리 |
+| breeze | 바람 | 일반 | 공용 | 드로우 1, 비용 0 | 산들바람 | 실바람 | Breeze | Zephyr |  |
+| whirl_slash | 바람 | 일반 | 공용 | 피해 3, 콤보 2장이면 3 × 2 | 회오리 베기 | 돌개바람 | Whirl Slash | Dust Devil |  |
+| tailwind | 바람 | 일반 | 공용 | 드로우 2 | 뒷바람 | 순풍 | Tailwind | Fair Wind |  |
+| second_wind | 바람 | 일반 | 공용 | 드로우 1 + 다음 턴 마나 1 | 숨 고르기 | 새 바람 | Breather | Fresh Air | 스파이어·하데스 'Second Wind' 회피 |
+| gust | 바람 | 고급 | 공용 | 적 전체 피해 4 + 취약 1턴 | 돌풍 | 거센 바람 | Gust | Gale |  |
+| crosswind | 바람 | 고급 | 공용 | 피해 4 + 약화 1턴 | 맞바람 | 옆바람 | Headwind | Crosswind |  |
+| ride_the_wind | 바람 | 고급 | 누구나 Lv3 | 다음 비용 2 이하 카드 반복 | 바람길 | 순풍 날개 | Windward | Wind Rider |  |
+| eye_of_storm | 바람 | 희귀 | 1막 보스 | 지속 4 | 태풍의 눈 | 고요의 눈 | Eye of the Storm | Still Eye | TODO_NAME: 1막 보스 이름과 엮을 수 있음 |
+| catch_breath | 무 | 일반 | 공용 | 아군 전체 방어도 3 | 한숨 돌리기 | 움츠리기 | Catch Breath | Huddle |  |
+| find_weakness | 무 | 일반 | 공용 | 피해 2 + 취약 2턴 | 빈틈 찾기 | 빈틈 | Find the Gap | Opening | UI 용어 '약점'(상성) 회피 |
+| step_forward | 무 | 일반 | 공용 | 앞으로 이동 + 방어도 4, 비용 0 | 앞으로 나서기 | 한 걸음 | Step Up | One Step |  |
+| cheer | 무 | 일반 | 공용 | 아군 강화 3, 비용 0 | 응원 | 북돋우기 | Cheer | Encourage | 옛 encourage |
+| mend | 무 | 일반 | 공용 | 아군 회복 4 | 보살핌 | 쓰다듬기 | Mend | Pat | 옛 dewdrop |
+| rally | 무 | 일반 | 공용 | 아군 전체 싱크 10 | 함께 외치기 | 한마음 | Rally | One Heart |  |
+| deep_breath | 무 | 고급 | 공용 | 회복 3 + 드로우 1 | 깊은 숨 | 심호흡 | Deep Breath | Inhale |  |
+| attune | 무 | 고급 | 누구나 성체 | 싱크 20 + 드로우 1 | 교감 | 공명 | Attune | Resonance | '싱크' 회피 |
+
+## 검사 메모
+
+- 예약어(화상·냉기·빙결·약화·취약·도발·가시·방어도·강화·점화·연속·고집·장난·각성, 역할명, 능력치명)는 1안·2안 어디에도 없어요. '점화'→불붙이기/부싯돌, '싱크'→교감/공명, UI 상성 용어 '약점'→빈틈.
+- 다른 게임 대표명 회피: second_wind→숨 고르기/새 바람(영어 Breather), '버티기'→불길 앞막이/달군 방패, '돌진' 미사용.
+- 음차 0건. 옛 음차(인첸디움·아비수스·플람마 플루마·피닉스 브레스·프로스트 바스티온·퍼마프로스트)는 전부 교체.
+- 공용 카드에 정령 어휘 없음(유리·수염·꼬리·여우불은 Lv2 이상 전용 카드에만). 그래서 glass_skin·whisker_twitch는 속성 어휘로 지었어요.
+- 등급 꼴: 기본·일반은 고유어 명사 우선(입김·불티·잔물결), 동작형은 보조. 고급은 명사구·한자어 허용, '~기' 없음. 희귀는 문어·고유명(불사의 숨결·만년설·태풍의 눈).
+- 1안 글자 수(공백 제외): 최소 2(입김·불티·돌풍·응원·교감), 최대 6(여우불 소나기 2안 등). 상한은 실측 뒤.
+- 경계 어휘: '서리'(frost_breath 2안, frost_bite 2안, chill_wave 1안)는 얼음 속성이 들어오면 물 카드에 못 쓸 수 있어요. 상성 구조 결정 때 같이 봐요.
+
+## 어휘 표 (현재 세 정령·세 속성 기준)
+
+| 묶음 | 어휘 | 쓰는 곳 |
+| --- | --- | --- |
+| 불 (속성, 공용) | 불꽃, 불씨, 불티, 불길, 잉걸, 불똥, 열기, 맞불 | 공용 불 카드 |
+| 물 (속성, 공용) | 입김, 물방울, 물거품, 물결, 잔물결, 안개, 물벽 | 공용 물 카드 |
+| 바람 (속성, 공용) | 산들바람, 실바람, 뒷바람, 순풍, 돌풍, 맞바람, 옆바람, 돌개바람, 회오리 | 바람 카드 |
+| 무속성 | 숨, 걸음, 응원, 보살핌, 빈틈, 교감 | 무속성 카드 |
+| 불여우 (전용) | 꼬리, 여우불, 요화 | 불여우 Lv2·Lv3·성체 |
+| 유리 도롱뇽 (전용) | 유리, 비늘, 담금질, 갑주 | 도롱뇽 Lv2·Lv3·성체 |
+| 안개 고양이 (전용) | 수염, 발톱(찬), 발자국, 첫눈 | 고양이 Lv2·Lv3·성체 |

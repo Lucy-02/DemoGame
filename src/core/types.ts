@@ -6,6 +6,7 @@ export type CardTarget = "enemy" | "allEnemies" | "self" | "ally" | "allAllies";
 export interface SpiritDef {
   id: string;
   name: string;
+  nameEn?: string;
   etym: string;
   element: Element;
   role: string;
@@ -57,6 +58,7 @@ export type AuraId = "blaze_wing" | "deep_water" | "root_down" | "eye_of_storm";
 export interface CardDef {
   id: string;
   name: string;
+  nameEn?: string;
   element: Element;
   role: string;
   rarity: Rarity;
@@ -65,6 +67,8 @@ export interface CardDef {
   effects: CardOp[];
   exhaust?: boolean;
   start?: number;
+  /** 시작 덱에서 이 카드를 배운 정령. 없으면 같은 속성의 첫 정령. */
+  startOwner?: string;
   unlock: string;
 }
 
