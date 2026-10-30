@@ -6,8 +6,9 @@ import enemiesJson from "../data/enemies.json";
 import encountersJson from "../data/encounters.json";
 import eventsJson from "../data/events.json";
 import assetsJson from "../data/assets.json";
+import growthJson from "../data/growth.json";
 import type {
-  CardDef, EncounterDef, EnemyDef, EventDef, PersonalityDef, SpiritDef, Element,
+  CardDef, EncounterDef, EnemyDef, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
 } from "./types";
 
 export const C = constantsJson;
@@ -18,6 +19,7 @@ export const ENEMIES = enemiesJson as EnemyDef[];
 export const ENCOUNTERS = encountersJson as EncounterDef[];
 export const EVENTS = eventsJson as EventDef[];
 export const ASSETS = assetsJson as unknown as AssetsConfig;
+export const GROWTH = growthJson as unknown as GrowthDef;
 
 export interface ShapeAsset { type: "shape"; shape: string; color: string; size: number }
 export interface ImageAsset { type: "image"; path: string; scale?: number; offsetY?: number }

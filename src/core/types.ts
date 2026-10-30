@@ -135,11 +135,55 @@ export interface DeckCard {
   owner: string;
 }
 
+/** 성장 단계 (결정 0021). 전투 중 일시 상태 "각성"(awaken)과는 다른 것이에요. */
+export type Stage = "baby" | "adult" | "awakened";
+export const STAGES: readonly Stage[] = ["baby", "adult", "awakened"];
+
 /** 런 동안 유지되는 정령 상태. */
 export interface RunSpirit {
   id: string;
   hp: number;
   maxHpBonus: number;
-  adult: boolean;
+  stage: Stage;
+  level: number;
   personality: string;
+  /** 전투를 시작할 때 차 있는 싱크 (각성체·유대 에피소드) */
+  startSync: number;
+}
+
+/** 자람 조건: 전투 이벤트로 세는 행동 누적 (0021 2절) */
+export interface DeedDef {
+  kind: "awaken" | "blocked" | "freeze";
+  n: number;
+}
+
+/** 진화 한 줄. 같은 정령·같은 from이 둘 이상이면 분기 (0015) */
+export interface EvolutionDef {
+  spirit: string;
+  from: Stage;
+  to: Stage;
+  level: number;
+  deed?: DeedDef;
+}
+
+export interface EpisodeDef {
+  affinity: number;
+  stage?: Stage;
+  start_sync?: number;
+  reroll_choices?: number;
+}
+
+export interface GrowthDef {
+  levels: number[];
+  level_hp: number;
+  exp: Record<"normal" | "elite" | "boss", number>;
+  material: Record<"normal" | "elite" | "boss", number>;
+  stage_main_bonus: number;
+  stage_hp_main_bonus: number;
+  stage_start_sync: Partial<Record<Stage, number>>;
+  start_sync_cap: number;
+  evolutions: EvolutionDef[];
+  feed: { cost: number; affinity: number };
+  reroll: { cost: number; from: Stage };
+  episodes: EpisodeDef[];
 }
