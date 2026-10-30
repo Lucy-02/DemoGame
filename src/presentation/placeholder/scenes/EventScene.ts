@@ -1,9 +1,9 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
-import { C } from "../core/data";
-import { getRun } from "../core/run";
-import { maxHpOf } from "../core/stats";
-import type { EventDef, EventOutcome } from "../core/types";
+import { C } from "../../../core/data";
+import { getRun } from "../../../core/run";
+import { maxHpOf } from "../../../core/stats";
+import type { EventDef, EventOutcome } from "../../../core/types";
 import { runHud } from "../ui/hud";
 import { COLORS, H, W, bgFill, button, txt } from "../ui/widgets";
 

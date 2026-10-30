@@ -1,8 +1,8 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
-import { ELEMENT_COLOR, ELEMENT_NAME, RARITY_NAME, cardDef, spiritDef } from "../core/data";
-import { describeCard, type CasterStats } from "../core/text";
-import type { ShapeAsset } from "../core/data";
+import { ELEMENT_COLOR, ELEMENT_NAME, RARITY_NAME, cardDef, spiritDef } from "../../../core/data";
+import { describeCard, type CasterStats } from "../../../core/text";
+import type { ShapeAsset } from "../../../core/data";
 
 export const FONT = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'WenQuanYi Zen Hei', sans-serif";
 export const W = 1280;

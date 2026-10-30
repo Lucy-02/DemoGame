@@ -1,13 +1,25 @@
 # DemoGame · 정령 덱빌더 (프로토타입 v0.1)
 
-Phaser 4 + Vite + TypeScript. `npm install` 후 `npm run dev`.
+Electron + Vite + TypeScript + Phaser 4 + Spine. 구조는 `docs/architecture/0001-client-architecture.md`.
+
+## 실행
+- `npm install`
+- `npm run dev`: Electron 창으로 실행 (핫 리로드)
+- `npm run dev:web`: 브라우저로만 실행 (저장은 localStorage)
+- `npm run dist`: 배포용 폴더를 `release/`에 만들기
+- `npm run check`: 타입 검사 + 의존 방향 검사 + 테스트 + 리터럴 검사
+- `npm run test:e2e`: Electron 스모크 테스트 (GPU 없는 리눅스는 `xvfb-run -a` 앞에 붙이기)
+- `npm run sim -- 200`: 헤드리스 전투 시뮬레이터
 
 ## 구조
-- `src/data/*.json`: 기획 데이터 (정령, 카드 40, 적 11+새끼, 성격 8, 인카운터, 이벤트, 상수). 수치 조정은 여기서만.
-- `src/data/assets.json`: 정령/적 비주얼 지정 (shape / image / spine). 아트 교체는 여기서.
-- `src/core/`: 게임 로직. Phaser를 import하지 않아요. 전투 규칙(battle.ts), 런·맵·보상(run.ts), 능력치(stats.ts), 카드 문구(text.ts).
-- `src/scenes/`, `src/ui/`: **임시 플레이스홀더 UI.** 레이아웃·디자인 미확정이고, Lucy의 디자인으로 통째로 교체할 예정이에요. core는 UI에 의존하지 않아서 이 두 폴더만 갈아끼우면 돼요.
-- `tools/sim.ts`: 헤드리스 전투 시뮬레이터 (`npm run sim -- 200`).
+- `electron/main`, `electron/preload`: 창, `app://` 프로토콜, 저장 파일 IPC. 렌더러에는 `window.platformBridge`만 노출
+- `src/app`: 렌더러 부트
+- `src/platform`: 저장·창 모드 인터페이스와 Electron/웹 구현
+- `src/data/*.json`: 기획 데이터 (정령, 카드 40, 적 11+새끼, 성격 8, 인카운터, 이벤트, 상수). 수치 조정은 여기서만
+- `src/data/assets.json`: 정령/적 비주얼 지정 (shape / image / spine)
+- `src/core/`: 게임 로직. Phaser를 import하지 않아요(`npm run lint:deps`가 막아요). 전투 규칙(battle.ts), 런·맵·보상(run.ts), 능력치(stats.ts), 카드 문구(text.ts)
+- `src/presentation/placeholder/`: **임시 플레이스홀더 UI.** Lucy의 디자인으로 통째로 교체할 예정
+- `tools/`: 시뮬레이터와 자동 플레이 AI (골든 테스트도 같이 씀)
 
 ## 디자인 작업
 브랜딩·UI/UX는 Lucy가 정하고 Claude가 제안·구현해요. 규칙은 `CLAUDE.md`, 근거는 `docs/design-workflow-report.md`.

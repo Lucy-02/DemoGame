@@ -1,10 +1,10 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
-import { ASSETS, C, ELEMENT_COLOR, ELEMENT_NAME, ROLE_NAME, cardDef, type VisualAsset } from "../core/data";
-import { Battle, type BCard, type BEnemy, type BSpirit, type BattleEvent, type Ref } from "../core/battle";
-import { Rng } from "../core/rng";
-import { getRun } from "../core/run";
-import type { Element } from "../core/types";
+import { ASSETS, C, ELEMENT_COLOR, ELEMENT_NAME, ROLE_NAME, cardDef, type VisualAsset } from "../../../core/data";
+import { Battle, type BCard, type BEnemy, type BSpirit, type BattleEvent, type Ref } from "../../../core/battle";
+import { Rng } from "../../../core/rng";
+import { getRun } from "../../../core/run";
+import type { Element } from "../../../core/types";
 import { makeVisual, type Visual } from "../ui/visual";
 import { CARD_H, CARD_W, COLORS, H, W, bar, bgFill, button, cardView, toast, txt } from "../ui/widgets";
 

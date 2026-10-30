@@ -1,3 +1,4 @@
+// ⚠ 임시 플레이스홀더 UI의 진입점. 디자인 확정 후 이 폴더째 교체해요.
 import * as Phaser from "phaser";
 import { SpinePlugin } from "@esotericsoftware/spine-phaser-v4";
 import { BootScene } from "./scenes/BootScene";
@@ -12,8 +13,8 @@ import { DeckScene } from "./scenes/DeckScene";
 import { EndScene } from "./scenes/EndScene";
 import { H, W } from "./ui/widgets";
 
-async function start() {
-  // 한글 웹폰트가 준비된 뒤 시작해야 텍스트 폭이 어긋나지 않아요.
+/** 한글 웹폰트가 준비된 뒤 시작해야 텍스트 폭이 어긋나지 않아요. */
+async function waitForFonts() {
   try {
     await Promise.race([
       Promise.all([document.fonts.load("16px 'Noto Sans KR'"), document.fonts.load("bold 16px 'Noto Sans KR'")]),
@@ -22,9 +23,13 @@ async function start() {
   } catch {
     /* 폰트 없이도 진행 */
   }
-  const game = new Phaser.Game({
+}
+
+export async function startPlaceholderGame(parent: string): Promise<Phaser.Game> {
+  await waitForFonts();
+  return new Phaser.Game({
     type: Phaser.WEBGL,
-    parent: "game",
+    parent,
     width: W,
     height: H,
     backgroundColor: "#14121c",
@@ -32,6 +37,4 @@ async function start() {
     plugins: { scene: [{ key: "spine.SpinePlugin", plugin: SpinePlugin, mapping: "spine" }] },
     scene: [BootScene, TitleScene, MapScene, BattleScene, RewardScene, ShopScene, EventScene, RestScene, DeckScene, EndScene],
   });
-  (window as unknown as { game: Phaser.Game }).game = game;
 }
-start();

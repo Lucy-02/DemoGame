@@ -1,8 +1,8 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
-import { spiritDef, personalityDef } from "../core/data";
-import { FLOORS, getRun } from "../core/run";
-import { maxHpOf } from "../core/stats";
+import { spiritDef, personalityDef } from "../../../core/data";
+import { FLOORS, getRun } from "../../../core/run";
+import { maxHpOf } from "../../../core/stats";
 import { COLORS, W, bar, button, txt } from "./widgets";
 
 /** 런 화면 공통 상단 바: 층, 골드, 정령 HP, 덱 보기 */

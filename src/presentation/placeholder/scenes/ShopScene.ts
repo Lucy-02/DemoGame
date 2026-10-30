@@ -1,8 +1,8 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
-import { C, spiritDef } from "../core/data";
-import { getRun } from "../core/run";
-import type { CardDef } from "../core/types";
+import { C, spiritDef } from "../../../core/data";
+import { getRun } from "../../../core/run";
+import type { CardDef } from "../../../core/types";
 import { runHud } from "../ui/hud";
 import { runStats } from "../ui/preview";
 import { CARD_H, COLORS, W, bgFill, button, cardView, toast, txt } from "../ui/widgets";
