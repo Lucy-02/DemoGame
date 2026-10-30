@@ -29,13 +29,14 @@ export function fontBox(px: number): FontBox {
 export const px = (size: string) => parseFloat(size);
 
 /** Phaser Text 스타일. metrics를 직접 넣어 글자 상자 = 브라우저의 인라인 상자가 되게 해요. */
-export function textStyle(size: string, color: string): Phaser.Types.GameObjects.Text.TextStyle {
+export function textStyle(size: string, color: string, letterSpacing = 0): Phaser.Types.GameObjects.Text.TextStyle {
   const s = px(size);
   const { ascent, descent } = fontBox(s);
   return {
     fontFamily: FONT_STACK,
     fontSize: size,
     color,
+    letterSpacing,
     metrics: { ascent, descent, fontSize: ascent + descent },
   };
 }
@@ -84,8 +85,9 @@ export function inlineLine(
 }
 
 /** 글자 한 조각의 너비만 재요 (배치 전에 가운데 정렬 계산용). */
-export function measure(text: string, size: string): number {
+export function measure(text: string, size: string, letterSpacing = 0): number {
   fontBox(px(size));
   probe!.font = `${size} ${FONT_STACK}`;
-  return probe!.measureText(text).width;
+  // CSS letter-spacing은 글자마다 뒤에 붙어요 (마지막 글자 포함)
+  return probe!.measureText(text).width + letterSpacing * [...text].length;
 }

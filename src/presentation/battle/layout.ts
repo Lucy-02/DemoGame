@@ -87,3 +87,23 @@ export const INTENT = {
   /** .tface 22, 바깥 테 1.5 */
   face: 22, faceRing: 1.5,
 };
+
+/** .band top 646 ~ 아래 끝, inset 0 1px 0 glass-line */
+export const BAND = { top: 646, line: 1 };
+
+/** .mana left 22 top 672 80×80, inset 1.5 테, padding-top 16 · .ml bottom 13 */
+export const MANA = { x: 22, y: 672, d: 80, ring: 1.5, padTop: 16, labelBottom: 13 };
+
+/** .hand left 120 top 657 gap 8 · .grp padding 5 gap 4 radius 11 테 1 · .gface 26 top -15 바깥 테 2 */
+export const HAND = {
+  x: 120, y: 657, gap: 8,
+  group: { pad: 5, gap: 4, radius: 11, ring: 1 },
+  face: { d: 26, top: -15, ring: 2 },
+};
+
+/** .endw left 1132 top 662 width 132 gap 6 · .end height 58 radius 12 테 1.5 · .piles padding 2 4 0 · .pile gap 3 · .pi 13 */
+export const END = {
+  x: 1132, y: 662, w: 132, gap: 6,
+  button: { h: 58, radius: 12, ring: 1.5 },
+  piles: { pad: [2, 4, 0, 4] as [number, number, number, number], gap: 3, icon: 13 },
+};
