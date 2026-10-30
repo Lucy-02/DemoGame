@@ -5,25 +5,23 @@ import { transparentOf } from "../../style/color";
 import { box } from "../../style/draw";
 import { render, size, type Node } from "../../style/flex";
 import { icon, loadIcon } from "../../style/icons";
+import { placeholderArt } from "../../style/placeholder";
 import { faceKey, preloadFaces } from "../../faces";
 import { COPY } from "../copy";
 import { ALLY, ENEMY, GROUND, HOVER_RING, INFO as I, INTENT } from "../layout";
 import type { AllyVM, BattleVM, EnemyVM, FaceId, IntentVM, StatusVM } from "../viewmodel";
 
-const P = tokens.palette;
-const T = tokens.text.battle;
-const SIL_TINT: Record<string, string> = { "sil-star": P.sil.star, "sil-fire": P.sil.fire, "sil-jelly": P.sil.jelly };
+const P = tokens.provisional.palette;
+const T = tokens.provisional.text.battle;
 
 export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
   preloadFaces(scene);
   for (const a of vm.allies) {
-    loadIcon(scene, a.art, ALLY.body.w, ALLY.body.h);
     a.statuses.forEach((s) => loadIcon(scene, s.icon, I.status.icon));
   }
   loadIcon(scene, "i-sync", I.status.icon);
   loadIcon(scene, "i-shield", I.block.icon);
   for (const e of vm.enemies) {
-    loadIcon(scene, e.art, ENEMY.art.w, ENEMY.art.h);
     loadIcon(scene, e.element, I.status.icon);
     loadIcon(scene, e.weakTo, I.status.icon);
     loadIcon(scene, e.intent.icon, INTENT.icon);
@@ -236,7 +234,7 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number) {
   const cx = ALLY.xs[i];
   const bodyX = cx - ALLY.body.w / 2;
   const bodyBottom = ALLY.top + ALLY.body.h;
-  icon(scene, bodyX, ALLY.top, a.art, ALLY.body.w, ALLY.body.h, SIL_TINT[a.art]);
+  placeholderArt(scene, bodyX, ALLY.top, ALLY.body.w, ALLY.body.h, P.ink3);
   ground(scene, cx, bodyBottom);
   render(scene, allyInfo(a), cx - I.allyW / 2, bodyBottom + I.mt);
 }
@@ -248,7 +246,7 @@ export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number) {
   render(scene, intentN, cx - intent.w / 2, ENEMY.top);
   const bodyTop = ENEMY.top + intent.h + ENEMY.body.mt;
   const bodyBottom = bodyTop + ENEMY.body.h;
-  icon(scene, cx - ENEMY.art.w / 2, bodyBottom - ENEMY.art.h, e.art, ENEMY.art.w, ENEMY.art.h);
+  placeholderArt(scene, cx - ENEMY.art.w / 2, bodyBottom - ENEMY.art.h, ENEMY.art.w, ENEMY.art.h, P.ink3);
   ground(scene, cx, bodyBottom);
   if (e.hovered) {
     scene.add.image(cx, bodyBottom - HOVER_RING.bottom - HOVER_RING.h / 2, hoverRingTexture(scene));

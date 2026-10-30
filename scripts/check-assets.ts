@@ -13,7 +13,7 @@ for (const line of readFileSync('assets/provenance.jsonl', 'utf8').split('\n')) 
 function images(dir: string): string[] {
   return readdirSync(dir).flatMap(n => {
     const p = join(dir, n);
-    return statSync(p).isDirectory() ? images(p) : /\.(png|jpe?g|webp)$/i.test(p) ? [p] : [];
+    return statSync(p).isDirectory() ? images(p) : /\.(png|jpe?g|webp|svg)$/i.test(p) ? [p] : [];
   });
 }
 let bad = 0;

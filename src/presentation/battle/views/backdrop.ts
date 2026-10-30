@@ -3,7 +3,7 @@ import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { BG, FLOOR, FRAME } from "../layout";
 
-const P = tokens.palette;
+const P = tokens.provisional.palette;
 const KEY = "battle:backdrop";
 
 export function drawBackdrop(scene: Phaser.Scene) {

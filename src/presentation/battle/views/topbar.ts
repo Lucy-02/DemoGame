@@ -7,8 +7,8 @@ import { COPY } from "../copy";
 import { FRAME, SYS, WHERE } from "../layout";
 import type { BattleVM } from "../viewmodel";
 
-const P = tokens.palette;
-const T = tokens.text.battle;
+const P = tokens.provisional.palette;
+const T = tokens.provisional.text.battle;
 
 export function drawWhere(scene: Phaser.Scene, vm: BattleVM["where"]) {
   const quiet = { size: T.where, color: P.ink3 };

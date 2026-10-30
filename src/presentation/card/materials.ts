@@ -7,7 +7,7 @@ import type { FaceId } from "../faces";
 import { HAND_CARD as C, WINDOW_PATH } from "./layout";
 import type { Material } from "./viewmodel";
 
-const P = tokens.palette;
+const P = tokens.provisional.palette;
 
 type Layer =
   | { kind: "dots"; at: [number, number]; color: string; solid: number; fade: number; tile: [number, number] }
@@ -15,9 +15,9 @@ type Layer =
 
 const PATTERN: Record<Material, Layer[]> = {
   none: [],
-  fire: tokens.pattern.material.fire as unknown as Layer[],
-  water: tokens.pattern.material.water as unknown as Layer[],
-  wind: tokens.pattern.material.wind as unknown as Layer[],
+  fire: tokens.provisional.pattern.material.fire as unknown as Layer[],
+  water: tokens.provisional.pattern.material.water as unknown as Layer[],
+  wind: tokens.provisional.pattern.material.wind as unknown as Layer[],
 };
 
 export const MATERIAL_FILL: Record<Material, { fill: string; edge: string }> = {
