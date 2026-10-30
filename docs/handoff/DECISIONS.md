@@ -82,3 +82,7 @@
 ## 9. 클라이언트 구조 (2026-10-30~)
 
 - ✅ Electron + Vite, 게임 화면은 전부 Phaser · DOM은 앱 메뉴만(C안), 레이어 의존 규칙, 시드 고정 골든 테스트 → `docs/architecture/0001-client-architecture.md`
+
+## 10. 코어 기획 (2026-10-30~)
+
+- ✅ 계열별 분기 진화를 코어 기획에 포함. 구조(분기 수·시점·조건)는 시안 라운드 중, 이름은 예시일 뿐 → `0013`. 조사 보고서: `docs/research/core-design/`, 종합 문서: https://claude.ai/artifact/F8WGf2AitAzQ7QmTKy6CBx
