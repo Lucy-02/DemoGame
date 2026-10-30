@@ -8,10 +8,15 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 - 색·폰트·크기·시간 값을 지어내지 않아요. 정해지지 않은 값은 `TODO_TOKEN`으로 남겨요.
 
 ## 디자인 루프 (모든 단계 공통)
-브리프와 차별화 축 선언 → 시안 2~3개 → Lucy 선택 → 리뷰어(`.claude/agents/`) 독립 병렬 리뷰 → 종합 → 리뷰 보드 핀 카드 → Lucy와 스레드 토론 → 수락/기각/보류 → 결정 기록.
-- 리뷰 보드: https://claude.ai/artifact/K2By7mr5uWaJYH4RNWbLJ8 (`db` 컬렉션: personas, rounds, options, cards)
-- 지적 카드 형식: `design/review/card.schema.json`
-- 리뷰어는 한 스레드에서 2~3번까지만 말하고, 미적 판단은 하지 않아요. 최종 판단은 Lucy.
+넓게 펼치고 → 조각을 고르고 → 좁혀 가요. 한 화면, 한 변수씩 순서대로 정하지 않아요.
+- 모든 시안은 `design/concepts/LEDGER.md`(결정·고른 조각·작업 가정 장부)에서 시작해요. 새 시안은 장부의 조각을 빠짐없이 담고, 장부와 달라진 점을 시안 머리에 적어요. Lucy가 고른 조각을 말없이 빼거나 바꾸지 않아요.
+1. 공통 브리프(`design/concepts/BRIEF.md` 형식)를 쓰고, 서로 다른 축의 컨셉을 4~5개 정해요.
+2. 컨셉마다 에이전트 하나가 **아티팩트 하나**를 만들어요. 여러 화면(전투·지도·보상 등)을 한 번에 담고, 꽉 찬 상황도 넣어요. 병렬로 돌리고, 저는 링크만 모아요.
+3. Lucy가 화면·조각 단위로 체리피킹해요("A의 지도 밀도 + B의 질감"). 폐기된 컨셉은 다시 내지 않아요.
+4. 고른 조각을 섞은 다음 라운드 2~3안을 다시 병렬로 만들어요. 화면이 확정될 때까지 반복해요.
+5. 리뷰어(`.claude/agents/`)는 Lucy가 원할 때만, 확인이 필요한 화면에만 돌려요. 미적 판단은 하지 않아요.
+- 시안에 쓰는 색·폰트는 임시 값이에요. Lucy가 고르기 전에는 토큰에 넣지 않아요.
+- 리뷰 보드: https://claude.ai/artifact/K2By7mr5uWaJYH4RNWbLJ8 (`db` 컬렉션: personas, rounds, options, cards), 지적 카드 형식: `design/review/card.schema.json`
 - 라운드가 끝나면 `docs/design-decisions/NNNN-주제.md`를 남기고 `docs/handoff/DECISIONS.md`에 한 줄 요약을 더해요.
 
 ## 코드 구조
