@@ -1,4 +1,4 @@
-// 레이어 의존 방향 규칙. 위반하면 `npm run lint:deps`(CI 포함)가 실패해요.
+// 레이어 의존 방향 규칙. 위반하면 `pnpm lint:deps`(CI 포함)가 실패해요.
 // 그림: docs/architecture/0001-client-architecture.md
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
