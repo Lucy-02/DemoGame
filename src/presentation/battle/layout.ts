@@ -107,3 +107,11 @@ export const END = {
   button: { h: 58, radius: 12, ring: 1.5 },
   piles: { pad: [2, 4, 0, 4] as [number, number, number, number], gap: 3, icon: 13 },
 };
+
+/** .etip left 872 top 478 width 262 radius 12 padding 10 12 11 gap 5 line-height 1.45, 그림자 0 10 26
+ *  .etip h4 gap 6 · h4 span padding 0 6 radius 8 테 1 */
+export const ETIP = {
+  x: 872, y: 478, w: 262, radius: 12, pad: [10, 12, 11, 12] as [number, number, number, number], gap: 5, lh: 1.45,
+  ring: 1, shadow: { y: 10, blur: 26 },
+  title: { gap: 6 }, rank: { padX: 6, radius: 8, ring: 1 },
+};

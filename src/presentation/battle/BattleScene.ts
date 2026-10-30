@@ -3,6 +3,7 @@ import * as Phaser from "phaser";
 import { loadIcon } from "../style/icons";
 import { canonRest } from "./fixtures/canonRest";
 import { drawBackdrop } from "./views/backdrop";
+import { drawEnemyTip } from "./views/enemyTip";
 import { drawBand, drawEnd, drawHand, drawMana, preloadHand } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
 import { SYS } from "./layout";
@@ -41,6 +42,8 @@ export class BattleScene extends Phaser.Scene {
     drawMana(this, this.vm.mana);
     drawHand(this, this.vm.hand);
     drawEnd(this, this.vm);
+    const tip = this.vm.enemies.find((e) => e.hovered)?.tip;
+    if (tip) drawEnemyTip(this, tip);
     Object.assign(window, { __screenReady: BATTLE_SCENE });
   }
 }

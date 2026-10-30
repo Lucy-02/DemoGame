@@ -36,6 +36,14 @@ export const canonRest: BattleVM = {
       art: "en-3", hp: 41, maxHp: 48, block: 4, element: "e-water", weakTo: "e-wind", statuses: [],
       intent: { kind: "charge", order: 3, icon: "i-hour", amount: "18", target: "all" },
       shield: { broken: 1, total: 3 }, hovered: true,
+      tip: {
+        name: "껍질 거북", rank: "정예",
+        lines: [
+          [{ text: "해일 · 이번 적 차례에 아군 전체에게 " }, { text: "18", strong: true }],
+          [{ text: "실드 칸 " }, { text: "1", strong: true }, { text: "/3 깨짐 · 다 깨면 차징이 끊겨요" }],
+          [{ text: "속성 물 · 약점 바람" }],
+        ],
+      },
     },
   ],
   mana: { n: 2, max: 4 },

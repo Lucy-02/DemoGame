@@ -182,7 +182,8 @@ export const tokens = {
     "groupFaceRing": "#2b2927",
     "manaLine": "rgba(246,241,233,.22)",
     "endCalm": "rgba(246,241,233,.06)",
-    "endCalmLine": "rgba(246,241,233,.28)"
+    "endCalmLine": "rgba(246,241,233,.28)",
+    "tipShadow": "rgba(0,0,0,.4)"
   },
   "text": {
     "battle": {
@@ -219,7 +220,11 @@ export const tokens = {
       "endTurn": "18px",
       "endSub": "12px",
       "endSubNum": "13px",
-      "pile": "13px"
+      "pile": "13px",
+      "tipBody": "12.5px",
+      "tipTitle": "15px",
+      "tipChip": "12px",
+      "tipStrong": "14px"
     }
   },
   "pattern": {

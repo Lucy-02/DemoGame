@@ -14,7 +14,9 @@ export function box(
   const r = Math.min(radius, w / 2, h / 2);
   if (style.fill) {
     const f = rgba(style.fill);
-    g.fillStyle(f.color, f.alpha).fillRoundedRect(x, y, w, h, r);
+    // 반지름 0은 fillRect로 (둥근 사각형 경로는 1px 높이에서 일부만 칠해져요)
+    if (r > 0) g.fillStyle(f.color, f.alpha).fillRoundedRect(x, y, w, h, r);
+    else g.fillStyle(f.color, f.alpha).fillRect(x, y, w, h);
   }
   if (style.ring) {
     const s = rgba(style.ring.color);
