@@ -1,6 +1,6 @@
 # 카드 40장 1차 이름 시안 (2026-10-30)
 
-- 규칙: `design/canon/naming/CARD_NAMING.md` (0016). 시트: `design/canon/naming/cards.csv`
+- 규칙: `design/canon/naming/CARD_NAMING.md` (0018). 시트: `design/canon/naming/cards.csv`
 - 상태: Lucy "이대로 쭉 진행"(2026-10-30 14:40)으로 **1안을 가안으로 `src/data/cards.json`에 반영**했어요. 카드별로 2안이나 새 이름을 주시면 그때 바꿔요.
 - 전부 예시이고, `TODO_NAME`은 세계관(S3)이 정해진 뒤 고유명으로 바꿀 자리예요. 길이 상한은 이름 띠 실측 뒤(TODO_TOKEN).
 

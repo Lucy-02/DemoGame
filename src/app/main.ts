@@ -1,5 +1,5 @@
 // 렌더러 진입점. 플랫폼을 고르고 화면을 띄우는 일만 해요.
-// 기본은 정본 기준 새 전투 화면(?scene=aim 처럼 고정 장면 고르기). ?screen=legacy 면 예전 임시 UI(디자인 확정 후 삭제 예정)를 띄워요.
+// 기본은 정본 기준 새 전투 화면(?scene=aim 처럼 고정 장면 고르기). ?screen=legacy 면 예전 임시 UI를 띄워요(새 화면이 규칙에 연결될 때마다 화면 단위로 지워요).
 import { getPlatform } from "../platform";
 import { startGame } from "../presentation/game";
 import { startPlaceholderGame } from "../presentation/placeholder";

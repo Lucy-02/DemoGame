@@ -1,6 +1,6 @@
-# 글로 된 피드백 전수 조사와 시각화 안 (0017)
+# 글로 된 피드백 전수 조사와 시각화 안 (0019)
 
-- 날짜: 2026-10-30. 원칙: `docs/design-decisions/0017-feedback-over-text.md`
+- 날짜: 2026-10-30. 원칙: `docs/design-decisions/0019-feedback-over-text.md`
 - 대상: `src/presentation/battle/` (정본 전투 화면), `src/presentation/placeholder/` (임시 화면), `src/core/battle.ts`의 사유 문자열
 - 각 사례에 2~3안. **Lucy가 고른 것만** 다음 전투 시안 라운드에 반영해요. 색·크기·시간 값은 전부 TODO_TOKEN이에요.
 

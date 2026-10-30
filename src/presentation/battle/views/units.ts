@@ -1,5 +1,5 @@
 // 아군·적: 필드 그림, 발밑 그림자, 정보판(HP·방어도·받을 피해·상태), 적 머리 위 의도. 정본 .ally, .enemy, .info, .intent
-// 조준 미리보기(.fld-pv)도 여기서 그려요: 조준한 대상의 결과, 대상 후보 고리, 아군 받을 피해 a→b.
+// 대상 고르기 미리보기(.fld-pv, 결정 0013)도 여기서 그려요: 대상의 결과와 빛, 아군 받을 피해 a→b. 발밑 고리(타원)는 없어요.
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { transparentOf } from "../../style/color";
@@ -8,10 +8,11 @@ import { render, size, type Node } from "../../style/flex";
 import { linear } from "../../style/gradient";
 import { loadIcon } from "../../style/icons";
 import { placeholderArt } from "../../style/placeholder";
+import { shadowTexture } from "../../style/shadow";
 import { faceKey, preloadFaces } from "../../faces";
 import { COPY } from "../copy";
-import { ALLY, ENEMY, GROUND, HOVER_RING, INFO as I, INTENT, PREVIEW as PV } from "../layout";
-import type { AimTargetVM, AllyVM, BattleVM, Change, EnemyVM, IntentVM, StatusVM } from "../viewmodel";
+import { ALLY, ENEMY, GROUND, INFO as I, INTENT, PREVIEW as PV } from "../layout";
+import type { AllyVM, BattleVM, Change, EnemyOutcomeVM, EnemyVM, IntentVM, StatusVM } from "../viewmodel";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
@@ -29,70 +30,10 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
     loadIcon(scene, e.intent.icon, INTENT.icon);
     e.statuses.forEach((s) => loadIcon(scene, s.icon, I.status.icon));
   }
-  if (vm.aim) {
+  if (Object.keys(vm.plays).length > 0) {
     loadIcon(scene, "i-crack", I.block.icon);
     loadIcon(scene, "i-hit", PV.hits.icon);
   }
-}
-
-/** 호버 고리: WebGL 선은 안티앨리어싱이 없어 1.5px 타원이 두꺼워 보여서 canvas로 구워요. */
-function hoverRingTexture(scene: Phaser.Scene): string {
-  const key = "enemy:hover-ring";
-  if (scene.textures.exists(key)) return key;
-  const { w, h, width } = HOVER_RING;
-  const tex = scene.textures.createCanvas(key, w, h)!;
-  const ctx = tex.getContext();
-  ctx.strokeStyle = P.hoverRing;
-  ctx.lineWidth = width;
-  ctx.beginPath();
-  ctx.ellipse(w / 2, h / 2, (w - width) / 2, (h - width) / 2, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  tex.refresh();
-  return key;
-}
-
-/** 조준 고리(.ring.aim: 2px 테 + 바깥 빛)와 후보 고리(.ring.cand: 1.5px 점선). 빛만큼 여백을 둔 텍스처예요. */
-function previewRingTexture(scene: Phaser.Scene, kind: "aim" | "cand"): { key: string; margin: number } {
-  const { w, h } = PV.ring;
-  const margin = kind === "aim" ? PV.ring.glow : 0;
-  const key = `enemy:ring-${kind}`;
-  if (!scene.textures.exists(key)) {
-    const tex = scene.textures.createCanvas(key, w + margin * 2, h + margin * 2)!;
-    const ctx = tex.getContext();
-    const cx = margin + w / 2, cy = margin + h / 2;
-    const ellipse = (inset: number) => {
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, w / 2 - inset, h / 2 - inset, 0, 0, Math.PI * 2);
-    };
-    if (kind === "aim") {
-      // box-shadow는 상자 바깥에만: 타원을 캔버스 밖으로 밀어 그림자만 떨구고, 안쪽은 지워요
-      const shift = (w + margin * 2) * 2;
-      ctx.save();
-      ctx.shadowColor = P.aimGlow;
-      ctx.shadowBlur = PV.ring.glow;
-      ctx.shadowOffsetX = shift;
-      ctx.translate(-shift, 0);
-      ellipse(0);
-      ctx.fill();
-      ctx.restore();
-      ctx.globalCompositeOperation = "destination-out";
-      ellipse(0);
-      ctx.fill();
-      ctx.globalCompositeOperation = "source-over";
-      ctx.strokeStyle = P.accHi;
-      ctx.lineWidth = PV.ring.aim;
-      ellipse(PV.ring.aim / 2);
-      ctx.stroke();
-    } else {
-      ctx.strokeStyle = P.candRing;
-      ctx.lineWidth = PV.ring.cand;
-      ctx.setLineDash(PV.ring.dash);
-      ellipse(PV.ring.cand / 2);
-      ctx.stroke();
-    }
-    tex.refresh();
-  }
-  return { key, margin };
 }
 
 /** CSS repeating-linear-gradient 무늬를 w×h 텍스처로 */
@@ -175,10 +116,11 @@ function hpNumber(hp: number, max: number): Node {
   };
 }
 
-function infoPlate(width: number, rows: Node[]): Node {
+function infoPlate(width: number, rows: Node[], lit = false): Node {
   return {
     t: "col", w: width, gap: I.gap, pad: I.pad, radius: I.radius, mt: I.mt, align: "stretch",
-    style: { fill: P.plate, ring: { width: 1, color: P.plateLine } },
+    // 대상이면 조준 고리와 같은 2px 밝은 테 (.ring.aim)
+    style: { fill: P.plate, ring: lit ? { width: PV.lit.ring, color: P.accHi } : { width: 1, color: P.plateLine } },
     children: rows,
   };
 }
@@ -194,7 +136,7 @@ function incomingChip(n: number, pv?: Change): Node {
   };
 }
 
-function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change): Node {
+function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change, lit = false): Node {
   const rowA: Node = {
     t: "row", h: I.rowA.h, gap: I.rowA.gap, align: "center",
     children: [...(a.block ? [blockChip(a.block)] : []), hpBar(scene, a.hp, a.maxHp)],
@@ -221,7 +163,7 @@ function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change): Node {
       } as Node] : []),
     ],
   };
-  return infoPlate(I.allyW, [rowA, rowB, row2]);
+  return infoPlate(I.allyW, [rowA, rowB, row2], lit);
 }
 
 function shieldSlot(scene: Phaser.Scene, state: "broken" | "breaking" | "left"): Node {
@@ -242,7 +184,7 @@ function shieldSlot(scene: Phaser.Scene, state: "broken" | "breaking" | "left"):
   };
 }
 
-function enemyInfo(scene: Phaser.Scene, e: EnemyVM, pv?: AimTargetVM): Node {
+function enemyInfo(scene: Phaser.Scene, e: EnemyVM, pv?: EnemyOutcomeVM, lit = false): Node {
   const hp = pv ? pv.hp.to : e.hp;
   const block = pv?.block ? [blockChipPreview(pv.block)] : e.block ? [blockChip(e.block)] : [];
   const rowA: Node = {
@@ -299,7 +241,7 @@ function enemyInfo(scene: Phaser.Scene, e: EnemyVM, pv?: AimTargetVM): Node {
       ],
     });
   }
-  return infoPlate(I.enemyW, rows);
+  return infoPlate(I.enemyW, rows, lit);
 }
 
 function intentNode(it: IntentVM, cut = false): Node {
@@ -366,42 +308,68 @@ function ground(scene: Phaser.Scene, cx: number, bodyBottom: number) {
   scene.add.image(cx - GROUND.w / 2, bodyBottom - GROUND.h - GROUND.bottom, GROUND_KEY).setOrigin(0, 0);
 }
 
-/** pv: 미리보기에서 이 아군의 받을 피해 a→b */
-export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv?: Change) {
+/** 대상 강조: 정본 .ring.aim의 바깥 빛(box-shadow 0 0 14 aimGlow)을 그림 상자와 정보판 뒤에 깔아요.
+ *  그림이 실루엣·모델로 바뀌면 그림 모양을 따라 빛나게 바꿔요 (지금은 자리 채움 상자). */
+function glow(scene: Phaser.Scene, x: number, y: number, w: number, h: number, radius: number, hollow = false) {
+  const s = shadowTexture(scene, w, h, radius, { y: 0, blur: PV.lit.glow, color: P.aimGlow }, hollow);
+  scene.add.image(x - s.margin, y - s.margin, s.key).setOrigin(0, 0);
+}
+
+/** 그림 상자부터 정보판까지 (끌어 대기·클릭 판정 영역) */
+export interface UnitBounds {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface UnitPreview<R> {
+  /** 결과 미리보기 */
+  outcome?: R;
+  /** 대상이면 그림·정보판에 빛 */
+  lit?: boolean;
+}
+
+/** pv.outcome: 이 아군의 받을 피해 a→b */
+export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<Change> = {}): UnitBounds {
   const cx = ALLY.xs[i];
   const bodyX = cx - ALLY.body.w / 2;
   const bodyBottom = ALLY.top + ALLY.body.h;
+  const lit = !!pv.lit;
+  const info = allyInfo(scene, a, pv.outcome, lit);
+  const plateY = bodyBottom + I.mt;
+  const plateH = size(info).h;
+  if (lit) {
+    glow(scene, bodyX, ALLY.top, ALLY.body.w, ALLY.body.h, 0, true);
+    glow(scene, cx - I.allyW / 2, plateY, I.allyW, plateH, I.radius);
+  }
   placeholderArt(scene, bodyX, ALLY.top, ALLY.body.w, ALLY.body.h, P.ink3);
   ground(scene, cx, bodyBottom);
-  render(scene, allyInfo(scene, a, pv), cx - I.allyW / 2, bodyBottom + I.mt);
+  render(scene, info, cx - I.allyW / 2, plateY);
+  return { x: cx - I.allyW / 2, y: ALLY.top, w: I.allyW, h: plateY + plateH - ALLY.top };
 }
 
-export interface EnemyPreview {
-  /** 조준한 대상이면 그 결과 */
-  target?: AimTargetVM;
-  /** 조준하지 않은 대상 후보 */
-  candidate?: boolean;
-}
-
-/** 호버 고리와 몸 상자(발밑 가운데)를 돌려줘요. 고리는 카드에 마우스가 가면 숨겨요. */
-export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: EnemyPreview = {}) {
+/** 판정 영역(그림부터 정보판까지)을 돌려줘요 */
+export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPreview<EnemyOutcomeVM> = {}) {
   const cx = ENEMY.xs[i];
-  const intentN = intentNode(e.intent, !!pv.target?.cut);
+  const intentN = intentNode(e.intent, !!pv.outcome?.cut);
   const intent = size(intentN);
   render(scene, intentN, cx - intent.w / 2, ENEMY.top);
   const bodyTop = ENEMY.top + intent.h + ENEMY.body.mt;
   const bodyBottom = bodyTop + ENEMY.body.h;
-  placeholderArt(scene, cx - ENEMY.art.w / 2, bodyBottom - ENEMY.art.h, ENEMY.art.w, ENEMY.art.h, P.ink3);
+  const artX = cx - ENEMY.art.w / 2, artY = bodyBottom - ENEMY.art.h;
+  const lit = !!pv.lit;
+  const info = enemyInfo(scene, e, pv.outcome, lit);
+  const plateY = bodyBottom + I.mt;
+  const plateH = size(info).h;
+  if (lit) {
+    glow(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, 0, true);
+    glow(scene, cx - I.enemyW / 2, plateY, I.enemyW, plateH, I.radius);
+  }
+  placeholderArt(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, P.ink3);
   ground(scene, cx, bodyBottom);
-  let ring: Phaser.GameObjects.Image | undefined;
-  if (e.hovered && !pv.target && !pv.candidate) {
-    ring = scene.add.image(cx, bodyBottom - HOVER_RING.bottom - HOVER_RING.h / 2, hoverRingTexture(scene));
-  }
-  if (pv.target || pv.candidate) {
-    const r = previewRingTexture(scene, pv.target ? "aim" : "cand");
-    scene.add.image(cx, bodyBottom - PV.ring.bottom - PV.ring.h / 2, r.key);
-  }
-  if (pv.target) drawHits(scene, pv.target.hits, cx - ENEMY.body.w / 2, bodyTop);
-  render(scene, enemyInfo(scene, e, pv.target), cx - I.enemyW / 2, bodyBottom + I.mt);
-  return { ring, foot: { x: cx, y: bodyBottom } };
+  if (pv.outcome) drawHits(scene, pv.outcome.hits, cx - ENEMY.body.w / 2, bodyTop);
+  render(scene, info, cx - I.enemyW / 2, plateY);
+  const bounds: UnitBounds = { x: cx - I.enemyW / 2, y: ENEMY.top, w: I.enemyW, h: plateY + plateH - ENEMY.top };
+  return bounds;
 }

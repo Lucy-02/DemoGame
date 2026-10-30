@@ -46,8 +46,6 @@ export const ENEMY = {
 
 /** .ground left 50% bottom -6 120×14, radial-gradient(closest-side, shade, transparent) */
 export const GROUND = { w: 120, h: 14, bottom: -6 };
-/** .enemy.hov .body .ring bottom -12 150×26 border 1.5 */
-export const HOVER_RING = { w: 150, h: 26, bottom: -12, width: 1.5 };
 
 /** .info (R5): margin-top 12, width 168 / 184, gap 5, padding 7 8 8, radius 10 */
 export const INFO = {
@@ -113,9 +111,8 @@ export const ETIP = { x: 872, y: 478 };
 
 /** 집음·조준 미리보기 (.fld-pv, page.html·r5.css) */
 export const PREVIEW = {
-  /** .ring bottom -12 150×26 · .ring.aim border 2, box-shadow 0 0 14 · .ring.cand border 1.5 dashed
-   *  (Chrome 타원 점선 4.5/3은 정본 캡처 frame-h1.png에서 잰 값) */
-  ring: { w: 150, h: 26, bottom: -12, aim: 2, glow: 14, cand: 1.5, dash: [4.5, 3] },
+  /** 대상 강조: 정본 .ring.aim의 테 2와 바깥 빛(box-shadow 0 0 14)을 정보판·그림에 써요. 발밑 고리(타원)는 0013 후속으로 뺐어요 */
+  lit: { ring: 2, glow: 14 },
   /** .hits left -14 top -6 gap 4 · .hit height 24 padding 0 8 0 6 radius 13 gap 2, translateX(d×14) · .hti 13 */
   hits: { left: -14, top: -6, gap: 4, h: 24, pad: [0, 8, 0, 6] as [number, number, number, number], radius: 13, inGap: 2, step: 14, icon: 13 },
   /** .arr margin 0 1 */
@@ -135,19 +132,19 @@ export const PREVIEW = {
   ghost: { deg: -45, stripe: 3 },
 };
 
-/** 조준선 끝점들. 정본 .aimline 시작 (1026, 650) = H1 든 카드 상자(오른쪽 1022.2, 위 606.2)에서 (3.8, 43.8),
- *  끝 (1170, 322) = 거북 발밑 가운데 (1130, 344)에서 (40, -22). 대상이 여럿이어도 시작점은 하나예요.
- *  여럿을 고르면 줄기가 정보판 위 끝(발밑 + .info margin-top 12)에서 갈라져요 (Lucy 판정 1 ①). */
-export const AIM_ANCHOR = { origin: { dx: 3.8, dy: 43.8 }, target: { dx: 40, dy: -22 }, branchDy: INFO.mt };
-
 /** 손패 호버 H1 (r5 스크립트 "시안 값"): 든 카드 translateY(-30) scale(1.2), 같은 묶음 옆 카드 ±12,
  *  옆 묶음 ±10, 나머지 카드 opacity .62. 말풍선 아래 끝 y 598, 화면 가장자리 여백 8 */
 export const HOVER = {
   lift: 30, scale: 1.2, shiftIn: 12, shiftGroup: 10, dim: 0.62,
   bubbleBottom: 598, edge: 8,
-  /** 집은 카드는 말풍선을 왼쪽으로 비켜 조준선 자리를 비워요: left = cx - 폭 × .75 (정본 스크립트) */
-  heldBubble: 0.75,
 };
+
+/** 대상 고르기 (결정 0013, 정본 아님 · Lucy 확인 전 임시 값).
+ *  dim: 대상이 아닌 캐릭터를 어둡게 (밝기 배수) = 손패 호버 흐림 .62를 그대로 써요.
+ *  drag: 끄는 카드. threshold = 누른 채 이만큼 움직이면 끌기(그 전에 떼면 클릭으로 집기), scale = 필드 위에서 크기,
+ *  overTarget = 대상 위에서 불투명도(흐림과 같은 값), depth = 맨 위 */
+export const TARGETING = { dim: HOVER.dim };
+export const DRAG = { threshold: 6, scale: 0.6, overTarget: HOVER.dim, depth: 1000 };
 
 /** 든 카드 크기·밀림. 말풍선은 들린 카드 위에서 정본과 같은 거리에 따라 올라가요. */
 export interface LiftStyle {

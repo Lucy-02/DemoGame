@@ -2,11 +2,11 @@
 
 - 날짜: 2026-10-30
 - 상태: 수락됨 (Lucy 2026-10-30 14:40 "이대로 쭉 진행", 추천안 = 카드 가안 · 적 A안 · 각성 ②안). `src/data` 반영 PR 참고. 리뷰용 사본: https://claude.ai/artifact/9GBdupcj9FyaBpa2mdsDXU
-- 근거 결정: `docs/design-decisions/0015-mvp-spirits.md`
+- 근거 결정: `docs/design-decisions/0017-mvp-spirits.md`
 
 ## 한눈에
 
-MVP 데이터를 0015(불여우 공격 · 유리 도롱뇽 수호 · 안개 고양이 보조·교란)에 맞춰 다시 짜는 제안이에요. 아직 `src/data`는 건드리지 않았고, Lucy가 아래 세 가지를 고르면 PR로 옮겨요.
+MVP 데이터를 0017(불여우 공격 · 유리 도롱뇽 수호 · 안개 고양이 보조·교란)에 맞춰 다시 짜는 제안이에요. 아직 `src/data`는 건드리지 않았고, Lucy가 아래 세 가지를 고르면 PR로 옮겨요.
 
 바뀌는 것 네 가지예요.
 

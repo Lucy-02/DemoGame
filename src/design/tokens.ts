@@ -164,7 +164,6 @@ export const tokens = {
       "chipSofter": "rgba(246,241,233,.07)",
       "plateLine": "rgba(246,241,233,.06)",
       "debuffLine": "rgba(246,241,233,.32)",
-      "hoverRing": "rgba(246,241,233,.7)",
       "groundShade": "rgba(0,0,0,.35)",
       "cardOff": "#bdb9b2",
       "cardOffLine": "#8d8983",
@@ -194,7 +193,6 @@ export const tokens = {
       "pvFill": "rgba(122,69,119,.26)",
       "pvBlockFill": "rgba(122,69,119,.28)",
       "aimGlow": "rgba(201,155,196,.45)",
-      "candRing": "rgba(246,241,233,.55)",
       "ghostStripe": "rgba(217,120,106,.35)"
     },
     "text": {

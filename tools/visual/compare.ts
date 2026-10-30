@@ -2,6 +2,7 @@
 // 사용: pnpm visual [--crop x,y,w,h] [--frame rest] [--hover <카드 key>] [--scene aim] [--lift h1|b]
 //   --hover: 정본 H1 프레임에서 그 카드에 마우스를 올린 상태와, 게임의 같은 호버 상태를 비교해요.
 //   --scene aim: 정본 H1 프레임의 처음 상태(물방울 휘갈기기를 집어 거북 조준)와 게임 ?scene=aim 을 비교해요.
+//     0013부터 게임엔 조준선이 없고 대상 강조·나머지 어둡게라 그만큼 차이가 나요. 다른 예시: --scene drag|drag-field|drag-ally|drag-random --frame rest
 //   결과: test-results/visual/{canon,game,side,overlay,diff}.png (+ crop-*.png)
 // 처음 한 번: pnpm exec playwright install chromium (맥·윈도우). GPU 없는 리눅스도 소프트웨어 WebGL로 돌아요.
 import { mkdirSync, writeFileSync } from "node:fs";
