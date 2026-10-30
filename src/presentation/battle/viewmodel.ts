@@ -1,7 +1,9 @@
 // 전투 화면이 그리는 값. 화면은 이 모양만 알고 Battle 객체는 몰라요.
 // 지금은 정본 고정 장면(fixtures/)으로 채우고, session 층이 생기면 Battle 상태에서 만들어요.
+import type { CardVM } from "../card/viewmodel";
+import type { FaceId, IconId } from "../faces";
 
-export type IconId = string;
+export type { FaceId, IconId };
 
 export interface OrderSlotVM {
   n: number;
@@ -17,9 +19,6 @@ export interface StatusVM {
   icon: IconId;
   n: number;
 }
-
-/** 정령 얼굴 그림 이름 (assets/ui/faces/<face>-face.webp) */
-export type FaceId = "star" | "fire" | "jelly";
 
 export interface AllyVM {
   face: FaceId;
@@ -58,4 +57,10 @@ export interface BattleVM {
   order: { slots: OrderSlotVM[]; nextTurn: number };
   allies: AllyVM[];
   enemies: EnemyVM[];
+  mana: { n: number; max: number };
+  /** 정령별 손패 묶음 (왼쪽부터) */
+  hand: { owner: FaceId; cards: CardVM[] }[];
+  /** 지금 낼 수 있는 카드 수 */
+  playable: number;
+  piles: { draw: number; discard: number; exhaust: number };
 }

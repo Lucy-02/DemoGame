@@ -11,6 +11,8 @@ interface Margins {
   mr?: number;
   mt?: number;
   mb?: number;
+  /** align-self (가로 줄 안에서만) */
+  self?: "start" | "end";
 }
 
 export interface TextNode extends Margins {
@@ -20,6 +22,10 @@ export interface TextNode extends Margins {
   color: string;
   /** 고정 너비 안에서 가운데 정렬 (text-align:center + width) */
   w?: number;
+  /** line-height 배수 (기본 1.25) */
+  lh?: number;
+  /** letter-spacing (px) */
+  ls?: number;
 }
 
 export interface IconNode extends Margins {
@@ -58,7 +64,7 @@ export interface BoxNode extends Margins {
   h?: number;
   minH?: number;
   grow?: boolean;
-  align?: "center" | "baseline" | "start" | "stretch";
+  align?: "center" | "baseline" | "start" | "stretch" | "end";
   justify?: "start" | "between" | "center";
   radius?: number;
   /** 원형 바탕 (border-radius:50%) */
@@ -84,8 +90,8 @@ export function size(n: Node): Size {
     case "text": {
       const fs = px(n.size);
       const b = fontBox(fs);
-      const h = fs * LINE_HEIGHT;
-      return { w: n.w ?? measure(n.text, n.size), h, base: (h - (b.ascent + b.descent)) / 2 + b.ascent };
+      const h = fs * (n.lh ?? LINE_HEIGHT);
+      return { w: n.w ?? measure(n.text, n.size, n.ls), h, base: (h - (b.ascent + b.descent)) / 2 + b.ascent };
     }
     case "icon":
     case "image":
@@ -132,8 +138,8 @@ export function place(
     case "text": {
       const b = fontBox(px(n.size));
       const top = y + (H - (b.ascent + b.descent)) / 2;
-      const tw = measure(n.text, n.size);
-      scene.add.text(n.w ? x + (n.w - tw) / 2 : x, top, n.text, textStyle(n.size, n.color));
+      const tw = measure(n.text, n.size, n.ls);
+      scene.add.text(n.w ? x + (n.w - tw) / 2 : x, top, n.text, textStyle(n.size, n.color, n.ls));
       return;
     }
     case "icon":
@@ -181,7 +187,9 @@ export function place(
       const cw = "grow" in c && c.grow ? growW : kids[i].w;
       let cy: number;
       let ch = kids[i].h;
-      if (n.align === "baseline") cy = y + pt + lineBase - kids[i].base;
+      if (c.self === "start") cy = y + pt + (c.mt ?? 0);
+      else if (c.self === "end") cy = y + pt + innerH - kids[i].h - (c.mb ?? 0);
+      else if (n.align === "baseline") cy = y + pt + lineBase - kids[i].base;
       else if (n.align === "start") cy = y + pt + (c.mt ?? 0);
       else if (n.align === "stretch") { cy = y + pt; ch = innerH; }
       else cy = y + pt + (innerH - outerH(c, kids[i])) / 2 + (c.mt ?? 0);
@@ -196,7 +204,9 @@ export function place(
     cy += c.mt ?? 0;
     const stretch = n.align === "stretch" || n.align === undefined;
     const cw = stretch && c.t !== "text" && c.t !== "icon" && c.t !== "image" ? innerW - ml(c) - (c.mr ?? 0) : kids[i].w;
-    const cx = n.align === "center" ? x + pl + (innerW - outerW(c, kids[i])) / 2 + ml(c) : x + pl + ml(c);
+    const cx = n.align === "center" ? x + pl + (innerW - outerW(c, kids[i])) / 2 + ml(c)
+      : n.align === "end" ? x + pl + innerW - kids[i].w - (c.mr ?? 0)
+      : x + pl + ml(c);
     place(scene, g, c, cx, cy, cw, kids[i].h);
     cy += kids[i].h + (c.mb ?? 0) + gap;
   });

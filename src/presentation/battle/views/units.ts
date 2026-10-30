@@ -5,6 +5,7 @@ import { rgba, transparentOf } from "../../style/color";
 import { box } from "../../style/draw";
 import { render, size, type Node } from "../../style/flex";
 import { icon, loadIcon } from "../../style/icons";
+import { faceKey, preloadFaces } from "../../faces";
 import { COPY } from "../copy";
 import { ALLY, ENEMY, GROUND, HOVER_RING, INFO as I, INTENT } from "../layout";
 import type { AllyVM, BattleVM, EnemyVM, FaceId, IntentVM, StatusVM } from "../viewmodel";
@@ -13,12 +14,8 @@ const P = tokens.palette;
 const T = tokens.text.battle;
 const SIL_TINT: Record<string, string> = { "sil-star": P.sil.star, "sil-fire": P.sil.fire, "sil-jelly": P.sil.jelly };
 
-export const faceKey = (f: FaceId) => `face:${f}`;
-
 export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
-  for (const f of ["star", "fire", "jelly"] as FaceId[]) {
-    if (!scene.textures.exists(faceKey(f))) scene.load.image(faceKey(f), `assets/ui/faces/${f}-face.webp`);
-  }
+  preloadFaces(scene);
   for (const a of vm.allies) {
     loadIcon(scene, a.art, ALLY.body.w, ALLY.body.h);
     a.statuses.forEach((s) => loadIcon(scene, s.icon, I.status.icon));

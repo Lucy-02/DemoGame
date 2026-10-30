@@ -6,3 +6,5 @@ src/session/
 src/presentation/style/
 src/presentation/battle/
 src/presentation/game.ts
+src/presentation/card/
+src/presentation/faces.ts

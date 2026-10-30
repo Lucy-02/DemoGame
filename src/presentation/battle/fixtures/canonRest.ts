@@ -1,6 +1,11 @@
 // 전투 R5 정본 "쉬는 상태" 프레임(design/canon/battle-r5, #rest)과 같은 장면.
 // 시각 검증(pnpm visual)은 이 장면을 정본 스크린샷과 겹쳐 봐요.
+import type { CardVM } from "../../card/viewmodel";
 import type { BattleVM } from "../viewmodel";
+
+const star = (c: Omit<CardVM, "owner">): CardVM => ({ ...c, owner: "star" });
+const fire = (c: Omit<CardVM, "owner">): CardVM => ({ ...c, owner: "fire" });
+const jelly = (c: Omit<CardVM, "owner">): CardVM => ({ ...c, owner: "jelly" });
 
 export const canonRest: BattleVM = {
   where: { area: "이슬 숲", floor: 5, turn: 3 },
@@ -33,4 +38,34 @@ export const canonRest: BattleVM = {
       shield: { broken: 1, total: 3 }, hovered: true,
     },
   ],
+  mana: { n: 2, max: 4 },
+  hand: [
+    {
+      owner: "star",
+      cards: [
+        star({ name: "유성우", cost: 3, costShort: true, material: "none", art: "i-meteor", element: "e-none", values: [{ icon: "i-hit", n: 4, mult: 4 }], off: true, mark: "i-dice" }),
+        star({ name: "별빛 찌르기", cost: 1, material: "none", art: "i-spark", element: "e-none", values: [{ icon: "i-hit", n: 7, up: true }] }),
+        star({ name: "산들 바람", cost: 1, material: "wind", art: "e-wind", element: "e-wind", values: [{ icon: "i-shield", n: 5 }] }),
+      ],
+    },
+    {
+      owner: "fire",
+      cards: [
+        fire({ name: "불꽃 할퀴기", cost: 1, material: "fire", art: "i-claw", element: "e-fire", values: [{ icon: "i-hit", n: 9, up: true }] }),
+        fire({ name: "불씨 폭발", cost: 2, material: "fire", art: "i-burst", element: "e-fire", values: [{ icon: "i-hit", n: 15 }], off: true, why: "싱크 50 필요" }),
+        fire({ name: "달구기", cost: 1, material: "fire", art: "e-fire", element: "e-fire", values: [{ icon: "i-burn", n: 4 }] }),
+        fire({ name: "맞불", cost: 1, material: "fire", art: "i-twin", element: "e-fire", values: [{ icon: "i-hit", n: 6 }, { icon: "i-shield", n: 3 }] }),
+      ],
+    },
+    {
+      owner: "jelly",
+      cards: [
+        jelly({ name: "찌릿 촉수", cost: 1, material: "water", art: "i-bolt", element: "e-water", values: [{ icon: "i-hit", n: 5 }, { icon: "i-snow", n: 1 }] }),
+        jelly({ name: "물방울 휘갈기기", cost: 1, material: "water", art: "i-drops", element: "e-water", values: [{ icon: "i-hit", n: 3, mult: 2, up: true }] }),
+        jelly({ name: "물결 장막", cost: 2, material: "water", art: "i-veil", element: "e-water", values: [{ icon: "i-shield", n: 8 }] }),
+      ],
+    },
+  ],
+  playable: 8,
+  piles: { draw: 9, discard: 2, exhaust: 1 },
 };
