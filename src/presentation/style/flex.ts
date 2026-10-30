@@ -5,7 +5,7 @@ import type * as Phaser from "phaser";
 import { box, circle, type BoxStyle } from "./draw";
 import { icon as drawIcon } from "./icons";
 import { rgba } from "./color";
-import { LINE_HEIGHT, fontBox, measure, px, strikeLine, textStyle } from "./text";
+import { LINE_HEIGHT, fontBox, measure, px, strikeLine, textStyle, wrapSpans } from "./text";
 
 interface Margins {
   ml?: number | "auto";
@@ -14,6 +14,8 @@ interface Margins {
   mb?: number;
   /** align-self (가로 줄 안에서만) */
   self?: "start" | "end";
+  /** 누르면 부를 함수. 노드 상자 크기의 클릭 영역을 만들어요 (손 모양 커서) */
+  onClick?: () => void;
 }
 
 export interface TextNode extends Margins {
@@ -29,7 +31,12 @@ export interface TextNode extends Margins {
   ls?: number;
   /** text-decoration: line-through. 색을 안 주면 글자색, 굵기를 안 주면 글꼴 값 */
   strike?: { color?: string; width?: number };
+  /** 이 폭에서 줄을 바꿔요 (브라우저 기본 줄바꿈). 상자 폭 = 이 값 */
+  wrap?: number;
 }
+
+/** 줄바꿈할 글자의 줄들 */
+const linesOf = (n: TextNode) => (n.wrap ? wrapSpans([{ text: n.text, size: n.size, color: n.color }], n.wrap).map((l) => l.map((s) => s.text).join("")) : [n.text]);
 
 export interface IconNode extends Margins {
   t: "icon";
@@ -93,8 +100,9 @@ export function size(n: Node): Size {
     case "text": {
       const fs = px(n.size);
       const b = fontBox(fs);
-      const h = fs * (n.lh ?? LINE_HEIGHT);
-      return { w: n.w ?? measure(n.text, n.size, n.ls), h, base: (h - (b.ascent + b.descent)) / 2 + b.ascent };
+      const lineH = fs * (n.lh ?? LINE_HEIGHT);
+      const h = lineH * linesOf(n).length;
+      return { w: n.w ?? n.wrap ?? measure(n.text, n.size, n.ls), h, base: (lineH - (b.ascent + b.descent)) / 2 + b.ascent };
     }
     case "icon":
     case "image":
@@ -137,9 +145,17 @@ export function place(
 ): void {
   const s = size(n);
   const W = w ?? s.w, H = h ?? s.h;
+  if (n.onClick) hitArea(scene, x, y, W, H, n.onClick);
   switch (n.t) {
     case "text": {
       const b = fontBox(px(n.size));
+      if (n.wrap) {
+        const lineH = px(n.size) * (n.lh ?? LINE_HEIGHT);
+        linesOf(n).forEach((line, i) => {
+          scene.add.text(x, y + i * lineH + (lineH - (b.ascent + b.descent)) / 2, line, textStyle(n.size, n.color, n.ls));
+        });
+        return;
+      }
       const top = y + (H - (b.ascent + b.descent)) / 2;
       const tw = measure(n.text, n.size, n.ls);
       const tx = n.w ? x + (n.w - tw) / 2 : x;
@@ -236,6 +252,15 @@ function roundTexture(scene: Phaser.Scene, key: string, d: number): string {
   ctx.drawImage(src, (d - src.width * s) / 2, (d - src.height * s) / 2, src.width * s, src.height * s);
   tex.refresh();
   return out;
+}
+
+/** 클릭 영역 (그림 없음). 겹치면 나중에 만든 것이 먼저 받아요. */
+export function hitArea(scene: Phaser.Scene, x: number, y: number, w: number, h: number, onClick: () => void) {
+  return scene.add.zone(x, y, w, h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+    .on("pointerup", (_p: Phaser.Input.Pointer, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
+      e.stopPropagation();
+      onClick();
+    });
 }
 
 /** 노드를 그리고 크기를 돌려줘요. */

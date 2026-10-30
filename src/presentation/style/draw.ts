@@ -4,8 +4,8 @@ import { rgba } from "./color";
 
 export interface BoxStyle {
   fill?: string;
-  /** CSS `box-shadow: inset 0 0 0 <width> <color>` */
-  ring?: { width: number; color: string };
+  /** CSS `box-shadow: inset 0 0 0 <width> <color>`. dash를 주면 border dashed (선 길이 = 간격 = dash) */
+  ring?: { width: number; color: string; dash?: number };
 }
 
 export function box(
@@ -21,9 +21,37 @@ export function box(
   if (style.ring) {
     const s = rgba(style.ring.color);
     const k = style.ring.width / 2;
-    g.lineStyle(style.ring.width, s.color, s.alpha).strokeRoundedRect(x + k, y + k, w - 2 * k, h - 2 * k, Math.max(0, r - k));
+    g.lineStyle(style.ring.width, s.color, s.alpha);
+    if (style.ring.dash) dashedRoundRect(g, x + k, y + k, w - 2 * k, h - 2 * k, Math.max(0, r - k), style.ring.dash);
+    else g.strokeRoundedRect(x + k, y + k, w - 2 * k, h - 2 * k, Math.max(0, r - k));
   }
   return g;
+}
+
+/** 점선 둥근 테: 곧은 변은 dash 간격으로 끊고, 모서리 호는 이어 그려요 (lineStyle은 미리 정해 두세요) */
+function dashedRoundRect(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, r: number, dash: number) {
+  const seg = (x0: number, y0: number, x1: number, y1: number) => {
+    const len = Math.hypot(x1 - x0, y1 - y0);
+    for (let t = 0; t < len; t += dash * 2) {
+      const a = t / len, b = Math.min(len, t + dash) / len;
+      g.lineBetween(x0 + (x1 - x0) * a, y0 + (y1 - y0) * a, x0 + (x1 - x0) * b, y0 + (y1 - y0) * b);
+    }
+  };
+  seg(x + r, y, x + w - r, y);
+  seg(x + w, y + r, x + w, y + h - r);
+  seg(x + w - r, y + h, x + r, y + h);
+  seg(x, y + h - r, x, y + r);
+  const arc = (cx: number, cy: number, from: number) => {
+    g.beginPath();
+    g.arc(cx, cy, r, from, from + Math.PI / 2);
+    g.strokePath();
+  };
+  if (r > 0) {
+    arc(x + w - r, y + r, -Math.PI / 2);
+    arc(x + w - r, y + h - r, 0);
+    arc(x + r, y + h - r, Math.PI / 2);
+    arc(x + r, y + r, Math.PI);
+  }
 }
 
 export function circle(g: Phaser.GameObjects.Graphics, cx: number, cy: number, d: number, style: BoxStyle) {

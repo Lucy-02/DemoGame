@@ -9,3 +9,4 @@ src/presentation/game.ts
 src/presentation/card/
 src/presentation/faces.ts
 src/presentation/tooltip/
+src/presentation/spirits/

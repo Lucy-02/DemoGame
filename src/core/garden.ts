@@ -1,6 +1,6 @@
 // 정원: 판 밖에 남는 정령 상태와 그 규칙 (결정 0021). 순수 함수만 있고, 상태는 바꾸지 않고 새로 만들어 돌려줘요.
 // 화면·저장·전투 결과 받기는 session 층이 이 함수들을 불러서 해요.
-import { GROWTH, PERSONALITIES, SPIRITS } from "./data";
+import { CARDS, GROWTH, PERSONALITIES, SPIRITS } from "./data";
 import { Rng } from "./rng";
 import { baseStat, isGrown, round, stageRank } from "./stats";
 import type { CardDef, DeedDef, EpisodeDef, EvolutionDef, RunSpirit, Stage } from "./types";
@@ -161,6 +161,8 @@ export function spiritUnlocks(s: GardenSpirit): string[] {
 export const SPIRIT_UNLOCK_STEPS = ["lv2", "lv3", "adult"] as const;
 export const spiritUnlockKey = (id: string, step: (typeof SPIRIT_UNLOCK_STEPS)[number]) => `${id}_${step}`;
 
+const hasCard = (key: string) => CARDS.some((c) => c.unlock === key);
+
 export const isCardUnlocked = (g: Garden, card: CardDef) => unlockKeys(g).has(card.unlock);
 
 /** 해금을 봤다고 표시해요 (보면 배지가 사라져요, "받기" 버튼 없음) */
@@ -246,7 +248,8 @@ export function todos(s: GardenSpirit): Todo[] {
   const out: Todo[] = [];
   const evo = canEvolve(s);
   if (evo?.ok) out.push({ kind: "evolve", to: evo.evo.to });
-  for (const key of spiritUnlocks(s)) if (!s.seen.includes(key)) out.push({ kind: "unlock", key });
+  // 카드가 아직 없는 해금 키(예: 유리 도롱뇽 성체 카드 빈칸, 0020)는 볼 것이 없으니 할 일이 아니에요
+  for (const key of spiritUnlocks(s)) if (!s.seen.includes(key) && hasCard(key)) out.push({ kind: "unlock", key });
   if (episodesOpen(s) > s.episodes) out.push({ kind: "episode" });
   return out;
 }

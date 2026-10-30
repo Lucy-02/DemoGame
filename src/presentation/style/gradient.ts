@@ -1,5 +1,6 @@
 // CSS 그라데이션을 canvas 2D로 그대로 그려요 (재질 띠·배경용).
 // linear-gradient(<deg>, …), repeating-linear-gradient, radial-gradient(circle at x% y%, … px) 타일.
+import type * as Phaser from "phaser";
 
 /** 색 멈춤: at = 0~1 비율 또는 { px } 절대 길이 */
 export type Stop = [color: string, at: number | { px: number }];
@@ -50,4 +51,32 @@ export function radialTiles(
       ctx.fillRect(cx - rMax, cy - rMax, rMax * 2, rMax * 2);
     }
   }
+}
+
+/** radial-gradient(<rx> <ry> at <cx> <cy>, stops…): 비율은 상자 크기 기준. 원 그라데이션을 세로로 눌러서 그려요. */
+export function ellipse(
+  ctx: CanvasRenderingContext2D, w: number, h: number,
+  e: { rx: number; ry: number; cx: number; cy: number }, stops: [color: string, at: number][],
+) {
+  const rx = w * e.rx, ry = h * e.ry;
+  ctx.save();
+  ctx.translate(w * e.cx, h * e.cy);
+  ctx.scale(1, ry / rx);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+  for (const [c, at] of stops) g.addColorStop(at, c);
+  ctx.fillStyle = g;
+  ctx.fillRect(-w, -h * (rx / ry), w * 2, h * 2 * (rx / ry));
+  ctx.restore();
+}
+
+/** 캔버스 텍스처를 한 번만 만들어요 (같은 key면 다시 그리지 않아요) */
+export function canvasTexture(
+  scene: Phaser.Scene, key: string, w: number, h: number, paint: (ctx: CanvasRenderingContext2D) => void,
+): string {
+  if (!scene.textures.exists(key)) {
+    const tex = scene.textures.createCanvas(key, w, h)!;
+    paint(tex.getContext());
+    tex.refresh();
+  }
+  return key;
 }
