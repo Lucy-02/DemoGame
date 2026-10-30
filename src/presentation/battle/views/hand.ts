@@ -123,7 +123,8 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
       g.cards.forEach((c, j) => {
         const on = j === ci;
         c.view.setLifted(on);
-        c.view.setHeld(on && held);
+        // 집은 카드는 다른 카드를 보는 동안에도 제자리에서 테를 남겨요 (Lucy 판정 2 나, 정본은 테를 지움)
+        c.view.setHeld(c.vm.key === opts.held);
         to(c.view.root, {
           x: c.x + (i !== gi || on ? 0 : j < ci ? -L.shiftIn : L.shiftIn),
           y: c.y - (on ? L.lift : 0),
