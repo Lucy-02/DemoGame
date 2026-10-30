@@ -1,5 +1,5 @@
 // 골든 테스트: 같은 시드면 같은 전투 결과가 나와야 해요.
-// 규칙을 일부러 바꿨다면 `npx vitest run -u`로 스냅샷을 갱신하고, 바뀐 숫자를 PR에 적어요.
+// 규칙을 일부러 바꿨다면 `pnpm test -u`로 스냅샷을 갱신하고, 바뀐 숫자를 PR에 적어요.
 import { describe, expect, it } from "vitest";
 import { autoBattle } from "../../tools/autoplay";
 import { ENCOUNTERS } from "./data";
