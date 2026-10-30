@@ -3,13 +3,14 @@ import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { box, circle } from "../../style/draw";
 import { icon, loadIcon } from "../../style/icons";
+import { placeholderArt } from "../../style/placeholder";
 import { LINE_HEIGHT, fontBox, measure, px, textStyle } from "../../style/text";
 import { COPY } from "../copy";
 import { ORDER as O } from "../layout";
 import type { BattleVM } from "../viewmodel";
 
-const P = tokens.palette;
-const T = tokens.text.battle;
+const P = tokens.provisional.palette;
+const T = tokens.provisional.text.battle;
 
 
 
@@ -18,7 +19,6 @@ const lineW = O.line.w + O.line.mx * 2;
 
 export function preloadOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   for (const s of vm.slots) {
-    loadIcon(scene, s.art, O.art.w, O.art.h);
     loadIcon(scene, s.action, O.action.size - O.action.pad * 2);
   }
 }
@@ -70,7 +70,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
     );
     sx += O.numW + O.slot.gap;
     circle(g, sx + O.face / 2, cy, O.face, { fill: P.face });
-    icon(scene, sx + (O.face - O.art.w) / 2, cy - O.art.h / 2, s.art, O.art.w, O.art.h);
+    placeholderArt(scene, sx + (O.face - O.art.w) / 2, cy - O.art.h / 2, O.art.w, O.art.h, P.ink3);
     sx += O.face + O.slot.gap + O.action.ml;
     // 행동 기호: 마진 상자(13 + 위 12)가 칸 가운데 → 위로 12 밀림
     const aTop = cy - (O.action.size + O.action.mt) / 2 + O.action.mt;

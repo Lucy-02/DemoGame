@@ -17,7 +17,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
     parent,
     width: FRAME.w,
     height: FRAME.h,
-    backgroundColor: tokens.palette.floor,
+    backgroundColor: tokens.provisional.palette.floor,
     scale: opts.pixelExact
       ? { mode: Phaser.Scale.NONE }
       : { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },

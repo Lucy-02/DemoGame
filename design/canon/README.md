@@ -20,3 +20,8 @@ pnpm visual --crop 760,6,370,50  # 영역 확대 비교 (x,y,w,h), 3배
 
 결과는 `test-results/visual/`에 `canon.png`, `game.png`, `side.png`(나란히), `overlay.png`(반투명 겹침), `diff.png`(차이 = 분홍), `crop-*.png`로 나와요.
 처음 한 번 `pnpm exec playwright install chromium`이 필요해요. 미리 깔린 크로미움을 쓰려면 `CHROMIUM_PATH=<경로>`.
+
+## 정본에서 옮기지 않는 것 (Lucy 2026-10-30)
+- 정본의 색·글자 크기·재질 무늬는 `design/tokens/tokens.json`의 `provisional` 구역에만 둬요. 확정 구역(color·font·size·motion·screen)은 Lucy가 고른 값만.
+- 정본의 임시 그림(아군 실루엣 sil-*, 적 도형 en-*, 카드 그림 자리)은 쓰지 않고 `style/placeholder.ts`의 X 상자로 비워 둬요. 시각 검증에서 이 자리는 차이로 남아요.
+- 기능 기호(수치·상태·시스템 기호)는 정본 SVG를 쓰되 `assets/provenance.jsonl`에 placeholder로 기록해 `pnpm check:assets --release`가 출시 전에 잡아요.

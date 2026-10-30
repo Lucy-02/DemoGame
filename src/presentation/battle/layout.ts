@@ -1,5 +1,5 @@
 // 전투 화면 배치 수치. 모두 정본 CSS(design/canon/battle-r5/frame-old.css, r5.css)에서 옮겼고, 주석에 선택자를 적어요.
-// 색·글자 크기는 여기 두지 않고 토큰(tokens.palette, tokens.text)에서 가져와요.
+// 색·글자 크기는 여기 두지 않고 토큰(tokens.provisional.palette, tokens.provisional.text)에서 가져와요.
 
 export const FRAME = { w: 1280, h: 800 }; // .frame
 

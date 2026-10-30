@@ -5,18 +5,18 @@ import { rgba } from "../style/color";
 import { box, circle } from "../style/draw";
 import { place, render, size, type Node } from "../style/flex";
 import { icon, loadIcon } from "../style/icons";
+import { placeholderArt } from "../style/placeholder";
 import { px } from "../style/text";
 import { faceKey } from "../faces";
 import { HAND_CARD as C } from "./layout";
 import { bandTexture, windowTexture } from "./materials";
 import type { CardVM } from "./viewmodel";
 
-const P = tokens.palette;
-const T = tokens.text.battle;
+const P = tokens.provisional.palette;
+const T = tokens.provisional.text.battle;
 const UP_MARK = "▲";
 
 export function preloadHandCard(scene: Phaser.Scene, c: CardVM) {
-  loadIcon(scene, c.art, C.art.size);
   loadIcon(scene, c.element, C.element.size);
   const two = c.values.length > 1;
   for (const v of c.values) loadIcon(scene, v.icon, two ? C.glyph.sizeTwo : C.glyph.size);
@@ -54,9 +54,9 @@ export function drawHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: numbe
     ring: { width: C.border, color: off ? P.cardOffLine : P.cardLine },
   });
   scene.add.image(x + C.win.x, y + C.win.y, windowTexture(scene, c.owner, off)).setOrigin(0, 0);
-  const art = icon(
+  const art = placeholderArt(
     scene, x + C.win.x + (C.win.contentW - C.art.size) / 2, y + C.win.y + (C.win.h - C.art.size - C.art.mb) / 2,
-    c.art, C.art.size, C.art.size, P.art,
+    C.art.size, C.art.size, P.art,
   );
   if (off) art.setAlpha(0.45);
   scene.add.image(x + C.band.x, y + C.band.y, bandTexture(scene, c.material, off)).setOrigin(0, 0);

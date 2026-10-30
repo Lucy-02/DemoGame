@@ -7,8 +7,8 @@ import { inlineLine, lineBox, wrapSpans, type Span } from "../../style/text";
 import { ETIP as E } from "../layout";
 import type { EnemyTipVM, TipLine } from "../viewmodel";
 
-const P = tokens.palette;
-const T = tokens.text.battle;
+const P = tokens.provisional.palette;
+const T = tokens.provisional.text.battle;
 
 /** CSS box-shadow 바깥 그림자를 canvas로 구워요 (canvas shadowBlur = CSS blur 반경). */
 function shadowTexture(scene: Phaser.Scene, w: number, h: number): { key: string; margin: number } {
