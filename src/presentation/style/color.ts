@@ -21,3 +21,9 @@ export function rgba(css: string): Rgba {
 
 /** Phaser Text의 color 속성용 CSS 문자열 (그대로 통과). 타입만 좁혀요. */
 export const cssColor = (css: string) => css;
+
+/** 같은 색의 완전 투명 (CSS transparent 대신 색이 섞여 탁해지지 않게) */
+export function transparentOf(css: string): string {
+  const { color } = rgba(css);
+  return `rgba(${color >> 16},${(color >> 8) & 255},${color & 255},0)`;
+}

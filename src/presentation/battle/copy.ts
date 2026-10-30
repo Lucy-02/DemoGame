@@ -4,4 +4,12 @@ export const COPY = {
   turn: "턴",
   myTurn: "내 차례",
   dot: "·",
+  incoming: "받을",
+  front: "앞열",
+  weak: "약점",
+  all: "전체",
+  to: "→",
+  maxPrefix: "/",
+  shieldLeft: "끊기까지 ",
+  shieldUnit: "칸",
 };

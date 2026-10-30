@@ -157,14 +157,36 @@ export const tokens = {
       "fire": "#8f817b",
       "jelly": "#7f898b"
     },
-    "glassThin": "rgba(31,29,27,.5)"
+    "glassThin": "rgba(31,29,27,.5)",
+    "barTrack": "rgba(246,241,233,.14)",
+    "chipSoft": "rgba(246,241,233,.08)",
+    "chipSofter": "rgba(246,241,233,.07)",
+    "plateLine": "rgba(246,241,233,.06)",
+    "debuffLine": "rgba(246,241,233,.32)",
+    "hoverRing": "rgba(246,241,233,.7)",
+    "groundShade": "rgba(0,0,0,.35)"
   },
   "text": {
     "battle": {
       "where": "14px",
       "whereNum": "15px",
       "orderLabel": "13px",
-      "orderNum": "12px"
+      "orderNum": "12px",
+      "hp": "16px",
+      "hpMax": "12px",
+      "incoming": "15px",
+      "incomingLabel": "12px",
+      "chip": "13px",
+      "block": "14px",
+      "tag": "12px",
+      "intentOrder": "12px",
+      "intentAmount": "19px",
+      "intentAmountDebuff": "16px",
+      "intentLabel": "14px",
+      "intentTo": "12px",
+      "intentAll": "13px",
+      "shieldLabel": "13px",
+      "shieldNum": "14px"
     }
   }
 } as const;
