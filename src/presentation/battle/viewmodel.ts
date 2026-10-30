@@ -50,6 +50,18 @@ export interface EnemyVM {
   /** 차징 중인 적의 실드 칸: broken칸 깨짐 / total칸 */
   shield?: { broken: number; total: number };
   hovered?: boolean;
+  /** 호버 중일 때 뜨는 설명 (정본 .etip) */
+  tip?: EnemyTipVM;
+}
+
+/** 설명 한 줄: 보통 글과 강조 숫자(b)의 조각 */
+export type TipLine = { text: string; strong?: boolean }[];
+
+export interface EnemyTipVM {
+  name: string;
+  /** 이름 옆 등급 꼬리표 (정예 등) */
+  rank?: string;
+  lines: TipLine[];
 }
 
 export interface BattleVM {

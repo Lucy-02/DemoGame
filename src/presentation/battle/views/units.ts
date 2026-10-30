@@ -1,7 +1,7 @@
 // 아군·적: 필드 그림, 발밑 그림자, 정보판(HP·방어도·받을 피해·상태), 적 머리 위 의도. 정본 .ally, .enemy, .info, .intent
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
-import { rgba, transparentOf } from "../../style/color";
+import { transparentOf } from "../../style/color";
 import { box } from "../../style/draw";
 import { render, size, type Node } from "../../style/flex";
 import { icon, loadIcon } from "../../style/icons";
@@ -29,6 +29,22 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
     loadIcon(scene, e.intent.icon, INTENT.icon);
     e.statuses.forEach((s) => loadIcon(scene, s.icon, I.status.icon));
   }
+}
+
+/** 호버 고리: WebGL 선은 안티앨리어싱이 없어 1.5px 타원이 두꺼워 보여서 canvas로 구워요. */
+function hoverRingTexture(scene: Phaser.Scene): string {
+  const key = "enemy:hover-ring";
+  if (scene.textures.exists(key)) return key;
+  const { w, h, width } = HOVER_RING;
+  const tex = scene.textures.createCanvas(key, w, h)!;
+  const ctx = tex.getContext();
+  ctx.strokeStyle = P.hoverRing;
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  ctx.ellipse(w / 2, h / 2, (w - width) / 2, (h - width) / 2, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  tex.refresh();
+  return key;
 }
 
 // ── 조각 ──────────────────────────────────────────────
@@ -235,11 +251,7 @@ export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number) {
   icon(scene, cx - ENEMY.art.w / 2, bodyBottom - ENEMY.art.h, e.art, ENEMY.art.w, ENEMY.art.h);
   ground(scene, cx, bodyBottom);
   if (e.hovered) {
-    const g = scene.add.graphics();
-    const c = rgba(P.hoverRing);
-    g.lineStyle(HOVER_RING.width, c.color, c.alpha).strokeEllipse(
-      cx, bodyBottom - HOVER_RING.bottom - HOVER_RING.h / 2, HOVER_RING.w - HOVER_RING.width, HOVER_RING.h - HOVER_RING.width,
-    );
+    scene.add.image(cx, bodyBottom - HOVER_RING.bottom - HOVER_RING.h / 2, hoverRingTexture(scene));
   }
   render(scene, enemyInfo(e), cx - I.enemyW / 2, bodyBottom + I.mt);
 }

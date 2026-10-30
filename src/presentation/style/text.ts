@@ -58,20 +58,24 @@ export interface PlacedLine {
   objects: Phaser.GameObjects.Text[];
 }
 
-/**
- * 한 줄에 크기가 다른 글자 조각을 기준선 맞춰 놓아요 (CSS 인라인 서식 맥락과 같은 계산).
- * strut = 부모 글자 크기. 각 조각의 줄 높이 = 크기 × LINE_HEIGHT.
- */
-export function inlineLine(
-  scene: Phaser.Scene, x: number, top: number, strut: string, spans: Span[],
-): PlacedLine {
-  const parts = [{ size: px(strut) }, ...spans.map((s) => ({ size: px(s.size) }))].map(({ size }) => {
+/** 줄 상자의 기준선 위·아래 높이 (strut + 각 조각의 반-leading 포함) */
+export function lineBox(strut: string, spans: Pick<Span, "size">[], lineHeight = LINE_HEIGHT) {
+  const parts = [px(strut), ...spans.map((s) => px(s.size))].map((size) => {
     const b = fontBox(size);
-    const half = (size * LINE_HEIGHT - (b.ascent + b.descent)) / 2;
+    const half = (size * lineHeight - (b.ascent + b.descent)) / 2;
     return { above: b.ascent + half, below: b.descent + half };
   });
-  const above = Math.max(...parts.map((p) => p.above));
-  const below = Math.max(...parts.map((p) => p.below));
+  return { above: Math.max(...parts.map((p) => p.above)), below: Math.max(...parts.map((p) => p.below)) };
+}
+
+/**
+ * 한 줄에 크기가 다른 글자 조각을 기준선 맞춰 놓아요 (CSS 인라인 서식 맥락과 같은 계산).
+ * strut = 부모 글자 크기. 각 조각의 줄 높이 = 크기 × lineHeight.
+ */
+export function inlineLine(
+  scene: Phaser.Scene, x: number, top: number, strut: string, spans: Span[], lineHeight = LINE_HEIGHT,
+): PlacedLine {
+  const { above, below } = lineBox(strut, spans, lineHeight);
   const baseline = top + above;
   let cx = x;
   const objects = spans.map((s) => {
@@ -90,4 +94,43 @@ export function measure(text: string, size: string, letterSpacing = 0): number {
   probe!.font = `${size} ${FONT_STACK}`;
   // CSS letter-spacing은 글자마다 뒤에 붙어요 (마지막 글자 포함)
   return probe!.measureText(text).width + letterSpacing * [...text].length;
+}
+
+/**
+ * 글자 조각들을 maxW 폭에 맞춰 줄로 나눠요 (브라우저 기본 줄바꿈: 공백과 한글 음절 사이에서 끊김).
+ * 줄 끝 공백은 버려요.
+ */
+export function wrapSpans(spans: Span[], maxW: number): Span[][] {
+  // 끊을 수 있는 단위로 쪼개기: 한글 한 음절, 공백 하나, 나머지 글자 묶음
+  const units: Span[] = [];
+  for (const s of spans) {
+    for (const piece of s.text.match(/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]|\s|[^\s\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+/g) ?? []) {
+      units.push({ ...s, text: piece });
+    }
+  }
+  const lines: Span[][] = [[]];
+  let w = 0;
+  for (const u of units) {
+    const uw = measure(u.text, u.size);
+    const line = lines[lines.length - 1];
+    if (u.text.trim() === "") {
+      if (line.length) { line.push(u); w += uw; }
+      continue;
+    }
+    if (w + uw > maxW && line.length) {
+      while (line.length && line[line.length - 1].text.trim() === "") line.pop();
+      lines.push([u]);
+      w = uw;
+    } else {
+      line.push(u);
+      w += uw;
+    }
+  }
+  // 같은 모양의 이웃 조각은 다시 합쳐요 (글자 사이 간격이 브라우저와 같아지게)
+  return lines.map((line) => line.reduce<Span[]>((acc, u) => {
+    const last = acc[acc.length - 1];
+    if (last && last.size === u.size && last.color === u.color) last.text += u.text;
+    else acc.push({ ...u });
+    return acc;
+  }, []));
 }
