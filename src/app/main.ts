@@ -11,7 +11,7 @@ async function start() {
   const params = new URLSearchParams(location.search);
   const game = params.get("screen") === "legacy"
     ? await startPlaceholderGame("game")
-    : await startGame("game", { pixelExact: params.has("pixel"), hover: params.get("hover") ?? undefined });
+    : await startGame("game", { hover: params.get("hover") ?? undefined });
   Object.assign(window, { game });
 }
 start();
