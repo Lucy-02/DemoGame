@@ -77,3 +77,4 @@
 - 세 안 한 아티팩트: https://claude.ai/artifact/4HcCn3u5CQ5AcoGVwN7juL (A 정령별 세 줄 / B 한 장의 그리드 / C 정령과 함께 보는 덱). 캡처 archive/deck-{a,b,c}/
 - 덱 보기 레이어 R1 (리뷰 종합 포함): https://claude.ai/artifact/4HcCn3u5CQ5AcoGVwN7juL
 - 자라는 순간 R1: https://claude.ai/artifact/NEXhRQajDWBmH3WUwRoRAV
+- 덱 보기·자라는 순간 R2: https://claude.ai/artifact/LyNbvdjCFHPSRUdwoYK7uT
