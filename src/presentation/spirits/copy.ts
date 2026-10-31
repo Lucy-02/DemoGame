@@ -1,5 +1,6 @@
 // 정령 관리 화면 문구. 정본 R4 v5 문구 + 결정 0021의 탭·행동 이름.
 // 카드 동사는 "사용"(0011), 제작 용어(기믹형·인간형)는 쓰지 않아요(0012 리뷰).
+import { josa } from "../../core/korean";
 import type { Stage } from "../../core/types";
 import type { TabId } from "./viewmodel";
 
@@ -30,7 +31,7 @@ export const COPY = {
   grow: "키우기",
   level: "Lv",
   exp: "경험",
-  gate: (to: string) => `${to}로`,
+  gate: (to: string) => josa(to, "으로/로"),
   levelNeed: (n: number) => `Lv ${n}`,
   feed: "먹이기",
   affinity: "호감도",
