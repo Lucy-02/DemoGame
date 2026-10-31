@@ -61,7 +61,7 @@ exports[`전투 골든 > 보스전 한 판의 이벤트 로그가 바뀌지 않�
   "{"k":"phase2","uid":1}",
   "{"k":"log","text":"그림바크이(가) 분노해요! 2페이즈, 실드 8칸"}",
   "{"k":"awaken","id":"fire_fox"}",
-  "{"k":"log","text":"✦ 불여우 각성: TODO_NAME! 불여우의 피해 +50%, 부여하는 화상 2배"}",
+  "{"k":"log","text":"✦ 불여우 각성: TODO_NAME! 불여우가 입히는 피해가 50% 늘어납니다. 불여우가 부여하는 화상이 2배가 됩니다."}",
   "{"k":"spiritAct","id":"mist_cat","card":"물장구"}",
   "{"k":"log","text":"안개 고양이: 물장구"}",
   "{"k":"damage","ref":{"side":"e","uid":1},"amount":3,"blocked":0,"crit":true,"weakHit":false,"resist":true}",
