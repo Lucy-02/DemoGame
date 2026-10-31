@@ -7,15 +7,15 @@ describe("정령 관리 화면 데이터", () => {
   it("띠 링: 키우기 가능 / 진행 중 / 최종 단계, 할 일 개수", () => {
     const vm = spiritsVM(GARDENS.mixed, "fire_fox");
     expect(vm.roster.map((t) => [t.chip, t.ring.kind, t.todo])).toEqual([
-      ["유체 Lv4", "ready", 2],
-      ["성체 Lv5", "progress", 1],
-      ["각성체 Lv6", "final", 0],
+      ["유체 Lv 4", "ready", 2],
+      ["성체 Lv 5", "progress", 1],
+      ["각성체 Lv 6", "final", 0],
     ]);
   });
 
   it("탭 3개, 할 일은 성장 길·유대 탭 배지와 요약 카드로 이어져요", () => {
     const d = spiritsVM(GARDENS.mixed, "fire_fox").detail;
-    expect(d.tabs.map((t) => [t.label, t.count, t.badge])).toEqual([["개요", undefined, undefined], ["성장 길", "Lv4", "g-up"], ["유대", "0/3", undefined]]);
+    expect(d.tabs.map((t) => [t.label, t.count, t.badge])).toEqual([["개요", undefined, undefined], ["성장 길", "Lv 4", "g-up"], ["유대", "0/3", undefined]]);
     expect(d.facts.map((f) => f.kind)).toEqual(["next", "cells", "bond", "todo"]);
     expect(d.personality).toBeUndefined();
     expect(d.growth.gate).toMatchObject({ to: "성체", ready: true });

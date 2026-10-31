@@ -61,7 +61,7 @@ function factNode(f: FactVM, open: (tab: TabId) => void): Node {
         t: "col", gap: FACTS.innerGap,
         children: [
           label(f.fresh ? text(COPY.freshCount(f.fresh), T.factLabel, P.ink) : undefined),
-          big(String(f.have), `/ ${f.total}${COPY.unit}`),
+          big(String(f.have), COPY.ofCards(f.total)),
           {
             t: "row", gap: C.gap,
             children: Array.from({ length: f.total }, (_, i): Node => {
@@ -78,7 +78,7 @@ function factNode(f: FactVM, open: (tab: TabId) => void): Node {
       };
     }
     case "bond":
-      return { t: "col", gap: FACTS.innerGap, children: [label(), big(String(f.have), `/ ${f.total}`)] };
+      return { t: "col", gap: FACTS.innerGap, children: [label(), big(String(f.have), COPY.of(f.total))] };
     case "todo":
       return {
         t: "col", gap: FACTS.innerGap + FACTS.valueGap / 2,

@@ -11,8 +11,8 @@
     ] },
   { "id": "ev_merchant", "title": "길 잃은 행상", "text": "짐을 잔뜩 진 너구리 행상이 길을 묻고 있어요.",
     "options": [
-      { "label": "길을 알려준다", "desc": "골드를 25 얻습니다.", "outcome": [{ "type": "gold", "value": 25 }] },
-      { "label": "짐을 들어준다", "desc": "앞열 정령이 피해를 6 입습니다. 고급 카드 3장 중 1장을 골라 덱에 넣습니다.", "outcome": [{ "type": "damageFront", "value": 6 }, { "type": "cardReward", "rarity": "advanced" }] }
+      { "label": "길을 알려 준다", "desc": "골드를 25 얻습니다.", "outcome": [{ "type": "gold", "value": 25 }] },
+      { "label": "짐을 들어 준다", "desc": "앞열 정령이 피해를 6 입습니다. 고급 카드 3장 중 1장을 골라 덱에 넣습니다.", "outcome": [{ "type": "damageFront", "value": 6 }, { "type": "cardReward", "rarity": "advanced" }] }
     ] },
   { "id": "ev_shrine", "title": "시든 사당", "text": "정령을 모시던 작은 사당이 시들어 있어요. 아직 희미한 기운이 남아 있어요.",
     "options": [
