@@ -49,7 +49,7 @@ function ring(s: GardenSpirit): RingVM {
   return { kind: "progress", value: stageProgress(s) };
 }
 
-const chip = (s: GardenSpirit) => `${STAGE_LABEL[s.stage]} ${COPY.level}${levelOf(s.exp)}`;
+const chip = (s: GardenSpirit) => `${STAGE_LABEL[s.stage]} ${COPY.lv(levelOf(s.exp))}`;
 
 function tile(s: GardenSpirit, deployed: boolean): TileVM {
   const def = spiritDef(s.id);
@@ -126,7 +126,7 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
   const tabs: TabVM[] = [
     { id: "overview", label: TAB_LABEL.overview },
     {
-      id: "growth", label: TAB_LABEL.growth, count: `${COPY.level}${level}`,
+      id: "growth", label: TAB_LABEL.growth, count: COPY.lv(level),
       badge: has("evolve") ? TODO_ICON.evolve : has("unlock") ? TODO_ICON.unlock : undefined,
     },
     { id: "bond", label: TAB_LABEL.bond, count: `${s.episodes}/${GROWTH.episodes.length}`, badge: has("episode") ? TODO_ICON.episode : undefined },

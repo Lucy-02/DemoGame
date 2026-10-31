@@ -29,16 +29,17 @@ export const COPY = {
   bond: "유대",
   todo: "할 일",
   grow: "키우기",
-  level: "Lv",
+  /** 레벨은 `Lv 4` 한 꼴 (문구 규칙 숫자 표기) */
+  lv: (n: number) => `Lv ${n}`,
   exp: "경험",
   gate: (to: string) => josa(to, "으로/로"),
-  levelNeed: (n: number) => `Lv ${n}`,
   feed: "먹이기",
   affinity: "호감도",
   episode: (n: number) => `이야기 ${n}`,
-  seen: "봤어요",
-  open: "볼 수 있어요",
-  unit: "장",
+  seen: "읽음",
+  /** 현재/최대: 빗금 앞뒤 붙이고 단위는 끝에 한 번 */
+  of: (total: number) => `/${total}`,
+  ofCards: (total: number) => `/${total}장`,
   percent: "%",
   revealed: "성격 공개",
   hiddenNote: "성체가 되면 드러나요",
@@ -48,8 +49,8 @@ export const COPY = {
   now: "지금",
   watch: "보기",
   cost: (n: number) => `${COPY_MATERIAL} ${n}`,
-  fresh: "새로",
-  freshCount: (n: number) => `새로 ${n}`,
+  fresh: "새",
+  freshCount: (n: number) => `새 카드 ${n}`,
 };
 
 export const TAB_LABEL: Record<TabId, string> = {

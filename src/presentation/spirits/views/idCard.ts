@@ -17,7 +17,7 @@ export function stageChip(d: Pick<SpiritDetailVM, "stage" | "level" | "final">):
     t: "row", h: S.h, pad: [0, S.padX, 0, S.padX], radius: S.radius, gap: S.gap, align: "center", style: { fill: P.veil["10"] },
     children: [
       ...(d.final ? [{ t: "icon", id: "g-fin", w: S.icon, h: S.icon, tint: P.ink } as Node] : []),
-      text(`${d.stage} ${COPY.level}${d.level}`, T.stage, P.ink),
+      text(`${d.stage} ${COPY.lv(d.level)}`, T.stage, P.ink),
     ],
   };
 }

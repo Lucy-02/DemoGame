@@ -173,8 +173,8 @@ function growthRow(r: GrowthRowVM): Node {
 function growth(d: SpiritDetailVM): Node[] {
   const gr = d.growth;
   const exp: Node = gr.exp
-    ? { t: "col", gap: B.secGap, children: [head(`${COPY.exp} ${COPY.level}${gr.level}`, numPair(gr.exp.have, gr.exp.need)), bar(PANEL.growth.exp, gr.exp.have / gr.exp.need, P.veil["16"], P.ink2)] }
-    : head(`${COPY.exp} ${COPY.level}${gr.level}`, text(COPY.maxLevel, T.secHead, P.ink2));
+    ? { t: "col", gap: B.secGap, children: [head(`${COPY.exp} ${COPY.lv(gr.level)}`, numPair(gr.exp.have, gr.exp.need)), bar(PANEL.growth.exp, gr.exp.have / gr.exp.need, P.veil["16"], P.ink2)] }
+    : head(`${COPY.exp} ${COPY.lv(gr.level)}`, text(COPY.maxLevel, T.secHead, P.ink2));
   return [exp, { t: "col", gap: PANEL.growth.gap, children: gr.rows.map(growthRow) }];
 }
 
@@ -183,7 +183,7 @@ function gateFoot(d: SpiritDetailVM, act: PanelActions): Node | undefined {
   const gate = d.growth.gate;
   if (!gate) return undefined;
   const cond = [
-    `${COPY.levelNeed(gate.level.need)}${gate.level.ok ? " ✓" : ""}`,
+    `${COPY.lv(gate.level.need)}${gate.level.ok ? " ✓" : ""}`,
     ...(gate.deed ? [`${gate.deed.label} ${gate.deed.have}/${gate.deed.need}${gate.deed.ok ? " ✓" : ""}`] : []),
   ].join(` ${COPY.sep} `);
   return {
