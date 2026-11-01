@@ -253,6 +253,8 @@ export class Battle {
     this.turn++;
     this.inEnemyTurn = false;
     this.playedThisTurn = [];
+    // 바람길은 "이번 턴에" 다음 카드만 (0022)
+    this.repeatNext = null;
     this.log(`── ${this.turn}턴 ──`);
     for (const s of this.aliveSpirits()) {
       const keep = s.awaken > 0 && (C.awaken_keep_block as string[]).includes(s.id);
@@ -318,7 +320,7 @@ export class Battle {
       }
       const rd = s.auras.get("root_down");
       if (rd && !s.downed) {
-        const tgt = this.aliveSpirits().sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+        const tgt = this.aliveSpirits().sort((a, b) => a.hp - b.hp)[0];
         if (tgt) this.healSpirit(tgt, round(scale(rd, this.stat(s, "focus")) * this.healMult(s)));
       }
     }
@@ -655,10 +657,15 @@ export class Battle {
           else this.freezeEnemy(e);
         }
         break;
-      case "thorns":
-        owner.thorns += scale(withGrow(op.value), guard);
-        this.events.push({ k: "status", ref: { side: "s", id: owner.id }, text: `반격 ${owner.thorns}` });
+      case "thorns": {
+        // 아군을 고르는 카드(담금질 유리)는 고른 아군 모두가 받아요. 그 밖에는 카드 주인
+        const v = scale(withGrow(op.value), guard);
+        for (const s of tg.allies.length ? tg.allies : [owner]) {
+          s.thorns += v;
+          this.events.push({ k: "status", ref: { side: "s", id: s.id }, text: `반격 ${s.thorns}` });
+        }
         break;
+      }
       case "grow":
         c.grow += op.value;
         this.log(`${def.name} 성장 +${op.value} (이번 전투 누적 +${c.grow})`);
@@ -701,7 +708,8 @@ export class Battle {
         this.nextTurnMana += op.value;
         break;
       case "sync":
-        this.addSync(owner, op.value, null);
+        // 함께 외치기(아군 전체)는 모두가 받아요 (문구 의도, 0022)
+        for (const s of tg.allies.length ? tg.allies : [owner]) this.addSync(s, op.value, null);
         break;
       case "aura":
         if (op.aura === "eye_of_storm") this.eyeOfStorm = op.value;

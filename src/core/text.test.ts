@@ -28,7 +28,8 @@ describe("카드 효과 문구 (0022)", () => {
 
   it("대상은 효과마다. 같은 대상이 이어지면 한 번만", () => {
     expect(text("fire_storm")).toBe("모든 적에게 피해를 5 입히고 화상을 3 부여합니다.");
-    expect(text("tempered_glass")).toBe("모든 아군이 방어도를 5 얻습니다. 이 정령이 반격을 2 얻습니다.");
+    expect(text("tempered_glass")).toBe("모든 아군이 방어도를 5 얻고 반격을 2 얻습니다.");
+    expect(text("rally")).toBe("모든 아군의 싱크로율이 10%p 오릅니다.");
     expect(text("bubble_shield")).toBe("아군 하나에게 방어도를 5 줍니다.");
     expect(text("mend")).toBe("아군 하나의 HP를 4 회복합니다.");
   });
