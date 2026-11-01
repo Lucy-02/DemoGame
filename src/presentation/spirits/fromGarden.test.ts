@@ -29,7 +29,9 @@ describe("정령 관리 화면 데이터", () => {
   it("일러스트: 지금 단계 그림, 그림이 없는 정령(불여우)은 자리표시", () => {
     const vm = spiritsVM(GARDENS.mixed, "mist_cat");
     expect(vm.roster.map((t) => t.face?.key)).toEqual([undefined, "spirit:glass_salamander:adult:body", "spirit:mist_cat:awakened:body"]);
-    expect(vm.detail.art).toMatchObject({ key: "spirit:mist_cat:awakened:body", frame: { k: "face" }, fit: { s: 1.08 } });
+    expect(vm.detail.art).toMatchObject({ key: "spirit:mist_cat:awakened:body", frame: { k: "face" } });
+    // 조정값(spiritFit.json)은 Lucy가 피팅 페이지에서 바꾸는 값이라, 있는지만 봐요
+    expect(vm.detail.art?.fit).toBeTypeOf("object");
     expect(spiritsVM(GARDENS.fresh, "mist_cat").detail.art).toMatchObject({ key: "spirit:mist_cat:baby:body", frame: { k: "mass" } });
     expect(spiritsVM(GARDENS.mixed, "fire_fox").detail.art).toBeUndefined();
   });
