@@ -28,9 +28,9 @@ describe("정령 관리 화면 데이터", () => {
 
   it("일러스트: 지금 단계 그림, 그림이 없는 정령(불여우)은 자리표시", () => {
     const vm = spiritsVM(GARDENS.mixed, "mist_cat");
-    expect(vm.roster.map((t) => t.face)).toEqual([undefined, "spirit:glass_salamander:adult:face", "spirit:mist_cat:awakened:face"]);
-    expect(vm.detail.art).toEqual({ key: "spirit:mist_cat:awakened:body", frame: [0.71, 0.15, 0.17] });
-    expect(spiritsVM(GARDENS.fresh, "mist_cat").detail.art).toEqual({ key: "spirit:mist_cat:baby:body", frame: undefined });
+    expect(vm.roster.map((t) => t.face?.key)).toEqual([undefined, "spirit:glass_salamander:adult:body", "spirit:mist_cat:awakened:body"]);
+    expect(vm.detail.art).toMatchObject({ key: "spirit:mist_cat:awakened:body", frame: { k: "face" }, fit: { s: 1.08 } });
+    expect(spiritsVM(GARDENS.fresh, "mist_cat").detail.art).toMatchObject({ key: "spirit:mist_cat:baby:body", frame: { k: "mass" } });
     expect(spiritsVM(GARDENS.mixed, "fire_fox").detail.art).toBeUndefined();
   });
 

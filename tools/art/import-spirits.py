@@ -1,8 +1,9 @@
 # 정령 일러스트를 게임용 파일로 옮겨요 (Drive jjal-handoff confirmed와 같은 배경 제거본을 2×로 키운 것에서).
 # 쓰는 법: python -I tools/art/import-spirits.py <jjal-bgrm 폴더> <2× 폴더 (upscale-2x.py 결과)> <저장소 루트>
 # 만드는 것: public/assets/spirits/<정령>/<단계>.webp (알파로 자르고 긴 변 LONG)
-#          public/assets/spirits/<정령>/<단계>-face.webp (128 정사각, 띠 타일 원형 얼굴용)
-#          src/presentation/spiritFrames.json (성체·각성체 얼굴 자리. 화면이 상반신 구도를 잡는 데 써요)
+#          src/presentation/spiritFrames.json (구도 기준: 성체·각성체는 얼굴 상자, 유체는 보이는 면적, 띠 타일 얼굴 자르기 기본값. 0023)
+# 사람 손으로 맞춘 값은 src/presentation/spiritFit.json(피팅 페이지 spirit-fit.html)에 따로 있어서, 다시 돌려도 지워지지 않아요.
+# 먼저 tools/art/detect-faces.py로 tools/art/faces.json을 만들어 둬요.
 # 그리고 assets/provenance.jsonl에 파일마다 한 줄 (원본 PNG의 NovelAI 메타데이터에서).
 # 필요: Pillow, numpy
 import hashlib, json, sys
@@ -17,42 +18,15 @@ STAGES = {"baby": "cub", "adult": "adult", "awakened": "awakened"}
 LONG = 1536
 # 테두리 색 정리 폭 (2× 원본 px)
 EDGE = 2
-FACE = 128
-# 성체·각성체 얼굴 자리: (가운데 x, 가운데 y: 자른 그림 폭·높이 비율, 지름: 긴 변 비율). 눈으로 맞춘 값이에요.
-FACES = {
-    "flash/adult": (0.33, 0.11, 0.153),
-    "flash/awakened": (0.28, 0.21, 0.153),
-    "glass-salamander/adult": (0.47, 0.1, 0.17),
-    "glass-salamander/awakened": (0.54, 0.17, 0.17),
-    "kelp-seahorse/adult": (0.47, 0.09, 0.153),
-    "kelp-seahorse/awakened": (0.58, 0.23, 0.119),
-    "magma-ibex/adult": (0.44, 0.12, 0.153),
-    "magma-ibex/awakened": (0.47, 0.25, 0.136),
-    "mirage/adult": (0.51, 0.07, 0.119),
-    "mirage/awakened": (0.5, 0.08, 0.119),
-    "mirror-peacock/adult": (0.53, 0.14, 0.102),
-    "mirror-peacock/awakened": (0.53, 0.23, 0.102),
-    "mist-cat/adult": (0.47, 0.22, 0.204),
-    "mist-cat/awakened": (0.71, 0.15, 0.17),
-    "night-owl/adult": (0.46, 0.11, 0.119),
-    "night-owl/awakened": (0.52, 0.19, 0.136),
-    "pearl-oyster/adult": (0.55, 0.17, 0.119),
-    "pearl-oyster/awakened": (0.55, 0.19, 0.102),
-    "prism-chameleon/adult": (0.36, 0.22, 0.136),
-    "prism-chameleon/awakened": (0.4, 0.09, 0.136),
-    "rain-frog/adult": (0.37, 0.08, 0.136),
-    "rain-frog/awakened": (0.53, 0.19, 0.136),
-    "river-otter/adult": (0.47, 0.11, 0.136),
-    "river-otter/awakened": (0.51, 0.09, 0.136),
-    "rune/adult": (0.41, 0.14, 0.136),
-    "rune/awakened": (0.55, 0.2, 0.136),
-    "shadow-moth/adult": (0.38, 0.13, 0.187),
-    "shadow-moth/awakened": (0.37, 0.19, 0.17),
-}
-# 유체는 몸 전체가 얼굴 자리에 들어가요. 정사각으로 채우고 둘레를 이만큼 비워요
+# 성체·각성체 구도 (0023): 얼굴 상자(tools/art/faces.json, detect-faces.py 결과) 높이로 크기를 맞춰요.
+# 띠 타일 얼굴은 얼굴 상자 높이의 TILE_FACE배 정사각, 가운데를 얼굴 높이의 TILE_UP만큼 올려요(머리카락까지)
+TILE_FACE = 2.4
+TILE_UP = 0.15
+# 가로 기준: 얼굴 가운데와, 얼굴 아래 BODY_BAND 얼굴 높이 띠의 몸통 가운데(알파 중앙값)를 BODY_MIX 비율로 섞어요
+BODY_BAND = 3
+BODY_MIX = 0.5
+# 유체는 몸 전체가 띠 타일 얼굴 자리에 들어가요. 정사각으로 채우고 둘레를 이만큼 비워요
 BABY_MARGIN = 0.06
-
-
 
 
 def defringe(im: Image.Image) -> Image.Image:
@@ -73,12 +47,6 @@ def defringe(im: Image.Image) -> Image.Image:
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA")
 
 
-def square(im: Image.Image, cx: float, cy: float, d: float) -> Image.Image:
-    out = Image.new("RGBA", (round(d), round(d)), (0, 0, 0, 0))
-    out.paste(im, (round(d / 2 - cx), round(d / 2 - cy)), im)
-    return out.resize((FACE, FACE), Image.LANCZOS)
-
-
 def meta(png: Path) -> dict:
     info = Image.open(png).info
     c = json.loads(info["Comment"])
@@ -90,27 +58,35 @@ def meta(png: Path) -> dict:
 
 def main(root: Path, up2x: Path, repo: Path):
     rows = []
-    frames: dict[str, dict[str, tuple]] = {}
+    detected = json.loads((repo / "tools/art/faces.json").read_text(encoding="utf-8"))
+    frames: dict[str, dict[str, dict]] = {}
     for s in SPIRITS:
         for game, drive in STAGES.items():
             im = Image.open(up2x / f"{s}__{drive}.png").convert("RGBA")
             im = defringe(im.crop(im.getbbox()))
+            W, H = im.size
             body = im.copy()
             body.thumbnail((LONG, LONG), Image.LANCZOS)
+            solid = np.asarray(im.getchannel("A")) > 128
+            r4 = lambda v: round(float(v), 4)
             if drive == "cub":
-                d = max(im.size) / (1 - 2 * BABY_MARGIN)
-                face = square(im, im.width / 2, im.height / 2, d)
-                how = "몸 전체를 정사각으로"
+                # 보이는 면적의 제곱근(폭 비율)과 무게중심 x로 크기·가로 자리를 맞춰요. 타일 얼굴은 몸 전체
+                xs = np.nonzero(solid)[1]
+                frame = {"k": "mass", "x": r4(xs.mean() / W), "u": r4(np.sqrt(solid.sum()) / W),
+                         "c": [0.5, 0.5, r4(max(W, H) / (1 - 2 * BABY_MARGIN) / H)]}
             else:
-                fx, fy, fd = FACES[f"{s}/{drive}"]
-                face = square(im, fx * im.width, fy * im.height, fd * max(im.size))
-                how = f"얼굴 자리 {fx}, {fy}, 지름 {fd}"
-                frames.setdefault(s.replace("-", "_"), {})[game] = (fx, fy, fd)
+                _, x0, y0, x1, y1 = detected[f"{s}/{drive}"]["faces"][0]
+                fx, fy, fh = (x0 + x1) / 2 * W, (y0 + y1) / 2 * H, (y1 - y0) * H
+                band = solid[int(y0 * H + fh):int(min(H, y0 * H + fh * (1 + BODY_BAND)))]
+                cols = np.nonzero(band)[1]
+                tx = float(np.median(cols)) if len(cols) else fx
+                frame = {"k": "face", "x": r4((fx * (1 - BODY_MIX) + tx * BODY_MIX) / W), "y": r4(fy / H), "u": r4(fh / H),
+                         "c": [r4(fx / W), r4((fy - fh * TILE_UP) / H), r4(fh * TILE_FACE / H)]}
+            frames.setdefault(s.replace("-", "_"), {})[game] = frame
             out = repo / "public/assets/spirits" / s
             out.mkdir(parents=True, exist_ok=True)
             m = meta(root / "final" / f"{s}__{drive}.png")
-            for name, img, work in [(f"{game}.webp", body, f"알파 기준으로 자르고 긴 변 {LONG}로 줄임"),
-                                    (f"{game}-face.webp", face, f"얼굴 원형용 {FACE} 정사각 ({how})")]:
+            for name, img, work in [(f"{game}.webp", body, f"알파 기준으로 자르고 긴 변 {LONG}로 줄임")]:
                 p = out / name
                 img.save(p, "WEBP", quality=86, method=6)
                 rows.append({
@@ -128,8 +104,8 @@ def main(root: Path, up2x: Path, repo: Path):
     prov = repo / "assets/provenance.jsonl"
     keep = [l for l in prov.read_text(encoding="utf-8").splitlines() if l.strip() and '"assets/spirits/' not in l]
     prov.write_text("\n".join(keep + [json.dumps(r, ensure_ascii=False) for r in rows]) + "\n", encoding="utf-8", newline="\n")
-    (repo / "src/presentation/spiritFrames.json").write_text(
-        json.dumps(frames, indent=1) + "\n", encoding="utf-8", newline="\n")
+    lines = [f' "{k}": {json.dumps(v, ensure_ascii=False)}' for k, v in frames.items()]
+    (repo / "src/presentation/spiritFrames.json").write_text("{\n" + ",\n".join(lines) + "\n}\n", encoding="utf-8", newline="\n")
     print(f"{len(rows)} files")
 
 

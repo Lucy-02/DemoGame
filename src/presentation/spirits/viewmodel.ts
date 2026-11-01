@@ -1,6 +1,7 @@
 // 정령 관리 화면이 그리는 데이터. 화면은 이것만 보고 그려요 (정원 상태 → fromGarden.ts → 이 모양).
 import type { Stage } from "../../core/types";
 import type { IconId } from "../faces";
+import type { Crop, Fit, Frame } from "./artFit";
 
 export type TabId = "overview" | "growth" | "bond";
 
@@ -21,8 +22,8 @@ export interface TileVM {
   /** 할 일 개수 (0이면 배지 없음) */
   todo: number;
   deployed: boolean;
-  /** 원형 얼굴 그림 텍스처 (없으면 자리표시) */
-  face?: string;
+  /** 원형 얼굴: 본그림 텍스처와 자를 자리 (없으면 자리표시) */
+  face?: { key: string; crop: Crop };
 }
 
 export interface StatVM {
@@ -96,7 +97,7 @@ export interface SpiritDetailVM {
   id: string;
   name: string;
   /** 지금 단계 본그림 (없으면 자리표시) */
-  art?: { key: string; frame?: readonly [number, number, number] };
+  art?: { key: string; frame?: Frame; fit: Fit };
   stage: string;
   /** 목업은 레벨이 없어요 */
   level?: number;
