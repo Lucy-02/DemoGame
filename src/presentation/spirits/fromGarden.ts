@@ -6,6 +6,7 @@ import {
 } from "../../core/garden";
 import { baseStat, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
 import { describeCard } from "../../core/text";
+import { spiritArt } from "../spiritArt";
 import { STAGES, type CardDef, type StatKey } from "../../core/types";
 import { COPY, DEED_LABEL, STAGE_LABEL, TAB_LABEL } from "./copy";
 import type {
@@ -55,7 +56,7 @@ function tile(s: GardenSpirit, deployed: boolean): TileVM {
   const def = spiritDef(s.id);
   return {
     id: s.id, name: def.name, element: ELEMENT_ICON[def.element], chip: chip(s), ring: ring(s),
-    todo: todos(s).length, deployed,
+    todo: todos(s).length, deployed, face: spiritArt(s.id, s.stage)?.face,
   };
 }
 
@@ -152,7 +153,7 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
   // 호감도 막대의 목표: 아직 못 넘은 다음 문턱 (이미 넘었지만 단계가 모자란 이야기는 목록에서 보여요)
   const next = GROWTH.episodes.find((ep) => ep.affinity > s.affinity);
   return {
-    id: s.id, name: def.name, stage: STAGE_LABEL[s.stage], level, final,
+    id: s.id, name: def.name, art: spiritArt(s.id, s.stage)?.body, stage: STAGE_LABEL[s.stage], level, final,
     tags: [
       { icon: ELEMENT_ICON[def.element], text: ELEMENT_NAME[def.element] },
       { icon: ROLE_ICON[def.role] ?? "i-sword", text: ROLE_NAME[def.role] ?? def.role },

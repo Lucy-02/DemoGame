@@ -20,6 +20,8 @@ export interface TileVM {
   /** 할 일 개수 (0이면 배지 없음) */
   todo: number;
   deployed: boolean;
+  /** 원형 얼굴 그림 텍스처 (없으면 자리표시) */
+  face?: string;
 }
 
 export interface StatVM {
@@ -89,6 +91,8 @@ export interface EpisodeVM {
 export interface SpiritDetailVM {
   id: string;
   name: string;
+  /** 지금 단계 본그림 텍스처 (없으면 자리표시) */
+  art?: string;
   stage: string;
   level: number;
   final: boolean;
