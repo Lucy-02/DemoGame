@@ -9,7 +9,14 @@ export const BG = { rx: 0.58, ry: 0.72, cx: 0.5, cy: 0.4, mid: 0.55 };
 export const SCRIM = { bottomTo: 0.34, left: { a: 0.28, to: 0.28 }, top: { a: 0.3, to: 0.14 } };
 
 /** 일러스트 자리 (유체 자리표시 .q-phb 350,210 420 원 · .q-phs 440,330 240×288). 패널을 접으면 오른쪽으로 80 (.q.closed …translateX(80px)) */
-export const ART = { glow: { x: 350, y: 210, d: 420 }, body: { x: 440, y: 330, w: 240, h: 288 }, closedShift: 80 };
+export const ART = {
+  glow: { x: 350, y: 210, d: 420 }, body: { x: 440, y: 330, w: 240, h: 288 }, closedShift: 80,
+  /** 실제 일러스트 구도 (Lucy 2026-11-02 "상반신이 보이는 정도", 캐릭터 화면 관행). 가운데 x는 body 가운데.
+   *  성체·각성체: 얼굴 자리 지름을 faceD로 맞추고 얼굴 가운데를 faceY에 둬요(머리부터 허벅지쯤까지 보여요).
+   *  유체: 몸 전체를 whole 상자에 비율대로 넣고 아래 가운데에 붙여요. 그림은 위 막대 아래·아래 띠 위로만 보여요. */
+  upper: { faceD: 170, faceY: 200 },
+  whole: { w: 440, h: 440, bottom: 620 },
+};
 
 /** .tb height 52 padding 0 20 gap 10, 아래 1px 선 · .tb-back gap 4 · .res gap 6, .ri 16 */
 export const TOP = { h: 52, padX: 20, gap: 10, line: 1, backGap: 4, backIcon: 14, resGap: 6, resIcon: 16 };

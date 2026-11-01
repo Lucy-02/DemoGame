@@ -91,8 +91,8 @@ export interface EpisodeVM {
 export interface SpiritDetailVM {
   id: string;
   name: string;
-  /** 지금 단계 본그림 텍스처 (없으면 자리표시) */
-  art?: string;
+  /** 지금 단계 본그림 (없으면 자리표시) */
+  art?: { key: string; frame?: readonly [number, number, number] };
   stage: string;
   level: number;
   final: boolean;
