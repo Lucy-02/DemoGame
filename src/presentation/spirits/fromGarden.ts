@@ -7,8 +7,9 @@ import {
 import { baseStat, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
 import { describeCard } from "../../core/text";
 import { spiritArt } from "../spiritArt";
-import { STAGES, type CardDef, type StatKey } from "../../core/types";
+import { STAGES, type CardDef, type Stage, type StatKey } from "../../core/types";
 import { COPY, DEED_LABEL, STAGE_LABEL, TAB_LABEL } from "./copy";
+import { MOCK_ELEMENT_ICON, type Mockup } from "./mockups";
 import type {
   EpisodeVM, FactVM, GateVM, GrowthRowVM, RingVM, SpiritDetailVM, SpiritsVM, StatRowVM, TabVM, TileVM,
 } from "./viewmodel";
@@ -188,16 +189,72 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
   };
 }
 
-/** 화면 데이터. 고른 정령이 정원에 없으면 첫 정령을 보여 줘요 */
-export function spiritsVM(g: Garden, selected: string): SpiritsVM {
-  const sel = g.spirits.some((s) => s.id === selected) ? selected : g.spirits[0].id;
+// ───────────────────────── 목업 (파일럿 3종 밖) ─────────────────────────
+
+/** 목업 정령과 지금 보여 줄 단계 */
+export interface MockView {
+  list: readonly Mockup[];
+  stage(id: string): Stage;
+}
+
+const mockIcon = (m: Mockup) => MOCK_ELEMENT_ICON[m.element] ?? "e-none";
+
+function mockTile(m: Mockup, stage: Stage): TileVM {
+  const rank = stageRank(stage);
+  return {
+    id: m.id, name: m.name, element: mockIcon(m), chip: STAGE_LABEL[stage],
+    ring: stage === "awakened" ? { kind: "final", value: 1 } : { kind: "progress", value: rank / (STAGES.length - 1) },
+    todo: 0, deployed: false, face: spiritArt(m.id, stage)?.face,
+  };
+}
+
+function mockDetail(m: Mockup, stage: Stage): SpiritDetailVM {
+  const rank = stageRank(stage);
+  const a = spiritArt(m.id, stage);
+  return {
+    id: m.id, name: m.name, art: a && { key: a.body, frame: a.frame }, stage: STAGE_LABEL[stage], final: stage === "awakened", mock: true,
+    tags: [{ icon: mockIcon(m), text: m.element }, { text: COPY.mock }],
+    stats: STAT_ORDER.map((k) => ({ label: STAT_LABEL[k], up: false })),
+    tabs: [
+      { id: "overview", label: TAB_LABEL.overview },
+      { id: "growth", label: TAB_LABEL.growth },
+      { id: "bond", label: TAB_LABEL.bond, count: `0/${GROWTH.episodes.length}` },
+    ],
+    facts: [{ kind: "next", label: COPY.next, final: COPY.undecided }],
+    overview: {
+      rows: [],
+      awaken: { name: COPY.awaken, desc: COPY.undecided },
+      reroll: { shown: false, can: false, cost: GROWTH.reroll.cost },
+    },
+    growth: {
+      rows: STAGES.map((st, i) => ({
+        stage: STAGE_LABEL[st], state: i < rank ? "done" : i === rank ? "now" : "next", pick: st,
+        chips: [], notes: i === rank ? [] : [COPY.pickStage],
+      })),
+    },
+    bond: {
+      affinity: 0,
+      next: GROWTH.episodes[0]?.affinity,
+      episodes: GROWTH.episodes.map((ep, i) => ({ n: i + 1, state: "locked", need: `${COPY.affinity} ${ep.affinity}` })),
+      feed: { gain: 0, cost: GROWTH.feed.cost, can: false },
+    },
+  };
+}
+
+/** 화면 데이터. 고른 정령이 정원(또는 목업)에 없으면 첫 정령을 보여 줘요. 목업은 정원 정령 뒤에 붙어요 */
+export function spiritsVM(g: Garden, selected: string, mocks?: MockView): SpiritsVM {
+  const mock = mocks?.list.find((m) => m.id === selected);
+  const sel = mock || g.spirits.some((s) => s.id === selected) ? selected : g.spirits[0].id;
   const partySize = C.party_size;
   return {
     material: g.material,
-    roster: g.spirits.map((s, i) => tile(s, i < partySize)),
+    roster: [
+      ...g.spirits.map((s, i) => tile(s, i < partySize)),
+      ...(mocks?.list.map((m) => mockTile(m, mocks.stage(m.id))) ?? []),
+    ],
     deployed: Math.min(partySize, g.spirits.length),
     partySize,
     selected: sel,
-    detail: detail(g, gardenSpirit(g, sel)),
+    detail: mock ? mockDetail(mock, mocks!.stage(mock.id)) : detail(g, gardenSpirit(g, sel)),
   };
 }

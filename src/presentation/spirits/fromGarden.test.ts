@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { GardenSession } from "../../session/garden";
 import { GARDENS } from "./fixtures";
 import { spiritsVM } from "./fromGarden";
+import { MOCKUPS } from "./mockups";
 
 describe("정령 관리 화면 데이터", () => {
   it("띠 링: 키우기 가능 / 진행 중 / 최종 단계, 할 일 개수", () => {
@@ -11,6 +12,18 @@ describe("정령 관리 화면 데이터", () => {
       ["성체 Lv 5", "progress", 1],
       ["각성체 Lv 6", "final", 0],
     ]);
+  });
+
+  it("목업: 파일럿 뒤에 붙고, 정하지 않은 값은 비워요", () => {
+    const mocks = { list: MOCKUPS, stage: (id: string) => (id === "night_owl" ? "baby" as const : "awakened" as const) };
+    const vm = spiritsVM(GARDENS.mixed, "night_owl", mocks);
+    expect(vm.roster).toHaveLength(3 + MOCKUPS.length);
+    expect(vm.roster.slice(3).every((t) => t.face && !t.deployed && t.todo === 0)).toBe(true);
+    const d = vm.detail;
+    expect([d.name, d.stage, d.level, d.mock, d.art?.key]).toEqual(["부엉이", "유체", undefined, true, "spirit:night_owl:baby:body"]);
+    expect(d.stats.every((s) => s.value === undefined)).toBe(true);
+    expect(d.growth.rows.map((r) => [r.state, r.pick])).toEqual([["now", "baby"], ["next", "adult"], ["next", "awakened"]]);
+    expect(spiritsVM(GARDENS.mixed, "night_owl").selected).toBe("fire_fox");
   });
 
   it("일러스트: 지금 단계 그림, 그림이 없는 정령(불여우)은 자리표시", () => {

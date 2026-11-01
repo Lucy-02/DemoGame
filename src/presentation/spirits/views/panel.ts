@@ -4,6 +4,7 @@ import { box, circle } from "../../style/draw";
 import { render, size, type BoxNode, type Node } from "../../style/flex";
 import { COPY } from "../copy";
 import { BIG_BUTTON, FRAME, PANEL } from "../layout";
+import type { Stage } from "../../../core/types";
 import type { EpisodeVM, GrowthRowVM, SpiritDetailVM, TabId, TabVM } from "../viewmodel";
 import { personalityPill } from "./idCard";
 import { P, T, badge, bar, button, glass, rule, text } from "./parts";
@@ -15,6 +16,8 @@ export interface PanelActions {
   feed(): void;
   reroll(): void;
   seeEpisode(): void;
+  /** 목업: 성장 길에서 단계를 눌러 그 단계 그림 보기 */
+  pickStage(stage: Stage): void;
 }
 
 export const PANEL_ICONS = [
@@ -100,8 +103,11 @@ function overview(d: SpiritDetailVM, act: PanelActions): Node[] {
   }));
   const per = d.overview.personality;
   const reroll = d.overview.reroll;
+  const stats: Node = rows.length
+    ? { t: "col", gap: B.secGap, children: [head(COPY.stats, legend), { t: "col", gap: G.rowGap, children: rows }] }
+    : { t: "col", gap: B.secGap, children: [head(COPY.stats), text(COPY.undecided, T.tags, P.ink2)] };
   return [
-    { t: "col", gap: B.secGap, children: [head(COPY.stats, legend), { t: "col", gap: G.rowGap, children: rows }] },
+    stats,
     {
       t: "col", gap: B.secGap,
       children: [
@@ -125,7 +131,7 @@ function overview(d: SpiritDetailVM, act: PanelActions): Node[] {
 
 // ───────────────────────── 성장 길 ─────────────────────────
 
-function growthRow(r: GrowthRowVM): Node {
+function growthRow(r: GrowthRowVM, act: PanelActions): Node {
   const Gr = PANEL.growth;
   const width = BODY.w - Gr.pad[1] - Gr.pad[3] - Gr.dot - Gr.colW - Gr.colGap * 2;
   const lines: Node[] = r.chips.map((c) => ({
@@ -143,9 +149,11 @@ function growthRow(r: GrowthRowVM): Node {
     ],
   }));
   const notes = r.notes.map((n) => text(n, T.small, r.state === "next" ? P.ink3Spirit : P.ink2));
+  const pick = r.pick;
   return {
     t: "row", pad: Gr.pad, gap: Gr.colGap, radius: Gr.radius, align: "start",
     style: r.state === "now" ? { fill: P.veil["06"] } : undefined,
+    ...(pick && r.state !== "now" ? { onClick: () => act.pickStage(pick) } : {}),
     children: [
       {
         t: "block", w: Gr.dot, h: Gr.dot, mt: Gr.dotMt,
@@ -170,12 +178,14 @@ function growthRow(r: GrowthRowVM): Node {
   };
 }
 
-function growth(d: SpiritDetailVM): Node[] {
+function growth(d: SpiritDetailVM, act: PanelActions): Node[] {
   const gr = d.growth;
+  const steps: Node = { t: "col", gap: PANEL.growth.gap, children: gr.rows.map((r) => growthRow(r, act)) };
+  if (gr.level === undefined) return [steps];
   const exp: Node = gr.exp
     ? { t: "col", gap: B.secGap, children: [head(`${COPY.exp} ${COPY.lv(gr.level)}`, numPair(gr.exp.have, gr.exp.need)), bar(PANEL.growth.exp, gr.exp.have / gr.exp.need, P.veil["16"], P.ink2)] }
     : head(`${COPY.exp} ${COPY.lv(gr.level)}`, text(COPY.maxLevel, T.secHead, P.ink2));
-  return [exp, { t: "col", gap: PANEL.growth.gap, children: gr.rows.map(growthRow) }];
+  return [exp, steps];
 }
 
 /** 성장 길 아래: 다음 단계 문 (조건 진척 + 키우기) */
@@ -248,7 +258,7 @@ function bond(d: SpiritDetailVM, act: PanelActions): Node[] {
 export function drawPanel(scene: Phaser.Scene, d: SpiritDetailVM, tab: TabId, act: PanelActions) {
   box(scene.add.graphics(), X, PANEL.y, PANEL.w, PANEL.h, PANEL.radius, glass(true));
   drawTabs(scene, d, tab, act);
-  const body = tab === "overview" ? overview(d, act) : tab === "growth" ? growth(d) : bond(d, act);
+  const body = tab === "overview" ? overview(d, act) : tab === "growth" ? growth(d, act) : bond(d, act);
   if (tab === "growth") drawSpine(scene, body);
   render(scene, { t: "col", w: BODY.w, gap: B.gap, children: body }, BODY.x, BODY.y);
   // 아래에 붙는 줄 (.q-awk margin-top auto, 위 1px 선)
@@ -262,9 +272,10 @@ export function drawPanel(scene: Phaser.Scene, d: SpiritDetailVM, tab: TabId, ac
 /** 성장 길 점들을 잇는 세로선 (.cs-gw::before left 7 w 2): 첫 점 가운데부터 마지막 점 가운데까지 */
 function drawSpine(scene: Phaser.Scene, body: Node[]) {
   const Gr = PANEL.growth;
-  const [exp, path] = body;
+  // 경험 줄 + 단계 목록, 목업은 단계 목록만
+  const path = body[body.length - 1];
   const rows = (path as BoxNode).children;
-  const top = BODY.y + size(exp).h + B.gap;
+  const top = BODY.y + (body.length > 1 ? size(body[0]).h + B.gap : 0);
   const dotY = Gr.pad[0] + Gr.dotMt + Gr.dot / 2;
   const last = rows.slice(0, -1).reduce((a, r) => a + size(r).h + Gr.gap, 0);
   box(scene.add.graphics(), BODY.x + Gr.spine.x, top + dotY, Gr.spine.w, last, 0, { fill: P.veil["16"] });

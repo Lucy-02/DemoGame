@@ -1,4 +1,5 @@
 // 정령 관리 화면이 그리는 데이터. 화면은 이것만 보고 그려요 (정원 상태 → fromGarden.ts → 이 모양).
+import type { Stage } from "../../core/types";
 import type { IconId } from "../faces";
 
 export type TabId = "overview" | "growth" | "bond";
@@ -26,7 +27,8 @@ export interface TileVM {
 
 export interface StatVM {
   label: string;
-  value: number;
+  /** 정하지 않은 값(목업)이면 undefined */
+  value?: number;
   /** 단계로 올랐나 (▲) */
   up: boolean;
 }
@@ -68,6 +70,8 @@ export interface UnlockChipVM {
 export interface GrowthRowVM {
   stage: string;
   state: "done" | "now" | "next";
+  /** 목업: 누르면 이 단계 그림을 보여 줘요 */
+  pick?: Stage;
   /** 이 단계에서 여는 레벨 줄 ("Lv2", "Lv3"…) */
   chips: (UnlockChipVM & { at: string })[];
   /** 성체 줄의 성격 공개 등 덧붙임 */
@@ -94,9 +98,13 @@ export interface SpiritDetailVM {
   /** 지금 단계 본그림 (없으면 자리표시) */
   art?: { key: string; frame?: readonly [number, number, number] };
   stage: string;
-  level: number;
+  /** 목업은 레벨이 없어요 */
+  level?: number;
   final: boolean;
-  tags: { icon: IconId; text: string }[];
+  /** 파일럿 3종 밖의 목업 (능력치·카드·각성이 아직 없어요) */
+  mock?: boolean;
+  /** 기호 없는 꼬리표도 있어요 (목업) */
+  tags: { icon?: IconId; text: string }[];
   /** 유체면 undefined (???) */
   personality?: string;
   stats: StatVM[];
@@ -110,7 +118,8 @@ export interface SpiritDetailVM {
     reroll: { can: boolean; cost: number; shown: boolean };
   };
   growth: {
-    level: number;
+    /** 목업은 레벨이 없어요 */
+    level?: number;
     exp?: { have: number; need: number };
     rows: GrowthRowVM[];
     gate?: GateVM;

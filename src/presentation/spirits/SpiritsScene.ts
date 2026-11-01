@@ -5,14 +5,17 @@ import type { Garden } from "../../core/garden";
 import { GardenSession } from "../../session/garden";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
+import type { Stage } from "../../core/types";
 import { DEFAULT_GARDEN, GARDENS } from "./fixtures";
-import { spiritsVM } from "./fromGarden";
+import { spiritsVM, type MockView } from "./fromGarden";
+import { MOCKUPS, MOCK_FIRST_STAGE } from "./mockups";
 import type { TabId } from "./viewmodel";
 import { drawArt, drawBackdrop, drawScrim } from "./views/backdrop";
 import { ID_ICONS, drawIdCard } from "./views/idCard";
 import { PANEL_ICONS, drawPanel } from "./views/panel";
 import { RAIL_ICONS, drawFacts, drawRail } from "./views/rail";
-import { STRIP_ICONS, drawStrip } from "./views/strip";
+import { FRAME, STRIP } from "./layout";
+import { STRIP_ICONS, clampFrom, drawStrip, stripFit } from "./views/strip";
 import { TOP_ICONS, drawTopbar } from "./views/topbar";
 
 export const SPIRITS_SCENE = "spirits";
@@ -32,6 +35,11 @@ export class SpiritsScene extends Phaser.Scene {
   private selected = "";
   private tab: TabId = "overview";
   private open = true;
+  /** 목업 정령마다 지금 보여 줄 단계 (성장 길에서 눌러 바꿔요) */
+  private mockStage = new Map<string, Stage>();
+  private readonly mocks: MockView = { list: MOCKUPS, stage: (id) => this.mockStage.get(id) ?? MOCK_FIRST_STAGE };
+  /** 아래 띠에서 맨 앞에 보이는 타일 번호 (휠로 넘겨요) */
+  private stripFrom = 0;
   /** 입력 처리 중에 지우면 안 돼서, 다시 그리기는 다음 update에서 해요 */
   private dirty = false;
 
@@ -49,11 +57,20 @@ export class SpiritsScene extends Phaser.Scene {
 
   preload() {
     for (const [id, w] of [...TOP_ICONS, ...ID_ICONS, ...STRIP_ICONS, ...PANEL_ICONS, ...RAIL_ICONS]) loadIcon(this, id, w);
-    preloadSpiritArt(this, this.session.state.spirits.map((s) => s.id));
+    preloadSpiritArt(this, [...this.session.state.spirits.map((s) => s.id), ...MOCKUPS.map((m) => m.id)]);
   }
 
   create() {
     const off = this.session.onChange(() => this.redraw());
+    this.reveal(this.selected);
+    // 아래 띠 위에서 휠을 굴리면 타일을 한 칸씩 넘겨요
+    this.input.on("wheel", (p: Phaser.Input.Pointer, _o: unknown, dx: number, dy: number) => {
+      if (p.y < FRAME.h - STRIP.h) return;
+      const step = Math.sign(dy || dx);
+      if (!step) return;
+      this.stripFrom += step;
+      this.redraw();
+    });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.leaveGrowth();
       off();
@@ -74,7 +91,7 @@ export class SpiritsScene extends Phaser.Scene {
 
   private paint() {
     this.children.removeAll(true);
-    const vm = spiritsVM(this.session.state, this.selected);
+    const vm = spiritsVM(this.session.state, this.selected, this.mocks);
     const d = vm.detail;
     drawBackdrop(this);
     drawArt(this, !this.open, d.art);
@@ -89,13 +106,18 @@ export class SpiritsScene extends Phaser.Scene {
         feed: () => this.session.dispatch({ kind: "feed", id: this.selected }),
         reroll: () => this.session.dispatch({ kind: "reroll", id: this.selected }),
         seeEpisode: () => this.session.dispatch({ kind: "seeEpisode", id: this.selected }),
+        pickStage: (stage) => {
+          this.mockStage.set(this.selected, stage);
+          this.redraw();
+        },
       });
     } else {
       const openTab = (t: TabId) => this.show(this.selected, t, true);
       drawFacts(this, d, openTab);
       drawRail(this, d, openTab);
     }
-    drawStrip(this, vm, (id) => this.show(id, this.tab, this.open));
+    this.stripFrom = clampFrom(this.stripFrom, vm.roster.length);
+    drawStrip(this, vm, this.stripFrom, (id) => this.show(id, this.tab, this.open));
   }
 
   /** 정령·탭·패널 상태를 바꿔요. 성장 길에서 나가면 그 정령의 새 해금을 본 것으로 (배지가 사라져요, "받기" 없음) */
@@ -105,10 +127,22 @@ export class SpiritsScene extends Phaser.Scene {
     this.selected = id;
     this.tab = tab;
     this.open = open;
+    this.reveal(id);
     this.redraw();
   }
 
+  /** 고른 정령 타일이 아래 띠에 보이게 넘겨요 */
+  private reveal(id: string) {
+    const ids = [...this.session.state.spirits.map((s) => s.id), ...MOCKUPS.map((m) => m.id)];
+    const i = ids.indexOf(id);
+    if (i < 0) return;
+    const fit = stripFit();
+    if (i < this.stripFrom) this.stripFrom = i;
+    else if (i >= this.stripFrom + fit) this.stripFrom = i - fit + 1;
+  }
+
   private leaveGrowth() {
-    if (this.open && this.tab === "growth") this.session.dispatch({ kind: "seeUnlocks", id: this.selected });
+    const garden = this.session.state.spirits.some((s) => s.id === this.selected);
+    if (garden && this.open && this.tab === "growth") this.session.dispatch({ kind: "seeUnlocks", id: this.selected });
   }
 }
