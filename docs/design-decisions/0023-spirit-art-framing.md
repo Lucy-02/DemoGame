@@ -12,15 +12,22 @@ Lucy가 확정 일러스트 14종 × 3단계를 넘겼어요(Drive `jjal-handoff
 - 누끼 어색함 시안 4개(A 지금 / B 테두리 정리 + 아래 사라짐 / C B + 뒤에서 비치는 빛 / D B + 그림 색이 배경에 번짐) 중 **D**. "배경이 적절하게 필요하긴 하겠다. 지금은 너무 날 것."
 
 ## 한 일
-- 구도 (`src/presentation/spirits/layout.ts` `ART`)
-  - 성체·각성체: 그림마다 얼굴 자리(`src/presentation/spiritFrames.json`)를 기준으로, 얼굴 지름 170, 얼굴 가운데 y 200. 머리부터 허벅지쯤까지 보여요.
-  - 유체: 몸 전체를 440×440에 넣고 띠 바로 위에 붙여요.
+- 구도 (`src/presentation/spirits/layout.ts` `ART`): 처음엔 눈대중 얼굴 원 지름 170으로 맞췄다가, 정령마다 크기가 들쭉날쭉해서 아래 "균일하게 맞추기"로 바꿨어요.
   - 그림은 정보 카드·패널 뒤로 지나가고, 위 막대 아래·아래 띠 위로만 보여요.
 - 화질: 1k 원본을 RealESRGAN anime_6B로 2× 키웠어요(Drive `up2x`와 같은 공정). 긴 변 1536 webp로 다시 만들었어요.
 - D 처리
   - 바깥 테두리의 흰 번짐 색을 안쪽 색으로 바꿔요. 파일을 만들 때 해요(`tools/art/import-spirits.py`).
   - 그림을 1/4로 줄여 blur 22·밝기 0.7을 걸고, 알파 0.85로 배경에 깔아요(`ART.ambient`).
   - 아래 띠에 걸리는 그림만 띠 위 80px 동안 서서히 사라져요(`ART.fade`). 몸 전체가 보이는 유체는 그대로예요.
+
+## 균일하게 맞추기와 피팅 페이지 (Lucy 2026-11-02)
+- Lucy: "캐릭터마다 확대율·배치·정렬을 맞춰 보이는 크기·느낌이 균일해야 해." "내가 피팅·조정하기 편한 에디터/검수 페이지를 만들어 줘."
+- 처음 자리(자동, `tools/art/import-spirits.py` → `src/presentation/spiritFrames.json`)
+  - 성체·각성체: 얼굴 감지(`tools/art/detect-faces.py`, ComfyUI의 face_yolov8m → `tools/art/faces.json`)로 얼굴 상자 높이를 135px(`ART.upper.faceH`)에 맞추고, 얼굴 가운데를 y 195에 둬요. 가로는 얼굴과 몸통 가운데를 반씩 섞어요.
+  - 유체: 보이는 면적의 제곱근을 330px(`ART.whole.mass`)에 맞추고 발밑을 y 620에 둬요.
+  - 띠 타일 얼굴: 얼굴 상자 2.4배 원(유체는 몸 전체). 따로 구운 얼굴 파일은 없애고 화면에서 본그림을 잘라요.
+- 사람이 맞춘 값: `src/presentation/spiritFit.json` (정령·단계마다 크기 배율 s, 이동 dx·dy, 타일 얼굴 c). 처음 자리를 다시 만들어도 지워지지 않아요.
+- 피팅 페이지: `pnpm dev:web` → `/spirit-fit.html`. 한 장씩 보기(끌어 이동·휠 크기·다른 정령 겹쳐 보기·패널 접힘), 나란히 보기(단계별 14종), 타일 얼굴 자르기. 저장하면 개발 서버가 `spiritFit.json`을 고치고 열린 게임 화면이 다시 불러와요. 그리는 계산은 게임과 같은 `src/presentation/spirits/artFit.ts`.
 
 ## 기각한 것
 - 테두리를 따라 얇게 두르는 외곽 glow: 스티커 느낌이 더 강해져요. 넓게 번진 뒤 빛(C)은 시안으로 냈지만 Lucy가 D를 골랐어요.

@@ -11,11 +11,12 @@ export const SCRIM = { bottomTo: 0.34, left: { a: 0.28, to: 0.28 }, top: { a: 0.
 /** 일러스트 자리 (유체 자리표시 .q-phb 350,210 420 원 · .q-phs 440,330 240×288). 패널을 접으면 오른쪽으로 80 (.q.closed …translateX(80px)) */
 export const ART = {
   glow: { x: 350, y: 210, d: 420 }, body: { x: 440, y: 330, w: 240, h: 288 }, closedShift: 80,
-  /** 실제 일러스트 구도 (Lucy 2026-11-02 "상반신이 보이는 정도", 캐릭터 화면 관행). 가운데 x는 body 가운데.
-   *  성체·각성체: 얼굴 자리 지름을 faceD로 맞추고 얼굴 가운데를 faceY에 둬요(머리부터 허벅지쯤까지 보여요).
-   *  유체: 몸 전체를 whole 상자에 비율대로 넣고 아래 가운데에 붙여요. 그림은 위 막대 아래·아래 띠 위로만 보여요. */
-  upper: { faceD: 170, faceY: 200 },
-  whole: { w: 440, h: 440, bottom: 620 },
+  /** 실제 일러스트 구도 (0023, Lucy: 캐릭터마다 보이는 크기·느낌이 균일하게). 가로 기준은 body 가운데.
+   *  성체·각성체: 얼굴 상자 높이를 faceH로 맞추고 얼굴 가운데를 faceY에 둬요(머리부터 허벅지쯤까지 보여요).
+   *  유체: 보이는 면적의 제곱근을 mass로 맞추고(maxW·maxH 안으로) 아래를 bottom에 붙여요.
+   *  그림은 위 막대 아래·아래 띠 위로만 보여요. */
+  upper: { faceH: 135, faceY: 195 },
+  whole: { mass: 330, maxW: 700, maxH: 560, bottom: 620 },
   /** 누끼 어색함 줄이기 (Lucy 2026-11-02 시안 D 고름): 그림을 scale로 줄여 blur·brightness를 걸고 alpha로 배경에 깔아
    *  그림 색이 배경에 번지게 해요. 그림은 아래 띠에 닿기 전 fade px 동안 서서히 사라져요. */
   ambient: { scale: 0.25, blur: 22, brightness: 0.7, alpha: 0.85 },

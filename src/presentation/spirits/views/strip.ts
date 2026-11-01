@@ -5,6 +5,7 @@ import { box, circle } from "../../style/draw";
 import { render, size, hitArea, type Node } from "../../style/flex";
 import { canvasTexture } from "../../style/gradient";
 import { placeholderArt } from "../../style/placeholder";
+import { paintTileFace } from "../artFit";
 import { COPY } from "../copy";
 import { FRAME, STRIP } from "../layout";
 import type { RingVM, SpiritsVM, TileVM } from "../viewmodel";
@@ -122,8 +123,11 @@ function drawTile(scene: Phaser.Scene, t: TileVM, selected: boolean, x: number, 
   const rx = x + (tile.w - R.d) / 2, ry = y + tile.pad[0];
   const faceD = R.d - R.faceInset * 2;
   circle(g, rx + R.d / 2, ry + R.d / 2, faceD, { fill: P.wall });
-  if (t.face && scene.textures.exists(t.face)) {
-    render(scene, { t: "image", key: t.face, w: faceD, h: faceD, round: true }, rx + R.faceInset, ry + R.faceInset);
+  const face = t.face;
+  if (face && scene.textures.exists(face.key)) {
+    const src = scene.textures.get(face.key).getSourceImage() as HTMLImageElement;
+    const k = canvasTexture(scene, `${face.key}@tile${faceD}:${face.crop.join(",")}`, faceD, faceD, (ctx) => paintTileFace(ctx, src, face.crop, faceD));
+    scene.add.image(rx + R.faceInset, ry + R.faceInset, k).setOrigin(0, 0);
   } else {
     const ph = faceD / 2;
     placeholderArt(scene, rx + (R.d - ph) / 2, ry + (R.d - ph) / 2, ph, ph, P.glassLine);

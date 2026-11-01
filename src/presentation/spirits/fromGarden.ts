@@ -51,9 +51,14 @@ function ring(s: GardenSpirit): RingVM {
   return { kind: "progress", value: stageProgress(s) };
 }
 
-function art(s: GardenSpirit): SpiritDetailVM["art"] {
-  const a = spiritArt(s.id, s.stage);
-  return a && { key: a.body, frame: a.frame };
+function art(id: string, stage: Stage): SpiritDetailVM["art"] {
+  const a = spiritArt(id, stage);
+  return a && { key: a.body, frame: a.frame, fit: a.fit };
+}
+
+function face(id: string, stage: Stage): TileVM["face"] {
+  const a = spiritArt(id, stage);
+  return a?.crop && { key: a.body, crop: a.crop };
 }
 
 const chip = (s: GardenSpirit) => `${STAGE_LABEL[s.stage]} ${COPY.lv(levelOf(s.exp))}`;
@@ -62,7 +67,7 @@ function tile(s: GardenSpirit, deployed: boolean): TileVM {
   const def = spiritDef(s.id);
   return {
     id: s.id, name: def.name, element: ELEMENT_ICON[def.element], chip: chip(s), ring: ring(s),
-    todo: todos(s).length, deployed, face: spiritArt(s.id, s.stage)?.face,
+    todo: todos(s).length, deployed, face: face(s.id, s.stage),
   };
 }
 
@@ -159,7 +164,7 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
   // 호감도 막대의 목표: 아직 못 넘은 다음 문턱 (이미 넘었지만 단계가 모자란 이야기는 목록에서 보여요)
   const next = GROWTH.episodes.find((ep) => ep.affinity > s.affinity);
   return {
-    id: s.id, name: def.name, art: art(s), stage: STAGE_LABEL[s.stage], level, final,
+    id: s.id, name: def.name, art: art(s.id, s.stage), stage: STAGE_LABEL[s.stage], level, final,
     tags: [
       { icon: ELEMENT_ICON[def.element], text: ELEMENT_NAME[def.element] },
       { icon: ROLE_ICON[def.role] ?? "i-sword", text: ROLE_NAME[def.role] ?? def.role },
@@ -204,15 +209,14 @@ function mockTile(m: Mockup, stage: Stage): TileVM {
   return {
     id: m.id, name: m.name, element: mockIcon(m), chip: STAGE_LABEL[stage],
     ring: stage === "awakened" ? { kind: "final", value: 1 } : { kind: "progress", value: rank / (STAGES.length - 1) },
-    todo: 0, deployed: false, face: spiritArt(m.id, stage)?.face,
+    todo: 0, deployed: false, face: face(m.id, stage),
   };
 }
 
 function mockDetail(m: Mockup, stage: Stage): SpiritDetailVM {
   const rank = stageRank(stage);
-  const a = spiritArt(m.id, stage);
   return {
-    id: m.id, name: m.name, art: a && { key: a.body, frame: a.frame }, stage: STAGE_LABEL[stage], final: stage === "awakened", mock: true,
+    id: m.id, name: m.name, art: art(m.id, stage), stage: STAGE_LABEL[stage], final: stage === "awakened", mock: true,
     tags: [{ icon: mockIcon(m), text: m.element }, { text: COPY.mock }],
     stats: STAT_ORDER.map((k) => ({ label: STAT_LABEL[k], up: false })),
     tabs: [
