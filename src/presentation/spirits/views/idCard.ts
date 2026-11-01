@@ -6,7 +6,10 @@ import { ID } from "../layout";
 import type { SpiritDetailVM } from "../viewmodel";
 import { P, T, glass, rule, text } from "./parts";
 
-export const ID_ICONS = [["g-fin", ID.stage.icon], ["e-fire", ID.tags.icon], ["e-water", ID.tags.icon], ["i-sword", ID.tags.icon], ["i-shield", ID.tags.icon], ["i-sprout", ID.tags.icon]] as const;
+export const ID_ICONS = [
+  ["g-fin", ID.stage.icon], ["e-fire", ID.tags.icon], ["e-water", ID.tags.icon], ["e-wind", ID.tags.icon], ["e-none", ID.tags.icon],
+  ["i-sword", ID.tags.icon], ["i-shield", ID.tags.icon], ["i-sprout", ID.tags.icon],
+] as const;
 
 const UP_MARK = "▲";
 
@@ -17,7 +20,7 @@ export function stageChip(d: Pick<SpiritDetailVM, "stage" | "level" | "final">):
     t: "row", h: S.h, pad: [0, S.padX, 0, S.padX], radius: S.radius, gap: S.gap, align: "center", style: { fill: P.veil["10"] },
     children: [
       ...(d.final ? [{ t: "icon", id: "g-fin", w: S.icon, h: S.icon, tint: P.ink } as Node] : []),
-      text(`${d.stage} ${COPY.lv(d.level)}`, T.stage, P.ink),
+      text(d.level === undefined ? d.stage : `${d.stage} ${COPY.lv(d.level)}`, T.stage, P.ink),
     ],
   };
 }
@@ -42,7 +45,10 @@ export function drawIdCard(scene: Phaser.Scene, d: SpiritDetailVM) {
         t: "row", gap: ID.tags.gap, align: "center",
         children: d.tags.map((tag): Node => ({
           t: "row", gap: ID.tags.iconGap, align: "center",
-          children: [{ t: "icon", id: tag.icon, w: ID.tags.icon, h: ID.tags.icon, tint: P.ink2 }, text(tag.text, T.tags, P.ink2)],
+          children: [
+            ...(tag.icon ? [{ t: "icon", id: tag.icon, w: ID.tags.icon, h: ID.tags.icon, tint: P.ink2 } as Node] : []),
+            text(tag.text, T.tags, P.ink2),
+          ],
         })),
       },
       {
@@ -62,7 +68,7 @@ export function drawIdCard(scene: Phaser.Scene, d: SpiritDetailVM) {
                 {
                   t: "row", align: "start",
                   children: [
-                    text(String(st.value), T.stat, P.ink, { lh: S.valueLh }),
+                    text(st.value === undefined ? COPY.unknown : String(st.value), T.stat, st.value === undefined ? P.ink3Spirit : P.ink, { lh: S.valueLh }),
                     ...(st.up ? [text(UP_MARK, T.statLabel, P.ok, { lh: 1 })] : []),
                   ],
                 },

@@ -51,6 +51,11 @@ export const COPY = {
   cost: (n: number) => `${COPY_MATERIAL} ${n}`,
   fresh: "새",
   freshCount: (n: number) => `새 카드 ${n}`,
+  /** 목업: 정하지 않은 숫자와 설명 */
+  unknown: "?",
+  undecided: "아직 정하지 않았어요",
+  mock: "목업",
+  pickStage: "눌러서 보기",
 };
 
 export const TAB_LABEL: Record<TabId, string> = {

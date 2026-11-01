@@ -13,7 +13,7 @@ import { P, T, button, glass, rule, text } from "./parts";
 const S = STRIP;
 export const STRIP_ICONS = [
   ["g-down", S.sort.icon], ["e-fire", S.filter.icon], ["i-sword", S.filter.icon], ["g-ring", S.filter.icon],
-  ["g-fin", S.chip.icon], ["g-flag", S.flag.icon], ["e-fire", S.name.icon], ["e-water", S.name.icon],
+  ["g-fin", S.chip.icon], ["g-flag", S.flag.icon], ["e-fire", S.name.icon], ["e-water", S.name.icon], ["e-wind", S.name.icon], ["e-none", S.name.icon],
 ] as const;
 
 /** 링 텍스처 (.q-ring svg): 바탕 원 + 진행 호. 최종 단계는 얇은 상아 원 */
@@ -166,7 +166,16 @@ function countBadge(n: number): Node {
   return { t: "col", round: true, w: b.d + b.outer * 2, h: b.d + b.outer * 2, pad: [b.outer, b.outer, b.outer, b.outer], style: { fill: P.ringOuter }, children: [core] };
 }
 
-export function drawStrip(scene: Phaser.Scene, vm: SpiritsVM, onSelect: (id: string) => void) {
+/** 띠에 한 번에 들어가는 타일 수 (넘치면 휠로 넘겨요) */
+export function stripFit(): number {
+  const room = FRAME.w - S.padX - (S.padX + S.head.w + S.gap);
+  return Math.max(1, Math.floor((room + S.tiles.gap) / (S.tile.w + S.tiles.gap)));
+}
+
+/** 맨 앞 타일 번호를 0 ~ (전체 - 들어가는 수) 안으로 */
+export const clampFrom = (from: number, total: number) => Math.max(0, Math.min(from, total - stripFit()));
+
+export function drawStrip(scene: Phaser.Scene, vm: SpiritsVM, from: number, onSelect: (id: string) => void) {
   const top = FRAME.h - S.h;
   const g = scene.add.graphics();
   box(g, 0, top, FRAME.w, S.h, 0, glass());
@@ -177,8 +186,9 @@ export function drawStrip(scene: Phaser.Scene, vm: SpiritsVM, onSelect: (id: str
 
   const tileTop = top + (S.h - tileHeight(vm.roster[0])) / 2;
   const x0 = S.padX + S.head.w + S.gap;
-  const selIndex = vm.roster.findIndex((t) => t.id === vm.selected);
-  vm.roster.forEach((t, i) => {
+  const shown = vm.roster.slice(from, from + stripFit());
+  const selIndex = shown.findIndex((t) => t.id === vm.selected);
+  shown.forEach((t, i) => {
     const x = x0 + i * (S.tile.w + S.tiles.gap);
     const th = drawTile(scene, t, i === selIndex, x, tileTop, onSelect);
     // 고른 타일 양옆 선은 숨겨요
