@@ -35,8 +35,10 @@ const ENEMY_TO: Partial<Record<CardTarget, string>> = { allEnemies: "모든 적�
 const ALLY = {
   block: { self: ["", "얻"], ally: ["아군 하나에게 ", "주"], allAllies: ["모든 아군이 ", "얻"] },
   empower: { self: ["", "얻"], ally: ["아군 하나에게 ", "부여하"], allAllies: ["모든 아군에게 ", "부여하"] },
+  thorns: { self: ["", "얻"], ally: ["아군 하나에게 ", "부여하"], allAllies: ["모든 아군이 ", "얻"] },
 } as const;
-const HEAL_TO: Partial<Record<CardTarget, string>> = { ally: "아군 하나의 ", allAllies: "모든 아군의 " };
+/** 아군의 수치가 바뀌는 효과 (회복·싱크로율): "아군 하나의 HP를 …" */
+const ALLY_OF: Partial<Record<CardTarget, string>> = { ally: "아군 하나의 ", allAllies: "모든 아군의 " };
 
 const sentence = (c: Clause) => `${c.to}${polite(c.core)}.${c.after ? ` ${c.after}` : ""}`;
 
@@ -82,7 +84,6 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
   const foeOf = t === "allEnemies" ? "모든 적의" : "대상의";
   /** 카드 주인에게만 가는 효과: 다른 아군을 고르는 카드에서는 "이 정령이"로 밝혀요 */
   const me = t === "ally" || t === "allAllies" ? "이 정령이 " : "";
-  const myOf = me ? "이 정령의 " : "";
   const ally = (op: keyof typeof ALLY, what: string): Clause => {
     const [to, verb] = (ALLY[op] as Record<string, readonly [string, string]>)[t] ?? ALLY[op].self;
     return { to, core: `${what} ${verb}` };
@@ -97,13 +98,13 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
         return [{ to: foe, core: `피해를 ${hits} 입히`, after: again }];
       }
       case "block": return [ally("block", `방어도를 ${sc(main(op.value), "guard")}`)];
-      case "heal": return [{ to: HEAL_TO[t] ?? "", core: `HP를 ${sc(main(op.value), "focus")} 회복하` }];
+      case "heal": return [{ to: ALLY_OF[t] ?? "", core: `HP를 ${sc(main(op.value), "focus")} 회복하` }];
       case "burn": return [{ to: foe, core: `화상을 ${sc(main(op.value), "focus")} 부여하` }];
       case "ignite": return [{ to: foe, core: "화상 수치만큼 피해를 입히고 화상을 모두 없애" }];
       case "chill": return [{ to: foe, core: `냉기를 ${sc(main(op.value), "focus")} 부여하` }];
       case "freeze":
         return [{ to: foe, core: "빙결시키", after: `보스에게는 대신 냉기를 ${op.bossChill} ${polite("부여하")}.` }];
-      case "thorns": return [{ to: me, core: `반격을 ${sc(main(op.value), "guard")} 얻` }];
+      case "thorns": return [ally("thorns", `반격을 ${sc(main(op.value), "guard")}`)];
       case "grow": return [{ to: "", core: `이번 전투 동안 이 카드의 수치가 ${op.value} 늘어나` }];
       case "draw": return [{ to: "", core: `카드를 ${op.value}장 뽑` }];
       case "vulnerable": return [{ to: foe, core: `취약을 ${op.turns}턴 부여하` }];
@@ -112,13 +113,13 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
       case "taunt": return [{ to: me, core: "도발을 얻" }];
       case "moveFront": return [{ to: "", core: "이 정령이 앞열로 나서" }];
       case "manaNextTurn": return [{ to: "", core: `다음 턴에 마력을 ${op.value} 더 얻` }];
-      case "sync": return [{ to: "", core: `${myOf}싱크로율이 ${op.value}%p 오르` }];
+      case "sync": return [{ to: ALLY_OF[t] ?? "", core: `싱크로율이 ${op.value}%p 오르` }];
       case "aura": {
         const body = ((): string => {
           switch (op.aura) {
             case "blaze_wing": return `이 정령이 화상을 부여할 때마다 화상을 ${op.value} 더 ${polite("부여하")}.`;
             case "deep_water": return `내 턴 시작 시 방어도를 ${sc(op.value, "guard")} ${polite("얻")}.`;
-            case "root_down": return `내 턴이 끝날 때 HP 비율이 가장 낮은 아군의 HP를 ${sc(op.value, "focus")} ${polite("회복하")}.`;
+            case "root_down": return `내 턴이 끝날 때 HP가 가장 낮은 아군의 HP를 ${sc(op.value, "focus")} ${polite("회복하")}.`;
             case "eye_of_storm": return `매 턴 ${op.value}번째로 사용하는 카드의 비용이 0이 ${polite("되")}.`;
           }
         })();
@@ -129,7 +130,7 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
       case "burnMultiply": return [{ to: "", core: `${foeOf} 화상을 ${op.value}배로 늘리` }];
       case "damagePerPlayed":
         return [{ to: "", core: `이번 전투에서 사용한 ${ELEMENT_NAME[op.element]} 카드 1장당 ${foe}피해를 ${op.value} 입히` }];
-      case "repeatNext": return [{ to: "", core: `다음으로 사용하는 비용 ${op.maxCost} 이하 카드가 한 번 더 발동하` }];
+      case "repeatNext": return [{ to: "", core: `이번 턴에 다음으로 사용하는 비용 ${op.maxCost} 이하 카드가 한 번 더 발동하` }];
       case "combo": return [`연속 ${op.n}: ${join(op.then.flatMap(one))}`];
     }
   };
