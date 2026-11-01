@@ -18,6 +18,8 @@ STAGES = {"baby": "cub", "adult": "adult", "awakened": "awakened"}
 LONG = 1536
 # 테두리 색 정리 폭 (2× 원본 px)
 EDGE = 2
+# 흰 매트 제거를 할 최소 알파 (이보다 투명하면 계산이 불안정해서 defringe에 맡겨요)
+UNMATTE_MIN = 0.06
 # 성체·각성체 구도 (0023): 얼굴 상자(tools/art/faces.json, detect-faces.py 결과) 높이로 크기를 맞춰요.
 # 띠 타일 얼굴은 얼굴 상자 높이의 TILE_FACE배 정사각, 가운데를 얼굴 높이의 TILE_UP만큼 올려요(머리카락까지)
 TILE_FACE = 2.4
@@ -27,6 +29,24 @@ BODY_BAND = 3
 BODY_MIX = 0.5
 # 유체는 몸 전체가 띠 타일 얼굴 자리에 들어가요. 정사각으로 채우고 둘레를 이만큼 비워요
 BABY_MARGIN = 0.06
+
+
+def matte_color(png: Path) -> np.ndarray:
+    """원본 생성 그림의 배경색 (테두리 4px의 중앙값). 흰 배경이라도 순백이 아니라 밝은 회색이에요."""
+    a = np.asarray(Image.open(png).convert("RGB")).astype(np.float32)
+    ring = np.concatenate([a[:4].reshape(-1, 3), a[-4:].reshape(-1, 3), a[:, :4].reshape(-1, 3), a[:, -4:].reshape(-1, 3)])
+    return np.median(ring, axis=0)
+
+
+def unmatte(im: Image.Image, bg: np.ndarray) -> Image.Image:
+    """반투명한 곳에 섞인 배경색을 빼서 원래 색을 되살려요 (I = αF + (1-α)B → F = (I - (1-α)B) / α).
+    베일·물·머리카락 끝이 어두운 배경 위에서 뿌옇게 뜨는 것을 줄여요. 거의 투명한 곳은 defringe가 맡아요."""
+    a = np.asarray(im).astype(np.float32)
+    al = a[..., 3:4] / 255
+    use = (al > UNMATTE_MIN) & (al < 1)
+    fg = (a[..., :3] - (1 - al) * bg) / np.maximum(al, UNMATTE_MIN)
+    a[..., :3] = np.where(use, np.clip(fg, 0, 255), a[..., :3])
+    return Image.fromarray(a.astype(np.uint8), "RGBA")
 
 
 def defringe(im: Image.Image) -> Image.Image:
@@ -63,7 +83,8 @@ def main(root: Path, up2x: Path, repo: Path):
     for s in SPIRITS:
         for game, drive in STAGES.items():
             im = Image.open(up2x / f"{s}__{drive}.png").convert("RGBA")
-            im = defringe(im.crop(im.getbbox()))
+            bg = matte_color(root / "final" / f"{s}__{drive}.png")
+            im = defringe(unmatte(im.crop(im.getbbox()), bg))
             W, H = im.size
             body = im.copy()
             body.thumbnail((LONG, LONG), Image.LANCZOS)
@@ -98,7 +119,7 @@ def main(root: Path, up2x: Path, repo: Path):
                     "source_png": f"Drive jjal-handoff legacy/confirmed-raw-20261102 ({s} {drive})",
                     "human_work": ("Lucy 생성·선별·확정 (confirmed). 배경 제거 "
                                    + ("lucida+vitmatte" if (s, drive) == ("night-owl", "awakened") else "hybrid+vitmatte")
-                                   + f". Claude가 RealESRGAN anime_6B로 2× 업스케일(알파 스냅), 바깥 테두리 흰 번짐 색 정리, {work}, webp 변환"),
+                                   + f". Claude가 RealESRGAN anime_6B로 2× 업스케일(알파 스냅), 흰 매트 제거(원본 배경색을 반투명한 곳에서 뺌), 바깥 테두리 흰 번짐 색 정리, {work}, webp 변환"),
                     "note": "정령 일러스트 첫 적용. 눈 재생성·색 보정 미실행(Lucy 판정 뒤). 출시 판정 전",
                 })
     prov = repo / "assets/provenance.jsonl"
