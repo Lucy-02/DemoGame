@@ -1,7 +1,8 @@
-# 정령 일러스트를 게임용 파일로 옮겨요 (Drive jjal-handoff confirmed와 같은 배경 제거본에서).
-# 쓰는 법: python -I tools/art/import-spirits.py <jjal-bgrm 폴더> <저장소 루트>
-# 만드는 것: public/assets/spirits/<정령>/<단계>.webp (알파로 자르고 긴 변 640)
+# 정령 일러스트를 게임용 파일로 옮겨요 (Drive jjal-handoff confirmed와 같은 배경 제거본을 2×로 키운 것에서).
+# 쓰는 법: python -I tools/art/import-spirits.py <jjal-bgrm 폴더> <2× 폴더 (upscale-2x.py 결과)> <저장소 루트>
+# 만드는 것: public/assets/spirits/<정령>/<단계>.webp (알파로 자르고 긴 변 LONG)
 #          public/assets/spirits/<정령>/<단계>-face.webp (128 정사각, 띠 타일 원형 얼굴용)
+#          src/presentation/spiritFrames.json (성체·각성체 얼굴 자리. 화면이 상반신 구도를 잡는 데 써요)
 # 그리고 assets/provenance.jsonl에 파일마다 한 줄 (원본 PNG의 NovelAI 메타데이터에서).
 # 필요: Pillow
 import hashlib, json, sys
@@ -12,7 +13,7 @@ SPIRITS = ["flash", "glass-salamander", "kelp-seahorse", "magma-ibex", "mirage",
            "night-owl", "pearl-oyster", "prism-chameleon", "rain-frog", "river-otter", "rune", "shadow-moth"]
 # 게임 단계 이름 ← Drive 파일 단계 이름
 STAGES = {"baby": "cub", "adult": "adult", "awakened": "awakened"}
-LONG = 640
+LONG = 1536
 FACE = 128
 # 성체·각성체 얼굴 자리: (가운데 x, 가운데 y: 자른 그림 폭·높이 비율, 지름: 긴 변 비율). 눈으로 맞춘 값이에요.
 FACES = {
@@ -49,10 +50,6 @@ FACES = {
 BABY_MARGIN = 0.06
 
 
-def cutout(root: Path, s: str, st: str) -> Path:
-    if s == "night-owl" and st == "awakened":
-        return root / "final-owl-out/lucida+vitmatte" / f"{s}__{st}.rgba.png"
-    return root / "final-out/hybrid+vitmatte" / f"{s}__{st}.rgba.png"
 
 
 def square(im: Image.Image, cx: float, cy: float, d: float) -> Image.Image:
@@ -70,11 +67,12 @@ def meta(png: Path) -> dict:
             "settings": {k: c[k] for k in keep if k in c}}
 
 
-def main(root: Path, repo: Path):
+def main(root: Path, up2x: Path, repo: Path):
     rows = []
+    frames: dict[str, dict[str, tuple]] = {}
     for s in SPIRITS:
         for game, drive in STAGES.items():
-            im = Image.open(cutout(root, s, drive)).convert("RGBA")
+            im = Image.open(up2x / f"{s}__{drive}.png").convert("RGBA")
             im = im.crop(im.getbbox())
             body = im.copy()
             body.thumbnail((LONG, LONG), Image.LANCZOS)
@@ -86,13 +84,14 @@ def main(root: Path, repo: Path):
                 fx, fy, fd = FACES[f"{s}/{drive}"]
                 face = square(im, fx * im.width, fy * im.height, fd * max(im.size))
                 how = f"얼굴 자리 {fx}, {fy}, 지름 {fd}"
+                frames.setdefault(s.replace("-", "_"), {})[game] = (fx, fy, fd)
             out = repo / "public/assets/spirits" / s
             out.mkdir(parents=True, exist_ok=True)
             m = meta(root / "final" / f"{s}__{drive}.png")
             for name, img, work in [(f"{game}.webp", body, f"알파 기준으로 자르고 긴 변 {LONG}로 줄임"),
                                     (f"{game}-face.webp", face, f"얼굴 원형용 {FACE} 정사각 ({how})")]:
                 p = out / name
-                img.save(p, "WEBP", quality=88, method=6)
+                img.save(p, "WEBP", quality=86, method=6)
                 rows.append({
                     "path": f"assets/spirits/{s}/{name}",
                     "sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
@@ -102,14 +101,16 @@ def main(root: Path, repo: Path):
                     "source_png": f"Drive jjal-handoff legacy/confirmed-raw-20261102 ({s} {drive})",
                     "human_work": ("Lucy 생성·선별·확정 (confirmed). 배경 제거 "
                                    + ("lucida+vitmatte" if (s, drive) == ("night-owl", "awakened") else "hybrid+vitmatte")
-                                   + f". Claude가 {work}, webp 변환"),
+                                   + f". Claude가 RealESRGAN anime_6B로 2× 업스케일(알파 스냅), {work}, webp 변환"),
                     "note": "정령 일러스트 첫 적용. 눈 재생성·색 보정 미실행(Lucy 판정 뒤). 출시 판정 전",
                 })
     prov = repo / "assets/provenance.jsonl"
     keep = [l for l in prov.read_text(encoding="utf-8").splitlines() if l.strip() and '"assets/spirits/' not in l]
     prov.write_text("\n".join(keep + [json.dumps(r, ensure_ascii=False) for r in rows]) + "\n", encoding="utf-8", newline="\n")
+    (repo / "src/presentation/spiritFrames.json").write_text(
+        json.dumps(frames, indent=1) + "\n", encoding="utf-8", newline="\n")
     print(f"{len(rows)} files")
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]), Path(sys.argv[2]))
+    main(Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]))

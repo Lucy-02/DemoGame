@@ -50,6 +50,11 @@ function ring(s: GardenSpirit): RingVM {
   return { kind: "progress", value: stageProgress(s) };
 }
 
+function art(s: GardenSpirit): SpiritDetailVM["art"] {
+  const a = spiritArt(s.id, s.stage);
+  return a && { key: a.body, frame: a.frame };
+}
+
 const chip = (s: GardenSpirit) => `${STAGE_LABEL[s.stage]} ${COPY.lv(levelOf(s.exp))}`;
 
 function tile(s: GardenSpirit, deployed: boolean): TileVM {
@@ -153,7 +158,7 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
   // 호감도 막대의 목표: 아직 못 넘은 다음 문턱 (이미 넘었지만 단계가 모자란 이야기는 목록에서 보여요)
   const next = GROWTH.episodes.find((ep) => ep.affinity > s.affinity);
   return {
-    id: s.id, name: def.name, art: spiritArt(s.id, s.stage)?.body, stage: STAGE_LABEL[s.stage], level, final,
+    id: s.id, name: def.name, art: art(s), stage: STAGE_LABEL[s.stage], level, final,
     tags: [
       { icon: ELEMENT_ICON[def.element], text: ELEMENT_NAME[def.element] },
       { icon: ROLE_ICON[def.role] ?? "i-sword", text: ROLE_NAME[def.role] ?? def.role },
