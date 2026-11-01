@@ -16,6 +16,10 @@ export const ART = {
    *  유체: 몸 전체를 whole 상자에 비율대로 넣고 아래 가운데에 붙여요. 그림은 위 막대 아래·아래 띠 위로만 보여요. */
   upper: { faceD: 170, faceY: 200 },
   whole: { w: 440, h: 440, bottom: 620 },
+  /** 누끼 어색함 줄이기 (Lucy 2026-11-02 시안 D 고름): 그림을 scale로 줄여 blur·brightness를 걸고 alpha로 배경에 깔아
+   *  그림 색이 배경에 번지게 해요. 그림은 아래 띠에 닿기 전 fade px 동안 서서히 사라져요. */
+  ambient: { scale: 0.25, blur: 22, brightness: 0.7, alpha: 0.85 },
+  fade: 80,
 };
 
 /** .tb height 52 padding 0 20 gap 10, 아래 1px 선 · .tb-back gap 4 · .res gap 6, .ri 16 */

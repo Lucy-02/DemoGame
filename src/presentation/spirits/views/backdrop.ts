@@ -1,4 +1,5 @@
-// 배경(.c-bg), 일러스트, 그림 위 그늘(.c-scrim). 일러스트는 ART.upper·whole 구도로 크게 그리고, 그림이 없는 정령은 정본 유체 자리에 X 상자로 비워 둬요.
+// 배경(.c-bg), 일러스트, 그림 위 그늘(.c-scrim). 일러스트는 ART.upper·whole 구도로 크게 그리고 색 번짐·아래 사라짐(ART.ambient·fade)을 더해요.
+// 그림이 없는 정령은 정본 유체 자리에 X 상자로 비워 둬요.
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { transparentOf, withAlpha } from "../../style/color";
@@ -34,26 +35,66 @@ export function drawArt(scene: Phaser.Scene, shifted: boolean, art?: SpiritDetai
     placeholderArt(scene, body.x + dx, body.y, body.w, body.h, P.glassLine);
     return;
   }
-  const cx = body.x + dx + body.w / 2;
-  const img = scene.add.image(0, 0, art.key).setOrigin(0, 0);
-  const w = img.width, h = img.height;
-  let s: number, x: number, y: number;
-  if (art.frame) {
-    const [fx, fy, fd] = art.frame;
-    s = ART.upper.faceD / (fd * Math.max(w, h));
-    x = cx - fx * w * s;
-    y = ART.upper.faceY - fy * h * s;
-  } else {
-    const { whole } = ART;
-    s = Math.min(whole.w / w, whole.h / h);
-    x = cx - (w * s) / 2;
-    y = whole.bottom - h * s;
+  const src = scene.textures.get(art.key).getSourceImage() as CanvasImageSource & { width: number; height: number };
+  const at = place(src.width, src.height, body.x + dx + body.w / 2, art.frame);
+  const key2 = canvasTexture(scene, `spirits:art:${art.key}:${dx}`, FRAME.w, FRAME.h, (ctx) => paintArt(ctx, src, at));
+  scene.add.image(0, 0, key2).setOrigin(0, 0);
+}
+
+interface Placed { x: number; y: number; w: number; h: number }
+
+/** 그림을 화면 어디에 얼마나 크게 둘지 (ART.upper: 얼굴 기준 상반신, ART.whole: 몸 전체) */
+function place(w: number, h: number, cx: number, frame?: readonly [number, number, number]): Placed {
+  if (frame) {
+    const [fx, fy, fd] = frame;
+    const s = ART.upper.faceD / (fd * Math.max(w, h));
+    return { x: cx - fx * w * s, y: ART.upper.faceY - fy * h * s, w: w * s, h: h * s };
   }
-  img.setScale(s).setPosition(x, y);
-  // 위 막대 아래, 아래 띠 위로만 (텍스처 좌표로 잘라요)
-  const top = Math.max(0, (TOP.h - y) / s);
-  const bottom = Math.min(h, (FRAME.h - STRIP.h - y) / s);
-  img.setCrop(0, top, w, Math.max(0, bottom - top));
+  const { whole } = ART;
+  const s = Math.min(whole.w / w, whole.h / h);
+  return { x: cx - (w * s) / 2, y: whole.bottom - h * s, w: w * s, h: h * s };
+}
+
+/** 그림 색 번짐 → 그림(아래로 사라짐). 위 막대 아래, 아래 띠 위로만 그려요 */
+function paintArt(ctx: CanvasRenderingContext2D, src: CanvasImageSource, at: Placed) {
+  const top = TOP.h, bottom = FRAME.h - STRIP.h;
+  const A = ART.ambient;
+  const glow = document.createElement("canvas");
+  glow.width = FRAME.w * A.scale;
+  glow.height = FRAME.h * A.scale;
+  const gc = glow.getContext("2d")!;
+  gc.filter = `blur(${A.blur}px) brightness(${A.brightness})`;
+  gc.drawImage(src, at.x * A.scale, at.y * A.scale, at.w * A.scale, at.h * A.scale);
+
+  const body = document.createElement("canvas");
+  body.width = FRAME.w;
+  body.height = FRAME.h;
+  const bc = body.getContext("2d")!;
+  bc.drawImage(src, at.x, at.y, at.w, at.h);
+  // 아래 띠에 걸리는 그림만 서서히 사라지게 (몸 전체가 보이는 유체는 그대로)
+  if (at.y + at.h > bottom) fadeOut(bc, bottom);
+  bc.globalCompositeOperation = "source-over";
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, top, FRAME.w, bottom - top);
+  ctx.clip();
+  ctx.globalAlpha = A.alpha;
+  ctx.drawImage(glow, 0, 0, FRAME.w, FRAME.h);
+  ctx.globalAlpha = 1;
+  ctx.drawImage(body, 0, 0);
+  ctx.restore();
+}
+
+function fadeOut(c: CanvasRenderingContext2D, bottom: number) {
+  c.globalCompositeOperation = "destination-in";
+  const fade = c.createLinearGradient(0, bottom - ART.fade, 0, bottom);
+  // destination-in은 알파만 봐요 (색은 아무거나, 알파는 1 → 0)
+  fade.addColorStop(0, withAlpha(P.scrim, 1));
+  fade.addColorStop(1, withAlpha(P.scrim, 0));
+  c.fillStyle = fade;
+  // 칠하지 않은 곳은 지워지니 전체를 칠해요 (기울기 위쪽은 불투명으로 이어져요)
+  c.fillRect(0, 0, FRAME.w, FRAME.h);
 }
 
 export function drawScrim(scene: Phaser.Scene) {
