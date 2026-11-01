@@ -122,8 +122,12 @@ function drawTile(scene: Phaser.Scene, t: TileVM, selected: boolean, x: number, 
   const rx = x + (tile.w - R.d) / 2, ry = y + tile.pad[0];
   const faceD = R.d - R.faceInset * 2;
   circle(g, rx + R.d / 2, ry + R.d / 2, faceD, { fill: P.wall });
-  const ph = faceD / 2;
-  placeholderArt(scene, rx + (R.d - ph) / 2, ry + (R.d - ph) / 2, ph, ph, P.glassLine);
+  if (t.face && scene.textures.exists(t.face)) {
+    render(scene, { t: "image", key: t.face, w: faceD, h: faceD, round: true }, rx + R.faceInset, ry + R.faceInset);
+  } else {
+    const ph = faceD / 2;
+    placeholderArt(scene, rx + (R.d - ph) / 2, ry + (R.d - ph) / 2, ph, ph, P.glassLine);
+  }
   scene.add.image(rx, ry, ringTexture(scene, t.ring)).setOrigin(0, 0);
   // 단계 칩: 링 아래 가운데에 걸쳐요
   const chip: Node = {

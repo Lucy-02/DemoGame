@@ -13,6 +13,13 @@ describe("정령 관리 화면 데이터", () => {
     ]);
   });
 
+  it("일러스트: 지금 단계 그림, 그림이 없는 정령(불여우)은 자리표시", () => {
+    const vm = spiritsVM(GARDENS.mixed, "mist_cat");
+    expect(vm.roster.map((t) => t.face)).toEqual([undefined, "spirit:glass_salamander:adult:face", "spirit:mist_cat:awakened:face"]);
+    expect(vm.detail.art).toBe("spirit:mist_cat:awakened:body");
+    expect(spiritsVM(GARDENS.mixed, "fire_fox").detail.art).toBeUndefined();
+  });
+
   it("탭 3개, 할 일은 성장 길·유대 탭 배지와 요약 카드로 이어져요", () => {
     const d = spiritsVM(GARDENS.mixed, "fire_fox").detail;
     expect(d.tabs.map((t) => [t.label, t.count, t.badge])).toEqual([["개요", undefined, undefined], ["성장 길", "Lv 4", "g-up"], ["유대", "0/3", undefined]]);

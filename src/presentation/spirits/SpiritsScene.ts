@@ -3,6 +3,7 @@
 import * as Phaser from "phaser";
 import type { Garden } from "../../core/garden";
 import { GardenSession } from "../../session/garden";
+import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
 import { DEFAULT_GARDEN, GARDENS } from "./fixtures";
 import { spiritsVM } from "./fromGarden";
@@ -48,6 +49,7 @@ export class SpiritsScene extends Phaser.Scene {
 
   preload() {
     for (const [id, w] of [...TOP_ICONS, ...ID_ICONS, ...STRIP_ICONS, ...PANEL_ICONS, ...RAIL_ICONS]) loadIcon(this, id, w);
+    preloadSpiritArt(this, this.session.state.spirits.map((s) => s.id));
   }
 
   create() {
@@ -75,7 +77,7 @@ export class SpiritsScene extends Phaser.Scene {
     const vm = spiritsVM(this.session.state, this.selected);
     const d = vm.detail;
     drawBackdrop(this);
-    drawArt(this, !this.open);
+    drawArt(this, !this.open, d.art);
     drawScrim(this);
     drawTopbar(this, vm.material);
     drawIdCard(this, d);

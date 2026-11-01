@@ -2,6 +2,8 @@
 # 출처: Lucy가 코어 기획 스레드에 올린 목록을 그대로 옮김. 이름은 작업용이고 네이밍 확정이 아니에요.
 # 속성 9종: 불 물 숲 바람 빛 그림자 땅 전기 얼음 (기획서 v0.2는 6종이라 상성 규칙 갱신 필요, 코어 기획 S3에서 다룸)
 # 계보: 초기 12 · 동물 12 · 추상 13 · 정통 판타지 6
+# 일러스트 확정 14종 (Lucy 2026-11-02, Drive jjal-handoff confirmed, 게임 파일 public/assets/spirits/): flash, glass-salamander, kelp-seahorse,
+#   magma-ibex, mirage, mirror-peacock, mist-cat, night-owl, pearl-oyster, prism-chameleon, rain-frog, river-otter, rune, shadow-moth
 # 진화 나무의 재료로 쓸지, 각각 독립 정령으로 둘지는 Lucy 답 대기 (2026-10-30)
 spirits:
   # 초기 12
@@ -30,6 +32,7 @@ spirits:
   - {key: mirror-peacock,   name: 공작,         element: 빛,     lineage: 동물}
   - {key: ash-crow,         name: 까마귀,       element: 그림자, lineage: 동물, gender: 남}
   - {key: eclipse-serpent,  name: 일식 뱀,      element: 그림자, lineage: 동물}
+  - {key: rain-frog,        name: 비개구리,     element: 물,     lineage: 동물, temp: true}  # 목록에 없던 정령. 이름·속성·계보는 Claude 임시 (2026-11-02)
   # 추상 13
   - {key: wave,             name: 파도,         element: 물,     lineage: 추상}
   - {key: tears,            name: 눈물,         element: 물,     lineage: 추상}

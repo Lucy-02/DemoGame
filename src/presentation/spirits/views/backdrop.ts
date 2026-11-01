@@ -1,4 +1,4 @@
-// 배경(.c-bg), 일러스트 자리, 그림 위 그늘(.c-scrim). 일러스트는 아직 없어서 정본의 유체 자리표시 위치에 X 상자로 비워 둬요.
+// 배경(.c-bg), 일러스트 자리, 그림 위 그늘(.c-scrim). 일러스트는 정본의 유체 자리표시 상자 안에 맞춰 넣고, 그림이 없는 정령은 X 상자로 비워 둬요.
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { transparentOf, withAlpha } from "../../style/color";
@@ -15,8 +15,8 @@ export function drawBackdrop(scene: Phaser.Scene) {
   return scene.add.image(0, 0, key).setOrigin(0, 0);
 }
 
-/** 일러스트 자리. 패널을 접으면 오른쪽으로 밀려요 */
-export function drawArt(scene: Phaser.Scene, shifted: boolean) {
+/** 일러스트 자리. 패널을 접으면 오른쪽으로 밀려요. 그림은 상자 안에 비율을 지켜 넣고 아래 가운데에 붙여요 */
+export function drawArt(scene: Phaser.Scene, shifted: boolean, art?: string) {
   const dx = shifted ? ART.closedShift : 0;
   const { glow, body } = ART;
   // .q-phb radial-gradient(closest-side, veil 07 → transparent)
@@ -29,7 +29,12 @@ export function drawArt(scene: Phaser.Scene, shifted: boolean) {
     ctx.fillRect(0, 0, glow.d, glow.d);
   });
   scene.add.image(glow.x + dx, glow.y, key).setOrigin(0, 0);
-  placeholderArt(scene, body.x + dx, body.y, body.w, body.h, P.glassLine);
+  if (!art || !scene.textures.exists(art)) {
+    placeholderArt(scene, body.x + dx, body.y, body.w, body.h, P.glassLine);
+    return;
+  }
+  const img = scene.add.image(body.x + dx + body.w / 2, body.y + body.h, art).setOrigin(0.5, 1);
+  img.setScale(Math.min(body.w / img.width, body.h / img.height));
 }
 
 export function drawScrim(scene: Phaser.Scene) {
