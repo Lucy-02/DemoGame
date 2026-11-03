@@ -19,7 +19,7 @@ import { faceKey } from "../../faces";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
-const PILE_ICONS = ["i-draw", "i-disc", "i-exh"] as const;
+const PILE_ICONS = ["fx-draw", "fx-discard", "prop-exhaust"] as const;
 
 const text = (t: string, sz: string, color: string, extra: Partial<Node> = {}): Node =>
   ({ t: "text", text: t, size: sz, color, ...extra }) as Node;

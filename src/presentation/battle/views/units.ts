@@ -22,8 +22,8 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
   for (const a of vm.allies) {
     a.statuses.forEach((s) => loadIcon(scene, s.icon, I.status.icon));
   }
-  loadIcon(scene, "i-sync", I.status.icon);
-  loadIcon(scene, "i-shield", I.block.icon);
+  loadIcon(scene, "fx-sync", I.status.icon);
+  loadIcon(scene, "fx-block", I.block.icon);
   for (const e of vm.enemies) {
     loadIcon(scene, e.element, I.status.icon);
     loadIcon(scene, e.weakTo, I.status.icon);
@@ -32,7 +32,7 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
   }
   if (Object.keys(vm.plays).length > 0) {
     loadIcon(scene, "i-crack", I.block.icon);
-    loadIcon(scene, "i-hit", PV.hits.icon);
+    loadIcon(scene, "fx-damage", PV.hits.icon);
   }
 }
 
@@ -83,7 +83,7 @@ function blockChip(n: number): Node {
     t: "row", h: I.block.h, pad: I.block.pad, radius: I.block.radius, gap: I.block.gap, align: "center",
     style: { fill: P.chip },
     children: [
-      { t: "icon", id: "i-shield", w: I.block.icon, h: I.block.icon, tint: P.ink2 },
+      { t: "icon", id: "fx-block", w: I.block.icon, h: I.block.icon, tint: P.ink2 },
       text(String(n), T.block, P.ink),
     ],
   };
@@ -152,7 +152,7 @@ function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change, lit = false): Nod
       {
         t: "row", gap: I.syncGap, align: "center",
         children: [
-          { t: "icon", id: "i-sync", w: I.status.icon, h: I.status.icon, tint: P.ink3 },
+          { t: "icon", id: "fx-sync", w: I.status.icon, h: I.status.icon, tint: P.ink3 },
           text(String(a.sync), T.chip, P.ink3),
         ],
       },
@@ -279,7 +279,7 @@ function drawHits(scene: Phaser.Scene, hits: number[], bodyX: number, bodyY: num
   hits.forEach((n, d) => {
     const pill: Node = {
       t: "row", h: H.h, pad: H.pad, radius: H.radius, gap: H.inGap, align: "center", style: { fill: P.danger },
-      children: [{ t: "icon", id: "i-hit", w: H.icon, h: H.icon, tint: P.onDanger }, text(String(n), T.hit, P.onDanger)],
+      children: [{ t: "icon", id: "fx-damage", w: H.icon, h: H.icon, tint: P.onDanger }, text(String(n), T.hit, P.onDanger)],
     };
     render(scene, pill, bodyX + H.left + d * H.step, y);
     y += H.h + H.gap;
