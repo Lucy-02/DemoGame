@@ -19,8 +19,8 @@ export const TODO_ICON: Record<Todo["kind"], string> = { evolve: "g-up", unlock:
 
 const STAT_ORDER: StatKey[] = ["hp", "power", "guard", "focus", "sync"];
 const STAT_LABEL: Record<StatKey, string> = { hp: "HP", power: "파워", guard: "가드", focus: "포커스", sync: "싱크" };
-const ELEMENT_ICON: Record<string, string> = { fire: "e-fire", water: "e-water", wind: "e-wind", none: "e-none" };
-const ROLE_ICON: Record<string, string> = { attack: "i-sword", guard: "i-shield", support: "i-sprout" };
+const ELEMENT_ICON: Record<string, string> = { fire: "el-fire", water: "el-water", forest: "el-forest", wind: "el-wind", none: "el-none" };
+const ROLE_ICON: Record<string, string> = { attack: "role-attack", guard: "role-guard", support: "role-support", disrupt: "role-disrupt" };
 
 /** 이 정령의 전용 카드 (해금 키 순서: lv2, lv3, adult) */
 function exclusiveCards(id: string): { card: CardDef; key: string; at: string }[] {
@@ -167,7 +167,7 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
     id: s.id, name: def.name, art: art(s.id, s.stage), stage: STAGE_LABEL[s.stage], level, final,
     tags: [
       { icon: ELEMENT_ICON[def.element], text: ELEMENT_NAME[def.element] },
-      { icon: ROLE_ICON[def.role] ?? "i-sword", text: ROLE_NAME[def.role] ?? def.role },
+      { icon: ROLE_ICON[def.role] ?? "role-attack", text: ROLE_NAME[def.role] ?? def.role },
     ],
     personality: grown ? personalityDef(s.personality).name : undefined,
     stats: rows.map((r) => ({ label: r.label, value: r.total, up: r.stage > 0 })),
@@ -202,7 +202,7 @@ export interface MockView {
   stage(id: string): Stage;
 }
 
-const mockIcon = (m: Mockup) => MOCK_ELEMENT_ICON[m.element] ?? "e-none";
+const mockIcon = (m: Mockup) => MOCK_ELEMENT_ICON[m.element] ?? "el-none";
 
 function mockTile(m: Mockup, stage: Stage): TileVM {
   const rank = stageRank(stage);

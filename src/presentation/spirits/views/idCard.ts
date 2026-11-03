@@ -7,8 +7,8 @@ import type { SpiritDetailVM } from "../viewmodel";
 import { P, T, glass, rule, text } from "./parts";
 
 export const ID_ICONS = [
-  ["g-fin", ID.stage.icon], ["e-fire", ID.tags.icon], ["e-water", ID.tags.icon], ["e-wind", ID.tags.icon], ["e-none", ID.tags.icon],
-  ["i-sword", ID.tags.icon], ["i-shield", ID.tags.icon], ["i-sprout", ID.tags.icon],
+  ["g-fin", ID.stage.icon], ["el-fire", ID.tags.icon], ["el-water", ID.tags.icon], ["el-forest", ID.tags.icon], ["el-wind", ID.tags.icon], ["el-none", ID.tags.icon],
+  ["role-attack", ID.tags.icon], ["role-guard", ID.tags.icon], ["role-support", ID.tags.icon], ["role-disrupt", ID.tags.icon],
 ] as const;
 
 const UP_MARK = "▲";
