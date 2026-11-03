@@ -86,10 +86,15 @@ precision highp float;
 varying vec2 vUv;
 uniform sampler2D uTex;
 uniform float uAlpha;
-void main() { gl_FragColor = texture2D(uTex, vUv) * uAlpha; }`;
+uniform vec4 uClip; // 화면 세로 자르기: 위, 아래, 사라지기 시작, 그리기 대상 높이 (px, 위가 0)
+void main() {
+  float y = uClip.w - gl_FragCoord.y;
+  float keep = step(uClip.x, y) * step(y, uClip.y) * clamp((uClip.y - y) / max(uClip.y - uClip.z, 0.001), 0.0, 1.0);
+  gl_FragColor = texture2D(uTex, vUv) * (uAlpha * keep);
+}`;
 
 const ATTRS = ["a0", "a1", "a2", "a3", "a4", "a5"] as const;
-const UNIFORMS = ["uWorld", "uView", "uTexSize", "uFlipV", "uTex", "uAlpha", "uJ", "uB", "uG0", "uG1", "uG2", "uG3", "uG4", "uP0", "uP1", "uP2"] as const;
+const UNIFORMS = ["uWorld", "uView", "uTexSize", "uFlipV", "uTex", "uAlpha", "uClip", "uJ", "uB", "uG0", "uG1", "uG2", "uG3", "uG4", "uP0", "uP1", "uP2"] as const;
 type Program = { prog: WebGLProgram; attr: Record<(typeof ATTRS)[number], number>; uni: Record<(typeof UNIFORMS)[number], WebGLUniformLocation | null> };
 
 /** 아틀라스 텍스처 (Phaser 텍스처 매니저에 올라간 것) */
@@ -178,12 +183,22 @@ export class PuppetObject extends Phaser.GameObjects.Extern {
   private acc = 0;
   private readonly uJ = new Float32Array(MAX_JOINTS * 4);
   private readonly uB = new Float32Array(MAX_BUNDLES * 4);
+  private clip: [top: number, bottom: number, fadeFrom: number] = [-1e9, 1e9, 1e9];
 
   constructor(scene: Phaser.Scene, core: PuppetCore, tex: PuppetTexture) {
     super(scene);
     this.core = core;
     this.tex = tex;
     scene.add.existing(this);
+  }
+
+  /**
+   * 화면 세로 범위 [top, bottom] 밖은 그리지 않고, fadeFrom부터 bottom까지 서서히 사라지게 해요(화면 px, 위가 0).
+   * 일러스트 paintArt의 위 막대·아래 띠 자르기와 아래 페이드를 그대로 따라 하려고 있어요.
+   */
+  setScreenClip(top: number, bottom: number, fadeFrom = bottom): this {
+    this.clip = [top, bottom, fadeFrom];
+    return this;
   }
 
   advance(dt: number): void {
@@ -260,6 +275,7 @@ export class PuppetObject extends Phaser.GameObjects.Extern {
     gl.uniform1f(uni.uFlipV, this.tex.flipV ? 1 : 0);
     gl.uniform1i(uni.uTex, 0);
     gl.uniform1f(uni.uAlpha, this.alpha);
+    gl.uniform4f(uni.uClip, this.clip[0], this.clip[1], this.clip[2], drawingContext.height);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex.gl);
     this.upload(gl, uni);

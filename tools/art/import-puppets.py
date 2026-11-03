@@ -1,10 +1,15 @@
 # 정령 퍼핏(각성체 idle)을 게임 파일로 옮겨요. 리그를 만드는 빌더는 jjal 저장소 tools/motion에 있어요(0002).
-# 쓰는 법: python -I tools/art/import-puppets.py <jjal exports/motion 폴더> <저장소 루트>
+# 쓰는 법: python -I tools/art/import-puppets.py <jjal exports/motion 폴더> <저장소 루트> [<jjal 2× 원본 폴더, 기본 ../final-20261102/up2x>]
 # 읽는 것: <jjal>/<정령>-awakened/rig/atlas/{rig.json, atlas@2.bc7.ktx, atlas@2.png}  (build_atlas.py 결과)
 # 만드는 것: public/assets/puppets/<정령>/{rig.json, atlas@2.bc7.ktx, atlas@2.png}, public/assets/puppets/index.json
 #          assets/provenance.jsonl에 파일마다 한 줄 (원본 각성체 일러스트 기록을 이어받아요)
+# 필요: Pillow, numpy
 # rig.json은 런타임(src/presentation/puppet)이 읽는 필드만 남기고 소수를 줄여요. 해상도 티어는 @2만 넣어요(Lucy 2026-11-03).
+# art.bbox: 리그 캔버스에서 원본 일러스트의 알파 경계 상자. 정령 일러스트 webp(import-spirits.py)가 같은 상자로 잘려 있어서,
+#           화면이 일러스트 자리(placeArt)에 퍼핏을 같은 크기로 올릴 때 써요.
 import hashlib, json, shutil, sys
+import numpy as np
+from PIL import Image
 from pathlib import Path
 
 FORMAT = 1
@@ -19,7 +24,7 @@ def rounded(v, nd):
     return v if nd is None else [round(x, nd) for x in v]
 
 
-def slim(rig: dict) -> dict:
+def slim(rig: dict, bbox: list[int]) -> dict:
     p = rig["points"]
     out = {
         "format": FORMAT,
@@ -28,6 +33,7 @@ def slim(rig: dict) -> dict:
         "bundles": rig.get("bundles", {}),
         "chains": [{**c, "pts": [[round(x, 2), round(y, 2)] for x, y in c["pts"]]} for c in rig.get("chains", [])],
         "motion": rig.get("motion", {}),
+        "art": {"bbox": bbox},
         "layers": [{k: rounded(l[k], nd) for k, nd in LAYER_KEYS.items() if k in l} for l in rig["layers"]],
     }
     if not out["chains"] and rig.get("tail_chain"):
@@ -43,6 +49,7 @@ def sha(p: Path) -> str:
 
 def main():
     src, root = Path(sys.argv[1]), Path(sys.argv[2])
+    up2x = Path(sys.argv[3]) if len(sys.argv) > 3 else src.parent / "final-20261102/up2x"
     dst = root / "public/assets/puppets"
     prov_p = root / "assets/provenance.jsonl"
     raw = [l for l in prov_p.read_text().splitlines() if l.strip()]
@@ -61,7 +68,10 @@ def main():
         out.mkdir(parents=True, exist_ok=True)
         for f in files:
             shutil.copyfile(atlas / f, out / f)
-        (out / "rig.json").write_text(json.dumps(slim(rig), separators=(",", ":")))
+        a = np.asarray(Image.open(up2x / f"{sid}__awakened.rgba.png").getchannel("A")) > 0
+        ys, xs = np.nonzero(a)
+        bbox = [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1]
+        (out / "rig.json").write_text(json.dumps(slim(rig, bbox), separators=(",", ":")))
         ids.append(sid)
         source = by_path.get(f"assets/spirits/{sid}/awakened.webp", {})
         for f in files + ["rig.json"]:

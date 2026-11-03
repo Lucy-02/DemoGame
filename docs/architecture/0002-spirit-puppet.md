@@ -1,6 +1,6 @@
-# 0002 · 정령 퍼핏 (각성체 idle) 런타임과 에셋 (2026-11-03)
+# 0002 · 정령 퍼핏(라투디, 각성체 idle) 런타임과 에셋 (2026-11-03)
 
-- 상태: 런타임·에셋 반영. **어느 화면에 붙일지는 미정**(시각 결정이라 Lucy 확인 뒤)
+- 상태: 런타임·에셋 반영. 정령 관리(정원) 화면의 각성체 그림을 퍼핏(라투디)으로 그려요(Lucy 2026-11-03). 다른 화면은 미정
 - 범위: 정령 일러스트 한 장을 레이어로 나눠 메시로 움직이는 idle(호흡·머리 갸웃·머리카락 흩날림·꼬리·베일·날개·귀). 공격·피격 같은 큰 동작은 아니에요. Spine은 그대로 둬요(Lucy 2026-11-03).
 
 ## 결정
@@ -21,7 +21,8 @@ public/assets/puppets/<정령>/atlas@2.bc7.ktx 아틀라스 BC7
 public/assets/puppets/<정령>/atlas@2.png     아틀라스 PNG (대체)
 src/presentation/puppet/puppetCore.ts        식 (엔진 모름)
 src/presentation/puppet/puppetRenderer.ts    Phaser Extern + 셰이더
-src/presentation/puppet/loadPuppet.ts        queuePuppet(preload) · createPuppet(create)
+src/presentation/puppet/loadPuppet.ts        queuePuppet(preload) · ensurePuppet(화면이 뜬 뒤 필요할 때) · createPuppet
+src/presentation/puppet/puppetIds.ts         퍼핏이 있는 정령 목록 (Phaser 없음, 뷰모델용)
 puppet-preview.html, tools/puppet-preview/   개발용 미리보기 (pnpm dev:web → /puppet-preview.html)
 tools/art/import-puppets.py                  jjal 빌더 결과 들여오기 + provenance
 ```
@@ -34,6 +35,8 @@ create() { const p = createPuppet(this, "mist-cat", { seed: 7 }); p.setScale(0.3
 ```
 
 좌표는 리그 캔버스 px(2432 또는 2048 정사각)예요. `setScale`로 화면 크기를 맞춰요. 여러 마리면 seed를 다르게 줘요.
+
+정령 관리 화면: 각성체 정령을 고르면 `ensurePuppet`으로 그 정령만 불러오고, 올라올 때까지는 일러스트를 그려요. 올라오면 일러스트 자리(`placeArt`)에 같은 크기로 퍼핏을 올려요. 맞추는 기준은 `rig.json`의 `art.bbox`(리그 캔버스에서 일러스트 알파 경계 상자, webp가 같은 상자로 잘려 있음)예요. 색 번짐은 일러스트로 그대로 그리고, 위 막대·아래 띠 자르기와 아래 페이드는 셰이더의 `setScreenClip`이 해요. 화면을 다시 그려도 움직임이 이어지게 정령별 `PuppetCore`를 남겨 둬요.
 
 ## rig.json (format 1)
 
@@ -61,6 +64,6 @@ create() { const p = createPuppet(this, "mist-cat", { seed: 7 }); p.setScale(0.3
 
 ## 남은 것
 
-- 붙일 화면과 크기 (Lucy)
+- 다른 화면(전투·편성 등)에 붙일지와 크기 (Lucy)
 - 화면이 리그 캔버스의 1/2보다 크게 그리면 @1이 필요해요(그때 Git LFS로)
 - 컨텍스트 손실 복구, Electron 실기 측정, 해상도 티어 자동 선택

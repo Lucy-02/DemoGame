@@ -50,8 +50,17 @@ export function placeArt(w: number, h: number, cx: number, frame?: Frame, fit: F
 
 export const tileCrop = (frame?: Frame, fit: Fit = {}): Crop | undefined => fit.c ?? frame?.c;
 
-/** 화면 크기 캔버스에 그림 색 번짐 → 그림(아래 띠에 걸리면 서서히 사라짐)을 그려요. 위 막대 아래·아래 띠 위로만 */
-export function paintArt(ctx: CanvasRenderingContext2D, src: CanvasImageSource, at: Placed) {
+/** 그림이 보이는 세로 범위와 아래 페이드 시작 (화면 px). 아래 띠에 걸리는 그림만 페이드해요 */
+export function artClip(at: Placed): { top: number; bottom: number; fadeFrom: number } {
+  const top = TOP.h, bottom = FRAME.h - STRIP.h;
+  return { top, bottom, fadeFrom: at.y + at.h > bottom ? bottom - ART.fade : bottom };
+}
+
+/**
+ * 화면 크기 캔버스에 그림 색 번짐 → 그림(아래 띠에 걸리면 서서히 사라짐)을 그려요. 위 막대 아래·아래 띠 위로만.
+ * body가 false면 색 번짐만 그려요(그림 자리는 움직이는 퍼핏이 따로 그려요).
+ */
+export function paintArt(ctx: CanvasRenderingContext2D, src: CanvasImageSource, at: Placed, body = true) {
   const top = TOP.h, bottom = FRAME.h - STRIP.h;
   const A = ART.ambient;
   const glow = document.createElement("canvas");
@@ -61,10 +70,10 @@ export function paintArt(ctx: CanvasRenderingContext2D, src: CanvasImageSource, 
   gc.filter = `blur(${A.blur}px) brightness(${A.brightness})`;
   gc.drawImage(src, at.x * A.scale, at.y * A.scale, at.w * A.scale, at.h * A.scale);
 
-  const body = document.createElement("canvas");
-  body.width = FRAME.w;
-  body.height = FRAME.h;
-  const bc = body.getContext("2d")!;
+  const bodyCanvas = document.createElement("canvas");
+  bodyCanvas.width = FRAME.w;
+  bodyCanvas.height = FRAME.h;
+  const bc = bodyCanvas.getContext("2d")!;
   bc.drawImage(src, at.x, at.y, at.w, at.h);
   // 아래 띠에 걸리는 그림만 서서히 사라지게 (몸 전체가 보이는 유체는 그대로)
   if (at.y + at.h > bottom) fadeOut(bc, bottom);
@@ -76,7 +85,7 @@ export function paintArt(ctx: CanvasRenderingContext2D, src: CanvasImageSource, 
   ctx.globalAlpha = A.alpha;
   ctx.drawImage(glow, 0, 0, FRAME.w, FRAME.h);
   ctx.globalAlpha = 1;
-  ctx.drawImage(body, 0, 0);
+  if (body) ctx.drawImage(bodyCanvas, 0, 0);
   ctx.restore();
 }
 

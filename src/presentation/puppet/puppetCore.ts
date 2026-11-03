@@ -131,6 +131,8 @@ export interface Rig {
   tail_chain?: Vec2[];
   motion?: Partial<Motion>;
   layers: RigLayer[];
+  /** 리그 캔버스에서 원본 일러스트의 알파 경계 상자 [x0, y0, x1, y1]. 정령 일러스트 webp가 같은 상자로 잘려 있어요 */
+  art?: { bbox: [number, number, number, number] };
   atlas?: {
     size: Vec2;
     tiers: Record<string, { file: string; size: Vec2 }>;
