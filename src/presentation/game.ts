@@ -7,6 +7,7 @@ import { FIXTURES } from "./battle/fixtures";
 import { FRAME } from "./battle/layout";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
 import type { TabId } from "./spirits/viewmodel";
+import { installCursor } from "./style/cursor";
 import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
@@ -37,6 +38,8 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
     scene: [],
     callbacks: {
       postBoot: (game) => {
+        // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
+        game.registry.set("cursor", installCursor(game));
         if (opts.screen === "spirits") {
           const data: SpiritsSceneData = { scene: opts.scene, select: opts.select, tab: opts.tab as TabId | undefined, closed: opts.closed };
           game.scene.add(SPIRITS_SCENE, SpiritsScene, true, data);
