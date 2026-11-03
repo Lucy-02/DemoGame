@@ -8,7 +8,7 @@
 | `02-pillars.md` | 필러 넷: 뜻 / 그래서 하는 것 / 하지 않는 것 / 충돌 시 우선순위 | 추천안 (0021) |
 | `03-core-loop.md` | 정원↔탐험 루프 그림, 층별 표, 루프 vs 아크, 검증 방법 | 미작성 (S2 뒤) |
 | `04-usp-validation.md` | "누가 배울까" 프로토타입 계획과 기록 | 초안 (S2 계획) |
-| `05-world.md` | 세계관 한 장 → 나중에 `world-bible/` | 미작성 (S3 브리프 먼저: `design/concepts/world-brief.md`) |
+| `05-world.md` | 세계 한 장 (배경만, 스토리 없음 0026) | 초안 (Claude 추천) |
 | `systems/` | 시스템별 원페이저 (머리에 관련 필러) | 미작성 |
 
 관련 정본: 기획서 v0.2 `docs/handoff/01_기획서_v0.2.md`(규칙 상세), 결정 한 줄 요약 `docs/handoff/DECISIONS.md`, 밸런스 `design/canon/BALANCE_BASELINE.md`, 정령 `design/canon/spirits/`, 네이밍 `design/canon/naming/`.
