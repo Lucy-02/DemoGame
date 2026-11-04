@@ -7,8 +7,8 @@ import type { SpiritDetailVM } from "../viewmodel";
 import { P, T, glass, rule, text } from "./parts";
 
 export const ID_ICONS = [
-  ["g-fin", ID.stage.icon], ["e-fire", ID.tags.icon], ["e-water", ID.tags.icon], ["e-wind", ID.tags.icon], ["e-none", ID.tags.icon],
-  ["i-sword", ID.tags.icon], ["i-shield", ID.tags.icon], ["i-sprout", ID.tags.icon],
+  ["ui-done", ID.stage.icon], ["el-fire", ID.tags.icon], ["el-water", ID.tags.icon], ["el-forest", ID.tags.icon], ["el-wind", ID.tags.icon], ["el-none", ID.tags.icon],
+  ["role-attack", ID.tags.icon], ["role-guard", ID.tags.icon], ["role-support", ID.tags.icon], ["role-disrupt", ID.tags.icon],
 ] as const;
 
 const UP_MARK = "▲";
@@ -19,7 +19,7 @@ export function stageChip(d: Pick<SpiritDetailVM, "stage" | "level" | "final">):
   return {
     t: "row", h: S.h, pad: [0, S.padX, 0, S.padX], radius: S.radius, gap: S.gap, align: "center", style: { fill: P.veil["10"] },
     children: [
-      ...(d.final ? [{ t: "icon", id: "g-fin", w: S.icon, h: S.icon, tint: P.ink } as Node] : []),
+      ...(d.final ? [{ t: "icon", id: "ui-done", w: S.icon, h: S.icon, tint: P.ink } as Node] : []),
       text(d.level === undefined ? d.stage : `${d.stage} ${COPY.lv(d.level)}`, T.stage, P.ink),
     ],
   };

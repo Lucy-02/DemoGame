@@ -9,7 +9,7 @@ import { COPY } from "../copy";
 import { P, T, badge, bar, button, glass, text } from "./parts";
 
 export const RAIL_ICONS = [
-  ["g-up", RAIL.badgeIcon], ["g-cardnew", RAIL.badgeIcon], ["g-book", RAIL.badgeIcon], ["g-fin", FACTS.finIcon],
+  ["g-up", RAIL.badgeIcon], ["g-cardnew", RAIL.badgeIcon], ["g-book", RAIL.badgeIcon], ["ui-done", FACTS.finIcon],
   ["g-up", BADGE.icon], ["g-cardnew", BADGE.icon], ["g-book", BADGE.icon],
 ] as const;
 
@@ -52,7 +52,7 @@ function factNode(f: FactVM, open: (tab: TabId) => void): Node {
       return {
         t: "col", gap: FACTS.innerGap,
         children: f.final
-          ? [label(), { t: "row", gap: FACTS.finGap, align: "center", children: [{ t: "icon", id: "g-fin", w: FACTS.finIcon, h: FACTS.finIcon, tint: P.ink }, text(f.final, T.factValueFin, P.ink)] }]
+          ? [label(), { t: "row", gap: FACTS.finGap, align: "center", children: [{ t: "icon", id: "ui-done", w: FACTS.finIcon, h: FACTS.finIcon, tint: P.ink }, text(f.final, T.factValueFin, P.ink)] }]
           : [label(), big(String(f.percent ?? 0), COPY.percent), bar(FACTS.bar, (f.percent ?? 0) / 100, P.veil["16"], f.ready ? P.ok : P.ink2)],
       };
     case "cells": {

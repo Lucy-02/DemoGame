@@ -28,4 +28,4 @@ export const MOCKUPS: readonly Mockup[] = [
 /** 목업을 처음 열 때 보여 줄 단계. 성장 길 탭에서 단계를 눌러 바꿔 봐요 */
 export const MOCK_FIRST_STAGE: Stage = "awakened";
 
-export const MOCK_ELEMENT_ICON: Record<string, string> = { 불: "e-fire", 물: "e-water", 바람: "e-wind" };
+export const MOCK_ELEMENT_ICON: Record<string, string> = { 불: "el-fire", 물: "el-water", 바람: "el-wind" };

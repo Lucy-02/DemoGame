@@ -13,8 +13,8 @@ import { P, T, button, glass, rule, text } from "./parts";
 
 const S = STRIP;
 export const STRIP_ICONS = [
-  ["g-down", S.sort.icon], ["e-fire", S.filter.icon], ["i-sword", S.filter.icon], ["g-ring", S.filter.icon],
-  ["g-fin", S.chip.icon], ["g-flag", S.flag.icon], ["e-fire", S.name.icon], ["e-water", S.name.icon], ["e-wind", S.name.icon], ["e-none", S.name.icon],
+  ["g-down", S.sort.icon], ["el-fire", S.filter.icon], ["role-attack", S.filter.icon], ["g-ring", S.filter.icon],
+  ["ui-done", S.chip.icon], ["g-flag", S.flag.icon], ["el-fire", S.name.icon], ["el-water", S.name.icon], ["el-wind", S.name.icon], ["el-none", S.name.icon],
 ] as const;
 
 /** 링 텍스처 (.q-ring svg): 바탕 원 + 진행 호. 최종 단계는 얇은 상아 원 */
@@ -68,7 +68,7 @@ function head(vm: SpiritsVM): Node {
           },
           {
             t: "row", gap: S.filter.gap,
-            children: ["e-fire", "i-sword", "g-ring"].map((id): Node => {
+            children: ["el-fire", "role-attack", "g-ring"].map((id): Node => {
               const inX = (S.filter.w - S.filter.icon) / 2, inY = (S.filter.h - S.filter.icon) / 2;
               return {
                 t: "col", w: S.filter.w, h: S.filter.h, radius: S.filter.radius, pad: [inY, inX, inY, inX], style: { fill: P.veil["06"] },
@@ -138,7 +138,7 @@ function drawTile(scene: Phaser.Scene, t: TileVM, selected: boolean, x: number, 
     t: "row", h: S.chip.h, pad: [0, S.chip.padX, 0, S.chip.padX], radius: S.chip.radius, gap: S.chip.gap, align: "center",
     style: { fill: P.floor, ring: { width: S.chip.ring, color: P.glassLine } },
     children: [
-      ...(t.ring.kind === "final" ? [{ t: "icon", id: "g-fin", w: S.chip.icon, h: S.chip.icon, tint: P.ink } as Node] : []),
+      ...(t.ring.kind === "final" ? [{ t: "icon", id: "ui-done", w: S.chip.icon, h: S.chip.icon, tint: P.ink } as Node] : []),
       text(t.chip, T.chip, P.ink),
     ],
   };
