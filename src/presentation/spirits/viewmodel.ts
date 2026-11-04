@@ -106,7 +106,7 @@ export interface SpiritDetailVM {
   mock?: boolean;
   /** 기호 없는 꼬리표도 있어요 (목업) */
   tags: { icon?: IconId; text: string }[];
-  /** 유체면 undefined (???) */
+  /** 정해지지 않은 목업이면 undefined (???) */
   personality?: string;
   stats: StatVM[];
   tabs: TabVM[];
@@ -114,8 +114,8 @@ export interface SpiritDetailVM {
   overview: {
     rows: StatRowVM[];
     awaken: { name: string; desc: string };
-    /** 성격 설명 (유체는 숨김) */
-    personality?: { name: string; desc: string };
+    /** 성격 설명. note: 유체 때 덧붙이는 안내. 목업은 없어요 */
+    personality?: { name: string; desc: string; note?: string };
     reroll: { can: boolean; cost: number; shown: boolean };
   };
   growth: {

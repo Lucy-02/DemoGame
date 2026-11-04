@@ -40,17 +40,20 @@ describe("정령 관리 화면 데이터", () => {
     const d = spiritsVM(GARDENS.mixed, "fire_fox").detail;
     expect(d.tabs.map((t) => [t.label, t.count, t.badge])).toEqual([["개요", undefined, undefined], ["성장 길", "Lv 4", "g-up"], ["유대", "0/3", undefined]]);
     expect(d.facts.map((f) => f.kind)).toEqual(["next", "cells", "bond", "todo"]);
-    expect(d.personality).toBeUndefined();
+    // 성격은 유체부터 보여요. 효과는 성체부터라 안내를 덧붙여요 (0033)
+    expect(d.personality).toBeDefined();
+    expect(d.overview.personality?.note).toBe("성체가 되면 효과가 나요");
+    expect(d.overview.reroll.shown).toBe(false);
     expect(d.growth.gate).toMatchObject({ to: "성체", ready: true });
   });
 
-  it("세션 명령: 키우면 성체가 되고 성격이 드러나요. 성장 길을 보면 새 카드 배지가 사라져요", () => {
+  it("세션 명령: 키우면 성체가 되고 성격 효과가 시작돼요. 성장 길을 보면 새 카드 배지가 사라져요", () => {
     const s = new GardenSession(GARDENS.mixed);
     s.dispatch({ kind: "seeUnlocks", id: "fire_fox" });
     s.dispatch({ kind: "evolve", id: "fire_fox" });
     const d = spiritsVM(s.state, "fire_fox").detail;
     expect(d.stage).toBe("성체");
-    expect(d.personality).toBeDefined();
+    expect(d.overview.personality?.note).toBeUndefined();
     expect(d.stats.filter((x) => x.up).map((x) => x.label)).toEqual(["파워", "포커스"]);
     // 성체 카드가 새로 열렸어요
     expect(d.tabs[1].badge).toBe("g-cardnew");

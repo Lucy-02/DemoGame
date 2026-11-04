@@ -123,7 +123,8 @@ function overview(d: SpiritDetailVM, act: PanelActions): Node[] {
             } as Node] : []),
           ],
         },
-        text(per?.desc ?? COPY.hiddenNote, T.tags, P.ink2, { wrap: BODY.w }),
+        text(per?.desc ?? COPY.undecided, T.tags, P.ink2, { wrap: BODY.w }),
+        ...(per?.note ? [text(per.note, T.small, P.ink3Spirit, { wrap: BODY.w })] : []),
       ],
     },
   ];

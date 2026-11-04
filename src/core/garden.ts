@@ -16,7 +16,7 @@ export interface GardenSpirit {
   stage: Stage;
   /** 분기 진화로 고른 갈래. MVP는 비어 있어요 (0015) */
   branch?: string;
-  /** 부화 때 한 번 정하고 유지해요. 유체 동안은 숨겨져 있어요 */
+  /** 부화 때 한 번 정하고 유지해요. 유체부터 보여요 (0033) */
   personality: string;
   /** 다음 진화의 자람 조건 누적값. 진화하면 0으로 */
   deed: number;
