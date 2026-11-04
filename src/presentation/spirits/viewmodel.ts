@@ -97,7 +97,7 @@ export interface SpiritDetailVM {
   id: string;
   name: string;
   /** 지금 단계 본그림 (없으면 자리표시) */
-  art?: { key: string; frame?: Frame; fit: Fit };
+  art?: { key: string; frame?: Frame; fit: Fit; puppet?: string };
   stage: string;
   /** 목업은 레벨이 없어요 */
   level?: number;

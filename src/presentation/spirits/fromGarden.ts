@@ -6,6 +6,7 @@ import {
 } from "../../core/garden";
 import { baseStat, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
 import { describeCard } from "../../core/text";
+import { awakenedPuppet } from "../puppet/puppetIds";
 import { spiritArt } from "../spiritArt";
 import { STAGES, type CardDef, type Stage, type StatKey } from "../../core/types";
 import { COPY, DEED_LABEL, STAGE_LABEL, TAB_LABEL } from "./copy";
@@ -53,7 +54,9 @@ function ring(s: GardenSpirit): RingVM {
 
 function art(id: string, stage: Stage): SpiritDetailVM["art"] {
   const a = spiritArt(id, stage);
-  return a && { key: a.body, frame: a.frame, fit: a.fit };
+  // 각성체는 움직이는 퍼핏(라투디)이 있으면 그걸로 그려요. 일러스트는 퍼핏을 불러오는 동안·색 번짐에 써요
+  const puppet = stage === "awakened" ? awakenedPuppet(id) : undefined;
+  return a && { key: a.body, frame: a.frame, fit: a.fit, ...(puppet ? { puppet } : {}) };
 }
 
 function face(id: string, stage: Stage): TileVM["face"] {

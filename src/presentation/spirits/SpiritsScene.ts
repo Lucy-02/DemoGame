@@ -3,6 +3,8 @@
 import * as Phaser from "phaser";
 import type { Garden } from "../../core/garden";
 import { GardenSession } from "../../session/garden";
+import { createPuppet, ensurePuppet } from "../puppet/loadPuppet";
+import type { PuppetCore } from "../puppet/puppetCore";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
 import type { Stage } from "../../core/types";
@@ -10,7 +12,7 @@ import { DEFAULT_GARDEN, GARDENS } from "./fixtures";
 import { spiritsVM, type MockView } from "./fromGarden";
 import { MOCKUPS, MOCK_FIRST_STAGE } from "./mockups";
 import type { TabId } from "./viewmodel";
-import { drawArt, drawBackdrop, drawScrim } from "./views/backdrop";
+import { drawArt, drawBackdrop, drawScrim, type LiveArt } from "./views/backdrop";
 import { ID_ICONS, drawIdCard } from "./views/idCard";
 import { PANEL_ICONS, drawPanel } from "./views/panel";
 import { RAIL_ICONS, drawFacts, drawRail } from "./views/rail";
@@ -42,6 +44,8 @@ export class SpiritsScene extends Phaser.Scene {
   private stripFrom = 0;
   /** 입력 처리 중에 지우면 안 돼서, 다시 그리기는 다음 update에서 해요 */
   private dirty = false;
+  /** 퍼핏 움직임 상태 (정령별). 화면을 다시 그려도 움직임이 처음부터 시작하지 않게 남겨 둬요 */
+  private puppetCores = new Map<string, PuppetCore>();
 
   constructor() {
     super(SPIRITS_SCENE);
@@ -94,7 +98,7 @@ export class SpiritsScene extends Phaser.Scene {
     const vm = spiritsVM(this.session.state, this.selected, this.mocks);
     const d = vm.detail;
     drawBackdrop(this);
-    drawArt(this, !this.open, d.art);
+    drawArt(this, !this.open, d.art, this.liveArt(d.art?.puppet));
     drawScrim(this);
     drawTopbar(this, vm.material);
     drawIdCard(this, d);
@@ -118,6 +122,23 @@ export class SpiritsScene extends Phaser.Scene {
     }
     this.stripFrom = clampFrom(this.stripFrom, vm.roster.length);
     drawStrip(this, vm, this.stripFrom, (id) => this.show(id, this.tab, this.open));
+  }
+
+  /** 각성체 퍼핏(라투디). 처음 볼 때 불러오고, 다 올라올 때까지는 일러스트를 그려요 */
+  private liveArt(id?: string): LiveArt | undefined {
+    if (!id) return undefined;
+    const ready = ensurePuppet(this, id, () => this.redraw());
+    return {
+      ready,
+      place: (at, clip) => {
+        const p = createPuppet(this, id, { core: this.puppetCores.get(id) });
+        this.puppetCores.set(id, p.core);
+        // 리그 캔버스의 일러스트 상자(art.bbox)가 일러스트 자리(at)에 꼭 맞게
+        const [x0, y0, x1] = p.core.rig.art!.bbox;
+        const s = at.w / (x1 - x0);
+        p.setScale(s).setPosition(at.x - x0 * s, at.y - y0 * s).setScreenClip(clip.top, clip.bottom, clip.fadeFrom);
+      },
+    };
   }
 
   /** 정령·탭·패널 상태를 바꿔요. 성장 길에서 나가면 그 정령의 새 해금을 본 것으로 (배지가 사라져요, "받기" 없음) */
