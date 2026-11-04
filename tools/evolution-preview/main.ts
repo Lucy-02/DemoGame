@@ -25,8 +25,10 @@ const SPIRITS: Record<string, Spirit> = {
   },
 };
 const ROLE: Record<Role, string> = { guard: "수호", attack: "공격", support: "보조", disrupt: "교란" };
-const BEATS = ["대기", "모임", "속성", "역할", "변화", "공개", "정리"];
-const DUR = [0, 1500, 1700, 1500, 2600, 2200, 0]; // ms, 임시
+const q0 = new URLSearchParams(location.search);
+// 덜어낸 판(Lucy 11/04): 유체 희미해짐 → 가운데 그림자 영역 → 가운데 속성·역할 → 성체 실루엣 → 공개 → 정리. 조금 빠르게.
+const BEATS = q0.get("look") !== "full" ? ["대기", "희미해짐", "그림자", "속성·역할", "변화", "공개", "정리"] : ["대기", "모임", "속성", "역할", "변화", "공개", "정리"];
+const DUR = q0.get("look") !== "full" ? [0, 700, 800, 1300, 1300, 1500, 0] : [0, 1500, 1700, 1500, 2600, 2200, 0]; // ms, 임시
 const W = 1280, H = 720, CX = W / 2, CY = H * 0.56;
 const FONT = "Orbit, Pretendard, sans-serif";
 
@@ -61,6 +63,8 @@ class Evolution extends Phaser.Scene {
     babyGlow: Phaser.Filters.Glow; silGlow: Phaser.Filters.Glow; wipe: Phaser.Filters.Wipe; vignette: Phaser.Filters.Vignette;
   };
   private timer?: Phaser.Time.TimerEvent;
+  private zone!: Phaser.GameObjects.Image;
+  private shade!: Phaser.GameObjects.Image;
 
   preload() {
     this.load.image("baby", `assets/spirits/${spiritId}/baby.webp`);
@@ -81,6 +85,9 @@ class Evolution extends Phaser.Scene {
     void bg;
     const bgGlow = this.add.image(CX, CY, "radial").setDisplaySize(W * 1.3, H * 1.5).setTint(S.color).setAlpha(0.18).setBlendMode(Phaser.BlendModes.ADD);
 
+    // 덜어낸 판의 가운데 영역: 어두운 바탕 위에 속성 빛이 번진 세로 타원
+    const shade = this.add.image(CX, CY - 60, "radial").setDisplaySize(760, 860).setTint(0x000000).setAlpha(0);
+    const zone = this.add.image(CX, CY - 60, "radial").setDisplaySize(560, 700).setTint(S.color).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
     const rays = this.add.container(CX, CY - 40).setAlpha(0);
     for (let i = 0; i < 14; i++) {
       const r = this.add.image(0, 0, "ray").setOrigin(0.5, 1).setRotation((i / 14) * Math.PI * 2).setTint(S.color).setBlendMode(Phaser.BlendModes.ADD);
@@ -88,7 +95,7 @@ class Evolution extends Phaser.Scene {
       rays.add(r);
     }
     const crest = CALM
-      ? this.add.image(CX, CY - 275, crestKey).setTint(S.color).setAlpha(0).setScale(0.16)
+      ? this.add.image(CX - 72, CY - 90, crestKey).setTint(S.color).setAlpha(0).setScale(0.24)
       : this.add.image(CX, CY - 70, crestKey).setTint(S.color).setAlpha(0).setScale(0.6).setBlendMode(Phaser.BlendModes.ADD);
     const ring = this.add.image(CX, CY - 40, "ring").setTint(S.color).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
 
@@ -126,10 +133,10 @@ class Evolution extends Phaser.Scene {
     });
 
     let role: Evolution["o"]["role"];
-    if (this.textures.exists("role")) role = this.add.image(CALM ? CX + 46 : CX, CALM ? CY - 275 : CY - 235, "role").setTint(0xf4eef2).setAlpha(0).setScale(CALM ? 0.3 : 0.5);
-    else role = this.add.text(CALM ? CX + 46 : CX, CALM ? CY - 275 : CY - 235, ROLE[B.role], { fontFamily: FONT, fontSize: "64px", color: "#f4eef2" }).setOrigin(0.5).setAlpha(0);
+    if (this.textures.exists("role")) role = this.add.image(CALM ? CX + 72 : CX, CALM ? CY - 90 : CY - 235, "role").setTint(0xf4eef2).setAlpha(0).setScale(CALM ? 0.45 : 0.5);
+    else role = this.add.text(CALM ? CX + 72 : CX, CALM ? CY - 90 : CY - 235, ROLE[B.role], { fontFamily: FONT, fontSize: "64px", color: "#f4eef2" }).setOrigin(0.5).setAlpha(0);
     const changed = !(S.roles.length === 1 && S.roles[0] === B.role);
-    const roleText = this.add.text(CX, CALM ? CY - 215 : CY - 330, changed ? `${S.roles.map((r) => ROLE[r]).join("·")}  →  ${ROLE[B.role]}` : ROLE[B.role], {
+    const roleText = this.add.text(CX, CALM ? CY + 10 : CY - 330, changed ? `${S.roles.map((r) => ROLE[r]).join("·")}  →  ${ROLE[B.role]}` : ROLE[B.role], {
       fontFamily: FONT, fontSize: "26px", color: "#f4eef2", stroke: "#000000", strokeThickness: 6,
     }).setOrigin(0.5).setAlpha(0);
 
@@ -166,6 +173,8 @@ class Evolution extends Phaser.Scene {
     cam.ignore(ui);
     const uiCam = this.cameras.add(0, 0, W, H);
     uiCam.ignore(this.children.list.filter((c) => !ui.includes(c as never)));
+    this.zone = zone;
+    this.shade = shade;
     this.o = { bgGlow, rays, crest, ring, baby, babySil, adult, adultSil, role, roleText, band, nameSmall, name, roleChip, panel, caption, gather, burst, motes, babyGlow, silGlow, wipe, vignette };
 
     // 유체 숨쉬기
@@ -250,22 +259,25 @@ class Evolution extends Phaser.Scene {
   private calmTarget(n: number) {
     const o = this.o;
     const babyScale = 330 / o.baby.height, adultScale = 640 / o.adult.height, closeScale = 1180 / o.adult.height;
+    const pick = (v: number[]) => v[n];
     return [
-      { t: o.bgGlow, alpha: [0.12, 0.2, 0.38, 0.4, 0.45, 0.3, 0.25][n] },
+      { t: o.bgGlow, alpha: pick([0.12, 0.08, 0.06, 0.06, 0.08, 0.2, 0.2]) },
+      { t: this.shade, alpha: pick([0, 0.3, 0.75, 0.75, 0.7, 0, 0]) },
+      { t: this.zone, alpha: pick([0, 0, 0.5, 0.55, 0.6, 0.25, 0.15]) },
       { t: o.rays, alpha: 0 },
-      { t: o.crest, alpha: n === 2 || n === 3 ? 0.95 : 0, x: n === 3 ? CX - 46 : CX },
-      { t: o.baby, alpha: n <= 3 ? 1 : 0, scale: n <= 3 ? babyScale : babyScale * 1.12 },
-      { t: o.babyGlow, outerStrength: [0, 2, 2.5, 2.5, 3, 0, 0][n] },
-      { t: o.babySil, alpha: 0, scale: n <= 3 ? babyScale : babyScale * 1.12 },
-      { t: o.adult, alpha: n >= 4 ? 1 : 0, scale: n >= 5 ? closeScale : adultScale, x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 },
-      { t: o.adultSil, alpha: n === 4 ? 1 : 0, scale: n >= 5 ? closeScale : adultScale, x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 },
-      { t: o.wipe, progress: n >= 5 ? 1 : 0 },
+      { t: o.crest, alpha: n === 3 ? 0.95 : 0 },
       { t: o.role, alpha: n === 3 ? 0.95 : 0 },
       { t: o.roleText, alpha: n === 3 ? 1 : 0 },
+      { t: o.baby, alpha: pick([1, 0.25, 0, 0, 0, 0, 0]), scale: n === 0 ? babyScale : babyScale * 0.96 },
+      { t: o.babyGlow, outerStrength: 0 },
+      { t: o.babySil, alpha: 0 },
+      { t: o.adult, alpha: n >= 4 ? 1 : 0, scale: n >= 5 ? closeScale : adultScale, x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 },
+      { t: o.adultSil, alpha: n === 4 ? 1 : 0, scale: n >= 5 ? closeScale : adultScale * (n === 4 ? 1 : 0.96), x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 },
+      { t: o.wipe, progress: n >= 5 ? 1 : 0 },
       { t: o.band, alpha: n === 6 ? 0 : 1 },
       { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
-      { t: o.vignette, strength: [0.25, 0.4, 0.45, 0.45, 0.5, 0.35, 0.3][n] },
-      { t: this.cameras.main, zoom: [1, 1.02, 1.03, 1.03, 1.04, 1, 1][n] },
+      { t: o.vignette, strength: pick([0.25, 0.35, 0.45, 0.45, 0.45, 0.3, 0.3]) },
+      { t: this.cameras.main, zoom: 1 },
     ] as { t: object; [k: string]: unknown }[];
   }
 
@@ -306,7 +318,7 @@ class Evolution extends Phaser.Scene {
     if (n === 1 && !CALM) o.gather.start();
     if (n === 2 && !CALM) this.ripple(1.0);
     if (n === 3 && !CALM) this.time.delayedCall(820, () => { cam.shake(160, 0.003); this.ripple(0.7); });
-    if (n === 4) {
+    if (n === 4 && !CALM) {
       // 유체 → 실루엣 → 성체 실루엣 (깜박임 없이 느린 겹침)
       o.babySil.setAlpha(0).setScale(o.baby.scale);
       o.adult.setAlpha(0);
