@@ -20,7 +20,7 @@ src/data          JSON (+ 스키마)
 src/platform      Platform 인터페이스, Electron/웹 구현. 저장은 문자열만
 ```
 
-3. **화면은 명령만 보내고, 연출은 확정된 결과만 보여줘요.** 연출 구조는 `design/card/research/R3-vfx-animation-architecture.md` §2의 Director + Sequencer를 따라요.
+3. **화면은 명령만 보내고, 연출은 확정된 결과만 보여줘요.** 연출 구조는 `design/archive/card-research/R3-vfx-animation-architecture.md` §2의 Director + Sequencer를 따라요.
 4. **스타일 값은 `design/tokens/tokens.json` 한 곳.** 새 폴더는 `design/strict-paths.txt`에 넣어 리터럴을 막아요.
 5. **결정성.** 한 판 = 시드 + 명령 목록. 골든 테스트(`src/core/battle.golden.test.ts`)가 규칙 변화를 잡아요.
 6. **Electron 보안.** contextIsolation·sandbox 켜기, nodeIntegration 끄기, 렌더러는 `app://`로 서빙, 저장 키는 `^[a-z0-9][a-z0-9_-]{0,31}$`만.

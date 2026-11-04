@@ -2,7 +2,7 @@
 
 모든 시안 작업은 이 장부에서 시작해요. 에이전트는 시안을 만들기 전에 이 파일을 읽고, 바꾼 것은 "장부 대비 변경"으로 적어요.
 - ✅ Lucy 확정 · 🔁 Lucy가 고른 조각인데 지금 시안(R4)에서 빠짐 · ❓ Lucy 확인 필요 · 🛠 작업 가정 (Claude가 넣음, 미확정)
-- 참고 화면은 `ledger/img/`, 시안 소스는 `src/*.tgz` (임시 폴더는 세션이 끝나면 사라져서 여기로 옮겼어요).
+- 참고 화면과 시안 소스(tgz)는 공유 폴더 `archive/design-concepts/`(`ledger/img/`, `src/`, `archive/`)에 있어요. 확정 시안 원본은 `design/canon/`.
 
 ---
 ## 1. 공통 ✅
@@ -98,7 +98,7 @@
 - 탭·버튼 컨트롤러 포커스, 포커스와 선택 모양 분리
 - 호버 전용 정보 줄이기, 패널 안 카드 글자 9px 미만, 밝은 그림 위 유리 대비
 - 이번 탐험에서 바뀐 것 보기 없음
-- 자세히: reviews/r4-synthesis.md
+- 자세히: ../archive/concept-reviews/r4-synthesis.md
 
 ## 6. 링크
 - **정본 페이지 (캡처 포함): https://claude.ai/artifact/6mauUwAoRT9KSmGidBnWx3** · 원본 캡처 전체: archive/<컨셉>/ (_full.jpg, fNN.jpg)

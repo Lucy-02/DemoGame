@@ -2,7 +2,7 @@
 
 - 상태: 수락됨 (Lucy, 2026-10-30)
 - 원본: https://claude.ai/artifact/LyNbvdjCFHPSRUdwoYK7uT (deck/, g1/), 캡처 `design-concepts/archive/deck-r2/`, `archive/growth-r2-1/`, 소스 `archive/src/*.tgz`
-- 리뷰: `design/concepts/reviews/deck-*.md`, `growth-*.md`, `r2-verify.md`. 장부 §9~§12
+- 리뷰: `design/archive/concept-reviews/deck-*.md`, `growth-*.md`, `r2-verify.md`. 장부 §9~§12
 
 ## 결정: 덱 보기 = A "정령별 세 줄"
 - 탐험 중 어디서나 여는 레이어, 이번 판 덱 확인. 정령별 줄 + 줄 머리(얼굴·장수·시작/이번 탐험 +n). 이유: "카드 보기지 정령 목록이 아니니까".

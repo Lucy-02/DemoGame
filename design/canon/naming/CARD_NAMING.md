@@ -1,6 +1,6 @@
 # 카드 네이밍 규칙 (정본)
 
-- 상태: Lucy 결정 2026-10-30 (`docs/design-decisions/0018-card-naming-rules.md`). 조사 근거: `docs/research/core-design/R4-card-naming.md`
+- 상태: Lucy 결정 2026-10-30 (`docs/design-decisions/0018-card-naming-rules.md`). 조사 근거: `docs/archive/research/core-design/R4-card-naming.md`
 - 적용 범위: 카드 이름(한국어·영어). 정령·적·상태 이름은 따로 정해요. 적·보스·성체 갈래 이름은 **명사형 추상개념**(현상·상태)으로, 동물·괴물·사람 이름 금지 (Lucy 2026-11-03, `TODO_NAMES.md`).
 - 이 문서는 규칙만 적어요. 예시 이름은 전부 예시이고 확정이 아니에요.
 

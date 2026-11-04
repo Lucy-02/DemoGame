@@ -62,8 +62,6 @@ const withSpirit = (g: Garden, id: string, f: (s: GardenSpirit) => GardenSpirit)
 
 // ───────────────────────── 레벨 ─────────────────────────
 
-export const MAX_LEVEL = GROWTH.levels.length;
-
 export function levelOf(exp: number): number {
   let lv = 1;
   GROWTH.levels.forEach((need, i) => {
@@ -159,7 +157,6 @@ export function spiritUnlocks(s: GardenSpirit): string[] {
 
 /** 이 정령의 전용 해금 키 전체 (열린 순서대로) */
 export const SPIRIT_UNLOCK_STEPS = ["lv2", "lv3", "adult"] as const;
-export const spiritUnlockKey = (id: string, step: (typeof SPIRIT_UNLOCK_STEPS)[number]) => `${id}_${step}`;
 
 const hasCard = (key: string) => CARDS.some((c) => c.unlock === key);
 
@@ -183,8 +180,6 @@ export function episodesOpen(s: GardenSpirit): number {
   }
   return n;
 }
-
-export const nextEpisode = (s: GardenSpirit): EpisodeDef | undefined => GROWTH.episodes[s.episodes];
 
 export function seeEpisode(g: Garden, id: string): Garden {
   const s = gardenSpirit(g, id);

@@ -1,6 +1,6 @@
-# 클라이언트 인수인계 (2026-10-30, main 5a3f1ea 기준)
+# 클라이언트 인수인계
 
-전투 화면을 정본에 맞춰 옮겨 온 세션(PR #6~#13)이 남기는 노트예요. 다음 세션은 `CLAUDE.md` → 이 문서 → `design/canon/README.md` → `docs/architecture/0001-client-architecture.md` 순서로 읽으면 돼요.
+정본 시안을 Phaser 4 화면으로 옮기는 관행과 렌더링 디테일이에요. 다음 세션은 `CLAUDE.md` → 이 문서 → `design/canon/README.md` → `docs/architecture/0001-client-architecture.md` 순서로 읽으면 돼요.
 
 ---
 
@@ -9,15 +9,15 @@
 ### Lucy가 직접 준 지시
 - "정본에 충실하게. 비율·배치·정렬을 시각 검증하며 따라가." 감으로 맞추지 않고, 정본 CSS 수치를 옮긴 다음 `pnpm visual`로 겹쳐 봐요.
 - "단계별로 바로바로 머지하면서 진행." 한 단계가 끝나면 PR을 올리고, CI가 초록이면 머지해요.
-- "미확정 값과 그림은 임시 구역으로 분리하고 플레이스홀더로." (2026-10-30) → 4절 참고.
-- 메타 고민(예: "이게 게임 UI 같냐")은 지금 하지 않기로 했어요. 시각 스킨 방향은 나중에 Lucy가 꺼낼 때 다뤄요.
-- 작업 방식: Lucy가 자기 PC(luddal-win)에서 에이전트를 직접 돌려요. 원격에서 대신 조작하는 방식은 Lucy가 불편해했어요.
+- "미확정 값과 그림은 임시 구역으로 분리하고 플레이스홀더로." → 4절.
+- 메타 고민(예: "이게 게임 UI 같냐")은 지금 하지 않아요. 시각 스킨 방향은 Lucy가 꺼낼 때 다뤄요.
+- Lucy가 자기 PC에서 에이전트를 직접 돌려요. 원격에서 대신 조작하지 않아요.
 
-### 실제로 혼났거나 고친 것 (반복하지 말 것)
-- **정본 값을 확정 토큰에 넣었던 것.** 정본 시안의 색·크기는 Lucy가 확정한 값이 아니에요. "정본을 따른다"와 "그 값을 확정한다"는 다른 일이에요. 지금은 `provisional` 구역에만 둬요.
-- **정본에 없는 선을 지어낸 것.** 말풍선 `.calc`의 `border-top: 1px solid var(--me)`는 정본에서 `--me`가 정의되지 않아 실제로는 그려지지 않아요. 저는 처음에 선을 그렸다가 지웠어요. **정본 CSS를 읽을 때는 그 값이 브라우저에서 실제로 적용되는지(정의 안 된 변수, 덮어쓰기, 무효 선언)까지 확인해요.** 판단 기준은 CSS 원문이 아니라 정본 캡처(frame-*.png)예요.
-- 개발 서버가 레거시 화면으로 뜬다는 지적 → 기본 주소를 새 전투 화면으로 바꿨어요(`?screen=legacy`가 예전 UI).
-- 화면이 창에 맞춰 확대돼 흐려진다는 지적 → 1280×800 고정 뷰포트로 바꾸고, 브라우저에서는 개발용 창 틀(제목줄·전체 화면·닫기)을 씌웠어요.
+### 지켜야 하는 것
+- **정본 값은 확정 토큰이 아니에요.** "정본을 따른다"와 "그 값을 확정한다"는 다른 일이라, 정본 값은 `provisional` 구역에만 둬요.
+- **정본 CSS는 실제로 적용되는 값만 옮겨요.** 정의 안 된 변수, 덮어쓰기, 무효 선언은 브라우저에서 그려지지 않아요(예: `.calc`의 `border-top`은 `--me`가 없어 선이 없음). 판단 기준은 CSS 원문이 아니라 정본 캡처(frame-*.png)예요.
+- 개발 서버 기본 화면은 새 전투 화면이에요(`?screen=legacy`가 임시 UI).
+- 1280×800 고정 뷰포트로 그리고, 브라우저에서는 개발용 창 틀(제목줄·전체 화면·닫기)을 씌워요. 창에 맞춰 확대하지 않아요.
 
 ### 결정이 필요한 것은 묻기
 - 새 레이아웃, 새 색, 새 모션 값, 새 그림, 네이밍은 만들지 않고 2~3개 선택지와 근거를 들고 Lucy에게 물어요. 결정 카드 하나에 추천 하나.
@@ -36,7 +36,7 @@
 | --- | --- | --- |
 | rest | 쉬는 상태 전체 | ✅ (차이 3.75%, 대부분 플레이스홀더 그림) |
 | H1 | 손패 호버: 들기, 옆 카드 밀림, 흐림, 말풍선, 적 호버 숨김 | ✅ (`--hover claw` 3.85%) |
-| H2 | 카드 집기·끌어 대기·대상 강조와 결과 미리보기 (0013, 조준선 없음) | ✅ PR #15, 끌기 브랜치 |
+| H2 | 카드 집기·끌어 대기·대상 강조와 결과 미리보기 (0013, 조준선 없음) | ✅ |
 | H3 | (정본 프레임 참고) | ❌ |
 | gimmick | 기믹·차징 상태 | ❌ |
 
@@ -101,10 +101,11 @@ src/presentation/battle/
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
   HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }
-  CardBubble.ts                drawCardBubble(scene, detail, left, bottom, tipX) → Container
+  cardTip.ts                   카드 호버 말풍선 내용 → tooltip/
   materials.ts                 bandTexture, windowTexture, paintPattern, MATERIAL_FILL, liftedBodyTexture
   layout.ts                    HAND_CARD, WINDOW_PATH(정령별 창 윗선 SVG path), BUBBLE
   viewmodel.ts                 CardVM(key, detail…), CardDetailVM {text, calc?, why?, owner}, RichText
+src/presentation/tooltip/      말풍선 공용(Tooltip.ts 그리기·배치, skins.ts 유리 스킨, content.ts 문단)
 src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/canon/spirit-r4v5, 탭 내용 0021)
   SpiritsScene.ts              정원 세션 상태 → spiritsVM → 통째로 다시 그리기 (입력 중엔 다음 update에서)
   fromGarden.ts                core/garden 상태 → SpiritsVM (규칙 판단은 core 함수만 씀)
@@ -177,7 +178,7 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 ```
 
 - 처음 한 번 `pnpm exec playwright install chromium`. 이미 깔린 크로미움은 `CHROMIUM_PATH=<경로>`.
-- 결과 기준치(이 세션 끝): rest 3.75%, `--hover claw` 3.85%. 이보다 크게 늘면 무언가 어긋난 거예요.
+- 결과 기준치: rest 3.75%, `--hover claw` 3.85%. 이보다 크게 늘면 무언가 어긋난 거예요.
 - CI(`.github/workflows`): Node 22, `pnpm install --frozen-lockfile` → typecheck → lint:deps → test → check:design → xvfb e2e.
 
 ### luddal-win(Windows) 주의
@@ -200,16 +201,16 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 
 ## 9. 다음 할 일 (순서는 Lucy에게 확인)
 
-정령 관리(2026-10-31, PR #21~#25) 다음:
+전투
+1. **session 층**: `src/session`에서 `src/core` 전투 상태 → `BattleVM` 변환, 카드 사용·턴 종료 명령. fixture 대신 실제 상태로 그리기. 의존 방향은 아키텍처 문서를 따라요.
+2. **모션 디테일**: 지금 모션 값은 `provisional.motion.hover` 하나뿐이에요. 들기·밀림·말풍선·카드 사용(0009 "가벼운 종이", 0010 "빛 한 번 쓸기")의 길이·곡선은 Lucy가 정할 값이에요. 선택지를 보여 주고 고르게 해요.
+3. 기믹·차징(`frame-gimmick.png`), H3.
+4. 고해상도 화면(devicePixelRatio) 대응. 글자·구운 텍스처 해상도까지 같이 다뤄야 해요.
+
+정령 관리·정원
 - 정원 저장: `GardenSession.snapshot/restore`를 platform 저장에 연결, 새 판(`Run`)에 `garden`을 넘기기
 - 런 종료 R2-1(0012): `grantBattle`로 경험·재료, 전투 이벤트로 자람 조건(`addDeed`: awaken·damage.blocked·freeze), 그 화면에서 키우기
-- 성장 길 카드를 카드 몸체(`card/HandCard`)로, 성격 다시 뽑기 3화 "둘 중 고르기" 화면, 이야기 문안(S3 뒤)
+- 성장 길 카드를 카드 몸체(`card/HandCard`)로, 성격 다시 뽑기 3화 "둘 중 고르기" 화면, 이야기 문안
 - 정렬·필터·편성 바꾸기는 모양만 있어요 (출전 준비 화면과 함께)
 
-
-1. ~~**H2 집기·조준**~~ 끝: 결정 0013(끌어 대기 + 집고 클릭, 조준선 없음). 상태는 `battle/targeting.ts`, 그리기는 `BattleScene.drawField`.
-2. **session 층**: `src/session`에서 `src/core` 전투 상태 → `BattleVM` 변환, 카드 사용·턴 종료 명령. fixture 대신 실제 상태로 그리기. 의존 방향은 아키텍처 문서를 따라요.
-3. **모션 디테일**: 지금 모션 값은 `provisional.motion.hover` 하나뿐이에요. 들기·밀림·말풍선·카드 사용(결정 0009 "가벼운 종이", 0010 "빛 한 번 쓸기")의 길이·곡선은 Lucy가 정할 값이에요. 선택지를 만들어 보여 주고 고르게 해요.
-4. 기믹·차징(`frame-gimmick.png`), H3.
-5. 고해상도 화면(devicePixelRatio) 대응. 글자·구운 텍스처 해상도까지 같이 다뤄야 해요.
-6. 레거시 UI(`src/presentation/placeholder`, `?screen=legacy`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 레거시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 규칙으로 끝까지 플레이되는 화면은 레거시뿐이에요. 예: 2번 session 층으로 새 전투 화면이 실제 전투를 돌리면 `placeholder/scenes/BattleScene.ts`를 지우고 레거시 흐름(지도 → 전투)을 새 전투로 잇거나, 흐름째 정리해요.
+임시 UI(`src/presentation/placeholder`, `?screen=legacy`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 임시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 규칙으로 끝까지 플레이되는 화면은 임시 UI뿐이에요.

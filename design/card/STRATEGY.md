@@ -2,9 +2,9 @@
 
 # 카드 디자인 전략 v0.2 (2026-10-29 밤, 📝 Claude 초안 · 리뷰어 5명 1회 반영 · Lucy 미검토)
 
-> v0.2 변경: 리뷰 종합(`reviews/synthesis.md`) 반영. 추천이 바뀐 곳 — 구분 체계는 **B 수정안**(성질 기호만 숫자판 안, 윤곽 변경·이름 띠 희귀도 점 삭제, 희귀도는 손패 밖), 기믹 활성은 **C 준비 기호**(정지 화면에서 보이는 모양 단서, 색·밝기 안 씀), 카드 사용 연출 **B**, Q1 **c 수정안**(묶음 띠 + 포커스 카드엔 사유). D1(초상 홈 성장)은 확인용으로 낮추고 D6 성장 순간 알림 추가 — 성체 능력치 +1이 반올림에 묻혀 숫자가 안 바뀜(8→8) 확인. 아래 본문은 v0.1 그대로이고, 위 변경이 우선해요.
+> v0.2 변경: 리뷰 종합(`../archive/card-reviews/synthesis.md`) 반영. 추천이 바뀐 곳 — 구분 체계는 **B 수정안**(성질 기호만 숫자판 안, 윤곽 변경·이름 띠 희귀도 점 삭제, 희귀도는 손패 밖), 기믹 활성은 **C 준비 기호**(정지 화면에서 보이는 모양 단서, 색·밝기 안 씀), 카드 사용 연출 **B**, Q1 **c 수정안**(묶음 띠 + 포커스 카드엔 사유). D1(초상 홈 성장)은 확인용으로 낮추고 D6 성장 순간 알림 추가 — 성체 능력치 +1이 반올림에 묻혀 숫자가 안 바뀜(8→8) 확인. 아래 본문은 v0.1 그대로이고, 위 변경이 우선해요.
 
-근거: `research/R1-anatomy-differentiation.md`(카드 구조·차별화, 16종 조사), `research/R2-states-interaction-a11y.md`(상태·접근성), `research/R3-vfx-animation-architecture.md`(연출 구조·Phaser 4·Spine). 프로젝트 전제: `CONTEXT.md`.
+근거: `../archive/card-research/R1-anatomy-differentiation.md`(카드 구조·차별화, 16종 조사), `../archive/card-research/R2-states-interaction-a11y.md`(상태·접근성), `../archive/card-research/R3-vfx-animation-architecture.md`(연출 구조·Phaser 4·Spine). 프로젝트 전제: `CONTEXT.md`.
 이 문서의 시각 항목은 모두 **제안**이에요. 값(색·크기·시간)은 TODO_TOKEN이고, 시안의 값은 임시예요.
 
 ---

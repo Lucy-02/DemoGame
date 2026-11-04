@@ -1,3 +1,5 @@
+> 아카이브 (2026-10-28 킥오프 프롬프트). 파일 표와 단계는 지금 구조와 달라요. 현재 규칙은 `CLAUDE.md`, 결정은 `docs/handoff/DECISIONS.md`.
+
 정령 덱빌더 인디게임의 **브랜딩과 UI/UX를 단계별로 같이 정하는 세션**이에요. 이 폴더의 파일을 먼저 읽고 시작해 주세요. 읽는 순서: `DECISIONS.md` → `docs/design-decisions/`(있으면) → `DESIGN_SYSTEM.md` → `03_화면별_정보·행동_목록_미검토.md` → 나머지.
 
 ## 나(Lucy)의 역할
