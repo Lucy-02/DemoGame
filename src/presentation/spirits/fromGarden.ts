@@ -101,7 +101,7 @@ function growthRows(s: GardenSpirit): GrowthRowVM[] {
         name: card.name, detail: describeCard(card, caster), at,
         open: open.has(key), fresh: open.has(key) && !s.seen.includes(key),
       })),
-    notes: stage === "adult" ? [COPY.revealed] : [],
+    notes: stage === "adult" ? [COPY.personalityOn] : [],
   }));
 }
 
@@ -172,14 +172,17 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
       { icon: ELEMENT_ICON[def.element], text: ELEMENT_NAME[def.element] },
       { icon: ROLE_ICON[def.role] ?? "role-attack", text: ROLE_NAME[def.role] ?? def.role },
     ],
-    personality: grown ? personalityDef(s.personality).name : undefined,
+    personality: personalityDef(s.personality).name,
     stats: rows.map((r) => ({ label: r.label, value: r.total, up: r.stage > 0 })),
     tabs,
     facts,
     overview: {
       rows,
       awaken: { name: COPY.awaken, desc: def.awaken.desc },
-      personality: grown ? { name: personalityDef(s.personality).name, desc: personalityDef(s.personality).desc } : undefined,
+      personality: {
+        name: personalityDef(s.personality).name, desc: personalityDef(s.personality).desc,
+        note: grown ? undefined : COPY.personalityLater,
+      },
       reroll: { shown: grown, can: canReroll(g, s), cost: GROWTH.reroll.cost },
     },
     growth: {

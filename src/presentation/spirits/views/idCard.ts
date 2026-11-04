@@ -25,7 +25,7 @@ export function stageChip(d: Pick<SpiritDetailVM, "stage" | "level" | "final">):
   };
 }
 
-/** 성격 알약 (.q .per). 유체는 점선 ??? (.per.q) */
+/** 성격 알약 (.q .per). 정해지지 않은 목업은 점선 ??? (.per.q) */
 export function personalityPill(name?: string): Node {
   return {
     t: "row", pad: ID.per.pad, radius: ID.per.radius, align: "center",

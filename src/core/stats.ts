@@ -7,10 +7,10 @@ export const round = (x: number) => Math.round(x + 1e-9);
 /** 유체 0 · 성체 1 · 각성체 2. 단계 보정은 이 수만큼 쌓여요. */
 export const stageRank = (s: Stage) => STAGES.indexOf(s);
 
-/** 성체부터 성격이 드러나요. */
+/** 성체부터 성격 효과가 나요 (성격 자체는 유체부터 보여요, 0033). */
 export const isGrown = (rs: Pick<RunSpirit, "stage">) => rs.stage !== "baby";
 
-/** 유체 때는 성격이 숨겨져 있고 효과도 꺼져 있어요. */
+/** 유체 때는 성격이 보이기만 하고 효과는 꺼져 있어요. */
 export function activePersonality(rs: RunSpirit): PersonalityDef | null {
   return isGrown(rs) ? personalityDef(rs.personality) : null;
 }
