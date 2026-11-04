@@ -1,5 +1,6 @@
 // 시각 검증: 정본 프레임과 Phaser 화면을 같은 1280×800으로 찍어 나란히·겹침·차이 이미지를 만들어요.
 // 사용: pnpm visual [--crop x,y,w,h] [--frame rest] [--hover <카드 key>] [--scene aim] [--lift h1|b]
+//   정령 관리: pnpm visual --screen spirits [--frame s-f1..s-f5] [--scene mixed] [--select <정령>] [--tab overview|growth|bond] [--closed]
 //   --hover: 정본 H1 프레임에서 그 카드에 마우스를 올린 상태와, 게임의 같은 호버 상태를 비교해요.
 //   --scene aim: 정본 H1 프레임의 처음 상태(물방울 휘갈기기를 집어 거북 조준)와 게임 ?scene=aim 을 비교해요.
 //     0013부터 게임엔 조준선이 없고 대상 강조·나머지 어둡게라 그만큼 차이가 나요. 다른 예시: --scene drag|drag-field|drag-ally|drag-random --frame rest
@@ -19,15 +20,19 @@ const opt = (name: string) => {
 };
 const hover = opt("hover");
 const scene = opt("scene");
-const frameId = opt("frame") ?? (hover || scene === "aim" ? "h1" : "rest");
+/** 비교할 화면: battle(기본) | spirits (정령 관리 정본 R4 v5, 프레임 s-f1~s-f5) */
+const screen = opt("screen") ?? "battle";
+const frameId = opt("frame") ?? (screen === "spirits" ? "s-f4" : hover || scene === "aim" ? "h1" : "rest");
 const crop = opt("crop")?.split(",").map(Number) as [number, number, number, number] | undefined;
 const outDir = resolve("test-results/visual");
 mkdirSync(outDir, { recursive: true });
 
 const orbitUrl = pathToFileURL(resolve("public/assets/fonts/Orbit-Regular.ttf")).href;
 
+const CANON_PAGE = { battle: "design/canon/battle-r5/page.html", spirits: "design/canon/spirit-r4v5/page.html" } as const;
+
 async function shootCanon(page: Page): Promise<Buffer> {
-  await page.goto(pathToFileURL(resolve("design/canon/battle-r5/page.html")).href);
+  await page.goto(pathToFileURL(resolve(CANON_PAGE[screen as keyof typeof CANON_PAGE])).href);
   // 정본은 Orbit을 Google Fonts에서 받아요. 오프라인에서도 같게 나오도록 번들 글꼴을 같은 이름으로 넣어요.
   await page.addStyleTag({ content: `@font-face{font-family:"Orbit";src:url("${orbitUrl}")}` });
   await page.evaluate(async () => {
@@ -42,6 +47,20 @@ async function shootCanon(page: Page): Promise<Buffer> {
       w.style.borderRadius = "0";
     });
   });
+  if (screen === "spirits") {
+    // 정령 관리 정본: 프레임 틀(.frame-wrap)을 1280 그대로, 둥근 모서리 없이
+    await page.evaluate((f) => {
+      const w = document.querySelector<HTMLElement>(`#${f}`)!;
+      w.style.width = "1280px";
+      w.style.maxWidth = "none";
+      w.style.borderRadius = "0";
+      w.querySelector<HTMLElement>(".frame")!.style.setProperty("--s", "1");
+    }, frameId);
+    await page.mouse.move(1, 1);
+    const wrap = await page.$(`#${frameId}`);
+    if (!wrap) throw new Error(`정본에 #${frameId} 프레임이 없어요`);
+    return wrap.screenshot();
+  }
   await page.mouse.move(1, 1);
   const el = await page.$(`#${frameId}`);
   if (!el) throw new Error(`정본에 #${frameId} 프레임이 없어요`);
@@ -65,13 +84,16 @@ async function shootCanon(page: Page): Promise<Buffer> {
 
 async function shootGame(page: Page, base: string): Promise<Buffer> {
   const q = new URLSearchParams();
+  if (screen !== "battle") q.set("screen", screen);
+  for (const k of ["select", "tab"]) if (opt(k)) q.set(k, opt(k)!);
+  if (args.includes("--closed")) q.set("closed", "");
   if (hover) q.set("hover", hover);
   if (scene) q.set("scene", scene);
   // 정본 H1 프레임과 비교할 땐 들기 크기도 정본 값으로 (게임 기본은 Lucy가 고른 b)
   const lift = opt("lift") ?? (frameId === "h1" ? "h1" : undefined);
   if (lift) q.set("lift", lift);
   await page.goto(`${base}${q.size ? `?${q}` : ""}`);
-  await page.waitForFunction(() => (window as { __screenReady?: string }).__screenReady === "battle", null, { timeout: 30_000 });
+  await page.waitForFunction((name) => (window as { __screenReady?: string }).__screenReady === name, screen, { timeout: 30_000 });
   await page.waitForTimeout(200);
   const canvas = await page.$("#game canvas");
   if (!canvas) throw new Error("게임 캔버스가 없어요");

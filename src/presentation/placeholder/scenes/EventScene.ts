@@ -23,7 +23,7 @@ export class EventScene extends Phaser.Scene {
     txt(this, W / 2, 180, ev.title, 32).setOrigin(0.5);
     txt(this, W / 2, 250, ev.text, 18, COLORS.text, { wordWrap: { width: 640 }, align: "center" }).setOrigin(0.5);
     ev.options.forEach((o, i) => {
-      button(this, W / 2, 360 + i * 80, 560, 64, `${o.label}\n${o.desc}`, () => this.apply(o.outcome), { size: 16, color: 0x4a3f6b });
+      button(this, W / 2, 360 + i * 80, 700, 64, `${o.label}\n${o.desc}`, () => this.apply(o.outcome), { size: 14, color: 0x4a3f6b });
     });
     txt(this, W / 2, H - 40, "이벤트는 src/data/events.json에서 추가할 수 있어요.", 12, COLORS.dim).setOrigin(0.5);
   }

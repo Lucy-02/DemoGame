@@ -105,7 +105,15 @@ src/presentation/card/
   materials.ts                 bandTexture, windowTexture, paintPattern, MATERIAL_FILL, liftedBodyTexture
   layout.ts                    HAND_CARD, WINDOW_PATH(정령별 창 윗선 SVG path), BUBBLE
   viewmodel.ts                 CardVM(key, detail…), CardDetailVM {text, calc?, why?, owner}, RichText
-src/presentation/style/        CSS 재현 도우미 (6절)
+src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/canon/spirit-r4v5, 탭 내용 0021)
+  SpiritsScene.ts              정원 세션 상태 → spiritsVM → 통째로 다시 그리기 (입력 중엔 다음 update에서)
+  fromGarden.ts                core/garden 상태 → SpiritsVM (규칙 판단은 core 함수만 씀)
+  layout.ts, copy.ts           정본 수치(선택자 주석), 문구
+  fixtures.ts                  고정 정원 GARDENS (mixed 기본, fresh)
+  views/                       backdrop·topbar·idCard·strip·panel·rail(접힘 레일+요약 카드)·parts(유리·배지·막대·버튼)
+src/session/garden.ts          정원 세션: 명령 → core/garden → onChange. snapshot/restore (platform 저장 연결 전)
+src/core/garden.ts             판 밖 정령 상태와 성장 규칙 (0021), 수치는 src/data/growth.json
+src/presentation/style/        CSS 재현 도우미 (6절). flex 노드에 onClick(클릭 영역)·wrap(줄바꿈 글자)
 src/presentation/placeholder/  예전 임시 UI. 새 화면이 규칙에 연결될 때마다 해당 화면을 지움
 src/core, src/data             게임 로직·데이터. UI 작업에서 건드리지 않음. 바꾸면 골든 스냅샷 이유를 PR에
 src/platform, electron/        저장·창. 렌더러는 Electron을 직접 import하지 않음(window.platformBridge)
@@ -165,6 +173,7 @@ pnpm test:e2e                   # Electron 스모크 (리눅스 무화면 환경
 pnpm tokens                     # tokens.json → tokens.ts
 pnpm visual [--crop x,y,w,h]    # 쉬는 상태 정본 비교
 pnpm visual --hover <cardKey>   # H1 비교 (다른 .fig는 숨기고 카드에 mouseenter)
+pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab overview|growth|bond] [--closed]   # 정령 관리
 ```
 
 - 처음 한 번 `pnpm exec playwright install chromium`. 이미 깔린 크로미움은 `CHROMIUM_PATH=<경로>`.
@@ -190,6 +199,13 @@ pnpm visual --hover <cardKey>   # H1 비교 (다른 .fig는 숨기고 카드에 
 ---
 
 ## 9. 다음 할 일 (순서는 Lucy에게 확인)
+
+정령 관리(2026-10-31, PR #21~#25) 다음:
+- 정원 저장: `GardenSession.snapshot/restore`를 platform 저장에 연결, 새 판(`Run`)에 `garden`을 넘기기
+- 런 종료 R2-1(0012): `grantBattle`로 경험·재료, 전투 이벤트로 자람 조건(`addDeed`: awaken·damage.blocked·freeze), 그 화면에서 키우기
+- 성장 길 카드를 카드 몸체(`card/HandCard`)로, 성격 다시 뽑기 3화 "둘 중 고르기" 화면, 이야기 문안(S3 뒤)
+- 정렬·필터·편성 바꾸기는 모양만 있어요 (출전 준비 화면과 함께)
+
 
 1. ~~**H2 집기·조준**~~ 끝: 결정 0013(끌어 대기 + 집고 클릭, 조준선 없음). 상태는 `battle/targeting.ts`, 그리기는 `BattleScene.drawField`.
 2. **session 층**: `src/session`에서 `src/core` 전투 상태 → `BattleVM` 변환, 카드 사용·턴 종료 명령. fixture 대신 실제 상태로 그리기. 의존 방향은 아키텍처 문서를 따라요.

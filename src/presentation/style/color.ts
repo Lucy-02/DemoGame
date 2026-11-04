@@ -27,3 +27,9 @@ export function transparentOf(css: string): string {
   const { color } = rgba(css);
   return `rgba(${color >> 16},${(color >> 8) & 255},${color & 255},0)`;
 }
+
+/** 같은 색, 다른 불투명도 */
+export function withAlpha(css: string, a: number): string {
+  const { color } = rgba(css);
+  return `rgba(${color >> 16},${(color >> 8) & 255},${color & 255},${a})`;
+}

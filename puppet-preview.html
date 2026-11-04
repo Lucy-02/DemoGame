@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>정령 퍼핏</title>
+    <!-- 개발 도구 페이지 (pnpm dev:web → /puppet-preview.html). 게임 빌드에는 들어가지 않아요. 결정 0002(아키텍처) -->
+    <style>
+      html, body { margin: 0; height: 100%; background: #262a38; color: #dde; font: 13px/1.4 system-ui, "Pretendard", sans-serif; }
+      #bar { position: fixed; left: 8px; top: 6px; display: flex; gap: 8px; align-items: center; z-index: 1; }
+      select, button { background: #2b2735; color: #dde; border: 1px solid #444; border-radius: 6px; padding: 3px 8px; font: inherit; }
+      #hud { white-space: pre; opacity: 0.8; }
+      #stage { display: flex; justify-content: center; align-items: center; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <div id="bar"><select id="spirit"></select><select id="count"><option>1</option><option>4</option><option>8</option><option>16</option></select><span id="hud"></span></div>
+    <div id="stage"></div>
+    <script type="module" src="/tools/puppet-preview/main.ts"></script>
+  </body>
+</html>

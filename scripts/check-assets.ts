@@ -1,4 +1,4 @@
-// public/ 아래 이미지가 assets/provenance.jsonl에 기록돼 있는지 검사해요.
+// public/ 아래 이미지(퍼핏 압축 텍스처 .ktx 포함)가 assets/provenance.jsonl에 기록돼 있는지 검사해요.
 // --release: 기록이 없거나 status가 release가 아닌 이미지가 있으면 실패.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -13,7 +13,7 @@ for (const line of readFileSync('assets/provenance.jsonl', 'utf8').split('\n')) 
 function images(dir: string): string[] {
   return readdirSync(dir).flatMap(n => {
     const p = join(dir, n);
-    return statSync(p).isDirectory() ? images(p) : /\.(png|jpe?g|webp|svg)$/i.test(p) ? [p] : [];
+    return statSync(p).isDirectory() ? images(p) : /\.(png|jpe?g|webp|svg|ktx)$/i.test(p) ? [p] : [];
   });
 }
 let bad = 0;

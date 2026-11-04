@@ -1,0 +1,26 @@
+{
+  "$comment": "정령 성장 메타 (결정 0021). 숫자는 모두 임시값이에요. 플레이테스트 뒤에 고쳐요.",
+  "levels": [0, 30, 80, 150, 250, 380],
+  "level_hp": 2,
+  "exp": { "normal": 10, "elite": 25, "boss": 50 },
+  "material": { "normal": 1, "elite": 3, "boss": 5 },
+  "stage_main_bonus": 2,
+  "stage_hp_main_bonus": 6,
+  "stage_start_sync": { "awakened": 30 },
+  "start_sync_cap": 50,
+  "evolutions": [
+    { "spirit": "fire_fox", "from": "baby", "to": "adult", "level": 4 },
+    { "spirit": "fire_fox", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "awaken", "n": 3 } },
+    { "spirit": "glass_salamander", "from": "baby", "to": "adult", "level": 4 },
+    { "spirit": "glass_salamander", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "blocked", "n": 150 } },
+    { "spirit": "mist_cat", "from": "baby", "to": "adult", "level": 4 },
+    { "spirit": "mist_cat", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "freeze", "n": 8 } }
+  ],
+  "feed": { "cost": 1, "affinity": 10 },
+  "reroll": { "cost": 5, "from": "adult" },
+  "episodes": [
+    { "affinity": 30, "start_sync": 10 },
+    { "affinity": 80, "stage": "adult", "start_sync": 10 },
+    { "affinity": 150, "stage": "awakened", "reroll_choices": 2 }
+  ]
+}
