@@ -37,6 +37,8 @@ const branchIdx = Math.min(S.branches.length - 1, Number(q.get("branch") ?? (spi
 const B = S.branches[branchIdx];
 const autoplay = q.get("autoplay") === "1";
 const capture = q.get("capture") === "1";
+// look=calm(기본): 빛 하나·움직임 하나로 덜어낸 판(Lucy 11/04 "이펙트가 덕지덕지 과함"). look=full: 첫 판(빛줄기·폭발·고리·흔들림·블룸).
+const CALM = q.get("look") !== "full";
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const pick = $("spirit") as HTMLSelectElement, br = $("branch") as HTMLSelectElement;
@@ -85,12 +87,14 @@ class Evolution extends Phaser.Scene {
       r.setScale(1 + (i % 3) * 0.35, 1.4 + (i % 4) * 0.3).setAlpha(0.35 + (i % 2) * 0.25);
       rays.add(r);
     }
-    const crest = this.add.image(CX, CY - 70, crestKey).setTint(S.color).setAlpha(0).setScale(0.6).setBlendMode(Phaser.BlendModes.ADD);
+    const crest = CALM
+      ? this.add.image(CX, CY - 275, crestKey).setTint(S.color).setAlpha(0).setScale(0.16)
+      : this.add.image(CX, CY - 70, crestKey).setTint(S.color).setAlpha(0).setScale(0.6).setBlendMode(Phaser.BlendModes.ADD);
     const ring = this.add.image(CX, CY - 40, "ring").setTint(S.color).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
 
     const motes = this.add.particles(0, 0, "dot", {
       x: { min: 0, max: W }, y: H + 10, speedY: { min: -40, max: -12 }, speedX: { min: -8, max: 8 }, lifespan: 9000,
-      scale: { min: 0.08, max: 0.22 }, alpha: { start: 0.5, end: 0 }, tint: S.color, frequency: 140, blendMode: "ADD",
+      scale: { min: 0.08, max: 0.22 }, alpha: { start: 0.5, end: 0 }, tint: S.color, frequency: CALM ? 600 : 140, blendMode: "ADD",
     });
 
     const babyH = 330, adultH = 640;
@@ -102,11 +106,11 @@ class Evolution extends Phaser.Scene {
     const adultSil = this.add.image(adult.x, adult.y, "adult").setOrigin(0.5, 1).setScale(adult.scale).setTint(0x0b0a0c).setTintMode(Phaser.TintModes.FILL).setAlpha(0);
 
     baby.enableFilters();
-    const babyGlow = baby.filters!.internal.addGlow(S.color, 0, 0, 1, false, 10, 18);
+    const babyGlow = baby.filters!.internal.addGlow(S.color, 0, 0, 1, false, 10, CALM ? 12 : 18);
     babySil.enableFilters();
-    babySil.filters!.internal.addGlow(S.color, 6, 0, 1, false, 10, 18);
+    babySil.filters!.internal.addGlow(S.color, CALM ? 3 : 6, 0, 1, false, 10, CALM ? 12 : 18);
     adultSil.enableFilters();
-    const silGlow = adultSil.filters!.internal.addGlow(S.color, 8, 0, 1, false, 10, 18);
+    const silGlow = adultSil.filters!.internal.addGlow(S.color, CALM ? 3 : 8, 0, 1, false, 10, CALM ? 12 : 18);
     const wipe = adultSil.filters!.internal.addWipe(0.18, 0, 1);
     wipe.setBottomToTop();
     wipe.progress = 0; // 0 = 다 보임, 1 = 다 걷힘
@@ -122,10 +126,10 @@ class Evolution extends Phaser.Scene {
     });
 
     let role: Evolution["o"]["role"];
-    if (this.textures.exists("role")) role = this.add.image(CX, CY - 235, "role").setTint(0xf4eef2).setAlpha(0).setScale(0.5);
-    else role = this.add.text(CX, CY - 235, ROLE[B.role], { fontFamily: FONT, fontSize: "64px", color: "#f4eef2" }).setOrigin(0.5).setAlpha(0);
+    if (this.textures.exists("role")) role = this.add.image(CALM ? CX + 46 : CX, CALM ? CY - 275 : CY - 235, "role").setTint(0xf4eef2).setAlpha(0).setScale(CALM ? 0.3 : 0.5);
+    else role = this.add.text(CALM ? CX + 46 : CX, CALM ? CY - 275 : CY - 235, ROLE[B.role], { fontFamily: FONT, fontSize: "64px", color: "#f4eef2" }).setOrigin(0.5).setAlpha(0);
     const changed = !(S.roles.length === 1 && S.roles[0] === B.role);
-    const roleText = this.add.text(CX, CY - 330, changed ? `${S.roles.map((r) => ROLE[r]).join("·")}  →  ${ROLE[B.role]}` : ROLE[B.role], {
+    const roleText = this.add.text(CX, CALM ? CY - 215 : CY - 330, changed ? `${S.roles.map((r) => ROLE[r]).join("·")}  →  ${ROLE[B.role]}` : ROLE[B.role], {
       fontFamily: FONT, fontSize: "26px", color: "#f4eef2", stroke: "#000000", strokeThickness: 6,
     }).setOrigin(0.5).setAlpha(0);
 
@@ -154,7 +158,7 @@ class Evolution extends Phaser.Scene {
     const caption = this.add.text(W - 24, 20, "", { fontFamily: FONT, fontSize: "15px", color: "#a49ca2" }).setOrigin(1, 0);
 
     // 화면 전체: 블룸 + 비네트
-    Phaser.Actions.AddEffectBloom(cam, { threshold: 0.72, blurRadius: 2, blurSteps: 4, blurQuality: 1, blendAmount: 0.45 });
+    if (!CALM) Phaser.Actions.AddEffectBloom(cam, { threshold: 0.72, blurRadius: 2, blurSteps: 4, blurQuality: 1, blendAmount: 0.45 });
     const vignette = cam.filters.external.addVignette(0.5, 0.5, 0.75, 0.25, 0x000000);
 
     // 글자·패널은 확대·블룸이 없는 UI 카메라로 따로 그려요.
@@ -221,6 +225,7 @@ class Evolution extends Phaser.Scene {
   /** 박자 n이 끝났을 때의 모습. 박자를 건너뛰거나 동작 줄이기일 때 바로 이 값으로 둬요. */
   private target(n: number) {
     const o = this.o;
+    if (CALM) return this.calmTarget(n);
     const babyScale = 330 / o.baby.height, adultScale = 640 / o.adult.height, closeScale = 1180 / o.adult.height;
     return [
       { t: o.bgGlow, alpha: [0.18, 0.3, 0.7, 0.7, 0.95, 0.55, 0.45][n] },
@@ -238,6 +243,29 @@ class Evolution extends Phaser.Scene {
       { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
       { t: o.vignette, strength: [0.25, 0.6, 0.7, 0.7, 0.8, 0.45, 0.4][n] },
       { t: this.cameras.main, zoom: [1, 1.05, 1.06, 1.08, 1.12, 1, 1][n] },
+    ] as { t: object; [k: string]: unknown }[];
+  }
+
+  /** 덜어낸 판: 빛 하나(뒤에서 비추는 속성 빛)와 움직임 하나(실루엣이 바뀌고 걷힘)만 남겨요. */
+  private calmTarget(n: number) {
+    const o = this.o;
+    const babyScale = 330 / o.baby.height, adultScale = 640 / o.adult.height, closeScale = 1180 / o.adult.height;
+    return [
+      { t: o.bgGlow, alpha: [0.12, 0.2, 0.38, 0.4, 0.45, 0.3, 0.25][n] },
+      { t: o.rays, alpha: 0 },
+      { t: o.crest, alpha: n === 2 || n === 3 ? 0.95 : 0, x: n === 3 ? CX - 46 : CX },
+      { t: o.baby, alpha: n <= 3 ? 1 : 0, scale: n <= 3 ? babyScale : babyScale * 1.12 },
+      { t: o.babyGlow, outerStrength: [0, 2, 2.5, 2.5, 3, 0, 0][n] },
+      { t: o.babySil, alpha: 0, scale: n <= 3 ? babyScale : babyScale * 1.12 },
+      { t: o.adult, alpha: n >= 4 ? 1 : 0, scale: n >= 5 ? closeScale : adultScale, x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 },
+      { t: o.adultSil, alpha: n === 4 ? 1 : 0, scale: n >= 5 ? closeScale : adultScale, x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 },
+      { t: o.wipe, progress: n >= 5 ? 1 : 0 },
+      { t: o.role, alpha: n === 3 ? 0.95 : 0 },
+      { t: o.roleText, alpha: n === 3 ? 1 : 0 },
+      { t: o.band, alpha: n === 6 ? 0 : 1 },
+      { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
+      { t: o.vignette, strength: [0.25, 0.4, 0.45, 0.45, 0.5, 0.35, 0.3][n] },
+      { t: this.cameras.main, zoom: [1, 1.02, 1.03, 1.03, 1.04, 1, 1][n] },
     ] as { t: object; [k: string]: unknown }[];
   }
 
@@ -268,16 +296,16 @@ class Evolution extends Phaser.Scene {
 
   private enter(n: number) {
     const o = this.o, d = DUR[n] || 900, cam = this.cameras.main;
-    const ease: Record<string, string> = { crest: "Back.out", role: "Bounce.out" };
+    const ease: Record<string, string> = CALM ? {} : { crest: "Back.out", role: "Bounce.out" };
     // 기본: 모든 값을 이번 박자 목표로 부드럽게
     for (const { t, ...props } of this.target(n)) {
       const key = t === o.crest ? "crest" : t === o.role ? "role" : "";
       const dur = t === o.role ? 700 : t === o.wipe ? d * 0.8 : t === (o.adultSil as object) && n === 5 ? d * 0.8 : d * 0.7;
       this.tweens.add({ targets: t, ...props, duration: dur, ease: ease[key] ?? "Sine.inOut", delay: t === o.role ? 150 : 0 });
     }
-    if (n === 1) o.gather.start();
-    if (n === 2) this.ripple(1.0);
-    if (n === 3) this.time.delayedCall(820, () => { cam.shake(160, 0.003); this.ripple(0.7); });
+    if (n === 1 && !CALM) o.gather.start();
+    if (n === 2 && !CALM) this.ripple(1.0);
+    if (n === 3 && !CALM) this.time.delayedCall(820, () => { cam.shake(160, 0.003); this.ripple(0.7); });
     if (n === 4) {
       // 유체 → 실루엣 → 성체 실루엣 (깜박임 없이 느린 겹침)
       o.babySil.setAlpha(0).setScale(o.baby.scale);
@@ -285,10 +313,10 @@ class Evolution extends Phaser.Scene {
       this.tweens.killTweensOf([o.baby, o.babySil, o.adult, o.adultSil]);
       this.tweens.chain({ tweens: [
         { targets: o.babySil, alpha: 1, duration: 500, ease: "Sine.in" },
-        { targets: [o.babySil], scale: o.baby.scale * 1.3, duration: 900, ease: "Sine.inOut", onStart: () => { o.baby.setAlpha(0); } },
+        { targets: [o.babySil], scale: o.baby.scale * (CALM ? 1.12 : 1.3), duration: 900, ease: "Sine.inOut", onStart: () => { o.baby.setAlpha(0); } },
         { targets: o.babySil, alpha: 0, duration: 900, ease: "Sine.inOut", onStart: () => { this.tweens.add({ targets: o.adultSil, alpha: 1, duration: 900, ease: "Sine.inOut" }); } },
       ] });
-      this.tweens.add({ targets: o.silGlow, outerStrength: { from: 4, to: 14 }, duration: d, yoyo: false });
+      this.tweens.add({ targets: o.silGlow, outerStrength: CALM ? { from: 2, to: 5 } : { from: 4, to: 14 }, duration: d, yoyo: false });
       o.gather.frequency = 5;
     }
     if (n === 5) {
@@ -297,9 +325,11 @@ class Evolution extends Phaser.Scene {
       this.tweens.add({ targets: o.babySil, alpha: 0, duration: 300 });
       o.gather.stop();
       o.gather.frequency = 12;
-      o.burst.explode(140);
-      this.ripple(1.6);
-      cam.shake(220, 0.004);
+      if (!CALM) {
+        o.burst.explode(140);
+        this.ripple(1.6);
+        cam.shake(220, 0.004);
+      }
     }
     if (n < 6 && DUR[n]) this.timer = this.time.delayedCall(DUR[n], () => { if (this.autoRun) this.go(n + 1); });
     else this.autoRun = false;
