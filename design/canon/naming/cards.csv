@@ -12,6 +12,7 @@ backfire,불,고급,불여우 Lv2,"피해 8, 화상 중이면 한 번 더",맞�
 fire_storm,불,고급,불여우 Lv3,적 전체 피해 5 + 화상 3,꼬리 불바다,여우불 소나기,Tail Inferno,Foxfire Rain,5,"1안 (가안, 2026-10-30)",정령 어휘 허용
 glass_shatter,불,고급,도롱뇽 Lv2,현재 방어도만큼 피해,유리 파편,깨진 비늘,Glass Shards,Shattered Scale,4,"1안 (가안, 2026-10-30)",정령 어휘 허용
 tempered_glass,불,고급,도롱뇽 Lv3,아군 전체 방어도 5 + 가시 2,담금질 유리,유리 갑주,Tempered Glass,Glass Plate,5,"1안 (가안, 2026-10-30)",정령 어휘 허용
+glass_citadel,불,희귀,도롱뇽 성체,"방어도 6 + 이번 전투 동안 방어도 유지, 소멸",유리 성채,불변 유리,Glass Citadel,Unbreaking Glass,4,"1안 (가안, 2026-10-30)","0020 빈칸 채움. 기준선: 2마나 방어도 10 상당 → 실제 6 + 규칙(유지). 규칙을 바꾸는 희귀. TODO_NAME: 세계관 고유명 후보 자리"
 phoenix_breath,불,희귀,불여우 성체,"화상 2배 + 폭발, 소멸",불사의 숨결,요화 (妖火),Undying Breath,Foxfire,5,"1안 (가안, 2026-10-30)",TODO_NAME: 세계관 고유명 후보 자리
 mist_breath,물,기본,공용,냉기 3,입김,안개 숨,Puff,Mist Breath,2,"1안 (가안, 2026-10-30)",고양이 시작 ×2
 paw_splash,물,기본,공용,피해 4 + 냉기 1,물장구,물방울 튕기기,Splash,Droplet Flick,3,"1안 (가안, 2026-10-30)",고양이 시작 ×1

@@ -127,6 +127,7 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
       }
       case "damageFromBlock":
         return [{ to: foe, core: "현재 방어도만큼 피해를 입히", after: `파워의 영향을 받지 ${polite("않")}.` }];
+      case "keepBlock": return [{ to: "", core: "이번 전투 동안 방어도가 내 턴 시작 시 사라지지 않" }];
       case "burnMultiply": return [{ to: "", core: `${foeOf} 화상을 ${op.value}배로 늘리` }];
       case "damagePerPlayed":
         return [{ to: "", core: `이번 전투에서 사용한 ${ELEMENT_NAME[op.element]} 카드 1장당 ${foe}피해를 ${op.value} 입히` }];

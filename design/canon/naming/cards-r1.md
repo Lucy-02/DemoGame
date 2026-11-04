@@ -1,4 +1,4 @@
-# 카드 40장 1차 이름 시안 (2026-10-30)
+# 카드 41장 1차 이름 시안 (2026-10-30)
 
 - 규칙: `design/canon/naming/CARD_NAMING.md` (0018). 시트: `design/canon/naming/cards.csv`
 - 상태: Lucy "이대로 쭉 진행"(2026-10-30 14:40)으로 **1안을 가안으로 `src/data/cards.json`에 반영**했어요. 카드별로 2안이나 새 이름을 주시면 그때 바꿔요.
@@ -19,6 +19,7 @@
 | fire_storm | 불 | 고급 | 불여우 Lv3 | 적 전체 피해 5 + 화상 3 | 꼬리 불바다 | 여우불 소나기 | Tail Inferno | Foxfire Rain | 정령 어휘 허용 |
 | glass_shatter | 불 | 고급 | 도롱뇽 Lv2 | 현재 방어도만큼 피해 | 유리 파편 | 깨진 비늘 | Glass Shards | Shattered Scale | 정령 어휘 허용 |
 | tempered_glass | 불 | 고급 | 도롱뇽 Lv3 | 아군 전체 방어도 5 + 가시 2 | 담금질 유리 | 유리 갑주 | Tempered Glass | Glass Plate | 정령 어휘 허용 |
+| glass_citadel | 불 | 희귀 | 도롱뇽 성체 | 방어도 6 + 이번 전투 동안 방어도 유지, 소멸 | 유리 성채 | 불변 유리 | Glass Citadel | Unbreaking Glass | 0020 빈칸(수호 희귀 0장) 채움, 2026-10-30. TODO_NAME: 세계관 고유명 후보 자리 |
 | phoenix_breath | 불 | 희귀 | 불여우 성체 | 화상 2배 + 폭발, 소멸 | 불사의 숨결 | 요화 (妖火) | Undying Breath | Foxfire | TODO_NAME: 세계관 고유명 후보 자리 |
 | mist_breath | 물 | 기본 | 공용 | 냉기 3 | 입김 | 안개 숨 | Puff | Mist Breath | 고양이 시작 ×2 |
 | paw_splash | 물 | 기본 | 공용 | 피해 4 + 냉기 1 | 물장구 | 물방울 튕기기 | Splash | Droplet Flick | 고양이 시작 ×1 |

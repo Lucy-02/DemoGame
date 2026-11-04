@@ -65,9 +65,9 @@ describe("정원 (0021)", () => {
     expect(todos(fox(g))).toEqual([{ kind: "evolve", to: "adult" }, { kind: "episode" }]);
     g = seeEpisode(g, "fire_fox");
     expect(todos(fox(g))).toEqual([{ kind: "evolve", to: "adult" }]);
-    // 카드가 없는 해금(유리 도롱뇽 성체)은 할 일이 아니에요
+    // 유리 도롱뇽 성체 카드(유리 성채)도 안 본 해금이면 할 일이에요
     const sal = { ...gardenSpirit(g, "glass_salamander"), stage: "adult" as const, seen: ["glass_salamander_lv2", "glass_salamander_lv3"] };
-    expect(todos(sal).filter((t) => t.kind === "unlock")).toEqual([]);
+    expect(todos(sal).filter((t) => t.kind === "unlock")).toEqual([{ kind: "unlock", key: "glass_salamander_adult" }]);
   });
 
   it("먹이기는 재료를 쓰고 싱크만큼 호감도를 올려요. 에피소드는 단계도 필요해요", () => {

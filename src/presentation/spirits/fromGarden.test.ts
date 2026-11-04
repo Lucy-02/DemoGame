@@ -9,7 +9,7 @@ describe("정령 관리 화면 데이터", () => {
     const vm = spiritsVM(GARDENS.mixed, "fire_fox");
     expect(vm.roster.map((t) => [t.chip, t.ring.kind, t.todo])).toEqual([
       ["유체 Lv 4", "ready", 2],
-      ["성체 Lv 5", "progress", 1],
+      ["성체 Lv 5", "progress", 2],
       ["각성체 Lv 6", "final", 0],
     ]);
   });
