@@ -5,19 +5,19 @@ import * as Phaser from "phaser";
 
 type Role = "guard" | "attack" | "support" | "disrupt";
 type Branch = { meaning: string; role: Role; stats: [string, number, number][] };
-type Spirit = { name: string; el: "fire" | "water"; elName: string; color: number; pers: string; persDesc: string; branches: Branch[] };
+type Spirit = { name: string; el: "fire" | "water"; elName: string; color: number; pers: string; persDesc: string; roles: Role[]; branches: Branch[] };
 
 // 시안용 예시 데이터. 갈래 뜻은 design/canon/naming/TODO_NAMES.md, 능력치는 0021 표를 따른 임시 숫자예요.
 const SPIRITS: Record<string, Spirit> = {
   "glass-salamander": {
-    name: "유리 도롱뇽", el: "fire", elName: "불", color: 0xff7a4d, pers: "신중", persDesc: "가드 +15%",
+    name: "유리 도롱뇽", el: "fire", elName: "불", color: 0xff7a4d, pers: "신중", persDesc: "가드 +15%", roles: ["guard"],
     branches: [
       { meaning: "받아내기", role: "guard", stats: [["HP", 38, 44], ["가드", 13, 15]] },
       { meaning: "되돌리기", role: "attack", stats: [["파워", 9, 11], ["가드", 13, 15]] },
     ],
   },
   "mist-cat": {
-    name: "안개 고양이", el: "water", elName: "물", color: 0x8ec2ff, pers: "총명", persDesc: "포커스 +15%",
+    name: "안개 고양이", el: "water", elName: "물", color: 0x8ec2ff, pers: "총명", persDesc: "포커스 +15%", roles: ["support", "disrupt"],
     branches: [
       { meaning: "얼리기", role: "disrupt", stats: [["포커스", 13, 15], ["싱크", 12, 14]] },
       { meaning: "지키기", role: "support", stats: [["포커스", 13, 15], ["싱크", 12, 14]] },
@@ -135,19 +135,20 @@ class Evolution extends Phaser.Scene {
     let role: Evolution["o"]["role"];
     if (this.textures.exists("role")) role = this.add.image(CALM ? CX + 72 : CX, CALM ? CY - 90 : CY - 235, "role").setTint(0xf4eef2).setAlpha(0).setScale(CALM ? 0.45 : 0.5);
     else role = this.add.text(CALM ? CX + 72 : CX, CALM ? CY - 90 : CY - 235, ROLE[B.role], { fontFamily: FONT, fontSize: "64px", color: "#f4eef2" }).setOrigin(0.5).setAlpha(0);
-    // 유체는 역할이 없고, 진화하면서 고른 갈래로 역할이 정해져요(Lucy 11/04).
+    // 컷신은 무엇으로 자라는지만 보여줘요. 이미 아는 유체 정보(역할 등)는 띄우지 않아요(Lucy 11/04).
     const roleText = this.add.text(CX, CALM ? CY + 10 : CY - 330, ROLE[B.role], {
       fontFamily: FONT, fontSize: "26px", color: "#f4eef2", stroke: "#000000", strokeThickness: 6,
     }).setOrigin(0.5).setAlpha(0);
 
-    // 이름 띠: 속성·역할·성격 칩 + 이름. 성격은 유체부터 보여요(Lucy 11/03).
-    const band = this.add.container(56, H - 70);
+    // 성체 이름 띠: 속성·역할·성격 칩 + 이름. 공개 박자에만 떠요.
+    // 유체 정보 띠는 만들지 않아요. 이미 아는 정보라 컷신에 띄울 필요가 없어요(Lucy 11/04).
+    const band = this.add.container(56, H - 70).setAlpha(0);
     const chip = (x: number, t: string, c: string) => this.add.text(x, -64, t, { fontFamily: FONT, fontSize: "17px", color: c, backgroundColor: "#1d1a1ecc", padding: { x: 10, y: 5 } });
     const c1 = chip(0, `${S.elName}`, "#" + S.color.toString(16));
-    const c3 = chip(c1.width + 8, `성격 ${S.pers} · ${S.persDesc}`, "#cfc6cc");
-    const roleChip = chip(c1.width + c3.width + 16, ROLE[B.role], "#f4eef2").setVisible(false);
-    const nameSmall = this.add.text(0, -26, "유체 · Lv 4", { fontFamily: FONT, fontSize: "16px", color: "#a49ca2" });
-    const name = this.add.text(0, -4, S.name, { fontFamily: FONT, fontSize: "40px", color: "#f4eef2", stroke: "#000000", strokeThickness: 6 });
+    const roleChip = chip(c1.width + 8, ROLE[B.role], "#f4eef2");
+    const c3 = chip(c1.width + roleChip.width + 16, `성격 ${S.pers} · ${S.persDesc}`, "#cfc6cc");
+    const nameSmall = this.add.text(0, -26, `${B.meaning} 갈래 · TODO_NAME`, { fontFamily: FONT, fontSize: "16px", color: "#a49ca2" });
+    const name = this.add.text(0, -4, `${S.name} 성체`, { fontFamily: FONT, fontSize: "40px", color: "#f4eef2", stroke: "#000000", strokeThickness: 6 });
     band.add([c1, roleChip, c3, nameSmall, name]);
 
     const panel = this.add.container(W - 470, 90).setAlpha(0);
@@ -248,7 +249,7 @@ class Evolution extends Phaser.Scene {
       { t: o.wipe, progress: n >= 5 ? 1 : 0 },
       { t: o.role, alpha: n === 3 ? 1 : 0, y: n >= 3 ? CY - 235 : CY - 420 },
       { t: o.roleText, alpha: n === 3 ? 1 : 0 },
-      { t: o.band, alpha: n === 6 ? 0 : 1 },
+      { t: o.band, alpha: n === 5 ? 1 : 0 },
       { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
       { t: o.vignette, strength: [0.25, 0.6, 0.7, 0.7, 0.8, 0.45, 0.4][n] },
       { t: this.cameras.main, zoom: [1, 1.05, 1.06, 1.08, 1.12, 1, 1][n] },
@@ -274,7 +275,7 @@ class Evolution extends Phaser.Scene {
       { t: o.adult, alpha: n >= 4 ? 1 : 0, scale: n >= 5 ? closeScale : adultScale, x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 },
       { t: o.adultSil, alpha: n === 4 ? 1 : 0, scale: n >= 5 ? closeScale : adultScale * (n === 4 ? 1 : 0.96), x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 },
       { t: o.wipe, progress: n >= 5 ? 1 : 0 },
-      { t: o.band, alpha: n === 6 ? 0 : 1 },
+      { t: o.band, alpha: n === 5 ? 1 : 0 },
       { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
       { t: o.vignette, strength: pick([0.25, 0.35, 0.45, 0.45, 0.45, 0.3, 0.3]) },
       { t: this.cameras.main, zoom: 1 },
@@ -290,12 +291,6 @@ class Evolution extends Phaser.Scene {
     const o = this.o;
     o.caption.setText(n ? `${n} ${BEATS[n]}` : "대기 · 키우기를 누르면 시작");
     $("hud").textContent = `박자 ${n}/6 ${BEATS[n]}`;
-
-    // 글자 바꾸기
-    const grown = n >= 5;
-    o.nameSmall.setText(grown ? `${B.meaning} 갈래 · TODO_NAME` : "유체 · Lv 4");
-    o.name.setText(grown ? `${S.name} 성체` : S.name);
-    o.roleChip.setVisible(grown);
 
     const animate = !this.still && n === prev + 1 && n > 0;
     if (!animate) {
