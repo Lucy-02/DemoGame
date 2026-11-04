@@ -268,7 +268,7 @@ class Evolution extends Phaser.Scene {
       { t: o.crest, alpha: n === 3 ? 0.95 : 0 },
       { t: o.role, alpha: n === 3 ? 0.95 : 0 },
       { t: o.roleText, alpha: n === 3 ? 1 : 0 },
-      { t: o.baby, alpha: pick([1, 0.25, 0, 0, 0, 0, 0]), scale: n === 0 ? babyScale : babyScale * 0.96 },
+      { t: o.baby, alpha: pick([1, 0.5, 0.35, 0.3, 0, 0, 0]), scale: n === 0 ? babyScale : babyScale * 0.98 }, // 유체는 사라지지 않고 희미하게 남았다가 성체 실루엣으로 바뀌어요(Lucy 11/04)
       { t: o.babyGlow, outerStrength: 0 },
       { t: o.babySil, alpha: 0 },
       { t: o.adult, alpha: n >= 4 ? 1 : 0, scale: n >= 5 ? closeScale : adultScale, x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 },
