@@ -1,7 +1,7 @@
 # 문구 규칙 (정본)
 
 - 상태: 효과문의 말투와 어순은 **Lucy 결정**, 나머지 섹션은 **추천안을 Lucy가 수락** (둘 다 2026-11-01, `docs/design-decisions/0022-text-rules.md`). 효과문 세부 몇 개와 용어는 확인 대기(0022 "남은 것").
-- 조사 근거: `docs/research/core-design/R5-effect-text.md`(효과문), `R6-ui-text-sections.md`(나머지 섹션). 근거와 표본은 거기에 있고, 이 문서에는 규칙만 적어요.
+- 조사 근거: `docs/archive/research/core-design/R5-effect-text.md`(효과문), `R6-ui-text-sections.md`(나머지 섹션). 근거와 표본은 거기에 있고, 이 문서에는 규칙만 적어요.
 - 이름(카드·정령·용어)은 이 문서가 정하지 않아요. 이름은 `design/canon/naming/`과 Lucy 몫이에요.
 
 ## 0. 섹션 지도: 목소리 넷

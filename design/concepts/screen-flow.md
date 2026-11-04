@@ -1,7 +1,7 @@
 # 전체 화면 목록·흐름 리서치 (다음 디자인 라운드 고르기)
 
 작성: 2026-10-29 · 용도: 확정된 화면(지도·전투·정령 관리·보상)을 넘어 게임 전체 화면을 한 장에 놓고, 다음 라운드를 고르기 위한 근거
-읽은 것: `LEDGER.md`(10/29 12:30 + 전투 R5 19:28), `docs/handoff/01·02·03`, `DECISIONS.md`, `design-decisions/0004~0007`, `research/spirit-screen-ia.md`, `BRAND_BRIEF.md`, 캡처 `archive/r2-map/f03`, `archive/garden/f03`, `archive/battle5/frame-rest`
+읽은 것: `LEDGER.md`(10/29 12:30 + 전투 R5 19:28), `docs/handoff/01·02·03`, `DECISIONS.md`, `design-decisions/0004~0007`, 공유 폴더 `archive/design-concepts/research/spirit-screen-ia.md`, `BRAND_BRIEF.md`, 캡처 `archive/r2-map/f03`, `archive/garden/f03`, `archive/battle5/frame-rest`
 표기: **[출처]**는 아래 링크로 확인한 내용, **[미검증]**은 플레이 경험·통념이라 원문으로 확인하지 못한 내용이에요.
 이 노트는 **정보 구조와 흐름**만 다뤄요. 레이아웃·색·글꼴·네이밍은 제안하지 않았고, 화면 이름은 기획 문서에 이미 있는 말을 썼어요. 새 이름이 필요한 곳은 "(가칭)"으로 적었어요. 모두 Lucy 컨펌 대상이에요.
 

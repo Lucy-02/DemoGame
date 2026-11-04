@@ -1,7 +1,7 @@
 # 0007. 전투 화면 R5 "판단 동선" 확정
 
 - 상태: 수락됨 (Lucy, 2026-10-29)
-- 원본: https://claude.ai/artifact/Kqa9pCZnjAs6juuboj1wRh (r5/page.html), 캡처 `design-concepts/archive/battle5/`, 리뷰 `design/concepts/reviews/battle4-*.md`
+- 원본: https://claude.ai/artifact/Kqa9pCZnjAs6juuboj1wRh (r5/page.html), 캡처 `design-concepts/archive/battle5/`, 리뷰 `design/archive/concept-reviews/battle4-*.md`
 
 ## 결정
 - 뼈대: R4 C "판단 동선". 카드를 집어 조준하면 필드에 결과 미리보기. (대체됨: 0013 — 조준선 대신 끌어 대기 + 집고 클릭, 대상 강조·나머지 어둡게)
