@@ -57,7 +57,7 @@ class Evolution extends Phaser.Scene {
     bgGlow: Phaser.GameObjects.Image; rays: Phaser.GameObjects.Container; crest: Phaser.GameObjects.Image; ring: Phaser.GameObjects.Image;
     baby: Phaser.GameObjects.Image; babySil: Phaser.GameObjects.Image; adult: Phaser.GameObjects.Image; adultSil: Phaser.GameObjects.Image;
     role: Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.AlphaSingle;
-    roleText: Phaser.GameObjects.Text; band: Phaser.GameObjects.Container; nameSmall: Phaser.GameObjects.Text; name: Phaser.GameObjects.Text;
+    roleText: Phaser.GameObjects.Text; elText: Phaser.GameObjects.Text; band: Phaser.GameObjects.Container; nameSmall: Phaser.GameObjects.Text; name: Phaser.GameObjects.Text;
     roleChip: Phaser.GameObjects.Text; panel: Phaser.GameObjects.Container; caption: Phaser.GameObjects.Text;
     gather: Phaser.GameObjects.Particles.ParticleEmitter; burst: Phaser.GameObjects.Particles.ParticleEmitter; motes: Phaser.GameObjects.Particles.ParticleEmitter;
     babyGlow: Phaser.Filters.Glow; silGlow: Phaser.Filters.Glow; wipe: Phaser.Filters.Wipe; vignette: Phaser.Filters.Vignette;
@@ -136,9 +136,12 @@ class Evolution extends Phaser.Scene {
     if (this.textures.exists("role")) role = this.add.image(CALM ? CX + 72 : CX, CALM ? CY - 90 : CY - 235, "role").setTint(0xf4eef2).setAlpha(0).setScale(CALM ? 0.45 : 0.5);
     else role = this.add.text(CALM ? CX + 72 : CX, CALM ? CY - 90 : CY - 235, ROLE[B.role], { fontFamily: FONT, fontSize: "64px", color: "#f4eef2" }).setOrigin(0.5).setAlpha(0);
     // 컷신은 무엇으로 자라는지만 보여줘요. 이미 아는 유체 정보(역할 등)는 띄우지 않아요(Lucy 11/04).
-    const roleText = this.add.text(CX, CALM ? CY + 10 : CY - 330, ROLE[B.role], {
-      fontFamily: FONT, fontSize: "26px", color: "#f4eef2", stroke: "#000000", strokeThickness: 6,
+    // 아이콘마다 아래에 한글 이름을 달아요: 속성 아래 속성 이름, 역할 아래 역할 이름(Lucy 11/04).
+    const label = (x: number, y: number, t: string, color: string) => this.add.text(x, y, t, {
+      fontFamily: FONT, fontSize: "26px", color, stroke: "#000000", strokeThickness: 6,
     }).setOrigin(0.5).setAlpha(0);
+    const roleText = label(CALM ? CX + 72 : CX, CALM ? CY - 2 : CY - 330, ROLE[B.role], "#f4eef2");
+    const elText = label(CX - 72, CY - 2, S.elName, "#" + S.color.toString(16));
 
     // 성체 이름 띠: 속성·역할·성격 칩 + 이름. 공개 박자에만 떠요.
     // 유체 정보 띠는 만들지 않아요. 이미 아는 정보라 컷신에 띄울 필요가 없어요(Lucy 11/04).
@@ -176,7 +179,7 @@ class Evolution extends Phaser.Scene {
     uiCam.ignore(this.children.list.filter((c) => !ui.includes(c as never)));
     this.zone = zone;
     this.shade = shade;
-    this.o = { bgGlow, rays, crest, ring, baby, babySil, adult, adultSil, role, roleText, band, nameSmall, name, roleChip, panel, caption, gather, burst, motes, babyGlow, silGlow, wipe, vignette };
+    this.o = { bgGlow, rays, crest, ring, baby, babySil, adult, adultSil, role, roleText, elText, band, nameSmall, name, roleChip, panel, caption, gather, burst, motes, babyGlow, silGlow, wipe, vignette };
 
     // 유체 숨쉬기
     this.tweens.add({ targets: [baby], scaleY: baby.scale * 1.015, yoyo: true, repeat: -1, duration: 1400, ease: "Sine.inOut" });
@@ -249,6 +252,7 @@ class Evolution extends Phaser.Scene {
       { t: o.wipe, progress: n >= 5 ? 1 : 0 },
       { t: o.role, alpha: n === 3 ? 1 : 0, y: n >= 3 ? CY - 235 : CY - 420 },
       { t: o.roleText, alpha: n === 3 ? 1 : 0 },
+      { t: o.elText, alpha: CALM && n === 3 ? 1 : 0 },
       { t: o.band, alpha: n === 5 ? 1 : 0 },
       { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
       { t: o.vignette, strength: [0.25, 0.6, 0.7, 0.7, 0.8, 0.45, 0.4][n] },
@@ -269,6 +273,7 @@ class Evolution extends Phaser.Scene {
       { t: o.crest, alpha: n === 3 ? 0.95 : 0 },
       { t: o.role, alpha: n === 3 ? 0.95 : 0 },
       { t: o.roleText, alpha: n === 3 ? 1 : 0 },
+      { t: o.elText, alpha: CALM && n === 3 ? 1 : 0 },
       { t: o.baby, alpha: pick([1, 0.5, 0.35, 0.3, 0, 0, 0]), scale: n === 0 ? babyScale : babyScale * 0.98 }, // 유체는 사라지지 않고 희미하게 남았다가 성체 실루엣으로 바뀌어요(Lucy 11/04)
       { t: o.babyGlow, outerStrength: 0 },
       { t: o.babySil, alpha: 0 },
