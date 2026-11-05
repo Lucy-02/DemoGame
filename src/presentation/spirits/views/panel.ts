@@ -263,7 +263,7 @@ export function drawPanel(scene: Phaser.Scene, d: SpiritDetailVM, tab: TabId, ac
   if (tab === "growth") drawSpine(scene, body);
   render(scene, { t: "col", w: BODY.w, gap: B.gap, children: body }, BODY.x, BODY.y);
   // 아래에 붙는 줄 (.q-awk margin-top auto, 위 1px 선)
-  const foot = tab === "overview" ? awakenFoot(d) : tab === "growth" ? gateFoot(d, act) : undefined;
+  const foot = tab === "overview" ? releaseFoot(d) : tab === "growth" ? gateFoot(d, act) : undefined;
   if (foot) {
     const node: BoxNode = { t: "col", w: BODY.w, children: [rule(PANEL.foot.line), { ...foot, mt: PANEL.foot.pt } as Node] };
     render(scene, node, BODY.x, BODY_BOTTOM - size(node).h);
@@ -282,9 +282,9 @@ function drawSpine(scene: Phaser.Scene, body: Node[]) {
   box(scene.add.graphics(), BODY.x + Gr.spine.x, top + dotY, Gr.spine.w, last, 0, { fill: P.veil["16"] });
 }
 
-function awakenFoot(d: SpiritDetailVM): Node {
+function releaseFoot(d: SpiritDetailVM): Node {
   return {
     t: "col", gap: B.secGap,
-    children: [head(COPY.awaken), text(d.overview.awaken.desc, T.tags, P.ink, { wrap: BODY.w })],
+    children: [head(COPY.release), text(d.overview.release.desc, T.tags, P.ink, { wrap: BODY.w })],
   };
 }

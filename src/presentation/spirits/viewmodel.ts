@@ -113,7 +113,7 @@ export interface SpiritDetailVM {
   facts: FactVM[];
   overview: {
     rows: StatRowVM[];
-    awaken: { name: string; desc: string };
+    release: { name: string; desc: string };
     /** 성격 설명. note: 유체 때 덧붙이는 안내. 목업은 없어요 */
     personality?: { name: string; desc: string; note?: string };
     reroll: { can: boolean; cost: number; shown: boolean };

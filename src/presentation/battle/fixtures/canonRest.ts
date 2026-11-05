@@ -19,9 +19,9 @@ export const canonRest: BattleVM = {
     nextTurn: 4,
   },
   allies: [
-    { face: "star", art: "sil-star", hp: 19, maxHp: 34, incoming: 18, statuses: [{ icon: "kw-burn", n: 2 }], sync: 20 },
-    { face: "fire", art: "sil-fire", hp: 28, maxHp: 38, incoming: 18, statuses: [{ icon: "kw-weak", n: 1 }], sync: 40 },
-    { face: "jelly", art: "sil-jelly", hp: 44, maxHp: 52, block: 6, incoming: 30, statuses: [{ icon: "kw-chill", n: 1 }], sync: 65, front: true },
+    { face: "star", art: "sil-star", hp: 19, maxHp: 34, incoming: 18, statuses: [{ icon: "kw-burn", n: 2 }] },
+    { face: "fire", art: "sil-fire", hp: 28, maxHp: 38, incoming: 18, statuses: [{ icon: "kw-weak", n: 1 }] },
+    { face: "jelly", art: "sil-jelly", hp: 44, maxHp: 52, block: 6, incoming: 30, statuses: [{ icon: "kw-chill", n: 1 }], front: true },
   ],
   enemies: [
     {
@@ -65,8 +65,8 @@ export const canonRest: BattleVM = {
       cards: [
         fire({ key: "claw", name: "불꽃 할퀴기", cost: 1, material: "fire", art: "i-claw", element: "el-fire", values: [{ icon: "fx-damage", n: 9, up: true }],
           detail: { text: [{ text: "피해를 " }, { text: "9", strong: true }, { text: " 입힙니다." }], calc: [{ text: "기본 7 + 파워 2 = " }, { text: "9", strong: true }], owner: "불 정령 · 불 · 용암석" } }),
-        fire({ key: "blast", name: "불씨 폭발", cost: 2, material: "fire", art: "i-burst", element: "el-fire", values: [{ icon: "fx-damage", n: 15 }], off: true, why: "싱크 50 필요",
-          detail: { text: [{ text: "피해를 " }, { text: "15", strong: true }, { text: " 입힙니다. 불 정령의 싱크가 50 이상일 때만 사용할 수 있습니다." }], why: "불 정령 싱크 40 · 50 필요", owner: "불 정령 · 불 · 용암석" } }),
+        fire({ key: "blast", name: "불씨 폭발", cost: 2, material: "fire", art: "i-burst", element: "el-fire", values: [{ icon: "fx-damage", n: 15 }], off: true, why: "화상 필요",
+          detail: { text: [{ text: "피해를 " }, { text: "15", strong: true }, { text: " 입힙니다. 화상이 있는 적에게만 사용할 수 있습니다." }], why: "화상이 있는 적 없음", owner: "불 정령 · 불 · 용암석" } }),
         fire({ key: "heat", name: "달구기", cost: 1, material: "fire", art: "el-fire", element: "el-fire", values: [{ icon: "kw-burn", n: 4 }],
           detail: { text: [{ text: "화상", term: true }, { text: "을 " }, { text: "4", strong: true }, { text: " 부여합니다." }], owner: "불 정령 · 불 · 용암석" } }),
         fire({ key: "counter", name: "맞불", cost: 1, material: "fire", art: "i-twin", element: "el-fire", values: [{ icon: "fx-damage", n: 6 }, { icon: "fx-block", n: 3 }],

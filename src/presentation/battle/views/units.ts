@@ -22,7 +22,6 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
   for (const a of vm.allies) {
     a.statuses.forEach((s) => loadIcon(scene, s.icon, I.status.icon));
   }
-  loadIcon(scene, "fx-sync", I.status.icon);
   loadIcon(scene, "fx-block", I.block.icon);
   for (const e of vm.enemies) {
     loadIcon(scene, e.element, I.status.icon);
@@ -149,13 +148,6 @@ function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change, lit = false): Nod
     t: "row", minH: I.row2.minH, gap: I.row2.gap, align: "center",
     children: [
       ...a.statuses.map(statusChip),
-      {
-        t: "row", gap: I.syncGap, align: "center",
-        children: [
-          { t: "icon", id: "fx-sync", w: I.status.icon, h: I.status.icon, tint: P.ink3 },
-          text(String(a.sync), T.chip, P.ink3),
-        ],
-      },
       ...(a.front ? [{
         t: "row", pad: I.front.pad, radius: I.front.radius, align: "center", ml: "auto",
         style: { ring: { width: 1, color: P.glassLine } },

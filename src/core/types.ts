@@ -1,5 +1,5 @@
 export type Element = "fire" | "water" | "forest" | "wind" | "none";
-export type StatKey = "hp" | "power" | "guard" | "focus" | "sync";
+export type StatKey = "hp" | "power" | "guard" | "focus";
 export type Rarity = "basic" | "common" | "advanced" | "rare";
 export type CardTarget = "enemy" | "allEnemies" | "self" | "ally" | "allAllies";
 
@@ -14,7 +14,8 @@ export interface SpiritDef {
   motif: string;
   stats: Record<StatKey, number>;
   adultMain: StatKey[];
-  awaken: { name: string; nameEn: string; desc: string };
+  /** 해방: 각성체가 전투마다 한 번 켜는 일시 변신 */
+  release: { name: string; nameEn: string; desc: string };
 }
 
 export interface PersonalityDef {
@@ -45,7 +46,6 @@ export type CardOp =
   | { op: "taunt" }
   | { op: "moveFront" }
   | { op: "manaNextTurn"; value: number }
-  | { op: "sync"; value: number }
   | { op: "aura"; aura: AuraId; value: number }
   | { op: "damageFromBlock" }
   | { op: "keepBlock" }
@@ -136,7 +136,7 @@ export interface DeckCard {
   owner: string;
 }
 
-/** 성장 단계 (결정 0021). 전투 중 일시 상태 "각성"(awaken)과는 다른 것이에요. */
+/** 성장 단계 (결정 0021) */
 export type Stage = "baby" | "adult" | "awakened";
 export const STAGES: readonly Stage[] = ["baby", "adult", "awakened"];
 
@@ -148,13 +148,11 @@ export interface RunSpirit {
   stage: Stage;
   level: number;
   personality: string;
-  /** 전투를 시작할 때 차 있는 싱크 (각성체·유대 에피소드) */
-  startSync: number;
 }
 
 /** 자람 조건: 전투 이벤트로 세는 행동 누적 (0021 2절) */
 export interface DeedDef {
-  kind: "awaken" | "blocked" | "freeze";
+  kind: "dealt" | "blocked" | "freeze";
   n: number;
 }
 
@@ -170,7 +168,6 @@ export interface EvolutionDef {
 export interface EpisodeDef {
   affinity: number;
   stage?: Stage;
-  start_sync?: number;
   reroll_choices?: number;
 }
 
@@ -181,8 +178,6 @@ export interface GrowthDef {
   material: Record<"normal" | "elite" | "boss", number>;
   stage_main_bonus: number;
   stage_hp_main_bonus: number;
-  stage_start_sync: Partial<Record<Stage, number>>;
-  start_sync_cap: number;
   evolutions: EvolutionDef[];
   feed: { cost: number; affinity: number };
   reroll: { cost: number; from: Stage };

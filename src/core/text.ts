@@ -37,7 +37,7 @@ const ALLY = {
   empower: { self: ["", "얻"], ally: ["아군 하나에게 ", "부여하"], allAllies: ["모든 아군에게 ", "부여하"] },
   thorns: { self: ["", "얻"], ally: ["아군 하나에게 ", "부여하"], allAllies: ["모든 아군이 ", "얻"] },
 } as const;
-/** 아군의 수치가 바뀌는 효과 (회복·싱크로율): "아군 하나의 HP를 …" */
+/** 아군의 수치가 바뀌는 효과 (회복): "아군 하나의 HP를 …" */
 const ALLY_OF: Partial<Record<CardTarget, string>> = { ally: "아군 하나의 ", allAllies: "모든 아군의 " };
 
 const sentence = (c: Clause) => `${c.to}${polite(c.core)}.${c.after ? ` ${c.after}` : ""}`;
@@ -113,7 +113,6 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
       case "taunt": return [{ to: me, core: "도발을 얻" }];
       case "moveFront": return [{ to: "", core: "이 정령이 앞열로 나서" }];
       case "manaNextTurn": return [{ to: "", core: `다음 턴에 마력을 ${op.value} 더 얻` }];
-      case "sync": return [{ to: ALLY_OF[t] ?? "", core: `싱크로율이 ${op.value}%p 오르` }];
       case "aura": {
         const body = ((): string => {
           switch (op.aura) {

@@ -9,19 +9,19 @@ const SEEDS = 20;
 describe("전투 골든", () => {
   it("인카운터별 요약이 바뀌지 않는다", () => {
     const summary = ENCOUNTERS.map((enc) => {
-      let wins = 0, turns = 0, hpLeft = 0, awakens = 0, breaks = 0, cancels = 0;
+      let wins = 0, turns = 0, hpLeft = 0, releases = 0, breaks = 0, cancels = 0;
       for (let i = 0; i < SEEDS; i++) {
         const { battle, events } = autoBattle(enc.enemies, i);
         if (battle.result === "victory") wins++;
         turns += battle.turn;
         hpLeft += battle.spirits.reduce((a, s) => a + s.hp, 0);
         for (const e of events) {
-          if (e.k === "awaken") awakens++;
+          if (e.k === "release") releases++;
           if (e.k === "break") breaks++;
           if (e.k === "cancel") cancels++;
         }
       }
-      return `${enc.id} wins=${wins}/${SEEDS} turns=${turns} hp=${hpLeft} awaken=${awakens} break=${breaks} cancel=${cancels}`;
+      return `${enc.id} wins=${wins}/${SEEDS} turns=${turns} hp=${hpLeft} release=${releases} break=${breaks} cancel=${cancels}`;
     });
     expect(summary).toMatchSnapshot();
   });

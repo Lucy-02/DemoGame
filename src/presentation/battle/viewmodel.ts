@@ -33,7 +33,6 @@ export interface AllyVM {
   /** 이번 적 차례에 받을 피해 합계 */
   incoming?: number;
   statuses: StatusVM[];
-  sync: number;
   front?: boolean;
 }
 

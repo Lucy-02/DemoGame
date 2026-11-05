@@ -30,7 +30,6 @@ export const tokens = {
       "hp": "TODO_TOKEN",
       "block": "TODO_TOKEN",
       "shield": "TODO_TOKEN",
-      "sync": "TODO_TOKEN",
       "mana": "TODO_TOKEN"
     },
     "feedback": {
@@ -503,7 +502,6 @@ export const todoTokens: readonly string[] = [
   "color.stat.hp",
   "color.stat.block",
   "color.stat.shield",
-  "color.stat.sync",
   "color.stat.mana",
   "color.feedback.damage",
   "color.feedback.heal",

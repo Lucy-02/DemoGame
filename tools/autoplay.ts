@@ -4,8 +4,9 @@ import { cardDef } from "../src/core/data";
 import { Rng } from "../src/core/rng";
 import { Run } from "../src/core/run";
 
-/** 이번 턴에 낼 수 있는 카드를 다 내요. 공격 우선, 그다음 아무거나. */
+/** 해방할 수 있으면 먼저 해방하고, 이번 턴에 낼 수 있는 카드를 다 내요. 공격 우선, 그다음 아무거나. */
 export function autoPlayTurn(b: Battle, rng: Rng) {
+  for (const s of b.aliveSpirits()) if (b.canRelease(s.id)) b.release(s.id);
   for (let guard = 0; guard < 60 && b.result === "ongoing"; guard++) {
     const playable = b.hand.filter((c) => b.canPlay(c).ok);
     if (!playable.length) return;
