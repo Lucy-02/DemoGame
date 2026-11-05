@@ -102,7 +102,7 @@ export interface SpiritDetailVM {
   /** 목업은 레벨이 없어요 */
   level?: number;
   final: boolean;
-  /** 파일럿 3종 밖의 목업 (능력치·카드·각성이 아직 없어요) */
+  /** 파일럿 3종 밖의 목업 (능력치·카드·해방이 아직 없어요) */
   mock?: boolean;
   /** 기호 없는 꼬리표도 있어요 (목업) */
   tags: { icon?: IconId; text: string }[];
