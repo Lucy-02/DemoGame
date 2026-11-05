@@ -45,7 +45,9 @@ const CALM = q.get("look") !== "full";
 const STAGE = q.get("stage") === "none" ? "none" : "reveal";
 // 배경 그림 안에서 정령이 서는 자리(임시, 정령마다 다를 수 있어요): 발판 높이 비율, 성체 키가 배경 높이에서 차지하는 비율
 const STAGE_FOOT_Y = 0.88, STAGE_ADULT_FRAC = 0.75;
-const FEATHER = Number(q.get("feather") ?? 2); // 임시: 배경 가장자리 번짐(원본 px). 흰 경계·끊긴 선을 흐려서 감춰요(Lucy 11/05)
+// 배경 가장자리 정리(Lucy 11/05, 임시 값): 흰 매트 제거 → 1px 깎기 → 1px 번짐. 비교표는 evolution-staging/bg-edge-techniques.png
+const EDGE = { matte: q.get("matte") !== "0", choke: Number(q.get("choke") ?? 1), feather: Number(q.get("feather") ?? 1) };
+const MATTE_GRAY = 222; // 누끼 전 회색 바탕의 대략 값(원본 모서리 220~224)
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const pick = $("spirit") as HTMLSelectElement, br = $("branch") as HTMLSelectElement;
@@ -91,7 +93,7 @@ class Evolution extends Phaser.Scene {
     void bg;
     const bgGlow = this.add.image(CX, CY, "radial").setDisplaySize(W * 1.3, H * 1.5).setTint(S.color).setAlpha(0.18).setBlendMode(Phaser.BlendModes.ADD);
     // 무대는 유체 발밑(CY + 150)에 바닥이 오게 깔아요. 그림자·비네트가 무대 위로 덮여서 함께 어두워져요.
-    if (STAGE !== "none") featherEdges(this, "stage", "stageSoft", FEATHER);
+    if (STAGE !== "none") cleanEdges(this, "stage", "stageSoft");
     const stage = STAGE !== "none" ? this.add.image(CX, H + 520, "stageSoft").setOrigin(0.5, STAGE_FOOT_Y).setAlpha(0) : undefined;
 
     // 덜어낸 판의 가운데 영역: 어두운 바탕 위에 속성 빛이 번진 세로 타원
@@ -392,17 +394,56 @@ const start = async () => {
 };
 void start();
 
-/** 가장자리 번지게: 원본 알파에 흐린 알파를 곱해요. 안쪽은 그대로, 바깥 테두리만 부드럽게 사라져요. */
-function featherEdges(scene: Phaser.Scene, src: string, dst: string, px: number) {
+/** 누끼 가장자리 정리. Photoshop의 Remove White Matte(반투명 픽셀에 섞인 바탕색 빼기) + Choke(테두리 깎기) + Feather(번짐)와 같은 순서예요. */
+function cleanEdges(scene: Phaser.Scene, src: string, dst: string) {
   const img = scene.textures.get(src).getSourceImage() as HTMLImageElement;
+  const w = img.width, h = img.height;
   const cv = document.createElement("canvas");
-  cv.width = img.width; cv.height = img.height;
-  const cx = cv.getContext("2d")!;
+  cv.width = w; cv.height = h;
+  const cx = cv.getContext("2d", { willReadFrequently: true })!;
   cx.drawImage(img, 0, 0);
-  if (px > 0) {
-    cx.globalCompositeOperation = "destination-in";
-    cx.filter = `blur(${px}px)`;
-    cx.drawImage(img, 0, 0);
+  const data = cx.getImageData(0, 0, w, h), d = data.data;
+  const a0 = new Uint8ClampedArray(w * h);
+  for (let p = 0; p < w * h; p++) a0[p] = d[p * 4 + 3];
+  // 1) 흰 매트 제거: 색 = (보이는 색 − (1−a)·바탕) / a
+  if (EDGE.matte) for (let p = 0; p < w * h; p++) {
+    const a = a0[p] / 255;
+    if (a <= 0.03 || a >= 1) continue;
+    for (let c = 0; c < 3; c++) d[p * 4 + c] = (d[p * 4 + c] - (1 - a) * MATTE_GRAY) / a;
   }
+  // 2) 깎기: 3×3 최솟값을 choke번
+  let a1 = a0;
+  for (let k = 0; k < EDGE.choke; k++) {
+    const nx = new Uint8ClampedArray(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let m = 255;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const yy = Math.min(h - 1, Math.max(0, y + dy)), xx = Math.min(w - 1, Math.max(0, x + dx));
+        m = Math.min(m, a1[yy * w + xx]);
+      }
+      nx[y * w + x] = m;
+    }
+    a1 = nx;
+  }
+  // 3) 번짐: 깎은 알파를 흐린 뒤 원래 알파를 넘지 않게
+  const mask = document.createElement("canvas");
+  mask.width = w; mask.height = h;
+  const mx = mask.getContext("2d", { willReadFrequently: true })!;
+  const md = mx.createImageData(w, h);
+  for (let p = 0; p < w * h; p++) md.data[p * 4 + 3] = a1[p];
+  mx.putImageData(md, 0, 0);
+  let a2 = a1;
+  if (EDGE.feather > 0) {
+    const bl = document.createElement("canvas");
+    bl.width = w; bl.height = h;
+    const bx = bl.getContext("2d", { willReadFrequently: true })!;
+    bx.filter = `blur(${EDGE.feather}px)`;
+    bx.drawImage(mask, 0, 0);
+    const bd = bx.getImageData(0, 0, w, h).data;
+    a2 = new Uint8ClampedArray(w * h);
+    for (let p = 0; p < w * h; p++) a2[p] = bd[p * 4 + 3];
+  }
+  for (let p = 0; p < w * h; p++) d[p * 4 + 3] = Math.min(a0[p], a2[p]);
+  cx.putImageData(data, 0, 0);
   scene.textures.addCanvas(dst, cv);
 }
