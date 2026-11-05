@@ -14,7 +14,6 @@ export interface PanelActions {
   close(): void;
   evolve(): void;
   feed(): void;
-  reroll(): void;
   seeEpisode(): void;
   /** 목업: 성장 길에서 단계를 눌러 그 단계 그림 보기 */
   pickStage(stage: Stage): void;
@@ -73,7 +72,7 @@ const numPair = (have: number, need: number): Node => ({
 
 // ───────────────────────── 개요 ─────────────────────────
 
-function overview(d: SpiritDetailVM, act: PanelActions): Node[] {
+function overview(d: SpiritDetailVM): Node[] {
   const G = PANEL.statGrid;
   const legend: Node = {
     t: "row", gap: G.legend.gap, align: "center",
@@ -102,7 +101,6 @@ function overview(d: SpiritDetailVM, act: PanelActions): Node[] {
     ],
   }));
   const per = d.overview.personality;
-  const reroll = d.overview.reroll;
   const stats: Node = rows.length
     ? { t: "col", gap: B.secGap, children: [head(COPY.stats, legend), { t: "col", gap: G.rowGap, children: rows }] }
     : { t: "col", gap: B.secGap, children: [head(COPY.stats), text(COPY.undecided, T.tags, P.ink2)] };
@@ -112,17 +110,7 @@ function overview(d: SpiritDetailVM, act: PanelActions): Node[] {
       t: "col", gap: B.secGap,
       children: [
         head(COPY.personality),
-        {
-          t: "row", gap: B.headGap, align: "center",
-          children: [
-            personalityPill(per?.name),
-            ...(reroll.shown ? [{
-              ...button(`${COPY.reroll} · ${COPY.cost(reroll.cost)}`, {
-                size: T.tool, h: PANEL.small.h, radius: PANEL.small.radius, padX: PANEL.small.padX, enabled: reroll.can, onClick: act.reroll,
-              }), ml: "auto",
-            } as Node] : []),
-          ],
-        },
+        { t: "row", children: [personalityPill(per?.name)] },
         text(per?.desc ?? COPY.undecided, T.tags, P.ink2, { wrap: BODY.w }),
         ...(per?.note ? [text(per.note, T.small, P.ink3Spirit, { wrap: BODY.w })] : []),
       ],
@@ -259,7 +247,7 @@ function bond(d: SpiritDetailVM, act: PanelActions): Node[] {
 export function drawPanel(scene: Phaser.Scene, d: SpiritDetailVM, tab: TabId, act: PanelActions) {
   box(scene.add.graphics(), X, PANEL.y, PANEL.w, PANEL.h, PANEL.radius, glass(true));
   drawTabs(scene, d, tab, act);
-  const body = tab === "overview" ? overview(d, act) : tab === "growth" ? growth(d, act) : bond(d, act);
+  const body = tab === "overview" ? overview(d) : tab === "growth" ? growth(d, act) : bond(d, act);
   if (tab === "growth") drawSpine(scene, body);
   render(scene, { t: "col", w: BODY.w, gap: B.gap, children: body }, BODY.x, BODY.y);
   // 아래에 붙는 줄 (.q-awk margin-top auto, 위 1px 선)

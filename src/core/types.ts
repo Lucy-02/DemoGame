@@ -171,7 +171,6 @@ export interface EpisodeDef {
   affinity: number;
   stage?: Stage;
   start_sync?: number;
-  reroll_choices?: number;
 }
 
 export interface GrowthDef {
@@ -185,6 +184,5 @@ export interface GrowthDef {
   start_sync_cap: number;
   evolutions: EvolutionDef[];
   feed: { cost: number; affinity: number };
-  reroll: { cost: number; from: Stage };
   episodes: EpisodeDef[];
 }

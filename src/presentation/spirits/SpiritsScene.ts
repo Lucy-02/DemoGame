@@ -108,7 +108,6 @@ export class SpiritsScene extends Phaser.Scene {
         close: () => this.show(this.selected, this.tab, false),
         evolve: () => this.session.dispatch({ kind: "evolve", id: this.selected }),
         feed: () => this.session.dispatch({ kind: "feed", id: this.selected }),
-        reroll: () => this.session.dispatch({ kind: "reroll", id: this.selected }),
         seeEpisode: () => this.session.dispatch({ kind: "seeEpisode", id: this.selected }),
         pickStage: (stage) => {
           this.mockStage.set(this.selected, stage);

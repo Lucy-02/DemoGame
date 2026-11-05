@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { CARDS, GROWTH } from "./data";
 import {
-  addDeed, canEvolve, episodesOpen, evolve, feed, gardenSpirit, grantBattle, isFinalStage, levelOf, newGarden, reroll,
-  rerollChoices, seeEpisode, startSync, todos, unlockKeys, type Garden,
+  addDeed, canEvolve, episodesOpen, evolve, feed, gardenSpirit, grantBattle, isFinalStage, levelOf, newGarden,
+  seeEpisode, startSync, todos, unlockKeys, type Garden,
 } from "./garden";
-import { Rng } from "./rng";
 import { Run } from "./run";
 import { baseStat, maxHpOf } from "./stats";
 
@@ -80,19 +79,6 @@ describe("정원 (0021)", () => {
     const high = { ...cat, affinity: 999 };
     expect(episodesOpen(high)).toBe(1); // 2화는 성체부터
     expect(episodesOpen({ ...high, stage: "adult" })).toBe(2);
-  });
-
-  it("성격 다시 뽑기: 성체부터, 같은 성격은 안 나오고, 3화를 보면 둘 중 고르기", () => {
-    let g = { ...newGarden(1), material: 20 };
-    const before = fox(g).personality;
-    const [pick] = rerollChoices(fox(g), new Rng(5));
-    expect(pick).not.toBe(before);
-    expect(reroll(g, "fire_fox", pick)).toBe(g); // 유체는 못 해요
-    g = evolve(withExp(g, GROWTH.levels[3]), "fire_fox");
-    g = reroll(g, "fire_fox", pick);
-    expect(fox(g).personality).toBe(pick);
-    expect(g.material).toBe(20 - GROWTH.reroll.cost);
-    expect(rerollChoices({ ...fox(g), episodes: 3 }, new Rng(5))).toHaveLength(2);
   });
 
   it("판으로: 단계·레벨·성격·시작 싱크를 정원에서 읽어요", () => {
