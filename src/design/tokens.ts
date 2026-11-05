@@ -470,6 +470,15 @@ export const tokens = {
       }
     },
     "motion": {
+      "spiritSwap": {
+        "duration": "240ms",
+        "easing": [
+          0.2,
+          0.8,
+          0.2,
+          1
+        ]
+      },
       "hover": {
         "duration": "160ms",
         "easing": [

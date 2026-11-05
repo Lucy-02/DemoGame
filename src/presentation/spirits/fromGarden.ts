@@ -1,7 +1,7 @@
 // 정원 상태 → 정령 관리 화면 데이터. 규칙 판단(키울 수 있나, 할 일)은 모두 core/garden 함수에 맡겨요.
 import { C, CARDS, ELEMENT_NAME, GROWTH, ROLE_NAME, personalityDef, spiritDef } from "../../core/data";
 import {
-  canEvolve, canFeed, canReroll, episodesOpen, feedGain, gardenSpirit, isFinalStage, levelOf, levelProgress,
+  canEvolve, canFeed, episodesOpen, feedGain, gardenSpirit, isFinalStage, levelOf, levelProgress,
   spiritUnlocks, todos, toRunSpirit, type Garden, type GardenSpirit, type Todo,
 } from "../../core/garden";
 import { baseStat, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
@@ -183,7 +183,6 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
         name: personalityDef(s.personality).name, desc: personalityDef(s.personality).desc,
         note: grown ? undefined : COPY.personalityLater,
       },
-      reroll: { shown: grown, can: canReroll(g, s), cost: GROWTH.reroll.cost },
     },
     growth: {
       level,
@@ -234,7 +233,6 @@ function mockDetail(m: Mockup, stage: Stage): SpiritDetailVM {
     overview: {
       rows: [],
       awaken: { name: COPY.awaken, desc: COPY.undecided },
-      reroll: { shown: false, can: false, cost: GROWTH.reroll.cost },
     },
     growth: {
       rows: STAGES.map((st, i) => ({
