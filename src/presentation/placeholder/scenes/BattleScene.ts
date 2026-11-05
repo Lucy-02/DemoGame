@@ -216,21 +216,7 @@ export class BattleScene extends Phaser.Scene {
       h.add(this.add.rectangle(-82, half + 34, 30, 20, COLORS.block).setStrokeStyle(2, 0xffffff));
       h.add(txt(this, -82, half + 34, `${e.block}`, 13, "#fff").setOrigin(0.5));
     }
-    if (e.maxShield > 0) {
-      if (e.broken) {
-        h.add(txt(this, 0, half + 54, "BREAK!", 15, "#ffe066", { stroke: "#000", strokeThickness: 4, fontStyle: "bold" }).setOrigin(0.5));
-      } else {
-        const n = e.maxShield;
-        for (let i = 0; i < n; i++) {
-          const x = (i - (n - 1) / 2) * 15;
-          const on = i < e.shield;
-          h.add(this.add.rectangle(x, half + 54, 10, 10, on ? COLORS.shield : 0x444444).setAngle(45).setStrokeStyle(1, 0x000000));
-        }
-        h.add(txt(this, n * 7.5 + 8, half + 54, weakBy ? `약점 ${ELEMENT_NAME[weakBy]}` : "", 11, "#ffe9a8").setOrigin(0, 0.5));
-      }
-    } else {
-      h.add(txt(this, 0, half + 54, "실드 없음", 11, COLORS.dim).setOrigin(0.5));
-    }
+    h.add(txt(this, 0, half + 54, weakBy ? `약점 ${ELEMENT_NAME[weakBy]}` : "약점 없음", 11, weakBy ? "#ffe9a8" : COLORS.dim).setOrigin(0.5));
     const st: string[] = [];
     if (e.status.burn) st.push(`화상${e.status.burn}`);
     if (e.status.chill) st.push(`냉기${e.status.chill}/${b.chillThreshold(e)}`);
@@ -336,8 +322,8 @@ export class BattleScene extends Phaser.Scene {
       y = v.root.y - 140;
       const weakBy = Object.entries(C.affinity_beats as Record<string, string>).find(([, d]) => d === e.def.element)?.[0] as Element | undefined;
       lines.push(`${e.def.name}  (${ELEMENT_NAME[e.def.element]} · ${{ normal: "일반", elite: "엘리트", boss: "보스", minion: "소환수" }[e.def.tier]})`);
-      lines.push(weakBy ? `약점 ${ELEMENT_NAME[weakBy]} ×${C.affinity_weak}, 타격마다 실드 -1` : "약점 없음 (실드 없음)");
-      lines.push(`실드 ${e.shield}/${e.maxShield} · 빙결까지 냉기 ${b.chillThreshold(e)}`);
+      lines.push(weakBy ? `약점 ${ELEMENT_NAME[weakBy]} ×${C.affinity_weak}` : "약점 없음");
+      lines.push(`빙결까지 냉기 ${b.chillThreshold(e)}`);
       const pat = e.phase === 2 && e.def.phase2 ? e.def.phase2.pattern : e.def.pattern;
       lines.push("패턴: " + pat.map((m, i) => `${i === e.patternIdx % pat.length ? "▶" : ""}${m.charge ? "[차징]" : ""}${m.name}`).join(" → "));
       if (e.def.phase2 && e.phase === 1) lines.push(`HP ${e.def.phase2.hpBelow * 100}% 아래에서 2페이즈`);
@@ -512,17 +498,11 @@ export class BattleScene extends Phaser.Scene {
         case "status":
           at(40, () => this.float(e.ref, e.text, "#e0b0ff", 17));
           break;
-        case "break":
-          at(80, () => {
-            this.float({ side: "e", uid: e.uid }, "BREAK!", "#ffe066", 36);
-            this.cameras.main.shake(180, 0.01);
-          });
-          break;
         case "freeze":
           at(80, () => this.float({ side: "e", uid: e.uid }, "빙결!", "#9fe8ff", 32));
           break;
         case "phase2":
-          at(300, () => this.banner("그림바크 2페이즈", 0x4a2a1a, "실드 8칸으로 다시 차요. 대지 가르기를 끊을 다단 공격을 아껴두세요."));
+          at(300, () => this.banner("그림바크 2페이즈", 0x4a2a1a, "대지 가르기를 차징해요. 빙결로 끊을 수 있어요."));
           t += 900;
           break;
         case "release": {

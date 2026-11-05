@@ -17,7 +17,6 @@ export const COLORS = {
   gold: "#ffd166",
   hp: 0xe0525a,
   block: 0x5aa8ff,
-  shield: 0xffe08a,
 };
 
 export function txt(

@@ -22,7 +22,6 @@
     "fire": "forest",
     "forest": "water"
   },
-  "break_crit_bonus": 0.2,
   "crit_base": 0.05,
   "crit_mult": 1.5,
   "crit_pity": 0.02,

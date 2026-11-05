@@ -52,9 +52,6 @@ export interface BEnemy {
   hp: number;
   maxHp: number;
   block: number;
-  shield: number;
-  maxShield: number;
-  broken: boolean;
   skip: boolean;
   skipReason: string;
   status: Status;
@@ -80,7 +77,6 @@ export type BattleEvent =
   | { k: "heal"; ref: Ref; amount: number }
   | { k: "block"; ref: Ref; amount: number }
   | { k: "status"; ref: Ref; text: string }
-  | { k: "break"; uid: number }
   | { k: "freeze"; uid: number }
   | { k: "cancel"; uid: number; reason: string }
   | { k: "charge"; uid: number; move: string }
@@ -142,8 +138,8 @@ export class Battle {
     enemyIds.forEach((id, i) => {
       const def = enemyDef(id);
       this.enemies.push({
-        uid: i + 1, def, hp: def.hp, maxHp: def.hp, block: 0, shield: def.shield, maxShield: def.shield,
-        broken: false, skip: false, skipReason: "", status: newStatus(), patternIdx: 0, phase: 1,
+        uid: i + 1, def, hp: def.hp, maxHp: def.hp, block: 0,
+        skip: false, skipReason: "", status: newStatus(), patternIdx: 0, phase: 1,
         charging: false, bonusDmg: 0, dead: false,
       });
     });
@@ -395,15 +391,10 @@ export class Battle {
       }
       e.patternIdx++;
     }
-    // 적 턴 끝: 화상, 브레이크 해제
+    // 적 턴 끝: 화상
     if (!e.dead && e.status.burn > 0) {
       this.hurtEnemy(e, round(e.status.burn * this.vulnMult(e.status)), true);
       e.status.burn = Math.max(0, e.status.burn - 1);
-    }
-    if (!e.dead && e.broken) {
-      e.broken = false;
-      e.shield = e.maxShield;
-      this.log(`${e.def.name}: 실드 다시 참`);
     }
   }
 
@@ -751,7 +742,7 @@ export class Battle {
   private cardHit(owner: BSpirit, e: BEnemy, base: number, element: Element, noPower: boolean) {
     const power = noPower ? C.stat_base : this.stat(owner, "power");
     const aff = affinity(element, e.def.element);
-    const chance = C.crit_base + owner.critPity + (e.broken ? C.break_crit_bonus : 0);
+    const chance = C.crit_base + owner.critPity;
     const crit = this.rng.next() < chance;
     owner.critPity = crit ? 0 : owner.critPity + C.crit_pity;
     const release = owner.release > 0 ? ((C.release_damage_mult as Record<string, number>)[owner.id] ?? 1) : 1;
@@ -760,20 +751,6 @@ export class Battle {
       this.vulnMult(e.status) * (owner.status.weak > 0 ? C.weak_mult : 1) * release,
     );
     this.hurtEnemy(e, dmg, false, { crit, weakHit: aff > 1, resist: aff < 1 });
-    if (aff > 1 && !e.dead && e.maxShield > 0 && !e.broken) {
-      e.shield--;
-      if (e.shield <= 0) this.breakEnemy(e);
-    }
-  }
-
-  private breakEnemy(e: BEnemy) {
-    e.shield = 0;
-    e.broken = true;
-    const wasCharging = e.charging;
-    e.skip = true;
-    e.skipReason = "브레이크";
-    this.events.push({ k: "break", uid: e.uid });
-    this.log(`${e.def.name} 브레이크${wasCharging ? " · 캐스팅 끊김" : ""}`);
   }
 
   private addChill(e: BEnemy, v: number) {
@@ -812,10 +789,8 @@ export class Battle {
       e.phase = 2;
       e.patternIdx = 0;
       e.charging = false;
-      e.broken = false;
-      e.maxShield = e.shield = p2.shield;
       this.events.push({ k: "phase2", uid: e.uid });
-      this.log(`${e.def.name} 분노: 2페이즈, 실드 ${p2.shield}칸`);
+      this.log(`${e.def.name} 분노: 2페이즈`);
     }
   }
 

@@ -52,7 +52,7 @@
 .ground{position:absolute;left:50%;bottom:-6px;width:120px;height:14px;margin-left:-60px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.35),transparent)}
 .info{margin-top:12px;width:164px;display:flex;flex-direction:column;gap:6px}
 .r1{display:flex;align-items:center;gap:6px;height:22px}
-.r2,.r3{display:flex;align-items:center;gap:5px;min-height:20px;flex-wrap:wrap}
+.r2{display:flex;align-items:center;gap:5px;min-height:20px;flex-wrap:wrap}
 .bar{position:relative;flex:1;height:5px;border-radius:3px;background:rgba(246,241,233,.14);overflow:hidden}
 .bar .fill{position:absolute;left:0;top:0;bottom:0;background:var(--hp);border-radius:3px}
 .bar.low .fill{background:var(--danger)}
@@ -101,12 +101,6 @@
 .enemy.aimed .ground{height:22px;bottom:-10px;width:150px;margin-left:-75px}
 .el{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(246,241,233,.08)}
 .weak{display:flex;align-items:center;gap:2px;height:20px;padding:0 6px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--glass-line);font-size:11px;color:var(--ink-3)}
-.slots{display:flex;gap:3px}
-.sl{width:11px;height:11px;border-radius:2px;box-shadow:inset 0 0 0 1.5px var(--warn)}
-.sl.on{background:var(--warn)}
-.sl.pvon{background:var(--acc-hi);box-shadow:none}
-.sll{font-size:13px;color:var(--ink-2)}
-.sll.pvt{font-size:13px;color:#2a1c29;background:var(--acc-hi);padding:0 7px;border-radius:9px}
 .hits{position:absolute;left:-18px;top:-6px;display:flex;flex-direction:column;gap:4px}
 .hit{display:flex;align-items:center;gap:2px;height:26px;padding:0 8px 0 6px;border-radius:13px;background:var(--danger);color:var(--on-danger);font-size:18px;transform:translateX(calc(var(--d)*14px))}
 .hti{width:13px;height:13px;fill:var(--on-danger)}

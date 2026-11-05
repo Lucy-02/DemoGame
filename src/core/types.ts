@@ -100,10 +100,9 @@ export interface EnemyDef {
   tier: EnemyTier;
   element: Element;
   hp: number;
-  shield: number;
   desc?: string;
   pattern: EnemyMove[];
-  phase2?: { hpBelow: number; shield: number; turnStartBlock: number; pattern: EnemyMove[] };
+  phase2?: { hpBelow: number; turnStartBlock: number; pattern: EnemyMove[] };
 }
 
 export interface EncounterDef {
