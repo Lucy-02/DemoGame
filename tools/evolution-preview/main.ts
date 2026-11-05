@@ -48,7 +48,7 @@ const STAGE_FOOT_Y = 0.88, STAGE_ADULT_FRAC = 0.75;
 // 배경 가장자리 정리(Lucy 11/05, 임시 값): 흰 매트 제거 → 1px 깎기 → 1px 번짐. 비교표는 evolution-staging/bg-edge-techniques.png
 const EDGE = { matte: q.get("matte") !== "0", choke: Number(q.get("choke") ?? 1), feather: Number(q.get("feather") ?? 1) };
 // 이름 띠 뒤 사선 흐림(임시 값): 세기·반복, 흐림이 끝나는 점(x, y)과 꽉 찬 흐림을 유지하는 비율
-const BAND_BLUR = { strength: Number(q.get("bandblur") ?? 2.5), steps: 6, reach: [W * 0.5, H * 0.25, 0.35] as [number, number, number] };
+const BAND_BLUR = { strength: Number(q.get("bandblur") ?? 1.5), steps: 6, reach: [W * 0.5, H * 0.25, 0.35] as [number, number, number] };
 const MATTE_GRAY = 222; // 누끼 전 회색 바탕의 대략 값(원본 모서리 220~224)
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
