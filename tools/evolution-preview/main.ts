@@ -41,15 +41,17 @@ const autoplay = q.get("autoplay") === "1";
 const capture = q.get("capture") === "1";
 // look=calm(기본): 빛 하나·움직임 하나로 덜어낸 판(Lucy 11/04 "이펙트가 덕지덕지 과함"). look=full: 첫 판(빛줄기·폭발·고리·흔들림·블룸).
 const CALM = q.get("look") !== "full";
-// 배경 무대(Lucy 11/05, 시안): stage=none | reveal(공개 때 펼쳐짐) | always(처음부터 깔림). 배경은 정령별 background.webp(누끼 확정본).
-const STAGE = (["none", "reveal", "always"] as const).find((v) => v === q.get("stage")) ?? "none";
-const BG_SIZE = 1000; // 임시: 정령 중심으로 넉넉하게, 화면 밖으로 잘려도 돼요(Lucy 11/05)
+// 배경 무대(Lucy 11/05): 진화 전엔 없고, 공개 때 성체 크기에 맞춰 발판이 발밑에 오게 깔려요. 배경은 정령별 background.webp(누끼 확정본). stage=none 이면 끄기.
+const STAGE = q.get("stage") === "none" ? "none" : "reveal";
+// 배경 그림 안에서 정령이 서는 자리(임시, 정령마다 다를 수 있어요): 발판 높이 비율, 성체 키가 배경 높이에서 차지하는 비율
+const STAGE_FOOT_Y = 0.88, STAGE_ADULT_FRAC = 0.75;
+const FEATHER = Number(q.get("feather") ?? 6); // 임시: 배경 가장자리 번짐(원본 px). 흰 경계·끊긴 선을 흐려서 감춰요(Lucy 11/05)
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const pick = $("spirit") as HTMLSelectElement, br = $("branch") as HTMLSelectElement;
 pick.innerHTML = Object.entries(SPIRITS).map(([k, v]) => `<option value="${k}"${k === spiritId ? " selected" : ""}>${v.name}</option>`).join("");
 br.innerHTML = S.branches.map((b, i) => `<option value="${i}"${i === branchIdx ? " selected" : ""}>${b.meaning} (${ROLE[b.role]})</option>`).join("");
-const reload = () => (location.search = `?spirit=${pick.value}&branch=${pick.value === spiritId ? br.value : 0}${STAGE !== "none" ? `&stage=${STAGE}` : ""}`);
+const reload = () => (location.search = `?spirit=${pick.value}&branch=${pick.value === spiritId ? br.value : 0}${STAGE === "none" ? "&stage=none" : ""}`);
 pick.onchange = reload;
 br.onchange = reload;
 
@@ -89,7 +91,8 @@ class Evolution extends Phaser.Scene {
     void bg;
     const bgGlow = this.add.image(CX, CY, "radial").setDisplaySize(W * 1.3, H * 1.5).setTint(S.color).setAlpha(0.18).setBlendMode(Phaser.BlendModes.ADD);
     // 무대는 유체 발밑(CY + 150)에 바닥이 오게 깔아요. 그림자·비네트가 무대 위로 덮여서 함께 어두워져요.
-    const stage = STAGE !== "none" ? this.add.image(CX, CY + 150, "stage").setOrigin(0.5, 0.86).setDisplaySize(BG_SIZE, BG_SIZE).setAlpha(0) : undefined;
+    if (STAGE !== "none") featherEdges(this, "stage", "stageSoft", FEATHER);
+    const stage = STAGE !== "none" ? this.add.image(CX, H + 520, "stageSoft").setOrigin(0.5, STAGE_FOOT_Y).setAlpha(0) : undefined;
 
     // 덜어낸 판의 가운데 영역: 어두운 바탕 위에 속성 빛이 번진 세로 타원
     const shade = this.add.image(CX, CY - 60, "radial").setDisplaySize(760, 860).setTint(0x000000).setAlpha(0);
@@ -295,16 +298,13 @@ class Evolution extends Phaser.Scene {
     ] as { t: object; [k: string]: unknown }[];
   }
 
-  /** 배경 무대 두 가지 시안. 유체 때 무대는 그림자 박자에 같이 가라앉고, 공개 때 성체와 함께 밝아져요. */
+  /** 배경 무대: 성체와 같은 자리·같은 배율로 따라가요. 성체 발밑(origin 아래쪽)에 발판(STAGE_FOOT_Y)이 와요. */
   private stageTarget(n: number) {
-    const out: { t: object; [k: string]: unknown }[] = [];
     const m = this.stage;
-    const grow = (k: number) => (n >= 5 ? 1.06 * k : k);
-    const sc = (img: Phaser.GameObjects.Image) => grow(BG_SIZE / img.width);
-    const x = n >= 6 ? CX - 250 : CX; // 정리 박자엔 성체를 따라 왼쪽으로
-    if (STAGE === "reveal" && m) out.push({ t: m, alpha: n >= 5 ? 1 : 0, scale: sc(m), x });
-    if (STAGE === "always" && m) out.push({ t: m, alpha: [1, 0.55, 0.3, 0.3, 0.35, 1, 1][n], scale: sc(m), x });
-    return out;
+    if (!m) return [];
+    const adultDisplayH = 1180; // calmTarget의 공개 박자 성체 키(closeScale)와 같아요
+    const scale = adultDisplayH / STAGE_ADULT_FRAC / m.height;
+    return [{ t: m, alpha: n >= 5 ? 1 : 0, scale: n >= 5 ? scale : scale * 0.96, x: n >= 6 ? CX - 250 : CX, y: H + 520 }];
   }
 
   private go(n: number) {
@@ -392,3 +392,17 @@ const start = async () => {
 };
 void start();
 
+/** 가장자리 번지게: 원본 알파에 흐린 알파를 곱해요. 안쪽은 그대로, 바깥 테두리만 부드럽게 사라져요. */
+function featherEdges(scene: Phaser.Scene, src: string, dst: string, px: number) {
+  const img = scene.textures.get(src).getSourceImage() as HTMLImageElement;
+  const cv = document.createElement("canvas");
+  cv.width = img.width; cv.height = img.height;
+  const cx = cv.getContext("2d")!;
+  cx.drawImage(img, 0, 0);
+  if (px > 0) {
+    cx.globalCompositeOperation = "destination-in";
+    cx.filter = `blur(${px}px)`;
+    cx.drawImage(img, 0, 0);
+  }
+  scene.textures.addCanvas(dst, cv);
+}
