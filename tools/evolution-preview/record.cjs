@@ -23,7 +23,7 @@ const { join } = require("node:path");
     window.__freeze = () => (fake = real());
     window.__advance = (ms) => (fake += ms);
   });
-  await page.goto(`http://localhost:${port}/evolution-preview.html?spirit=${spirit}&branch=${branch}&capture=1&autoplay=1${extra ? "&" + extra : ""}`);
+  await page.goto(`http://localhost:${port}/evolution-preview.html?spirit=${spirit}&branch=${branch}&capture=1${/(^|&)beat=/.test(extra) ? "" : "&autoplay=1"}${extra ? "&" + extra : ""}`);
   await page.waitForFunction(() => window.__game && window.__game.scene.getScenes(true).length > 0, null, { timeout: 60000 });
   await page.evaluate(() => { window.__game.loop.sleep(); window.__freeze(); });
   const n = Number(fps) * Number(secs);

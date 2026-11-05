@@ -47,6 +47,8 @@ const STAGE = q.get("stage") === "none" ? "none" : "reveal";
 const STAGE_FOOT_Y = 0.88, STAGE_ADULT_FRAC = 0.75;
 // 배경 가장자리 정리(Lucy 11/05, 임시 값): 흰 매트 제거 → 1px 깎기 → 1px 번짐. 비교표는 evolution-staging/bg-edge-techniques.png
 const EDGE = { matte: q.get("matte") !== "0", choke: Number(q.get("choke") ?? 1), feather: Number(q.get("feather") ?? 1) };
+// 이름 띠 뒤 사선 흐림(임시 값): 세기·반복, 흐림이 끝나는 점(x, y)과 꽉 찬 흐림을 유지하는 비율
+const BAND_BLUR = { strength: Number(q.get("bandblur") ?? 2.5), steps: 6, reach: [W * 0.5, H * 0.25, 0.35] as [number, number, number] };
 const MATTE_GRAY = 222; // 누끼 전 회색 바탕의 대략 값(원본 모서리 220~224)
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
@@ -73,6 +75,25 @@ class Evolution extends Phaser.Scene {
   private zone!: Phaser.GameObjects.Image;
   private shade!: Phaser.GameObjects.Image;
   private stage?: Phaser.GameObjects.Image;
+  private blurCam?: Phaser.Cameras.Scene2D.Camera;
+
+  /** 사선 마스크: 왼쪽 아래 모서리는 불투명, 가운데 쪽으로 갈수록 투명. 등고선이 대각선이라 사선 영역이 돼요. */
+  private makeBandMask() {
+    const key = "bandMask";
+    if (this.textures.exists(key)) return key;
+    const cv = document.createElement("canvas");
+    cv.width = W; cv.height = H;
+    const g = cv.getContext("2d")!;
+    const [x1, y1, hold] = BAND_BLUR.reach;
+    const grad = g.createLinearGradient(0, H, x1, y1);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(hold, "rgba(255,255,255,1)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, W, H);
+    this.textures.addCanvas(key, cv);
+    return key;
+  }
 
   preload() {
     this.load.image("baby", `assets/spirits/${spiritId}/baby.webp`);
@@ -162,7 +183,7 @@ class Evolution extends Phaser.Scene {
     const roleChip = chip(c1.width + 8, ROLE[B.role], "#f4eef2");
     const c3 = chip(c1.width + roleChip.width + 16, `성격 ${S.pers} · ${S.persDesc}`, "#cfc6cc");
     const nameSmall = this.add.text(0, -26, `${B.meaning} 갈래 · TODO_NAME`, { fontFamily: FONT, fontSize: "16px", color: "#a49ca2" });
-    const name = this.add.text(0, -4, `${S.name} 성체`, { fontFamily: FONT, fontSize: "40px", color: "#f4eef2", stroke: "#000000", strokeThickness: 6 });
+    const name = this.add.text(0, -4, `${S.name} 성체`, { fontFamily: FONT, fontSize: "40px", color: "#f4eef2" }); // 테두리 없음(Lucy 11/05), 뒤는 사선 흐림이 받쳐요
     band.add([c1, roleChip, c3, nameSmall, name]);
 
     const panel = this.add.container(W - 470, 90).setAlpha(0);
@@ -186,6 +207,13 @@ class Evolution extends Phaser.Scene {
     // 글자·패널은 확대·블룸이 없는 UI 카메라로 따로 그려요.
     const ui = [band, panel, caption];
     cam.ignore(ui);
+    // 이름 띠 뒤 사선 흐림(Lucy 11/05): 같은 장면을 흐린 카메라로 한 번 더 그리고, 왼쪽 아래 모서리에서 가운데로 갈수록 옅어지는 마스크로 잘라요.
+    const blurCam = this.cameras.add(0, 0, W, H).setAlpha(0);
+    blurCam.ignore(ui);
+    blurCam.filters.external.addBlur(1, 2, 2, BAND_BLUR.strength, 0xffffff, BAND_BLUR.steps);
+    blurCam.filters.external.addVignette(0.5, 0.5, 0.75, 0.25, 0x000000);
+    blurCam.filters.external.addMask(this.makeBandMask());
+    this.blurCam = blurCam;
     const uiCam = this.cameras.add(0, 0, W, H);
     uiCam.ignore(this.children.list.filter((c) => !ui.includes(c as never)));
     this.zone = zone;
@@ -204,6 +232,7 @@ class Evolution extends Phaser.Scene {
     this.still = ($("still") as HTMLInputElement).checked || matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.go(0);
     if (autoplay) this.time.delayedCall(800, () => this.play());
+    else if (q.get("beat")) this.go(Number(q.get("beat"))); // 정지 화면 확인용: ?beat=5 로 그 박자에 바로 멈춰요
   }
 
   update(_t: number, dt: number) {
@@ -266,6 +295,7 @@ class Evolution extends Phaser.Scene {
       { t: o.roleText, alpha: n === 3 ? 1 : 0 },
       { t: o.elText, alpha: CALM && n === 3 ? 1 : 0 },
       { t: o.band, alpha: n === 5 ? 1 : 0 },
+      ...(this.blurCam ? [{ t: this.blurCam, alpha: n === 5 ? 1 : 0 }] : []),
       { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
       { t: o.vignette, strength: [0.25, 0.6, 0.7, 0.7, 0.8, 0.45, 0.4][n] },
       { t: this.cameras.main, zoom: [1, 1.05, 1.06, 1.08, 1.12, 1, 1][n] },
