@@ -45,7 +45,7 @@ const CALM = q.get("look") !== "full";
 const STAGE = q.get("stage") === "none" ? "none" : "reveal";
 // 배경 그림 안에서 정령이 서는 자리(임시, 정령마다 다를 수 있어요): 발판 높이 비율, 성체 키가 배경 높이에서 차지하는 비율
 const STAGE_FOOT_Y = 0.88, STAGE_ADULT_FRAC = 0.75;
-const FEATHER = Number(q.get("feather") ?? 6); // 임시: 배경 가장자리 번짐(원본 px). 흰 경계·끊긴 선을 흐려서 감춰요(Lucy 11/05)
+const FEATHER = Number(q.get("feather") ?? 2); // 임시: 배경 가장자리 번짐(원본 px). 흰 경계·끊긴 선을 흐려서 감춰요(Lucy 11/05)
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const pick = $("spirit") as HTMLSelectElement, br = $("branch") as HTMLSelectElement;
