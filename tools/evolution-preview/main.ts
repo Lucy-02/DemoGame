@@ -41,12 +41,16 @@ const autoplay = q.get("autoplay") === "1";
 const capture = q.get("capture") === "1";
 // look=calm(기본): 빛 하나·움직임 하나로 덜어낸 판(Lucy 11/04 "이펙트가 덕지덕지 과함"). look=full: 첫 판(빛줄기·폭발·고리·흔들림·블룸).
 const CALM = q.get("look") !== "full";
+// 배경 무대(Lucy 11/05, 시안): stage=none | reveal(공개 때 펼쳐짐) | always(처음부터 깔림) | bloom(마법 없는 판 → 공개 때 마법 판)
+// 원본은 incoming/bg-wrap-20261102 의 회색 배경 PNG예요. 정식 누끼 전이라 가장자리 회색을 여기서 임시로 걷어내요.
+const STAGE = (["none", "reveal", "always", "bloom"] as const).find((v) => v === q.get("stage")) ?? "none";
+const BG_SIZE = 640; // 임시
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const pick = $("spirit") as HTMLSelectElement, br = $("branch") as HTMLSelectElement;
 pick.innerHTML = Object.entries(SPIRITS).map(([k, v]) => `<option value="${k}"${k === spiritId ? " selected" : ""}>${v.name}</option>`).join("");
 br.innerHTML = S.branches.map((b, i) => `<option value="${i}"${i === branchIdx ? " selected" : ""}>${b.meaning} (${ROLE[b.role]})</option>`).join("");
-const reload = () => (location.search = `?spirit=${pick.value}&branch=${pick.value === spiritId ? br.value : 0}`);
+const reload = () => (location.search = `?spirit=${pick.value}&branch=${pick.value === spiritId ? br.value : 0}${STAGE !== "none" ? `&stage=${STAGE}` : ""}`);
 pick.onchange = reload;
 br.onchange = reload;
 
@@ -65,25 +69,34 @@ class Evolution extends Phaser.Scene {
   private timer?: Phaser.Time.TimerEvent;
   private zone!: Phaser.GameObjects.Image;
   private shade!: Phaser.GameObjects.Image;
+  private stagePlain?: Phaser.GameObjects.Image;
+  private stageMagic?: Phaser.GameObjects.Image;
 
   preload() {
     this.load.image("baby", `assets/spirits/${spiritId}/baby.webp`);
     this.load.image("adult", `assets/spirits/${spiritId}/adult.webp`);
-    // 속성·역할 아이콘: 새 아이콘(el-·role-)이 없으면 예전 속성 아이콘(e-)으로, 역할은 글자로 대신해요.
+    // 속성·역할 아이콘 (확정본 el-·role-, 0024)
     this.load.svg("crest", `assets/ui/icons/el-${S.el}.svg`, { width: 512, height: 512 });
-    this.load.svg("crestOld", `assets/ui/icons/e-${S.el}.svg`, { width: 512, height: 512 });
     this.load.svg("role", `assets/ui/icons/role-${B.role}.svg`, { width: 256, height: 256 });
+    if (STAGE !== "none") {
+      this.load.image("stageMagicRaw", `incoming/bg-wrap-20261102/magic/${spiritId}.png`);
+      this.load.image("stagePlainRaw", `incoming/bg-wrap-20261102/plain/${spiritId}.png`);
+    }
     this.load.on("loaderror", () => {});
   }
 
   create() {
     this.makeTextures();
     const cam = this.cameras.main;
-    const crestKey = this.textures.exists("crest") ? "crest" : "crestOld";
+    const crestKey = "crest";
 
     const bg = this.add.rectangle(CX, H / 2, W, H, 0x141214);
     void bg;
     const bgGlow = this.add.image(CX, CY, "radial").setDisplaySize(W * 1.3, H * 1.5).setTint(S.color).setAlpha(0.18).setBlendMode(Phaser.BlendModes.ADD);
+    // 무대는 유체 발밑(CY + 150)에 바닥이 오게 깔아요. 그림자·비네트가 무대 위로 덮여서 함께 어두워져요.
+    const stageAt = (raw: string) => this.add.image(CX, CY + 150, keyOutGray(this, raw)).setOrigin(0.5, 0.86).setDisplaySize(BG_SIZE, BG_SIZE).setAlpha(0);
+    const stagePlain = STAGE === "bloom" ? stageAt("stagePlainRaw") : undefined;
+    const stageMagic = STAGE !== "none" ? stageAt("stageMagicRaw") : undefined;
 
     // 덜어낸 판의 가운데 영역: 어두운 바탕 위에 속성 빛이 번진 세로 타원
     const shade = this.add.image(CX, CY - 60, "radial").setDisplaySize(760, 860).setTint(0x000000).setAlpha(0);
@@ -179,6 +192,8 @@ class Evolution extends Phaser.Scene {
     uiCam.ignore(this.children.list.filter((c) => !ui.includes(c as never)));
     this.zone = zone;
     this.shade = shade;
+    this.stagePlain = stagePlain;
+    this.stageMagic = stageMagic;
     this.o = { bgGlow, rays, crest, ring, baby, babySil, adult, adultSil, role, roleText, elText, band, nameSmall, name, roleChip, panel, caption, gather, burst, motes, babyGlow, silGlow, wipe, vignette };
 
     // 유체 숨쉬기
@@ -284,7 +299,24 @@ class Evolution extends Phaser.Scene {
       { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
       { t: o.vignette, strength: pick([0.25, 0.35, 0.45, 0.45, 0.45, 0.3, 0.3]) },
       { t: this.cameras.main, zoom: 1 },
+      ...this.stageTarget(n),
     ] as { t: object; [k: string]: unknown }[];
+  }
+
+  /** 배경 무대 세 가지 시안. 유체 때 무대는 그림자 박자에 같이 가라앉고, 공개 때 성체와 함께 밝아져요. */
+  private stageTarget(n: number) {
+    const out: { t: object; [k: string]: unknown }[] = [];
+    const m = this.stageMagic, p = this.stagePlain;
+    const grow = (k: number) => (n >= 5 ? 1.06 * k : k);
+    const sc = (img: Phaser.GameObjects.Image) => grow(BG_SIZE / img.width);
+    const x = n >= 6 ? CX - 250 : CX; // 정리 박자엔 성체를 따라 왼쪽으로
+    if (STAGE === "reveal" && m) out.push({ t: m, alpha: n >= 5 ? 1 : 0, scale: sc(m), x });
+    if (STAGE === "always" && m) out.push({ t: m, alpha: [1, 0.55, 0.3, 0.3, 0.35, 1, 1][n], scale: sc(m), x });
+    if (STAGE === "bloom" && m && p) {
+      out.push({ t: p, alpha: [1, 0.55, 0.3, 0.3, 0.35, 0, 0][n], scale: sc(p), x });
+      out.push({ t: m, alpha: n >= 5 ? 1 : 0, scale: sc(m), x });
+    }
+    return out;
   }
 
   private go(n: number) {
@@ -371,3 +403,54 @@ const start = async () => {
   if (capture) (window as unknown as { __game: Phaser.Game }).__game = game;
 };
 void start();
+
+/** 정식 누끼 전 임시: 가장자리에서 이어진 회색 바탕만 걷어내요(가운데 회색 바위는 남아요).
+ *  바탕이 꽉 찬 그림(걷힌 곳이 20% 미만)은 가장자리를 둥글게 흐려서 얹어요. */
+function keyOutGray(scene: Phaser.Scene, rawKey: string) {
+  const key = rawKey.replace("Raw", "");
+  if (scene.textures.exists(key)) return key;
+  const src = scene.textures.get(rawKey).getSourceImage() as HTMLImageElement;
+  const w = src.width, h = src.height;
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  const cx = cv.getContext("2d")!;
+  cx.drawImage(src, 0, 0);
+  const img = cx.getImageData(0, 0, w, h), d = img.data;
+  const ref = [0, 0, 0];
+  for (const [x, y] of [[2, 2], [w - 3, 2], [2, h - 3], [w - 3, h - 3]]) for (let c = 0; c < 3; c++) ref[c] += d[(y * w + x) * 4 + c] / 4;
+  const diff = (i: number, r: ArrayLike<number>, o = 0) => Math.max(Math.abs(d[i] - r[o]), Math.abs(d[i + 1] - r[o + 1]), Math.abs(d[i + 2] - r[o + 2]));
+  const STEP = 5, REF = 40; // 임시: 이웃과 이만큼까지 비슷하면 바탕으로 이어 봐요(회색 그러데이션 대응)
+  const cleared = new Uint8Array(w * h);
+  const stack: number[] = [];
+  for (let x = 0; x < w; x++) stack.push(x, -1, (h - 1) * w + x, -1);
+  for (let y = 0; y < h; y++) stack.push(y * w, -1, y * w + w - 1, -1);
+  while (stack.length) {
+    const from = stack.pop()!, p = stack.pop()!;
+    if (cleared[p]) continue;
+    if (diff(p * 4, ref) > REF) continue;
+    if (from >= 0 && diff(p * 4, d, from * 4) > STEP) continue;
+    cleared[p] = 1;
+    const x = p % w;
+    if (x > 0) stack.push(p - 1, p);
+    if (x < w - 1) stack.push(p + 1, p);
+    if (p >= w) stack.push(p - w, p);
+    if (p < w * (h - 1)) stack.push(p + w, p);
+  }
+  let n = 0;
+  for (let p = 0; p < w * h; p++) n += cleared[p];
+  if (n / (w * h) < 0.2) {
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const r = Math.hypot((x - w / 2) / (w / 2), (y - h * 0.55) / (h * 0.55));
+      d[(y * w + x) * 4 + 3] = Math.round(255 * Phaser.Math.Clamp((1 - r) / 0.35, 0, 1));
+    }
+  } else {
+    for (let p = 0; p < w * h; p++) {
+      if (cleared[p]) { d[p * 4 + 3] = 0; continue; }
+      const x = p % w;
+      if ((x > 0 && cleared[p - 1]) || (x < w - 1 && cleared[p + 1]) || (p >= w && cleared[p - w]) || (p < w * (h - 1) && cleared[p + w])) d[p * 4 + 3] = 140;
+    }
+  }
+  cx.putImageData(img, 0, 0);
+  scene.textures.addCanvas(key, cv);
+  return key;
+}
