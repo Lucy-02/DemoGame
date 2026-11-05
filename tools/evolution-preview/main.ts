@@ -43,7 +43,7 @@ const capture = q.get("capture") === "1";
 const CALM = q.get("look") !== "full";
 // 배경 무대(Lucy 11/05, 시안): stage=none | reveal(공개 때 펼쳐짐) | always(처음부터 깔림). 배경은 정령별 background.webp(누끼 확정본).
 const STAGE = (["none", "reveal", "always"] as const).find((v) => v === q.get("stage")) ?? "none";
-const BG_SIZE = 640; // 임시
+const BG_SIZE = 1000; // 임시: 정령 중심으로 넉넉하게, 화면 밖으로 잘려도 돼요(Lucy 11/05)
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const pick = $("spirit") as HTMLSelectElement, br = $("branch") as HTMLSelectElement;
@@ -387,7 +387,7 @@ const start = async () => {
     document.fonts.add(await f.load());
   } catch { /* 글꼴이 없으면 대체 글꼴 */ }
   // ?capture=1: 영상으로 뽑을 때 프레임을 직접 넘겨요(tools/evolution-preview/record.cjs).
-  const game = new Phaser.Game({ type: Phaser.WEBGL, parent: "stage", width: W, height: H, backgroundColor: "#141214", scene: Evolution, banner: false, render: { preserveDrawingBuffer: capture } });
+  const game = new Phaser.Game({ type: Phaser.WEBGL, parent: "stage", width: W, height: H, backgroundColor: "#141214", scene: Evolution, banner: false, render: { preserveDrawingBuffer: capture, mipmapFilter: "LINEAR_MIPMAP_LINEAR" } }); // 밉맵: 큰 배경을 줄여 그릴 때 계단·반짝임 줄이기
   if (capture) (window as unknown as { __game: Phaser.Game }).__game = game;
 };
 void start();
