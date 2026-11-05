@@ -198,23 +198,6 @@ export function feed(g: Garden, id: string): Garden {
   return withSpirit({ ...g, material: g.material - GROWTH.feed.cost }, id, (s) => ({ ...s, affinity: s.affinity + gain }));
 }
 
-export const canReroll = (g: Garden, s: GardenSpirit) =>
-  meetsStage(s, GROWTH.reroll.from) && g.material >= GROWTH.reroll.cost;
-
-/** 다시 뽑을 때 고를 수 있는 성격 (지금 성격 제외). 3화를 봤으면 둘, 아니면 하나 */
-export function rerollChoices(s: GardenSpirit, rng: Rng): string[] {
-  const n = GROWTH.episodes.slice(0, s.episodes).reduce((a, ep) => Math.max(a, ep.reroll_choices ?? 1), 1);
-  const pool = PERSONALITIES.map((p) => p.id).filter((p) => p !== s.personality);
-  return rng.shuffle(pool).slice(0, n);
-}
-
-/** 고른 성격으로 바꾸고 재료를 써요 */
-export function reroll(g: Garden, id: string, personality: string): Garden {
-  const s = gardenSpirit(g, id);
-  if (!canReroll(g, s) || personality === s.personality) return g;
-  return withSpirit({ ...g, material: g.material - GROWTH.reroll.cost }, id, (x) => ({ ...x, personality }));
-}
-
 // ───────────────────────── 판으로 ─────────────────────────
 
 /** 정원의 정령을 판의 정령으로. HP는 최대 HP로 채워요 (부르는 쪽에서 maxHpOf로) */
@@ -231,7 +214,7 @@ export type Todo =
   | { kind: "unlock"; key: string }
   | { kind: "episode" };
 
-/** 행동이 남은 것만 (0021 5절). 먹이기·다시 뽑기는 늘 할 수 있어서 넣지 않아요. */
+/** 행동이 남은 것만 (0021 5절). 먹이기는 늘 할 수 있어서 넣지 않아요. */
 export function todos(s: GardenSpirit): Todo[] {
   const out: Todo[] = [];
   const evo = canEvolve(s);

@@ -845,7 +845,7 @@ export class Battle {
     this.events.push({ k: "heal", ref: { side: "s", id: s.id }, amount: amt });
   }
 
-  /** 해방할 수 있는지: 각성체만, 전투마다 한 번, 내 턴에. 마력은 들지 않아요(시간축이 들어오면 칸 비용, 0034). */
+  /** 해방할 수 있는지: 각성체만, 전투마다 한 번, 내 턴에. 마력은 들지 않아요(시간축이 들어오면 칸 비용, 0036). */
   canRelease(id: string): boolean {
     const s = this.spirit(id);
     return this.result === "ongoing" && !this.inEnemyTurn && !s.downed && !s.releaseUsed && s.run.stage === "awakened";

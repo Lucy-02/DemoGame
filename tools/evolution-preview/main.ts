@@ -19,8 +19,8 @@ const SPIRITS: Record<string, Spirit> = {
   "mist-cat": {
     name: "안개 고양이", el: "water", elName: "물", color: 0x8ec2ff, pers: "총명", persDesc: "포커스 +15%", roles: ["support", "disrupt"],
     branches: [
-      { meaning: "얼리기", role: "disrupt", stats: [["포커스", 13, 15], ["싱크", 12, 14]] },
-      { meaning: "지키기", role: "support", stats: [["포커스", 13, 15], ["싱크", 12, 14]] },
+      { meaning: "얼리기", role: "disrupt", stats: [["포커스", 13, 15], ["HP", 26, 32]] },
+      { meaning: "지키기", role: "support", stats: [["포커스", 13, 15], ["HP", 26, 32]] },
     ],
   },
 };

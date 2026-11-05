@@ -18,17 +18,20 @@ export function drawBackdrop(scene: Phaser.Scene) {
   return scene.add.image(0, 0, key).setOrigin(0, 0);
 }
 
+/** 전환 때 함께 움직이는 그림 조각 (본그림 또는 색 번짐 + 퍼핏, 자리표시) */
+export type ArtPiece = Phaser.GameObjects.GameObject & { x: number; alpha: number };
+
 /** 일러스트 자리에 대신 그릴 움직이는 퍼핏. ready가 아니면 일러스트를 그대로 그려요 */
 export interface LiveArt {
   ready: boolean;
   /** 일러스트가 놓일 자리(at)와 보이는 범위(clip)에 맞춰 퍼핏을 만들어요 */
-  place: (at: Placed, clip: ReturnType<typeof artClip>) => void;
+  place: (at: Placed, clip: ReturnType<typeof artClip>) => ArtPiece;
 }
 
-/** 일러스트. 패널을 접으면 오른쪽으로 밀려요 */
-export function drawArt(scene: Phaser.Scene, shifted: boolean, art?: SpiritDetailVM["art"], live?: LiveArt) {
+/** 그림 뒤 은은한 빛. 정령과 상관없이 늘 같은 자리예요. 패널을 접으면 오른쪽으로 밀려요 */
+export function drawArtGlow(scene: Phaser.Scene, shifted: boolean) {
   const dx = shifted ? ART.closedShift : 0;
-  const { glow, body } = ART;
+  const { glow } = ART;
   // .q-phb radial-gradient(closest-side, veil 07 → transparent)
   const key = canvasTexture(scene, "spirits:art-glow", glow.d, glow.d, (ctx) => {
     const r = glow.d / 2;
@@ -39,17 +42,22 @@ export function drawArt(scene: Phaser.Scene, shifted: boolean, art?: SpiritDetai
     ctx.fillRect(0, 0, glow.d, glow.d);
   });
   scene.add.image(glow.x + dx, glow.y, key).setOrigin(0, 0);
+}
+
+/** 일러스트. 패널을 접으면 오른쪽으로 밀려요. 그린 조각들을 돌려줘요 */
+export function drawArt(scene: Phaser.Scene, shifted: boolean, art?: SpiritDetailVM["art"], live?: LiveArt): ArtPiece[] {
+  const dx = shifted ? ART.closedShift : 0;
+  const { body } = ART;
   if (!art || !scene.textures.exists(art.key)) {
-    placeholderArt(scene, body.x + dx, body.y, body.w, body.h, P.glassLine);
-    return;
+    return [placeholderArt(scene, body.x + dx, body.y, body.w, body.h, P.glassLine)];
   }
   const src = scene.textures.get(art.key).getSourceImage() as CanvasImageSource & { width: number; height: number };
   const at = placeArt(src.width, src.height, body.x + dx + body.w / 2, art.frame, art.fit);
   const fit = [art.fit.s, art.fit.dx, art.fit.dy].join(",");
   const liveNow = !!live?.ready;
   const key2 = canvasTexture(scene, `spirits:art:${art.key}:${dx}:${fit}:${liveNow ? "glow" : "body"}`, FRAME.w, FRAME.h, (ctx) => paintArt(ctx, src, at, !liveNow));
-  scene.add.image(0, 0, key2).setOrigin(0, 0);
-  if (liveNow) live!.place(at, artClip(at));
+  const image = scene.add.image(0, 0, key2).setOrigin(0, 0);
+  return liveNow ? [image, live!.place(at, artClip(at))] : [image];
 }
 
 export function drawScrim(scene: Phaser.Scene) {

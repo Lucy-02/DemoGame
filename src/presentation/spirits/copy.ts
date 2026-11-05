@@ -18,7 +18,6 @@ export const COPY = {
   close: "닫기",
   personality: "성격",
   hidden: "???",
-  reroll: "다시 뽑기",
   stats: "능력치",
   legendBase: "기본",
   legendStage: "단계 보정",

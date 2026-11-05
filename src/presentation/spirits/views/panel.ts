@@ -5,7 +5,8 @@ import { render, size, type BoxNode, type Node } from "../../style/flex";
 import { COPY } from "../copy";
 import { BIG_BUTTON, FRAME, PANEL } from "../layout";
 import type { Stage } from "../../../core/types";
-import type { EpisodeVM, GrowthRowVM, SpiritDetailVM, TabId, TabVM } from "../viewmodel";
+import type { EpisodeVM, GrowthRowVM, SpiritDetailVM, StatRowVM, TabId, TabVM } from "../viewmodel";
+import { swapDuration, swapEase } from "./artSwap";
 import { personalityPill } from "./idCard";
 import { P, T, badge, bar, button, glass, rule, text } from "./parts";
 
@@ -14,7 +15,6 @@ export interface PanelActions {
   close(): void;
   evolve(): void;
   feed(): void;
-  reroll(): void;
   seeEpisode(): void;
   /** 목업: 성장 길에서 단계를 눌러 그 단계 그림 보기 */
   pickStage(stage: Stage): void;
@@ -73,7 +73,30 @@ const numPair = (have: number, need: number): Node => ({
 
 // ───────────────────────── 개요 ─────────────────────────
 
-function overview(d: SpiritDetailVM, act: PanelActions): Node[] {
+/** 능력치 막대. 다른 정령에서 넘어왔으면 그 정령의 값에서 새 값으로 움직여요 (0035) */
+function statBar(g: Phaser.GameObjects.Graphics, r: StatRowVM, was: StatRowVM | undefined, x: number, y: number, w: number, h: number) {
+  const k = w / PANEL.statMax;
+  const paint = (to: Phaser.GameObjects.Graphics, total: number, stage: number) => {
+    const base = Math.min(w, (total - stage) * k);
+    box(to, x, y, w, h, h / 2, { fill: P.veil["12"] });
+    box(to, x, y, base, h, h / 2, { fill: P.ink2 });
+    if (stage > 0) box(to, x + base, y, Math.min(w - base, stage * k), h, h / 2, { fill: P.ok });
+  };
+  if (!was) {
+    paint(g, r.total, r.stage);
+    return;
+  }
+  const moving = g.scene.add.graphics();
+  const v = { t: 0 };
+  const step = () => {
+    moving.clear();
+    paint(moving, was.total + (r.total - was.total) * v.t, was.stage + (r.stage - was.stage) * v.t);
+  };
+  step();
+  g.scene.tweens.add({ targets: v, t: 1, duration: swapDuration, ease: swapEase, onUpdate: step, onComplete: step });
+}
+
+function overview(d: SpiritDetailVM, statsFrom?: StatRowVM[]): Node[] {
   const G = PANEL.statGrid;
   const legend: Node = {
     t: "row", gap: G.legend.gap, align: "center",
@@ -90,19 +113,12 @@ function overview(d: SpiritDetailVM, act: PanelActions): Node[] {
       { t: "row", w: G.labelW, children: [text(r.label, T.sbLabel, P.ink2)] },
       {
         t: "block", w: 0, h: G.bar, grow: true,
-        draw: (g, x, y, w, h) => {
-          const k = w / PANEL.statMax;
-          const base = Math.min(w, (r.total - r.stage) * k);
-          box(g, x, y, w, h, h / 2, { fill: P.veil["12"] });
-          box(g, x, y, base, h, h / 2, { fill: P.ink2 });
-          if (r.stage > 0) box(g, x + base, y, Math.min(w - base, r.stage * k), h, h / 2, { fill: P.ok });
-        },
+        draw: (g, x, y, w, h) => statBar(g, r, statsFrom?.find((f) => f.label === r.label), x, y, w, h),
       },
       { t: "row", w: G.valueW, children: r.stage > 0 ? [text(`+${r.stage}`, T.sbValue, P.ok, { ml: "auto" })] : [] },
     ],
   }));
   const per = d.overview.personality;
-  const reroll = d.overview.reroll;
   const stats: Node = rows.length
     ? { t: "col", gap: B.secGap, children: [head(COPY.stats, legend), { t: "col", gap: G.rowGap, children: rows }] }
     : { t: "col", gap: B.secGap, children: [head(COPY.stats), text(COPY.undecided, T.tags, P.ink2)] };
@@ -112,17 +128,7 @@ function overview(d: SpiritDetailVM, act: PanelActions): Node[] {
       t: "col", gap: B.secGap,
       children: [
         head(COPY.personality),
-        {
-          t: "row", gap: B.headGap, align: "center",
-          children: [
-            personalityPill(per?.name),
-            ...(reroll.shown ? [{
-              ...button(`${COPY.reroll} · ${COPY.cost(reroll.cost)}`, {
-                size: T.tool, h: PANEL.small.h, radius: PANEL.small.radius, padX: PANEL.small.padX, enabled: reroll.can, onClick: act.reroll,
-              }), ml: "auto",
-            } as Node] : []),
-          ],
-        },
+        { t: "row", children: [personalityPill(per?.name)] },
         text(per?.desc ?? COPY.undecided, T.tags, P.ink2, { wrap: BODY.w }),
         ...(per?.note ? [text(per.note, T.small, P.ink3Spirit, { wrap: BODY.w })] : []),
       ],
@@ -256,10 +262,10 @@ function bond(d: SpiritDetailVM, act: PanelActions): Node[] {
 
 // ───────────────────────── 패널 ─────────────────────────
 
-export function drawPanel(scene: Phaser.Scene, d: SpiritDetailVM, tab: TabId, act: PanelActions) {
+export function drawPanel(scene: Phaser.Scene, d: SpiritDetailVM, tab: TabId, act: PanelActions, statsFrom?: StatRowVM[]) {
   box(scene.add.graphics(), X, PANEL.y, PANEL.w, PANEL.h, PANEL.radius, glass(true));
   drawTabs(scene, d, tab, act);
-  const body = tab === "overview" ? overview(d, act) : tab === "growth" ? growth(d, act) : bond(d, act);
+  const body = tab === "overview" ? overview(d, statsFrom) : tab === "growth" ? growth(d, act) : bond(d, act);
   if (tab === "growth") drawSpine(scene, body);
   render(scene, { t: "col", w: BODY.w, gap: B.gap, children: body }, BODY.x, BODY.y);
   // 아래에 붙는 줄 (.q-awk margin-top auto, 위 1px 선)

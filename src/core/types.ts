@@ -167,7 +167,6 @@ export interface EvolutionDef {
 export interface EpisodeDef {
   affinity: number;
   stage?: Stage;
-  reroll_choices?: number;
 }
 
 export interface GrowthDef {
@@ -179,6 +178,5 @@ export interface GrowthDef {
   stage_hp_main_bonus: number;
   evolutions: EvolutionDef[];
   feed: { cost: number; affinity: number };
-  reroll: { cost: number; from: Stage };
   episodes: EpisodeDef[];
 }

@@ -209,8 +209,8 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 
 정령 관리·정원
 - 정원 저장: `GardenSession.snapshot/restore`를 platform 저장에 연결, 새 판(`Run`)에 `garden`을 넘기기
-- 런 종료 R2-1(0012): `grantBattle`로 경험·재료, 전투 이벤트로 자람 조건(`addDeed`: awaken·damage.blocked·freeze), 그 화면에서 키우기
-- 성장 길 카드를 카드 몸체(`card/HandCard`)로, 성격 다시 뽑기 3화 "둘 중 고르기" 화면, 이야기 문안
+- 런 종료 R2-1(0012): `grantBattle`로 경험·재료, 전투 이벤트로 자람 조건(`addDeed`: 준 피해·막은 피해·빙결), 그 화면에서 키우기
+- 성장 길 카드를 카드 몸체(`card/HandCard`)로, 이야기 문안(S3 뒤)
 - 정렬·필터·편성 바꾸기는 모양만 있어요 (출전 준비 화면과 함께)
 
 임시 UI(`src/presentation/placeholder`, `?screen=legacy`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 임시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 규칙으로 끝까지 플레이되는 화면은 임시 UI뿐이에요.

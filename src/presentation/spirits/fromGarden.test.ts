@@ -43,7 +43,6 @@ describe("정령 관리 화면 데이터", () => {
     // 성격은 유체부터 보여요. 효과는 성체부터라 안내를 덧붙여요 (0033)
     expect(d.personality).toBeDefined();
     expect(d.overview.personality?.note).toBe("성체가 되면 효과가 나요");
-    expect(d.overview.reroll.shown).toBe(false);
     expect(d.growth.gate).toMatchObject({ to: "성체", ready: true });
   });
 

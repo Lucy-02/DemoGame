@@ -49,7 +49,7 @@ describe("문구대로 동작하는 카드 (0022)", () => {
   });
 });
 
-describe("해방 (0034)", () => {
+describe("해방 (0036)", () => {
   it("각성체만, 전투마다 한 번 해방해요", () => {
     const b = battleWith();
     const cat = b.spirit(OWNER);
