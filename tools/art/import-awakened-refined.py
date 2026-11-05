@@ -30,7 +30,9 @@ def main(refined: Path, repo: Path):
         row = json.loads(line)
         if row.get("path") in done:
             row["sha256"] = done[row["path"]]
-            row["human_work"] = row.get("human_work", "") + " Claude가 Anima Base + Tile & Repair LLLite로 전체 재묘사, Lucy 선별."
+            note = " Claude가 Anima Base + Tile & Repair LLLite로 전체 재묘사, Lucy 선별."
+            if note not in row.get("human_work", ""):  # 같은 정령을 다시 반입해도 기록이 겹치지 않게 해요
+                row["human_work"] = row.get("human_work", "") + note
             row["note"] = "전체 재묘사본(2026-11-05). 출시 판정 전"
             lines[i] = json.dumps(row, ensure_ascii=False)
     prov.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
