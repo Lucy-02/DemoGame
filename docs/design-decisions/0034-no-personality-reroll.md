@@ -21,5 +21,5 @@
 - **재료 쓰임:** 정원에서 재료를 쓰는 곳은 이제 먹이기뿐이에요.
 
 ## 함께 달라지는 것
-- `design/concepts/world/COMPARE.md`의 W4 "성격 다시 뽑기와 정면 충돌"은 이제 부딪히지 않아요.
-- 지난 조사·시안 문서(`docs/research`, `design/concepts`)의 다시 뽑기 언급은 그때 기록이라 고치지 않았어요.
+- `design/archive/world/COMPARE.md`의 W4 "성격 다시 뽑기와 정면 충돌"은 이제 부딪히지 않아요.
+- 지난 조사·시안 문서(`docs/archive/research`, `design/concepts`)의 다시 뽑기 언급은 그때 기록이라 고치지 않았어요.

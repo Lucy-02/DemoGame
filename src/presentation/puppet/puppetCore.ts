@@ -19,6 +19,11 @@ export interface ChainProfile {
   phase: number;
   second: number;
   period2: number;
+  /** 축 방향 늘이기(롤빵머리 출렁임). 지연 호흡·고개 각속도 → 감쇠 스프링. 0이면 꺼져요 */
+  stretch_breath: number;
+  stretch_roll: number;
+  stretch_k: number;
+  stretch_c: number;
 }
 
 /** 움직임 프로필. 진폭은 캔버스 px / 도. 정령별 차이는 rig.motion으로 덮어써요. */
@@ -286,6 +291,8 @@ export class PuppetCore {
   private readonly tailFlick: [angle: number, vel: number, hold: number] = [0, 0, 0];
   private tailFlickTimer = 2.0;
   private wingBreath = 0;
+  /** 체인별 축 방향 늘어남 [값, 속도] */
+  private readonly chainStretch: [number, number][];
 
   constructor(rig: Rig, opts: PuppetOptions = {}) {
     this.rig = rig;
@@ -333,6 +340,7 @@ export class PuppetCore {
     this.nJoints = off;
     this.jRest = new Float64Array(off * 2);
     for (const c of this.chains) this.jRest.set(c.rest, c.off * 2);
+    this.chainStretch = this.chains.map((): [number, number] => [0, 0]);
 
     this.sig = {
       rollRad: 0, swayRad: 0, hairRad: 0, breath: 0, earL: 0, earR: 0, wingRad: 0, wingTipRad: 0,
@@ -379,7 +387,10 @@ export class PuppetCore {
   profile(name: string): ChainProfile {
     const m = this.m;
     const over = (m[name] ?? {}) as Partial<ChainProfile>;
-    return { base_deg: m.tail_base_deg, bend_deg: m.tail_bend_deg, period: m.tail_period, phase: m.tail_phase, second: 0, period2: 2.7, ...over };
+    return {
+      base_deg: m.tail_base_deg, bend_deg: m.tail_bend_deg, period: m.tail_period, phase: m.tail_phase, second: 0, period2: 2.7,
+      stretch_breath: 0, stretch_roll: 0, stretch_k: 60, stretch_c: 6, ...over,
+    };
   }
 
   private waves(amps: number[], periods: number[], phases: number[]): number {
@@ -469,8 +480,20 @@ export class PuppetCore {
         if (ci === 0 && c.profile === "tail") acc += ((flick * s ** 6) / n) * 6;
         jBeta[o + k] = acc;
       }
+      // 축 방향 늘이기(롤빵머리 출렁임): 지연된 호흡·고개 각속도가 감쇠 스프링을 거쳐 마디 간격을 늘였다 줄여요.
+      // 아래 마디일수록 더 늘어나요. stretch_*가 0이면 그대로예요
+      let e = 0;
+      if (pr.stretch_breath || pr.stretch_roll) {
+        const st = this.chainStretch[ci];
+        const target = pr.stretch_breath * (this.breathLagged - 0.5) + pr.stretch_roll * rollVel * live;
+        st[1] += (target - st[0]) * pr.stretch_k * dt;
+        st[1] *= Math.exp(-pr.stretch_c * dt);
+        st[0] += st[1] * dt;
+        e = st[0];
+      }
       for (let k = 0; k < n - 1; k++) {
-        const dx = rest[2 * k + 2] - rest[2 * k], dy = rest[2 * k + 3] - rest[2 * k + 1];
+        const g = 1 + (e * (k + 1)) / (n - 1);
+        const dx = (rest[2 * k + 2] - rest[2 * k]) * g, dy = (rest[2 * k + 3] - rest[2 * k + 1]) * g;
         const cs = Math.cos(jBeta[o + k]), sn = Math.sin(jBeta[o + k]);
         jNow[2 * (o + k) + 2] = jNow[2 * (o + k)] + dx * cs - dy * sn;
         jNow[2 * (o + k) + 3] = jNow[2 * (o + k) + 1] + dx * sn + dy * cs;
