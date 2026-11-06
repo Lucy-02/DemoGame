@@ -87,6 +87,8 @@ def main():
                     neg = strip_tags(neg, UC_DROP)
                     params["skip_cfg_above_sigma"] = None
                 prompt = join(prefix, card["subject"], comp, b["tones"][card["owner"]], suffix, c["quality"])
+                if card.get("uc_drop"):
+                    neg = strip_tags(neg, set(card["uc_drop"]))
                 uc = join(uc_card, card.get("uc_extra", ""), neg)
                 for seed in card.get("seeds", b["seeds"]):
                     cases.append({
