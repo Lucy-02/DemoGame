@@ -28,7 +28,7 @@ const ROLE: Record<Role, string> = { guard: "수호", attack: "공격", support:
 const q0 = new URLSearchParams(location.search);
 // 덜어낸 판(Lucy 11/04): 유체 희미해짐 → 가운데 그림자 영역 → 가운데 속성·역할 → 성체 실루엣 → 공개 → 정리. 조금 빠르게.
 const BEATS = q0.get("look") !== "full" ? ["대기", "희미해짐", "그림자", "속성·역할", "변화", "공개", "정리"] : ["대기", "모임", "속성", "역할", "변화", "공개", "정리"];
-const DUR = q0.get("look") !== "full" ? [0, 700, 800, 1300, 1300, 1500, 0] : [0, 1500, 1700, 1500, 2600, 2200, 0]; // ms, 임시
+const DUR = q0.get("look") !== "full" ? [0, 700, 800, 1300, 1000, 1500, 0] : [0, 1500, 1700, 1500, 2600, 2200, 0]; // ms, 임시. 변화 박자 1300→1000(Lucy 11/06)
 const W = 1280, H = 720, CX = W / 2, CY = H * 0.56;
 const FONT = "Orbit, Pretendard, sans-serif";
 
@@ -41,12 +41,22 @@ const autoplay = q.get("autoplay") === "1";
 const capture = q.get("capture") === "1";
 // look=calm(기본): 빛 하나·움직임 하나로 덜어낸 판(Lucy 11/04 "이펙트가 덕지덕지 과함"). look=full: 첫 판(빛줄기·폭발·고리·흔들림·블룸).
 const CALM = q.get("look") !== "full";
+// 배경 무대(Lucy 11/05): 진화 전엔 없고, 공개 때 성체 크기에 맞춰 발판이 발밑에 오게 깔려요. 배경은 정령별 background.webp(누끼 확정본). stage=none 이면 끄기.
+const STAGE = q.get("stage") === "none" ? "none" : "reveal";
+// 배경 그림 안에서 정령이 서는 자리(임시, 정령마다 다를 수 있어요): 발판 높이 비율, 성체 키가 배경 높이에서 차지하는 비율
+const STAGE_FOOT_Y = 0.88, STAGE_ADULT_FRAC = 0.75;
+const STAGE_TINT = 0xd4d0d8; // 임시: 배경을 살짝 눌러서 성체가 앞에 서 보이게(Lucy 11/06 "따로 논다")
+// 배경 가장자리 정리(Lucy 11/05, 임시 값): 흰 매트 제거 → 1px 깎기 → 1px 번짐. 비교표는 evolution-staging/bg-edge-techniques.png
+const EDGE = { matte: q.get("matte") !== "0", choke: Number(q.get("choke") ?? 1), feather: Number(q.get("feather") ?? 1) };
+// 이름 띠 뒤 사선 흐림(임시 값): 세기·반복, 흐림이 끝나는 점(x, y)과 꽉 찬 흐림을 유지하는 비율
+const BAND_BLUR = { strength: Number(q.get("bandblur") ?? 1.5), steps: 6, reach: [W * 0.5, H * 0.25, 0.35] as [number, number, number] };
+const MATTE_GRAY = 222; // 누끼 전 회색 바탕의 대략 값(원본 모서리 220~224)
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const pick = $("spirit") as HTMLSelectElement, br = $("branch") as HTMLSelectElement;
 pick.innerHTML = Object.entries(SPIRITS).map(([k, v]) => `<option value="${k}"${k === spiritId ? " selected" : ""}>${v.name}</option>`).join("");
 br.innerHTML = S.branches.map((b, i) => `<option value="${i}"${i === branchIdx ? " selected" : ""}>${b.meaning} (${ROLE[b.role]})</option>`).join("");
-const reload = () => (location.search = `?spirit=${pick.value}&branch=${pick.value === spiritId ? br.value : 0}`);
+const reload = () => (location.search = `?spirit=${pick.value}&branch=${pick.value === spiritId ? br.value : 0}${STAGE === "none" ? "&stage=none" : ""}`);
 pick.onchange = reload;
 br.onchange = reload;
 
@@ -65,25 +75,48 @@ class Evolution extends Phaser.Scene {
   private timer?: Phaser.Time.TimerEvent;
   private zone!: Phaser.GameObjects.Image;
   private shade!: Phaser.GameObjects.Image;
+  private stage?: Phaser.GameObjects.Image;
+  private blurCam?: Phaser.Cameras.Scene2D.Camera;
+
+  /** 사선 마스크: 왼쪽 아래 모서리는 불투명, 가운데 쪽으로 갈수록 투명. 등고선이 대각선이라 사선 영역이 돼요. */
+  private makeBandMask() {
+    const key = "bandMask";
+    if (this.textures.exists(key)) return key;
+    const cv = document.createElement("canvas");
+    cv.width = W; cv.height = H;
+    const g = cv.getContext("2d")!;
+    const [x1, y1, hold] = BAND_BLUR.reach;
+    const grad = g.createLinearGradient(0, H, x1, y1);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(hold, "rgba(255,255,255,1)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, W, H);
+    this.textures.addCanvas(key, cv);
+    return key;
+  }
 
   preload() {
     this.load.image("baby", `assets/spirits/${spiritId}/baby.webp`);
     this.load.image("adult", `assets/spirits/${spiritId}/adult.webp`);
-    // 속성·역할 아이콘: 새 아이콘(el-·role-)이 없으면 예전 속성 아이콘(e-)으로, 역할은 글자로 대신해요.
+    // 속성·역할 아이콘 (확정본 el-·role-, 0024)
     this.load.svg("crest", `assets/ui/icons/el-${S.el}.svg`, { width: 512, height: 512 });
-    this.load.svg("crestOld", `assets/ui/icons/e-${S.el}.svg`, { width: 512, height: 512 });
     this.load.svg("role", `assets/ui/icons/role-${B.role}.svg`, { width: 256, height: 256 });
+    if (STAGE !== "none") this.load.image("stage", `assets/spirits/${spiritId}/background.webp`);
     this.load.on("loaderror", () => {});
   }
 
   create() {
     this.makeTextures();
     const cam = this.cameras.main;
-    const crestKey = this.textures.exists("crest") ? "crest" : "crestOld";
+    const crestKey = "crest";
 
     const bg = this.add.rectangle(CX, H / 2, W, H, 0x141214);
     void bg;
     const bgGlow = this.add.image(CX, CY, "radial").setDisplaySize(W * 1.3, H * 1.5).setTint(S.color).setAlpha(0.18).setBlendMode(Phaser.BlendModes.ADD);
+    // 무대는 유체 발밑(CY + 150)에 바닥이 오게 깔아요. 그림자·비네트가 무대 위로 덮여서 함께 어두워져요.
+    if (STAGE !== "none") cleanEdges(this, "stage", "stageSoft");
+    const stage = STAGE !== "none" ? this.add.image(CX, H + 520, "stageSoft").setOrigin(0.5, STAGE_FOOT_Y).setTint(STAGE_TINT).setAlpha(0) : undefined;
 
     // 덜어낸 판의 가운데 영역: 어두운 바탕 위에 속성 빛이 번진 세로 타원
     const shade = this.add.image(CX, CY - 60, "radial").setDisplaySize(760, 860).setTint(0x000000).setAlpha(0);
@@ -138,7 +171,7 @@ class Evolution extends Phaser.Scene {
     // 컷신은 무엇으로 자라는지만 보여줘요. 이미 아는 유체 정보(역할 등)는 띄우지 않아요(Lucy 11/04).
     // 아이콘마다 아래에 한글 이름을 달아요: 속성 아래 속성 이름, 역할 아래 역할 이름(Lucy 11/04).
     const label = (x: number, y: number, t: string, color: string) => this.add.text(x, y, t, {
-      fontFamily: FONT, fontSize: "26px", color, stroke: "#000000", strokeThickness: 6,
+      fontFamily: FONT, fontSize: "26px", color, // 테두리 없음(Lucy 11/06)
     }).setOrigin(0.5).setAlpha(0);
     const roleText = label(CALM ? CX + 72 : CX, CALM ? CY - 2 : CY - 330, ROLE[B.role], "#f4eef2");
     const elText = label(CX - 72, CY - 2, S.elName, "#" + S.color.toString(16));
@@ -151,7 +184,7 @@ class Evolution extends Phaser.Scene {
     const roleChip = chip(c1.width + 8, ROLE[B.role], "#f4eef2");
     const c3 = chip(c1.width + roleChip.width + 16, `성격 ${S.pers} · ${S.persDesc}`, "#cfc6cc");
     const nameSmall = this.add.text(0, -26, `${B.meaning} 갈래 · TODO_NAME`, { fontFamily: FONT, fontSize: "16px", color: "#a49ca2" });
-    const name = this.add.text(0, -4, `${S.name} 성체`, { fontFamily: FONT, fontSize: "40px", color: "#f4eef2", stroke: "#000000", strokeThickness: 6 });
+    const name = this.add.text(0, -4, `${S.name} 성체`, { fontFamily: FONT, fontSize: "40px", color: "#f4eef2" }); // 테두리 없음(Lucy 11/05), 뒤는 사선 흐림이 받쳐요
     band.add([c1, roleChip, c3, nameSmall, name]);
 
     const panel = this.add.container(W - 470, 90).setAlpha(0);
@@ -175,10 +208,20 @@ class Evolution extends Phaser.Scene {
     // 글자·패널은 확대·블룸이 없는 UI 카메라로 따로 그려요.
     const ui = [band, panel, caption];
     cam.ignore(ui);
+    // 이름 띠 뒤 사선 흐림(Lucy 11/05): 같은 장면을 흐린 카메라로 한 번 더 그리고, 왼쪽 아래 모서리에서 가운데로 갈수록 옅어지는 마스크로 잘라요.
+    const blurCam = this.cameras.add(0, 0, W, H).setAlpha(0);
+    blurCam.ignore(ui);
+    blurCam.filters.external.addBlur(1, 2, 2, BAND_BLUR.strength, 0xffffff, BAND_BLUR.steps);
+    blurCam.filters.external.addVignette(0.5, 0.5, 0.75, 0.25, 0x000000);
+    blurCam.filters.external.addMask(this.makeBandMask());
+    this.blurCam = blurCam;
     const uiCam = this.cameras.add(0, 0, W, H);
     uiCam.ignore(this.children.list.filter((c) => !ui.includes(c as never)));
     this.zone = zone;
     this.shade = shade;
+    this.stage = stage;
+    // 속성·역할 아이콘과 글자는 실루엣보다 위에 그려요. 아래에 있으면 실루엣이 차오르면서 먼저 덮여 일찍 사라져 보여요(Lucy 11/06).
+    for (const g of [crest, role, roleText, elText]) (g as unknown as Phaser.GameObjects.Components.Depth).setDepth(10);
     this.o = { bgGlow, rays, crest, ring, baby, babySil, adult, adultSil, role, roleText, elText, band, nameSmall, name, roleChip, panel, caption, gather, burst, motes, babyGlow, silGlow, wipe, vignette };
 
     // 유체 숨쉬기
@@ -192,6 +235,7 @@ class Evolution extends Phaser.Scene {
     this.still = ($("still") as HTMLInputElement).checked || matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.go(0);
     if (autoplay) this.time.delayedCall(800, () => this.play());
+    else if (q.get("beat")) this.go(Number(q.get("beat"))); // 정지 화면 확인용: ?beat=5 로 그 박자에 바로 멈춰요
   }
 
   update(_t: number, dt: number) {
@@ -254,6 +298,7 @@ class Evolution extends Phaser.Scene {
       { t: o.roleText, alpha: n === 3 ? 1 : 0 },
       { t: o.elText, alpha: CALM && n === 3 ? 1 : 0 },
       { t: o.band, alpha: n === 5 ? 1 : 0 },
+      ...(this.blurCam ? [{ t: this.blurCam, alpha: n === 5 ? 1 : 0 }] : []),
       { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
       { t: o.vignette, strength: [0.25, 0.6, 0.7, 0.7, 0.8, 0.45, 0.4][n] },
       { t: this.cameras.main, zoom: [1, 1.05, 1.06, 1.08, 1.12, 1, 1][n] },
@@ -284,7 +329,18 @@ class Evolution extends Phaser.Scene {
       { t: o.panel, alpha: n === 6 ? 1 : 0, x: n === 6 ? W - 470 : W - 440 },
       { t: o.vignette, strength: pick([0.25, 0.35, 0.45, 0.45, 0.45, 0.3, 0.3]) },
       { t: this.cameras.main, zoom: 1 },
+      ...this.stageTarget(n),
     ] as { t: object; [k: string]: unknown }[];
+  }
+
+  /** 배경 무대: 성체와 같은 자리·같은 배율로 따라가요. 성체 발밑(origin 아래쪽)에 발판(STAGE_FOOT_Y)이 와요. */
+  private stageTarget(n: number) {
+    const m = this.stage;
+    if (!m) return [];
+    // 성체와 한 몸처럼: 성체의 키·자리를 그대로 따라가요. 변화 박자(성체 640px, CY+300)에서 공개 박자(1180px, H+520)로 같이 밀려 들어와요.
+    const adultDisplayH = n >= 5 ? 1180 : 640; // calmTarget의 adultScale·closeScale과 같아요
+    const scale = adultDisplayH / STAGE_ADULT_FRAC / m.height;
+    return [{ t: m, alpha: n >= 5 ? 1 : 0, scale, x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 }];
   }
 
   private go(n: number) {
@@ -306,14 +362,28 @@ class Evolution extends Phaser.Scene {
     this.enter(n);
   }
 
+  /** 덜어낸 판의 움직임 곡선(Lucy 11/06 "easing 적절히"). 나타남은 빨리 시작해 천천히 멈추고(out), 사라짐·배경 조명은 부드럽게(inOut). */
+  private calmEase(t: object, n: number) {
+    const o = this.o;
+    const body = [o.adult, o.adultSil, this.stage];
+    if (body.includes(t as never)) return n === 5 ? "Cubic.out" : n === 6 ? "Quart.inOut" : "Sine.inOut"; // 공개: 밀려 들어와 멈춤, 정리: 옆으로 비켜섬
+    if (t === o.panel) return "Cubic.out";
+    if (t === o.band || t === this.blurCam) return n === 5 ? "Sine.out" : "Sine.in";
+    if ([o.crest, o.role, o.roleText, o.elText].includes(t as never)) return n === 3 ? "Cubic.out" : "Sine.in";
+    if (t === o.baby) return "Sine.out";
+    return "Sine.inOut";
+  }
+
   private enter(n: number) {
     const o = this.o, d = DUR[n] || 900, cam = this.cameras.main;
     const ease: Record<string, string> = CALM ? {} : { crest: "Back.out", role: "Bounce.out" };
     // 기본: 모든 값을 이번 박자 목표로 부드럽게
     for (const { t, ...props } of this.target(n)) {
       const key = t === o.crest ? "crest" : t === o.role ? "role" : "";
-      const dur = t === o.role ? 700 : t === o.wipe ? d * 0.8 : t === (o.adultSil as object) && n === 5 ? d * 0.8 : d * 0.7;
-      this.tweens.add({ targets: t, ...props, duration: dur, ease: ease[key] ?? "Sine.inOut", delay: t === o.role ? 150 : 0 });
+      // 역할 아이콘은 나타날 때만 살짝 늦게 와요. 사라질 땐 속성 아이콘·글자와 같은 시간에 같이 사라져요(Lucy 11/06).
+      const roleIn = t === o.role && n === 3;
+      const dur = roleIn ? 700 : t === o.wipe ? d * 0.8 : t === (o.adultSil as object) && n === 5 ? d * 0.8 : d * 0.7;
+      this.tweens.add({ targets: t, ...props, duration: dur, ease: ease[key] ?? (CALM ? this.calmEase(t, n) : "Sine.inOut"), delay: roleIn ? 150 : 0 });
     }
     if (n === 1 && !CALM) o.gather.start();
     if (n === 2 && !CALM) this.ripple(1.0);
@@ -367,7 +437,61 @@ const start = async () => {
     document.fonts.add(await f.load());
   } catch { /* 글꼴이 없으면 대체 글꼴 */ }
   // ?capture=1: 영상으로 뽑을 때 프레임을 직접 넘겨요(tools/evolution-preview/record.cjs).
-  const game = new Phaser.Game({ type: Phaser.WEBGL, parent: "stage", width: W, height: H, backgroundColor: "#141214", scene: Evolution, banner: false, render: { preserveDrawingBuffer: capture } });
+  const game = new Phaser.Game({ type: Phaser.WEBGL, parent: "stage", width: W, height: H, backgroundColor: "#141214", scene: Evolution, banner: false, render: { preserveDrawingBuffer: capture, mipmapFilter: "LINEAR_MIPMAP_LINEAR" } }); // 밉맵: 큰 배경을 줄여 그릴 때 계단·반짝임 줄이기
   if (capture) (window as unknown as { __game: Phaser.Game }).__game = game;
 };
 void start();
+
+/** 누끼 가장자리 정리. Photoshop의 Remove White Matte(반투명 픽셀에 섞인 바탕색 빼기) + Choke(테두리 깎기) + Feather(번짐)와 같은 순서예요. */
+function cleanEdges(scene: Phaser.Scene, src: string, dst: string) {
+  const img = scene.textures.get(src).getSourceImage() as HTMLImageElement;
+  const w = img.width, h = img.height;
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  const cx = cv.getContext("2d", { willReadFrequently: true })!;
+  cx.drawImage(img, 0, 0);
+  const data = cx.getImageData(0, 0, w, h), d = data.data;
+  const a0 = new Uint8ClampedArray(w * h);
+  for (let p = 0; p < w * h; p++) a0[p] = d[p * 4 + 3];
+  // 1) 흰 매트 제거: 색 = (보이는 색 − (1−a)·바탕) / a
+  if (EDGE.matte) for (let p = 0; p < w * h; p++) {
+    const a = a0[p] / 255;
+    if (a <= 0.03 || a >= 1) continue;
+    for (let c = 0; c < 3; c++) d[p * 4 + c] = (d[p * 4 + c] - (1 - a) * MATTE_GRAY) / a;
+  }
+  // 2) 깎기: 3×3 최솟값을 choke번
+  let a1 = a0;
+  for (let k = 0; k < EDGE.choke; k++) {
+    const nx = new Uint8ClampedArray(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let m = 255;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const yy = Math.min(h - 1, Math.max(0, y + dy)), xx = Math.min(w - 1, Math.max(0, x + dx));
+        m = Math.min(m, a1[yy * w + xx]);
+      }
+      nx[y * w + x] = m;
+    }
+    a1 = nx;
+  }
+  // 3) 번짐: 깎은 알파를 흐린 뒤 원래 알파를 넘지 않게
+  const mask = document.createElement("canvas");
+  mask.width = w; mask.height = h;
+  const mx = mask.getContext("2d", { willReadFrequently: true })!;
+  const md = mx.createImageData(w, h);
+  for (let p = 0; p < w * h; p++) md.data[p * 4 + 3] = a1[p];
+  mx.putImageData(md, 0, 0);
+  let a2 = a1;
+  if (EDGE.feather > 0) {
+    const bl = document.createElement("canvas");
+    bl.width = w; bl.height = h;
+    const bx = bl.getContext("2d", { willReadFrequently: true })!;
+    bx.filter = `blur(${EDGE.feather}px)`;
+    bx.drawImage(mask, 0, 0);
+    const bd = bx.getImageData(0, 0, w, h).data;
+    a2 = new Uint8ClampedArray(w * h);
+    for (let p = 0; p < w * h; p++) a2[p] = bd[p * 4 + 3];
+  }
+  for (let p = 0; p < w * h; p++) d[p * 4 + 3] = Math.min(a0[p], a2[p]);
+  cx.putImageData(data, 0, 0);
+  scene.textures.addCanvas(dst, cv);
+}
