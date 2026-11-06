@@ -12,3 +12,4 @@
 - 분기 진화 가설: TODO. 이름은 TODO_NAME
 - 세계관 자리: TODO (S3)
 - 아트 메모: Lucy
+- 카드 풀: `design/canon/spirits/pool-second-wave.md` (0041)

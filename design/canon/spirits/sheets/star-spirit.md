@@ -9,6 +9,6 @@
 - 이 손에서 빛나는 공용 카드: 산들바람, 뜸 들이기
 - 짝과 약점: 연타 정령(섬광)에게 걸면 빨리 차요. 앞열에 서면 일찍 쓰러져서 낙하가 안 나와요. 지켜 줄 수호(도롱뇽 벽)가 필요해요.
 - 분기 진화 가설: 갈래 A 유성(별을 몰아 직접 화력) / B 장막(나눠 주고 지키기). 이름은 TODO_NAME
-- 카드 풀 초안: https://claude.ai/artifact/65XadAQy1MfwvjcrA2Zyo8
+- 카드 풀: `design/canon/spirits/pool-second-wave.md` (0041)
 - 세계관 자리: TODO (S3)
 - 아트 메모: Lucy

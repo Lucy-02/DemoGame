@@ -8,6 +8,6 @@
 - 이 손에서 빛나는 공용 카드: 산들바람(손이 넓어야 품을 카드가 생김)
 - 짝과 약점: 큰 카드를 가진 정령(불여우 여우불, 산양 박치기)과 잘 맞아요. 불여우와 묶이면 불여우 쏠림을 더 키우니 같이 봐요. 혼자서는 피해가 거의 없어요.
 - 분기 진화 가설: 갈래 A 지키기(진주층 · 대합) / B 내보내기(진주 탄환 · 흑진주). 이름은 TODO_NAME
-- 카드 풀 초안: https://claude.ai/artifact/MFwTAva5LzeKANmrMgJM9Z
+- 카드 풀: `design/canon/spirits/pool-second-wave.md` (0041)
 - 세계관 자리: TODO (S3)
 - 아트 메모: Lucy
