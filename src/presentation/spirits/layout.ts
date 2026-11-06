@@ -21,6 +21,9 @@ export const ART = {
    *  그림 색이 배경에 번지게 해요. 그림은 아래 띠에 닿기 전 fade px 동안 서서히 사라져요. */
   ambient: { scale: 0.25, blur: 22, brightness: 0.7, alpha: 0.85 },
   fade: 80,
+  /** 다른 정령을 고를 때 (0035): 새 그림이 띠 방향에서 shift px 밀려 들어와요. 시간은 tokens.provisional.motion.spiritSwap.
+   *  이전 그림은 제자리에서 전체 시간의 out만큼 옅어지고, 새 그림은 wait만큼 늦게 나타나요(겹침이 짧아 이중 노출이 덜 보여요). */
+  swap: { shift: 24, out: 0.4, wait: 0.25 },
 };
 
 /** .tb height 52 padding 0 20 gap 10, 아래 1px 선 · .tb-back gap 4 · .res gap 6, .ri 16 */

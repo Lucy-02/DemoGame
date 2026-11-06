@@ -11,8 +11,9 @@ import type { Stage } from "../../core/types";
 import { DEFAULT_GARDEN, GARDENS } from "./fixtures";
 import { spiritsVM, type MockView } from "./fromGarden";
 import { MOCKUPS, MOCK_FIRST_STAGE } from "./mockups";
-import type { TabId } from "./viewmodel";
-import { drawArt, drawBackdrop, drawScrim, type LiveArt } from "./views/backdrop";
+import type { SpiritDetailVM, StatRowVM, TabId } from "./viewmodel";
+import { playArtSwap, type ArtMotion } from "./views/artSwap";
+import { drawArt, drawArtGlow, drawBackdrop, drawScrim, type LiveArt } from "./views/backdrop";
 import { ID_ICONS, drawIdCard } from "./views/idCard";
 import { PANEL_ICONS, drawPanel } from "./views/panel";
 import { RAIL_ICONS, drawFacts, drawRail } from "./views/rail";
@@ -46,6 +47,11 @@ export class SpiritsScene extends Phaser.Scene {
   private dirty = false;
   /** 퍼핏 움직임 상태 (정령별). 화면을 다시 그려도 움직임이 처음부터 시작하지 않게 남겨 둬요 */
   private puppetCores = new Map<string, PuppetCore>();
+  /** 마지막으로 그린 정령 (다른 정령을 고르면 여기서 전환해요, 0035) */
+  private shown?: { id: string; art: SpiritDetailVM["art"]; rows?: StatRowVM[] };
+  /** 다음 그리기에서 전환할지 */
+  private swapPending = false;
+  private artMotion: ArtMotion = { alpha: 1, dx: 0 };
 
   constructor() {
     super(SPIRITS_SCENE);
@@ -94,11 +100,23 @@ export class SpiritsScene extends Phaser.Scene {
   }
 
   private paint() {
+    this.tweens.killAll();
     this.children.removeAll(true);
     const vm = spiritsVM(this.session.state, this.selected, this.mocks);
     const d = vm.detail;
+    const before = this.swapPending && this.shown?.id !== vm.selected ? this.shown : undefined;
+    this.swapPending = false;
     drawBackdrop(this);
-    drawArt(this, !this.open, d.art, this.liveArt(d.art?.puppet));
+    drawArtGlow(this, !this.open);
+    const out = before ? drawArt(this, !this.open, before.art, this.liveArt(before.art?.puppet)) : [];
+    const into = drawArt(this, !this.open, d.art, this.liveArt(d.art?.puppet));
+    if (before) {
+      const order = vm.roster.map((t) => t.id);
+      const dir = Math.sign(order.indexOf(vm.selected) - order.indexOf(before.id)) || 1;
+      this.artMotion = playArtSwap(this, out, into, dir, this.artMotion);
+    } else {
+      this.artMotion = { alpha: 1, dx: 0 };
+    }
     drawScrim(this);
     drawTopbar(this, vm.material);
     drawIdCard(this, d);
@@ -108,13 +126,12 @@ export class SpiritsScene extends Phaser.Scene {
         close: () => this.show(this.selected, this.tab, false),
         evolve: () => this.session.dispatch({ kind: "evolve", id: this.selected }),
         feed: () => this.session.dispatch({ kind: "feed", id: this.selected }),
-        reroll: () => this.session.dispatch({ kind: "reroll", id: this.selected }),
         seeEpisode: () => this.session.dispatch({ kind: "seeEpisode", id: this.selected }),
         pickStage: (stage) => {
           this.mockStage.set(this.selected, stage);
           this.redraw();
         },
-      });
+      }, before?.rows);
     } else {
       const openTab = (t: TabId) => this.show(this.selected, t, true);
       drawFacts(this, d, openTab);
@@ -122,6 +139,7 @@ export class SpiritsScene extends Phaser.Scene {
     }
     this.stripFrom = clampFrom(this.stripFrom, vm.roster.length);
     drawStrip(this, vm, this.stripFrom, (id) => this.show(id, this.tab, this.open));
+    this.shown = { id: vm.selected, art: d.art, rows: this.open && this.tab === "overview" ? d.overview.rows : undefined };
   }
 
   /** 각성체 퍼핏(라투디). 처음 볼 때 불러오고, 다 올라올 때까지는 일러스트를 그려요 */
@@ -136,7 +154,7 @@ export class SpiritsScene extends Phaser.Scene {
         // 리그 캔버스의 일러스트 상자(art.bbox)가 일러스트 자리(at)에 꼭 맞게
         const [x0, y0, x1] = p.core.rig.art!.bbox;
         const s = at.w / (x1 - x0);
-        p.setScale(s).setPosition(at.x - x0 * s, at.y - y0 * s).setScreenClip(clip.top, clip.bottom, clip.fadeFrom);
+        return p.setScale(s).setPosition(at.x - x0 * s, at.y - y0 * s).setScreenClip(clip.top, clip.bottom, clip.fadeFrom);
       },
     };
   }
@@ -145,6 +163,7 @@ export class SpiritsScene extends Phaser.Scene {
   private show(id: string, tab: TabId, open: boolean) {
     const leaving = this.open && this.tab === "growth" && (id !== this.selected || tab !== "growth" || !open);
     if (leaving) this.leaveGrowth();
+    if (id !== this.selected) this.swapPending = true;
     this.selected = id;
     this.tab = tab;
     this.open = open;
