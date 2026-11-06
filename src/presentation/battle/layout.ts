@@ -51,7 +51,7 @@ export const GROUND = { w: 120, h: 14, bottom: -6 };
 export const INFO = {
   mt: 12, allyW: 168, enemyW: 184, gap: 5, pad: [7, 8, 8, 8] as [number, number, number, number], radius: 10,
   /** .rA height 20 gap 6 · .rB min-height 22 gap 6 · .r2 min-height 20 gap 5 · .r3 gap 6 */
-  rowA: { h: 20, gap: 6 }, rowB: { minH: 22, gap: 6 }, row2: { minH: 20, gap: 5 }, row3: { gap: 6 },
+  rowA: { h: 20, gap: 6 }, rowB: { minH: 22, gap: 6 }, row2: { minH: 20, gap: 5 },
   /** .bar height 5 radius 3 min-width 26 */
   bar: { h: 5, radius: 3 },
   /** .shd height 22 padding 0 6 0 4 radius 11 gap 2, .shi 13 */
@@ -62,16 +62,12 @@ export const INFO = {
   hpGap: 2,
   /** .st height 20 padding 0 6 0 4 radius 10 gap 2, .sti 12 */
   status: { h: 20, pad: [0, 6, 0, 4] as [number, number, number, number], radius: 10, gap: 2, icon: 12 },
-  /** .sync gap 2 */
-  syncGap: 2,
   /** .front padding 1 7 radius 9 */
   front: { pad: [1, 7, 1, 7] as [number, number, number, number], radius: 9 },
   /** .el 20 원 */
   element: 20,
   /** .weak height 20 padding 0 6 radius 10 gap 2 */
   weak: { h: 20, pad: [0, 6, 0, 6] as [number, number, number, number], radius: 10, gap: 2 },
-  /** .slots gap 3, .sl 12 radius 2 ring 1.5 */
-  slots: { gap: 3, size: 12, radius: 2, ring: 1.5 },
 };
 
 /** .intent height 32 padding 0 10 0 5 radius 16 gap 5 (.debuff radius 6) */
@@ -120,10 +116,6 @@ export const PREVIEW = {
   /** .shd.pv padding 0 5 0 3, inset 1.5 · .inc.pv inset 1.5 */
   block: { pad: [0, 5, 0, 3] as [number, number, number, number], ring: 1.5 },
   incomingRing: 1.5,
-  /** .sl.pvon repeating-linear-gradient(45deg, acc-hi 0 2px, transparent 2px 4px), inset 1.5 */
-  slotHatch: { deg: 45, stripe: 2, ring: 1.5 },
-  /** .sll.pvt padding 0 7 radius 9 */
-  cutTag: { pad: [0, 7, 0, 7] as [number, number, number, number], radius: 9 },
   /** .intent.cut inset 1.5, .amt text-decoration-thickness 2 */
   intentCut: { ring: 1.5, strike: 2 },
   /** .rs-slot.cut::after left 2 right 2 top 50% height 2 rotate(-14deg) */

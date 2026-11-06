@@ -19,15 +19,6 @@ const card = (cardId: string, i: number): BCard =>
   ({ uid: 100 + i, cardId, owner: OWNER, tempCostDelta: 0, locked: false, isCopy: false, grow: 0 });
 
 describe("문구대로 동작하는 카드 (0022)", () => {
-  it("함께 외치기: 모든 아군의 싱크로율이 10%p 오릅니다", () => {
-    const b = battleWith("rally");
-    const before = new Map(b.spirits.map((s) => [s.id, s.sync]));
-    b.play(100);
-    // 카드 주인은 카드를 쓸 때 받는 싱크로율이 더 붙어요
-    for (const s of b.spirits) expect(s.sync - before.get(s.id)!, s.id).toBeGreaterThanOrEqual(10);
-    expect(b.spirits.filter((s) => s.id !== OWNER).map((s) => s.sync - before.get(s.id)!)).toEqual([10, 10]);
-  });
-
   it("담금질 유리: 모든 아군이 방어도와 반격을 얻습니다", () => {
     const b = battleWith("tempered_glass");
     b.play(100);
@@ -55,5 +46,18 @@ describe("문구대로 동작하는 카드 (0022)", () => {
     b.drain();
     b.play(101, { side: "e", uid: 1 });
     expect(b.drain().some((e) => e.k === "log" && e.text.includes("한 번 더"))).toBe(false);
+  });
+});
+
+describe("해방 (0036)", () => {
+  it("각성체만, 전투마다 한 번 해방해요", () => {
+    const b = battleWith();
+    const cat = b.spirit(OWNER);
+    expect(b.canRelease(OWNER)).toBe(false);
+    cat.run = { ...cat.run, stage: "awakened" };
+    expect(b.release(OWNER)).toBe(true);
+    expect(cat.release).toBeGreaterThan(0);
+    expect(b.drain().some((e) => e.k === "release")).toBe(true);
+    expect(b.canRelease(OWNER)).toBe(false);
   });
 });

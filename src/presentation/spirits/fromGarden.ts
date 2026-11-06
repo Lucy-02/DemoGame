@@ -18,8 +18,8 @@ import type {
 /** 할 일 종류별 배지 기호 (정본: 새 카드 = g-cardnew) */
 export const TODO_ICON: Record<Todo["kind"], string> = { evolve: "g-up", unlock: "g-cardnew", episode: "g-book" };
 
-const STAT_ORDER: StatKey[] = ["hp", "power", "guard", "focus", "sync"];
-const STAT_LABEL: Record<StatKey, string> = { hp: "HP", power: "파워", guard: "가드", focus: "포커스", sync: "싱크" };
+const STAT_ORDER: StatKey[] = ["hp", "power", "guard", "focus"];
+const STAT_LABEL: Record<StatKey, string> = { hp: "HP", power: "파워", guard: "가드", focus: "포커스" };
 const ELEMENT_ICON: Record<string, string> = { fire: "el-fire", water: "el-water", forest: "el-forest", wind: "el-wind", none: "el-none" };
 const ROLE_ICON: Record<string, string> = { attack: "role-attack", guard: "role-guard", support: "role-support", disrupt: "role-disrupt" };
 
@@ -178,7 +178,7 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
     facts,
     overview: {
       rows,
-      awaken: { name: COPY.awaken, desc: def.awaken.desc },
+      release: { name: COPY.release, desc: def.release.desc },
       personality: {
         name: personalityDef(s.personality).name, desc: personalityDef(s.personality).desc,
         note: grown ? undefined : COPY.personalityLater,
@@ -232,7 +232,7 @@ function mockDetail(m: Mockup, stage: Stage): SpiritDetailVM {
     facts: [{ kind: "next", label: COPY.next, final: COPY.undecided }],
     overview: {
       rows: [],
-      awaken: { name: COPY.awaken, desc: COPY.undecided },
+      release: { name: COPY.release, desc: COPY.undecided },
     },
     growth: {
       rows: STAGES.map((st, i) => ({

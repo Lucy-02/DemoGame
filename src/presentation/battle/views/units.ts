@@ -22,7 +22,6 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
   for (const a of vm.allies) {
     a.statuses.forEach((s) => loadIcon(scene, s.icon, I.status.icon));
   }
-  loadIcon(scene, "fx-sync", I.status.icon);
   loadIcon(scene, "fx-block", I.block.icon);
   for (const e of vm.enemies) {
     loadIcon(scene, e.element, I.status.icon);
@@ -149,13 +148,6 @@ function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change, lit = false): Nod
     t: "row", minH: I.row2.minH, gap: I.row2.gap, align: "center",
     children: [
       ...a.statuses.map(statusChip),
-      {
-        t: "row", gap: I.syncGap, align: "center",
-        children: [
-          { t: "icon", id: "fx-sync", w: I.status.icon, h: I.status.icon, tint: P.ink3 },
-          text(String(a.sync), T.chip, P.ink3),
-        ],
-      },
       ...(a.front ? [{
         t: "row", pad: I.front.pad, radius: I.front.radius, align: "center", ml: "auto",
         style: { ring: { width: 1, color: P.glassLine } },
@@ -164,24 +156,6 @@ function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change, lit = false): Nod
     ],
   };
   return infoPlate(I.allyW, [rowA, rowB, row2], lit);
-}
-
-function shieldSlot(scene: Phaser.Scene, state: "broken" | "breaking" | "left"): Node {
-  const S = I.slots;
-  return {
-    t: "block", w: S.size, h: S.size,
-    draw: (g, x, y, w, h) => {
-      if (state === "broken") box(g, x, y, w, h, S.radius, { fill: P.warn });
-      else if (state === "left") box(g, x, y, w, h, S.radius, { ring: { width: S.ring, color: P.warn } });
-      else {
-        // 이번에 깰 칸: 빗금 + 테 (.sl.pvon). 둥근 모서리 2px는 무늬 위에 테로 덮어요
-        const s = PV.slotHatch.stripe;
-        const key = stripeTexture(scene, "slot", w, h, PV.slotHatch.deg, [[P.accHi, 0], [P.accHi, s], [transparentOf(P.accHi), s], [transparentOf(P.accHi), s * 2]]);
-        scene.add.image(x, y, key).setOrigin(0, 0);
-        box(scene.add.graphics(), x, y, w, h, S.radius, { ring: { width: PV.slotHatch.ring, color: P.accHi } });
-      }
-    },
-  };
 }
 
 function enemyInfo(scene: Phaser.Scene, e: EnemyVM, pv?: EnemyOutcomeVM, lit = false): Node {
@@ -211,37 +185,7 @@ function enemyInfo(scene: Phaser.Scene, e: EnemyVM, pv?: EnemyOutcomeVM, lit = f
       ...e.statuses.map(statusChip),
     ],
   };
-  const rows = [rowA, rowB, row2];
-  if (e.shield) {
-    const { broken, total } = e.shield;
-    const breaking = Math.min(pv?.shieldBreak ?? 0, total - broken);
-    const left = total - broken - breaking;
-    const label: Node = pv?.cut
-      ? {
-        t: "row", pad: PV.cutTag.pad, radius: PV.cutTag.radius, align: "center", style: { fill: P.accHi },
-        children: [text(COPY.cut, T.cutTag, P.onAccHi)],
-      }
-      : {
-        t: "row", align: "baseline",
-        children: [
-          text(COPY.shieldLeft, T.shieldLabel, P.ink2),
-          text(String(left), T.shieldNum, P.ink),
-          text(COPY.shieldUnit, T.shieldLabel, P.ink2),
-        ],
-      };
-    rows.push({
-      t: "row", gap: I.row3.gap, align: "center",
-      children: [
-        {
-          t: "row", gap: I.slots.gap, align: "center",
-          children: Array.from({ length: total }, (_, i) =>
-            shieldSlot(scene, i < broken ? "broken" : i < broken + breaking ? "breaking" : "left")),
-        },
-        label,
-      ],
-    });
-  }
-  return infoPlate(I.enemyW, rows, lit);
+  return infoPlate(I.enemyW, [rowA, rowB, row2], lit);
 }
 
 function intentNode(it: IntentVM, cut = false): Node {

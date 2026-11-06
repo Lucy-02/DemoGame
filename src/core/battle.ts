@@ -35,8 +35,10 @@ export interface BSpirit {
   keepBlock: boolean;
   empower: number;
   status: Status;
-  sync: number;
-  awaken: number;
+  /** 해방이 남은 턴. 0이면 꺼져 있어요. */
+  release: number;
+  /** 해방은 각성체만, 전투마다 한 번 */
+  releaseUsed: boolean;
   critPity: number;
   downed: boolean;
   auras: Map<AuraId, number>;
@@ -50,9 +52,6 @@ export interface BEnemy {
   hp: number;
   maxHp: number;
   block: number;
-  shield: number;
-  maxShield: number;
-  broken: boolean;
   skip: boolean;
   skipReason: string;
   status: Status;
@@ -78,14 +77,13 @@ export type BattleEvent =
   | { k: "heal"; ref: Ref; amount: number }
   | { k: "block"; ref: Ref; amount: number }
   | { k: "status"; ref: Ref; text: string }
-  | { k: "break"; uid: number }
   | { k: "freeze"; uid: number }
   | { k: "cancel"; uid: number; reason: string }
   | { k: "charge"; uid: number; move: string }
   | { k: "enemyAct"; uid: number; move: string }
   | { k: "spiritAct"; id: string; card: string }
-  | { k: "awaken"; id: string }
-  | { k: "awakenEnd"; id: string }
+  | { k: "release"; id: string }
+  | { k: "releaseEnd"; id: string }
   | { k: "downed"; id: string }
   | { k: "enemyDead"; uid: number }
   | { k: "phase2"; uid: number };
@@ -121,7 +119,6 @@ export class Battle {
   private eyeOfStorm = 0;
   private nextUid = 10000;
   private inEnemyTurn = false;
-  private turnEnding = false;
 
   constructor(
     runSpirits: RunSpirit[],
@@ -134,15 +131,15 @@ export class Battle {
       this.spirits.push({
         id: rs.id, def: spiritDef(rs.id), run: rs, personality: activePersonality(rs),
         hp: rs.hp, maxHp: maxHpOf(rs), block: 0, thorns: 0, taunt: false, keepBlock: false, empower: 0,
-        status: newStatus(), sync: rs.startSync, awaken: 0, critPity: 0, downed: rs.hp <= 0,
+        status: newStatus(), release: 0, releaseUsed: false, critPity: 0, downed: rs.hp <= 0,
         auras: new Map(), playedThisTurn: 0, stubbornUsed: false,
       });
     }
     enemyIds.forEach((id, i) => {
       const def = enemyDef(id);
       this.enemies.push({
-        uid: i + 1, def, hp: def.hp, maxHp: def.hp, block: 0, shield: def.shield, maxShield: def.shield,
-        broken: false, skip: false, skipReason: "", status: newStatus(), patternIdx: 0, phase: 1,
+        uid: i + 1, def, hp: def.hp, maxHp: def.hp, block: 0,
+        skip: false, skipReason: "", status: newStatus(), patternIdx: 0, phase: 1,
         charging: false, bonusDmg: 0, dead: false,
       });
     });
@@ -186,8 +183,8 @@ export class Battle {
     const def = cardDef(c.cardId);
     let cost = def.cost + c.tempCostDelta;
     const owner = this.spirit(c.owner);
-    const down = (C.awaken_cost_down as Record<string, number>)[owner.id];
-    if (owner.awaken > 0 && down) cost -= down;
+    const down = (C.release_cost_down as Record<string, number>)[owner.id];
+    if (owner.release > 0 && down) cost -= down;
     if (this.eyeOfStorm > 0 && this.playedThisTurn.length === this.eyeOfStorm - 1) cost = 0;
     return Math.max(0, cost);
   }
@@ -259,7 +256,7 @@ export class Battle {
     this.repeatNext = null;
     this.log(`── ${this.turn}턴 ──`);
     for (const s of this.aliveSpirits()) {
-      const keep = s.keepBlock || (s.awaken > 0 && (C.awaken_keep_block as string[]).includes(s.id));
+      const keep = s.keepBlock || (s.release > 0 && (C.release_keep_block as string[]).includes(s.id));
       if (!keep) s.block = 0;
       s.thorns = 0;
       s.taunt = false;
@@ -272,6 +269,13 @@ export class Battle {
     this.mana = C.mana_per_turn + this.nextTurnMana;
     this.nextTurnMana = 0;
     this.drawCards(C.hand_draw);
+    if (this.turn === 1) {
+      for (const s of this.aliveSpirits()) {
+        if (s.personality?.id !== "cheerful") continue;
+        this.drawCards(s.personality.value ?? 1);
+        this.log(`${s.def.name}(명랑): 카드 ${s.personality.value ?? 1}장 더 뽑음`);
+      }
+    }
 
     for (const s of this.aliveSpirits()) {
       if (s.personality?.id !== "playful") continue;
@@ -302,14 +306,6 @@ export class Battle {
 
   endTurn() {
     if (this.result !== "ongoing" || this.inEnemyTurn) return;
-    // 싱크로 콤보 보너스. 여기서 각성하면 다음 턴부터 2턴을 온전히 쓰도록 1턴 더 줘요.
-    this.turnEnding = true;
-    for (const s of this.aliveSpirits()) {
-      if (s.playedThisTurn >= C.sync_combo_min_cards) {
-        this.addSync(s, C.sync_combo_bonus, "콤보");
-      }
-    }
-    this.turnEnding = false;
     // 정령 턴 끝: 화상, 재생, 라딕스
     for (const s of this.aliveSpirits()) {
       if (s.status.burn > 0) {
@@ -355,12 +351,11 @@ export class Battle {
     };
     for (const s of this.spirits) {
       tick(s.status);
-      if (s.awaken > 0) {
-        s.awaken--;
-        if (s.awaken === 0) {
-          s.sync = 0;
-          this.events.push({ k: "awakenEnd", id: s.id });
-          this.log(`${s.def.name} 각성 끝`);
+      if (s.release > 0) {
+        s.release--;
+        if (s.release === 0) {
+          this.events.push({ k: "releaseEnd", id: s.id });
+          this.log(`${s.def.name} 해방 끝`);
         }
       }
     }
@@ -396,15 +391,10 @@ export class Battle {
       }
       e.patternIdx++;
     }
-    // 적 턴 끝: 화상, 브레이크 해제
+    // 적 턴 끝: 화상
     if (!e.dead && e.status.burn > 0) {
       this.hurtEnemy(e, round(e.status.burn * this.vulnMult(e.status)), true);
       e.status.burn = Math.max(0, e.status.burn - 1);
-    }
-    if (!e.dead && e.broken) {
-      e.broken = false;
-      e.shield = e.maxShield;
-      this.log(`${e.def.name}: 실드 다시 참`);
     }
   }
 
@@ -414,7 +404,7 @@ export class Battle {
     if (rule === "all") return alive;
     const taunt = alive.find((s) => s.taunt);
     if (taunt) return [taunt];
-    const glacies = alive.find((s) => s.awaken > 0 && (C.awaken_taunt as string[]).includes(s.id));
+    const glacies = alive.find((s) => s.release > 0 && (C.release_taunt as string[]).includes(s.id));
     if (glacies) return [glacies];
     if (rule === "front") return [alive.find((s) => s.id === this.frontId) ?? alive[0]];
     if (rule === "lowest") return [alive.slice().sort((a, b) => a.hp - b.hp)[0]];
@@ -546,9 +536,6 @@ export class Battle {
       this.resolve(def, c, owner, resolveTargets(), comboCount);
     }
 
-    // 싱크로율
-    this.addSync(owner, C.sync_per_card * (this.stat(owner, "sync") / C.stat_base), null);
-
     // 고집: 같은 턴 두 번째 카드면 복사본
     if (
       owner.personality?.id === "stubborn" && !c.isCopy && !owner.stubbornUsed &&
@@ -615,12 +602,12 @@ export class Battle {
         break;
       }
       case "block": {
-        const v = scale(withGrow(op.value), guard);
+        const v = round(scale(withGrow(op.value), guard) * this.kindMult(owner));
         for (const s of tg.allies) this.gainBlock(s, v);
         break;
       }
       case "heal": {
-        const v = round(scale(withGrow(op.value), focus) * this.healMult(owner));
+        const v = round(scale(withGrow(op.value), focus) * this.healMult(owner) * this.kindMult(owner));
         for (const s of tg.allies) this.healSpirit(s, v);
         break;
       }
@@ -649,7 +636,7 @@ export class Battle {
         break;
       case "chill": {
         let v = scale(withGrow(op.value), focus);
-        if (owner.awaken > 0) v *= (C.awaken_chill_mult as Record<string, number>)[owner.id] ?? 1;
+        if (owner.release > 0) v *= (C.release_chill_mult as Record<string, number>)[owner.id] ?? 1;
         for (const e of tg.enemies) if (!e.dead) this.addChill(e, v);
         break;
       }
@@ -714,10 +701,6 @@ export class Battle {
       case "manaNextTurn":
         this.nextTurnMana += op.value;
         break;
-      case "sync":
-        // 함께 외치기(아군 전체)는 모두가 받아요 (문구 의도, 0022)
-        for (const s of tg.allies.length ? tg.allies : [owner]) this.addSync(s, op.value, null);
-        break;
       case "aura":
         if (op.aura === "eye_of_storm") this.eyeOfStorm = op.value;
         else owner.auras.set(op.aura, (owner.auras.get(op.aura) ?? 0) + op.value);
@@ -736,12 +719,18 @@ export class Battle {
   }
 
   private healMult(owner: BSpirit) {
-    return owner.awaken > 0 ? ((C.awaken_heal_mult as Record<string, number>)[owner.id] ?? 1) : 1;
+    return owner.release > 0 ? ((C.release_heal_mult as Record<string, number>)[owner.id] ?? 1) : 1;
+  }
+
+  /** 다정: 아군에게 거는 회복·방어도가 늘어요. */
+  private kindMult(owner: BSpirit) {
+    const p = owner.personality;
+    return p?.id === "kind" ? (p.mult ?? 1) : 1;
   }
 
   private burnAmount(owner: BSpirit, v: number) {
     v += owner.auras.get("blaze_wing") ?? 0;
-    if (owner.awaken > 0) v *= (C.awaken_burn_mult as Record<string, number>)[owner.id] ?? 1;
+    if (owner.release > 0) v *= (C.release_burn_mult as Record<string, number>)[owner.id] ?? 1;
     return v;
   }
 
@@ -753,29 +742,15 @@ export class Battle {
   private cardHit(owner: BSpirit, e: BEnemy, base: number, element: Element, noPower: boolean) {
     const power = noPower ? C.stat_base : this.stat(owner, "power");
     const aff = affinity(element, e.def.element);
-    const chance = C.crit_base + owner.critPity + (e.broken ? C.break_crit_bonus : 0);
+    const chance = C.crit_base + owner.critPity;
     const crit = this.rng.next() < chance;
     owner.critPity = crit ? 0 : owner.critPity + C.crit_pity;
-    const awaken = owner.awaken > 0 ? ((C.awaken_damage_mult as Record<string, number>)[owner.id] ?? 1) : 1;
+    const release = owner.release > 0 ? ((C.release_damage_mult as Record<string, number>)[owner.id] ?? 1) : 1;
     const dmg = round(
       (base + owner.empower) * (power / C.stat_base) * aff * (crit ? C.crit_mult : 1) *
-      this.vulnMult(e.status) * (owner.status.weak > 0 ? C.weak_mult : 1) * awaken,
+      this.vulnMult(e.status) * (owner.status.weak > 0 ? C.weak_mult : 1) * release,
     );
     this.hurtEnemy(e, dmg, false, { crit, weakHit: aff > 1, resist: aff < 1 });
-    if (aff > 1 && !e.dead && e.maxShield > 0 && !e.broken) {
-      e.shield--;
-      if (e.shield <= 0) this.breakEnemy(e);
-    }
-  }
-
-  private breakEnemy(e: BEnemy) {
-    e.shield = 0;
-    e.broken = true;
-    const wasCharging = e.charging;
-    e.skip = true;
-    e.skipReason = "브레이크";
-    this.events.push({ k: "break", uid: e.uid });
-    this.log(`${e.def.name} 브레이크${wasCharging ? " · 캐스팅 끊김" : ""}`);
   }
 
   private addChill(e: BEnemy, v: number) {
@@ -814,10 +789,8 @@ export class Battle {
       e.phase = 2;
       e.patternIdx = 0;
       e.charging = false;
-      e.broken = false;
-      e.maxShield = e.shield = p2.shield;
       this.events.push({ k: "phase2", uid: e.uid });
-      this.log(`${e.def.name} 분노: 2페이즈, 실드 ${p2.shield}칸`);
+      this.log(`${e.def.name} 분노: 2페이즈`);
     }
   }
 
@@ -838,8 +811,7 @@ export class Battle {
     s.downed = true;
     s.block = 0;
     s.status = newStatus();
-    s.awaken = 0;
-    s.sync = 0;
+    s.release = 0;
     this.events.push({ k: "downed", id: s.id });
     this.log(`${s.def.name} 기절 · 카드 봉인`);
     this.sealCardsOf(s.id);
@@ -873,18 +845,20 @@ export class Battle {
     this.events.push({ k: "heal", ref: { side: "s", id: s.id }, amount: amt });
   }
 
-  private addSync(s: BSpirit, amt: number, src: string | null) {
-    if (s.downed || s.awaken > 0) return;
-    s.sync = Math.min(100, s.sync + amt);
-    if (src) this.log(`${s.def.name} 싱크로 ${src} +${amt}%p`);
-    if (s.sync >= 100) {
-      s.awaken = C.awaken_duration + (this.turnEnding ? 1 : 0);
-      this.events.push({ k: "awaken", id: s.id });
-      this.log(`✦ ${s.def.name} 각성: ${s.def.awaken.name}`);
-      if (s.personality?.id === "cheerful") {
-        for (const o of this.aliveSpirits()) if (o !== s) this.addSync(o, s.personality.value ?? C.cheerful_sync, "명랑");
-      }
-    }
+  /** 해방할 수 있는지: 각성체만, 전투마다 한 번, 내 턴에. 마력은 들지 않아요(시간축이 들어오면 칸 비용, 0036). */
+  canRelease(id: string): boolean {
+    const s = this.spirit(id);
+    return this.result === "ongoing" && !this.inEnemyTurn && !s.downed && !s.releaseUsed && s.run.stage === "awakened";
+  }
+
+  release(id: string): boolean {
+    if (!this.canRelease(id)) return false;
+    const s = this.spirit(id);
+    s.releaseUsed = true;
+    s.release = C.release_duration;
+    this.events.push({ k: "release", id: s.id });
+    this.log(`✦ ${s.def.name} 해방: ${s.def.release.name}`);
+    return true;
   }
 
   drawCards(n: number) {

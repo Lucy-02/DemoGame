@@ -4,10 +4,7 @@
   "hand_max": 10,
   "party_size": 3,
   "stat_base": 10,
-  "sync_per_card": 10,
-  "sync_combo_min_cards": 2,
-  "sync_combo_bonus": 15,
-  "awaken_duration": 2,
+  "release_duration": 2,
   "vuln_base": 0.25,
   "vuln_focus_step": 0.05,
   "vuln_cap": 0.6,
@@ -25,17 +22,16 @@
     "fire": "forest",
     "forest": "water"
   },
-  "break_crit_bonus": 0.2,
   "crit_base": 0.05,
   "crit_mult": 1.5,
   "crit_pity": 0.02,
-  "awaken_damage_mult": {
+  "release_damage_mult": {
     "fire_fox": 1.5
   },
-  "awaken_burn_mult": {
+  "release_burn_mult": {
     "fire_fox": 2
   },
-  "awaken_heal_mult": {},
+  "release_heal_mult": {},
   "reward": {
     "gold_normal": [
       15,
@@ -73,15 +69,14 @@
   },
   "rest_heal_pct": 0.3,
   "start_gold": 60,
-  "awaken_taunt": [
+  "release_taunt": [
     "glass_salamander"
   ],
-  "awaken_keep_block": [
+  "release_keep_block": [
     "glass_salamander"
   ],
-  "awaken_cost_down": {},
-  "cheerful_sync": 30,
-  "awaken_chill_mult": {
+  "release_cost_down": {},
+  "release_chill_mult": {
     "mist_cat": 2
   }
 }

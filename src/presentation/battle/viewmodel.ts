@@ -33,7 +33,6 @@ export interface AllyVM {
   /** 이번 적 차례에 받을 피해 합계 */
   incoming?: number;
   statuses: StatusVM[];
-  sync: number;
   front?: boolean;
 }
 
@@ -50,8 +49,6 @@ export interface EnemyVM {
   weakTo: IconId;
   statuses: StatusVM[];
   intent: IntentVM;
-  /** 차징 중인 적의 실드 칸: broken칸 깨짐 / total칸 */
-  shield?: { broken: number; total: number };
   hovered?: boolean;
   /** 호버 중일 때 뜨는 설명 (정본 .etip) */
   tip?: EnemyTipVM;
@@ -119,8 +116,6 @@ export interface EnemyOutcomeVM {
   hits: number[];
   block?: Change;
   hp: Change;
-  /** 이번에 깰 실드 칸 수 */
-  shieldBreak?: number;
   /** 차징이 끊기면 의도 알약·순서표에 끊김 표시 */
   cut?: boolean;
 }

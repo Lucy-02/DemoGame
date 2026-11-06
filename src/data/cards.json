@@ -37,7 +37,5 @@
   {"id": "step_forward", "name": "앞으로 나서기", "nameEn": "Step Up", "element": "none", "role": "guard", "rarity": "common", "cost": 0, "target": "self", "effects": [{"op": "moveFront"}, {"op": "block", "value": 4}], "unlock": "start"},
   {"id": "cheer", "name": "응원", "nameEn": "Cheer", "element": "none", "role": "support", "rarity": "common", "cost": 0, "target": "ally", "effects": [{"op": "empower", "value": 3}], "unlock": "start"},
   {"id": "mend", "name": "보살핌", "nameEn": "Mend", "element": "none", "role": "support", "rarity": "common", "cost": 1, "target": "ally", "effects": [{"op": "heal", "value": 4}], "unlock": "start"},
-  {"id": "rally", "name": "함께 외치기", "nameEn": "Rally", "element": "none", "role": "support", "rarity": "common", "cost": 1, "target": "allAllies", "effects": [{"op": "sync", "value": 10}], "unlock": "start"},
-  {"id": "deep_breath", "name": "깊은 숨", "nameEn": "Deep Breath", "element": "none", "role": "support", "rarity": "advanced", "cost": 1, "target": "self", "effects": [{"op": "heal", "value": 3}, {"op": "draw", "value": 1}], "unlock": "start"},
-  {"id": "attune", "name": "교감", "nameEn": "Attune", "element": "none", "role": "support", "rarity": "advanced", "cost": 1, "target": "self", "effects": [{"op": "sync", "value": 20}, {"op": "draw", "value": 1}], "unlock": "any_adult"}
+  {"id": "deep_breath", "name": "깊은 숨", "nameEn": "Deep Breath", "element": "none", "role": "support", "rarity": "advanced", "cost": 1, "target": "self", "effects": [{"op": "heal", "value": 3}, {"op": "draw", "value": 1}], "unlock": "start"}
 ]

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CARDS, GROWTH } from "./data";
 import {
   addDeed, canEvolve, episodesOpen, evolve, feed, gardenSpirit, grantBattle, isFinalStage, levelOf, newGarden,
-  seeEpisode, startSync, todos, unlockKeys, type Garden,
+  seeEpisode, todos, unlockKeys, type Garden,
 } from "./garden";
 import { Run } from "./run";
 import { baseStat, maxHpOf } from "./stats";
@@ -38,7 +38,7 @@ describe("정원 (0021)", () => {
     expect(evolve(g, "fire_fox")).toBe(g);
     g = addDeed(g, "fire_fox", "freeze", 99);
     expect(fox(g).deed).toBe(0);
-    g = addDeed(g, "fire_fox", "awaken", 3);
+    g = addDeed(g, "fire_fox", "dealt", 150);
     g = evolve(g, "fire_fox");
     expect(fox(g)).toMatchObject({ stage: "awakened", deed: 0 });
     expect(isFinalStage(fox(g))).toBe(true);
@@ -69,19 +69,19 @@ describe("정원 (0021)", () => {
     expect(todos(sal).filter((t) => t.kind === "unlock")).toEqual([{ kind: "unlock", key: "glass_salamander_adult" }]);
   });
 
-  it("먹이기는 재료를 쓰고 싱크만큼 호감도를 올려요. 에피소드는 단계도 필요해요", () => {
+  it("먹이기는 재료를 쓰고 호감도를 올려요. 에피소드는 단계도 필요해요", () => {
     let g = { ...newGarden(1), material: 10 };
     g = feed(g, "mist_cat");
     const cat = gardenSpirit(g, "mist_cat");
     expect(g.material).toBe(10 - GROWTH.feed.cost);
-    expect(cat.affinity).toBe(Math.round((GROWTH.feed.affinity * 12) / 10)); // 안개 고양이 싱크 12
+    expect(cat.affinity).toBe(GROWTH.feed.affinity);
     expect(feed({ ...g, material: 0 }, "mist_cat").material).toBe(0);
     const high = { ...cat, affinity: 999 };
     expect(episodesOpen(high)).toBe(1); // 2화는 성체부터
     expect(episodesOpen({ ...high, stage: "adult" })).toBe(2);
   });
 
-  it("판으로: 단계·레벨·성격·시작 싱크를 정원에서 읽어요", () => {
+  it("판으로: 단계·레벨·성격을 정원에서 읽어요", () => {
     let g = evolve(withExp(newGarden(1), GROWTH.levels[5]), "glass_salamander");
     g = { ...g, spirits: g.spirits.map((s) => ({ ...s, episodes: 2 })) };
     const run = new Run({ seed: 1, frontId: "glass_salamander", garden: g, adult: false, unlockAll: false });
@@ -89,9 +89,6 @@ describe("정원 (0021)", () => {
     expect(sal).toMatchObject({ stage: "adult", level: 6, personality: gardenSpirit(g, "glass_salamander").personality });
     // 수호: HP 32 + 레벨 HP 10 + 단계 HP 6, 가드 13 + 2 (성격 보정 전)
     expect(sal.hp).toBe(maxHpOf(sal));
-    expect(startSync(gardenSpirit(g, "glass_salamander"))).toBe(20);
-    const awakened = { ...gardenSpirit(g, "glass_salamander"), stage: "awakened" as const };
-    expect(startSync(awakened)).toBe(GROWTH.start_sync_cap);
     expect(baseStat({ ...sal, personality: "brave" }, "guard")).toBe(15);
     expect(run.isUnlocked(CARDS.find((c) => c.unlock === "glass_salamander_lv3")!)).toBe(true);
     expect(run.isUnlocked(CARDS.find((c) => c.unlock === "fire_fox_adult")!)).toBe(false);

@@ -29,8 +29,6 @@ export const tokens = {
     "stat": {
       "hp": "TODO_TOKEN",
       "block": "TODO_TOKEN",
-      "shield": "TODO_TOKEN",
-      "sync": "TODO_TOKEN",
       "mana": "TODO_TOKEN"
     },
     "feedback": {
@@ -231,8 +229,6 @@ export const tokens = {
         "intentLabel": "14px",
         "intentTo": "12px",
         "intentAll": "13px",
-        "shieldLabel": "13px",
-        "shieldNum": "14px",
         "cardCost": "14px",
         "cardValue": "22px",
         "cardValueTwo": "15px",
@@ -262,8 +258,7 @@ export const tokens = {
         "pvIncomingFrom": "13px",
         "pvArrow": "12px",
         "pvHp": "17px",
-        "hit": "16px",
-        "cutTag": "13px"
+        "hit": "16px"
       },
       "spirits": {
         "res": "16px",
@@ -511,8 +506,6 @@ export const todoTokens: readonly string[] = [
   "color.role.disrupt",
   "color.stat.hp",
   "color.stat.block",
-  "color.stat.shield",
-  "color.stat.sync",
   "color.stat.mana",
   "color.feedback.damage",
   "color.feedback.heal",

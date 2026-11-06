@@ -2,7 +2,7 @@
 // 화면·저장·전투 결과 받기는 session 층이 이 함수들을 불러서 해요.
 import { CARDS, GROWTH, PERSONALITIES, SPIRITS } from "./data";
 import { Rng } from "./rng";
-import { baseStat, isGrown, round, stageRank } from "./stats";
+import { isGrown, stageRank } from "./stats";
 import type { CardDef, DeedDef, EpisodeDef, EvolutionDef, RunSpirit, Stage } from "./types";
 
 export const GARDEN_VERSION = 1;
@@ -187,8 +187,8 @@ export function seeEpisode(g: Garden, id: string): Garden {
   return withSpirit(g, id, (x) => ({ ...x, episodes: x.episodes + 1 }));
 }
 
-/** 먹이기 한 번에 오르는 호감도: 기본 × 싱크/10 (기획서 v0.2 "싱크 = 호감도 상승량") */
-export const feedGain = (s: GardenSpirit) => round((GROWTH.feed.affinity * baseStat(toRunSpirit(s), "sync")) / 10);
+/** 먹이기 한 번에 오르는 호감도 */
+export const feedGain = (_s: GardenSpirit) => GROWTH.feed.affinity;
 
 export const canFeed = (g: Garden) => g.material >= GROWTH.feed.cost;
 
@@ -200,17 +200,10 @@ export function feed(g: Garden, id: string): Garden {
 
 // ───────────────────────── 판으로 ─────────────────────────
 
-/** 전투를 시작할 때 차 있는 싱크: 단계 + 본 에피소드. 모두 합쳐 상한까지 */
-export function startSync(s: GardenSpirit): number {
-  const fromStage = GROWTH.stage_start_sync[s.stage] ?? 0;
-  const fromBond = GROWTH.episodes.slice(0, s.episodes).reduce((a, ep) => a + (ep.start_sync ?? 0), 0);
-  return Math.min(GROWTH.start_sync_cap, fromStage + fromBond);
-}
-
 /** 정원의 정령을 판의 정령으로. HP는 최대 HP로 채워요 (부르는 쪽에서 maxHpOf로) */
 export function toRunSpirit(s: GardenSpirit): RunSpirit {
   return {
-    id: s.id, hp: 0, maxHpBonus: 0, stage: s.stage, level: levelOf(s.exp), personality: s.personality, startSync: startSync(s),
+    id: s.id, hp: 0, maxHpBonus: 0, stage: s.stage, level: levelOf(s.exp), personality: s.personality,
   };
 }
 

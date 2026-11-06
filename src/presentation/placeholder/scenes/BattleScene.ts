@@ -156,7 +156,7 @@ export class BattleScene extends Phaser.Scene {
     const b = this.battle;
     const half = v.size / 2;
     v.visual.root.setAlpha(s.downed ? 0.3 : 1);
-    if (s.awaken > 0) {
+    if (s.release > 0) {
       const ring = this.add.ellipse(0, 0, v.size * 1.6, v.size * 1.5, ELEMENT_COLOR[s.def.element], 0.18).setStrokeStyle(3, 0xffffff, 0.6);
       h.add(ring);
       this.tweens.add({ targets: ring, scale: 1.08, alpha: 0.6, duration: 500, yoyo: true, repeat: -1 });
@@ -174,9 +174,11 @@ export class BattleScene extends Phaser.Scene {
       h.add(this.add.rectangle(-82, half + 34, 30, 20, COLORS.block).setStrokeStyle(2, 0xffffff));
       h.add(txt(this, -82, half + 34, `${s.block}`, 13, "#fff").setOrigin(0.5));
     }
-    const awakenLeft = Math.min(s.awaken, C.awaken_duration);
-    h.add(bar(this, -65, half + 50, 130, 9, s.awaken > 0 ? 1 : s.sync / 100, s.awaken > 0 ? 0xffd166 : COLORS.sync));
-    h.add(txt(this, 70, half + 50, s.awaken > 0 ? `각성 ${awakenLeft}턴` : `${Math.floor(s.sync)}%`, 11, s.awaken > 0 ? COLORS.gold : "#d6b8ff").setOrigin(0, 0.5));
+    if (s.release > 0) {
+      h.add(txt(this, 0, half + 54, `해방 ${Math.min(s.release, C.release_duration)}턴`, 12, COLORS.gold).setOrigin(0.5));
+    } else if (b.canRelease(s.id)) {
+      h.add(button(this, 0, half + 58, 90, 24, "해방", () => this.releaseSpirit(s.id), { size: 13, disabled: this.busy }));
+    }
     const st: string[] = [];
     if (s.status.burn) st.push(`화상${s.status.burn}`);
     if (s.status.weak) st.push(`약화${s.status.weak}`);
@@ -214,21 +216,7 @@ export class BattleScene extends Phaser.Scene {
       h.add(this.add.rectangle(-82, half + 34, 30, 20, COLORS.block).setStrokeStyle(2, 0xffffff));
       h.add(txt(this, -82, half + 34, `${e.block}`, 13, "#fff").setOrigin(0.5));
     }
-    if (e.maxShield > 0) {
-      if (e.broken) {
-        h.add(txt(this, 0, half + 54, "BREAK!", 15, "#ffe066", { stroke: "#000", strokeThickness: 4, fontStyle: "bold" }).setOrigin(0.5));
-      } else {
-        const n = e.maxShield;
-        for (let i = 0; i < n; i++) {
-          const x = (i - (n - 1) / 2) * 15;
-          const on = i < e.shield;
-          h.add(this.add.rectangle(x, half + 54, 10, 10, on ? COLORS.shield : 0x444444).setAngle(45).setStrokeStyle(1, 0x000000));
-        }
-        h.add(txt(this, n * 7.5 + 8, half + 54, weakBy ? `약점 ${ELEMENT_NAME[weakBy]}` : "", 11, "#ffe9a8").setOrigin(0, 0.5));
-      }
-    } else {
-      h.add(txt(this, 0, half + 54, "실드 없음", 11, COLORS.dim).setOrigin(0.5));
-    }
+    h.add(txt(this, 0, half + 54, weakBy ? `약점 ${ELEMENT_NAME[weakBy]}` : "약점 없음", 11, weakBy ? "#ffe9a8" : COLORS.dim).setOrigin(0.5));
     const st: string[] = [];
     if (e.status.burn) st.push(`화상${e.status.burn}`);
     if (e.status.chill) st.push(`냉기${e.status.chill}/${b.chillThreshold(e)}`);
@@ -322,10 +310,10 @@ export class BattleScene extends Phaser.Scene {
       x = v.root.x + 90;
       y = v.root.y - 120;
       lines.push(`${s.def.name}  (${ELEMENT_NAME[s.def.element]} · ${ROLE_NAME[s.def.role]})`);
-      lines.push(`파워 ${b.stat(s, "power").toFixed(1)}  가드 ${b.stat(s, "guard").toFixed(1)}  포커스 ${b.stat(s, "focus").toFixed(1)}  싱크 ${b.stat(s, "sync").toFixed(1)}`);
+      lines.push(`파워 ${b.stat(s, "power").toFixed(1)}  가드 ${b.stat(s, "guard").toFixed(1)}  포커스 ${b.stat(s, "focus").toFixed(1)}`);
       lines.push(`치명 확률 ${Math.round((C.crit_base + s.critPity) * 100)}% (안 터질 때마다 +2%p)`);
       lines.push(s.personality ? `성격 ${s.personality.name}: ${s.personality.desc}` : "성격 ??? (성체가 되면 공개)");
-      lines.push(`각성 ${s.def.awaken.name}: ${s.def.awaken.desc}`);
+      lines.push(`해방 ${s.def.release.name}: ${s.def.release.desc}${s.run.stage === "awakened" ? "" : " (각성체만)"}`);
     } else {
       const e = b.enemy(ref.uid);
       if (e.dead) return;
@@ -334,8 +322,8 @@ export class BattleScene extends Phaser.Scene {
       y = v.root.y - 140;
       const weakBy = Object.entries(C.affinity_beats as Record<string, string>).find(([, d]) => d === e.def.element)?.[0] as Element | undefined;
       lines.push(`${e.def.name}  (${ELEMENT_NAME[e.def.element]} · ${{ normal: "일반", elite: "엘리트", boss: "보스", minion: "소환수" }[e.def.tier]})`);
-      lines.push(weakBy ? `약점 ${ELEMENT_NAME[weakBy]} ×${C.affinity_weak}, 타격마다 실드 -1` : "약점 없음 (실드 없음)");
-      lines.push(`실드 ${e.shield}/${e.maxShield} · 빙결까지 냉기 ${b.chillThreshold(e)}`);
+      lines.push(weakBy ? `약점 ${ELEMENT_NAME[weakBy]} ×${C.affinity_weak}` : "약점 없음");
+      lines.push(`빙결까지 냉기 ${b.chillThreshold(e)}`);
       const pat = e.phase === 2 && e.def.phase2 ? e.def.phase2.pattern : e.def.pattern;
       lines.push("패턴: " + pat.map((m, i) => `${i === e.patternIdx % pat.length ? "▶" : ""}${m.charge ? "[차징]" : ""}${m.name}`).join(" → "));
       if (e.def.phase2 && e.phase === 1) lines.push(`HP ${e.def.phase2.hpBelow * 100}% 아래에서 2페이즈`);
@@ -381,6 +369,15 @@ export class BattleScene extends Phaser.Scene {
     this.selected = null;
     this.hint.setText("");
     this.battle.play(c.uid, target);
+    const evts = this.battle.drain();
+    this.refresh();
+    this.animate(evts, () => this.afterAction());
+  }
+
+  private releaseSpirit(id: string) {
+    if (this.busy) return;
+    this.cancelSelect();
+    if (!this.battle.release(id)) return;
     const evts = this.battle.drain();
     this.refresh();
     this.animate(evts, () => this.afterAction());
@@ -501,30 +498,24 @@ export class BattleScene extends Phaser.Scene {
         case "status":
           at(40, () => this.float(e.ref, e.text, "#e0b0ff", 17));
           break;
-        case "break":
-          at(80, () => {
-            this.float({ side: "e", uid: e.uid }, "BREAK!", "#ffe066", 36);
-            this.cameras.main.shake(180, 0.01);
-          });
-          break;
         case "freeze":
           at(80, () => this.float({ side: "e", uid: e.uid }, "빙결!", "#9fe8ff", 32));
           break;
         case "phase2":
-          at(300, () => this.banner("그림바크 2페이즈", 0x4a2a1a, "실드 8칸으로 다시 차요. 대지 가르기를 끊을 다단 공격을 아껴두세요."));
+          at(300, () => this.banner("그림바크 2페이즈", 0x4a2a1a, "대지 가르기를 차징해요. 빙결로 끊을 수 있어요."));
           t += 900;
           break;
-        case "awaken": {
+        case "release": {
           const s = this.battle.spirit(e.id);
           at(200, () => {
             this.cameras.main.flash(250, 255, 255, 255);
-            this.banner(`✦ ${s.def.awaken.name} ✦`, ELEMENT_COLOR[s.def.element], `${s.def.name} 각성 · ${s.def.awaken.desc}`);
+            this.banner(`✦ ${s.def.release.name} ✦`, ELEMENT_COLOR[s.def.element], `${s.def.name} 해방 · ${s.def.release.desc}`);
           });
           t += 900;
           break;
         }
-        case "awakenEnd":
-          at(60, () => this.float({ side: "s", id: e.id }, "각성 종료", "#cccccc", 16));
+        case "releaseEnd":
+          at(60, () => this.float({ side: "s", id: e.id }, "해방 종료", "#cccccc", 16));
           break;
         case "downed":
           at(150, () => {

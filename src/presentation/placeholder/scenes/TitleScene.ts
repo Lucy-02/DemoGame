@@ -37,8 +37,8 @@ export class TitleScene extends Phaser.Scene {
       txt(this, x, y + 30, `${d.name}  ·  ${ELEMENT_NAME[d.element]} ${ROLE_NAME[d.role]}`, 20).setOrigin(0.5);
       txt(this, x, y + 56, d.motif, 13, COLORS.dim).setOrigin(0.5);
       const st = d.stats;
-      txt(this, x, y + 90, `HP ${st.hp}  파워 ${st.power}  가드 ${st.guard}\n포커스 ${st.focus}  싱크 ${st.sync}`, 14, COLORS.text, { align: "center" }).setOrigin(0.5);
-      txt(this, x, y + 128, `각성: ${d.awaken.name}`, 13, "#d6b8ff").setOrigin(0.5);
+      txt(this, x, y + 90, `HP ${st.hp}  파워 ${st.power}\n가드 ${st.guard}  포커스 ${st.focus}`, 14, COLORS.text, { align: "center" }).setOrigin(0.5);
+      txt(this, x, y + 128, `해방: ${d.release.name}`, 13, "#d6b8ff").setOrigin(0.5);
       if (sel) txt(this, x, y - 165, "▼ 앞열", 16, COLORS.gold).setOrigin(0.5);
     });
 

@@ -8,9 +8,9 @@ const enemy = { kind: "pick", side: "enemy" } as const;
 const ally = { kind: "pick", side: "ally" } as const;
 const none = [undefined, undefined, undefined];
 
-/** 정본 H1 (.fld-pv): 물방울 휘갈기기로 거북을 때리면 실드 2칸을 다 깨서 해일 차징이 끊겨요 */
+/** 정본 H1 (.fld-pv): 물방울 휘갈기기(브레이크)로 거북을 때리면 해일 차징이 끊겨요 */
 export const canonDropsOnTurtle: OutcomeVM = {
-  enemies: { 2: { hits: [3, 3], block: { from: 4, to: 0 }, hp: { from: 41, to: 39 }, shieldBreak: 2, cut: true } },
+  enemies: { 2: { hits: [3, 3], block: { from: 4, to: 0 }, hp: { from: 41, to: 39 }, cut: true } },
   incoming: [{ from: 18, to: 0 }, { from: 18, to: 0 }, { from: 30, to: 12 }],
 };
 

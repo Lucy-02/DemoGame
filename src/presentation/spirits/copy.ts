@@ -21,7 +21,7 @@ export const COPY = {
   stats: "능력치",
   legendBase: "기본",
   legendStage: "단계 보정",
-  awaken: "각성",
+  release: "해방",
   next: "다음 단계",
   final: "최종 단계",
   exclusive: "전용 카드",
@@ -71,7 +71,7 @@ export const STAGE_LABEL: Record<Stage, string> = {
 
 /** 자람 조건 이름 (0021 2절). 이름은 임시예요 */
 export const DEED_LABEL = {
-  awaken: "전투 중 각성",
+  dealt: "적에게 준 피해",
   blocked: "방어도로 막은 피해",
   freeze: "빙결",
 } as const;
