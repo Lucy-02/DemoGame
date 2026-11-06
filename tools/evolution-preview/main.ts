@@ -45,6 +45,7 @@ const CALM = q.get("look") !== "full";
 const STAGE = q.get("stage") === "none" ? "none" : "reveal";
 // 배경 그림 안에서 정령이 서는 자리(임시, 정령마다 다를 수 있어요): 발판 높이 비율, 성체 키가 배경 높이에서 차지하는 비율
 const STAGE_FOOT_Y = 0.88, STAGE_ADULT_FRAC = 0.75;
+const STAGE_TINT = 0xd4d0d8; // 임시: 배경을 살짝 눌러서 성체가 앞에 서 보이게(Lucy 11/06 "따로 논다")
 // 배경 가장자리 정리(Lucy 11/05, 임시 값): 흰 매트 제거 → 1px 깎기 → 1px 번짐. 비교표는 evolution-staging/bg-edge-techniques.png
 const EDGE = { matte: q.get("matte") !== "0", choke: Number(q.get("choke") ?? 1), feather: Number(q.get("feather") ?? 1) };
 // 이름 띠 뒤 사선 흐림(임시 값): 세기·반복, 흐림이 끝나는 점(x, y)과 꽉 찬 흐림을 유지하는 비율
@@ -115,7 +116,7 @@ class Evolution extends Phaser.Scene {
     const bgGlow = this.add.image(CX, CY, "radial").setDisplaySize(W * 1.3, H * 1.5).setTint(S.color).setAlpha(0.18).setBlendMode(Phaser.BlendModes.ADD);
     // 무대는 유체 발밑(CY + 150)에 바닥이 오게 깔아요. 그림자·비네트가 무대 위로 덮여서 함께 어두워져요.
     if (STAGE !== "none") cleanEdges(this, "stage", "stageSoft");
-    const stage = STAGE !== "none" ? this.add.image(CX, H + 520, "stageSoft").setOrigin(0.5, STAGE_FOOT_Y).setAlpha(0) : undefined;
+    const stage = STAGE !== "none" ? this.add.image(CX, H + 520, "stageSoft").setOrigin(0.5, STAGE_FOOT_Y).setTint(STAGE_TINT).setAlpha(0) : undefined;
 
     // 덜어낸 판의 가운데 영역: 어두운 바탕 위에 속성 빛이 번진 세로 타원
     const shade = this.add.image(CX, CY - 60, "radial").setDisplaySize(760, 860).setTint(0x000000).setAlpha(0);
@@ -334,9 +335,10 @@ class Evolution extends Phaser.Scene {
   private stageTarget(n: number) {
     const m = this.stage;
     if (!m) return [];
-    const adultDisplayH = 1180; // calmTarget의 공개 박자 성체 키(closeScale)와 같아요
+    // 성체와 한 몸처럼: 성체의 키·자리를 그대로 따라가요. 변화 박자(성체 640px, CY+300)에서 공개 박자(1180px, H+520)로 같이 밀려 들어와요.
+    const adultDisplayH = n >= 5 ? 1180 : 640; // calmTarget의 adultScale·closeScale과 같아요
     const scale = adultDisplayH / STAGE_ADULT_FRAC / m.height;
-    return [{ t: m, alpha: n >= 5 ? 1 : 0, scale: n >= 5 ? scale : scale * 0.96, x: n >= 6 ? CX - 250 : CX, y: H + 520 }];
+    return [{ t: m, alpha: n >= 5 ? 1 : 0, scale, x: n >= 6 ? CX - 250 : CX, y: n >= 5 ? H + 520 : CY + 300 }];
   }
 
   private go(n: number) {
@@ -358,6 +360,18 @@ class Evolution extends Phaser.Scene {
     this.enter(n);
   }
 
+  /** 덜어낸 판의 움직임 곡선(Lucy 11/06 "easing 적절히"). 나타남은 빨리 시작해 천천히 멈추고(out), 사라짐·배경 조명은 부드럽게(inOut). */
+  private calmEase(t: object, n: number) {
+    const o = this.o;
+    const body = [o.adult, o.adultSil, this.stage];
+    if (body.includes(t as never)) return n === 5 ? "Cubic.out" : n === 6 ? "Quart.inOut" : "Sine.inOut"; // 공개: 밀려 들어와 멈춤, 정리: 옆으로 비켜섬
+    if (t === o.panel) return "Cubic.out";
+    if (t === o.band || t === this.blurCam) return n === 5 ? "Sine.out" : "Sine.in";
+    if ([o.crest, o.role, o.roleText, o.elText].includes(t as never)) return n === 3 ? "Cubic.out" : "Sine.in";
+    if (t === o.baby) return "Sine.out";
+    return "Sine.inOut";
+  }
+
   private enter(n: number) {
     const o = this.o, d = DUR[n] || 900, cam = this.cameras.main;
     const ease: Record<string, string> = CALM ? {} : { crest: "Back.out", role: "Bounce.out" };
@@ -365,7 +379,7 @@ class Evolution extends Phaser.Scene {
     for (const { t, ...props } of this.target(n)) {
       const key = t === o.crest ? "crest" : t === o.role ? "role" : "";
       const dur = t === o.role ? 700 : t === o.wipe ? d * 0.8 : t === (o.adultSil as object) && n === 5 ? d * 0.8 : d * 0.7;
-      this.tweens.add({ targets: t, ...props, duration: dur, ease: ease[key] ?? "Sine.inOut", delay: t === o.role ? 150 : 0 });
+      this.tweens.add({ targets: t, ...props, duration: dur, ease: ease[key] ?? (CALM ? this.calmEase(t, n) : "Sine.inOut"), delay: t === o.role ? 150 : 0 });
     }
     if (n === 1 && !CALM) o.gather.start();
     if (n === 2 && !CALM) this.ripple(1.0);
