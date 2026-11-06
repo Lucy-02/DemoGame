@@ -13,7 +13,8 @@ if (!previewDir || !outDir) { console.error("usage: card-preview.mjs <previews> 
 fs.mkdirSync(outDir, { recursive: true });
 
 const raw = JSON.parse(fs.readFileSync(path.join(previewDir, "index.json"), "utf8"));
-const entries = Array.isArray(raw) ? raw : Object.entries(raw).map(([case_id, v]) => ({ case_id, ...v }));
+const src = raw.cases ?? raw;
+const entries = Array.isArray(src) ? src : Object.entries(src).map(([case_id, v]) => ({ case_id, ...v }));
 const briefsPath = process.env.BRIEFS || path.join(root, "design/card/art/rounds/r1/briefs.json");
 const briefs = JSON.parse(fs.readFileSync(briefsPath, "utf8"));
 const names = Object.fromEntries(briefs.cards.map((c) => [c.id, c.name]));
@@ -76,7 +77,9 @@ await page.evaluate((cards) => {
     el.classList.remove("off");
     const win = el.querySelector(".win");
     const ws = el.querySelector(".winsvg");
-    const d = ws.querySelector("path").getAttribute("d");
+    // 정본 별 윗선 path는 오른쪽 위 꼭짓점(84,11)이 빠져 오른쪽이 비스듬히 잘려요(layout.ts도 같음). 미리보기에서는 꼭짓점을 넣어 창 전체를 보여요.
+    const d = ws.querySelector("path").getAttribute("d").replace("L69.0 11 L84 85", "L69.0 11 L84 11 L84 85").replace("L168.1 22 L208 145", "L168.1 22 L208 22 L208 145");
+    ws.querySelector("path").setAttribute("d", d);
     const w = +ws.getAttribute("width"), h = +ws.getAttribute("height");
     el.querySelector(".ai").remove();
     const art = document.createElement("img");
