@@ -1,5 +1,6 @@
 export type Element = "fire" | "water" | "forest" | "wind" | "none";
-export type StatKey = "hp" | "power" | "guard" | "focus";
+/** 능력치. 스피드는 카드 시간을 나누는 값이에요 (시간 = 카드 기본 시간 ÷ 스피드, 0036). */
+export type StatKey = "hp" | "power" | "guard" | "focus" | "speed";
 export type Rarity = "basic" | "common" | "advanced" | "rare";
 export type CardTarget = "enemy" | "allEnemies" | "self" | "ally" | "allAllies";
 
