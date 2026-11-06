@@ -7,6 +7,7 @@
 # 무료 범위만: 1024×1024, 28스텝, n_samples 1, 베이스 이미지·레퍼런스 없음. 이 스크립트가 그 밖의 값을 넣지 않아요.
 import argparse
 import json
+import re
 import sys
 
 FREE = {"width": 1024, "height": 1024, "steps": 28}
@@ -20,6 +21,34 @@ def load_presets(path):
     return {p["key"]: p for p in items if isinstance(p, dict) and "key" in p}
 
 
+# "clean" 모드에서 떼는 캐릭터용 태그 (R1 평가: 사물 카드에서 초상·피부 쪽으로 끌고, 작고 여백 있는 그림과 반대로 감)
+CHAR_TAGS = {
+    "shiny skin", "masterpiece portrait", "skindentation", "oiled skin", "mature female", "flat color",
+    "simple illustration", "chibi", "loli, child, chibi", "beautiful gunbari", "hyper detail", "super detail",
+    "intricate details", "detailed incredibly absurdres", "very detailed",
+}
+UC_DROP = {"negative space", "blank page"}
+
+
+def strip_tags(text, drop):
+    out = []
+    for tok in text.split(","):
+        lead = tok[: len(tok) - len(tok.lstrip(" {"))]
+        trail = tok[len(tok.rstrip(" }")):]
+        core = tok.strip(" {}")
+        bare = core.split("::", 1)[1] if "::" in core and core.split("::", 1)[0].replace(".", "").lstrip("-").isdigit() else core
+        bare = bare.rstrip(":").strip()
+        if bare in drop:
+            keep = lead.strip(" ") + trail.strip(" ")
+            if keep:
+                out.append(" " + keep)
+            continue
+        out.append(tok)
+    res = ",".join(out)
+    res = re.sub(r"(\{+)\s*,\s*", r"\1", res)
+    return re.sub(r",\s*(\}+)", r"\1", res)
+
+
 def join(*parts):
     return ", ".join(p.strip().strip(",") for p in parts if p and p.strip().strip(","))
 
@@ -29,7 +58,7 @@ def main():
     ap.add_argument("briefs")
     ap.add_argument("presets")
     ap.add_argument("--owner-style", nargs="+", required=True, help="owner=key ...")
-    ap.add_argument("--alt-style", required=True)
+    ap.add_argument("--alt-style", default="#15")
     ap.add_argument("--fallback-alt", default="b07_v2", help="owner 화풍이 alt와 같을 때 쓸 비교 화풍")
     ap.add_argument("--name")
     a = ap.parse_args()
@@ -44,7 +73,29 @@ def main():
     c = b["common"]
     seen = set()
     cases = []
-    for card in b["cards"]:
+    if "variants" in b:
+        for card in b["cards"]:
+            own = owner_style[card["owner"]]
+            p = presets[own]
+            comp = c["composition_C"] if card["comp"] == "C" else c["composition"]
+            uc_card = c["uc_C"] if card["comp"] == "C" else c["uc"]
+            for v in card.get("variants", b["variants"]):
+                prefix, suffix, neg = p.get("prefix", ""), p.get("suffix", ""), p.get("negative", "")
+                params = dict(p.get("params", {}) or {})
+                if v["mode"] == "clean":
+                    prefix, suffix = strip_tags(prefix, CHAR_TAGS), strip_tags(suffix, CHAR_TAGS)
+                    neg = strip_tags(neg, UC_DROP)
+                    params["skip_cfg_above_sigma"] = None
+                prompt = join(prefix, card["subject"], comp, b["tones"][card["owner"]], suffix, c["quality"])
+                uc = join(uc_card, card.get("uc_extra", ""), neg)
+                for seed in card.get("seeds", b["seeds"]):
+                    cases.append({
+                        "case_id": f"{card['id']}-{card['comp']}-{v['tag']}-s{seed}",
+                        "prompt": prompt, "uc": uc, "seed": seed,
+                        "scale": params.get("scale", 6), "cfg_rescale": params.get("cfg_rescale", 0.1),
+                        "skip_cfg_above_sigma": params.get("skip_cfg_above_sigma"),
+                    })
+    for card in ([] if "variants" in b else b["cards"]):
         main_variant = card["id"] not in seen
         seen.add(card["id"])
         own = owner_style[card["owner"]]
