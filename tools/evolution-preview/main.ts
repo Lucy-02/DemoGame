@@ -28,7 +28,7 @@ const ROLE: Record<Role, string> = { guard: "수호", attack: "공격", support:
 const q0 = new URLSearchParams(location.search);
 // 덜어낸 판(Lucy 11/04): 유체 희미해짐 → 가운데 그림자 영역 → 가운데 속성·역할 → 성체 실루엣 → 공개 → 정리. 조금 빠르게.
 const BEATS = q0.get("look") !== "full" ? ["대기", "희미해짐", "그림자", "속성·역할", "변화", "공개", "정리"] : ["대기", "모임", "속성", "역할", "변화", "공개", "정리"];
-const DUR = q0.get("look") !== "full" ? [0, 700, 800, 1300, 1300, 1500, 0] : [0, 1500, 1700, 1500, 2600, 2200, 0]; // ms, 임시
+const DUR = q0.get("look") !== "full" ? [0, 700, 800, 1300, 1000, 1500, 0] : [0, 1500, 1700, 1500, 2600, 2200, 0]; // ms, 임시. 변화 박자 1300→1000(Lucy 11/06)
 const W = 1280, H = 720, CX = W / 2, CY = H * 0.56;
 const FONT = "Orbit, Pretendard, sans-serif";
 
@@ -171,7 +171,7 @@ class Evolution extends Phaser.Scene {
     // 컷신은 무엇으로 자라는지만 보여줘요. 이미 아는 유체 정보(역할 등)는 띄우지 않아요(Lucy 11/04).
     // 아이콘마다 아래에 한글 이름을 달아요: 속성 아래 속성 이름, 역할 아래 역할 이름(Lucy 11/04).
     const label = (x: number, y: number, t: string, color: string) => this.add.text(x, y, t, {
-      fontFamily: FONT, fontSize: "26px", color, stroke: "#000000", strokeThickness: 6,
+      fontFamily: FONT, fontSize: "26px", color, // 테두리 없음(Lucy 11/06)
     }).setOrigin(0.5).setAlpha(0);
     const roleText = label(CALM ? CX + 72 : CX, CALM ? CY - 2 : CY - 330, ROLE[B.role], "#f4eef2");
     const elText = label(CX - 72, CY - 2, S.elName, "#" + S.color.toString(16));
@@ -220,6 +220,8 @@ class Evolution extends Phaser.Scene {
     this.zone = zone;
     this.shade = shade;
     this.stage = stage;
+    // 속성·역할 아이콘과 글자는 실루엣보다 위에 그려요. 아래에 있으면 실루엣이 차오르면서 먼저 덮여 일찍 사라져 보여요(Lucy 11/06).
+    for (const g of [crest, role, roleText, elText]) (g as unknown as Phaser.GameObjects.Components.Depth).setDepth(10);
     this.o = { bgGlow, rays, crest, ring, baby, babySil, adult, adultSil, role, roleText, elText, band, nameSmall, name, roleChip, panel, caption, gather, burst, motes, babyGlow, silGlow, wipe, vignette };
 
     // 유체 숨쉬기
@@ -378,8 +380,10 @@ class Evolution extends Phaser.Scene {
     // 기본: 모든 값을 이번 박자 목표로 부드럽게
     for (const { t, ...props } of this.target(n)) {
       const key = t === o.crest ? "crest" : t === o.role ? "role" : "";
-      const dur = t === o.role ? 700 : t === o.wipe ? d * 0.8 : t === (o.adultSil as object) && n === 5 ? d * 0.8 : d * 0.7;
-      this.tweens.add({ targets: t, ...props, duration: dur, ease: ease[key] ?? (CALM ? this.calmEase(t, n) : "Sine.inOut"), delay: t === o.role ? 150 : 0 });
+      // 역할 아이콘은 나타날 때만 살짝 늦게 와요. 사라질 땐 속성 아이콘·글자와 같은 시간에 같이 사라져요(Lucy 11/06).
+      const roleIn = t === o.role && n === 3;
+      const dur = roleIn ? 700 : t === o.wipe ? d * 0.8 : t === (o.adultSil as object) && n === 5 ? d * 0.8 : d * 0.7;
+      this.tweens.add({ targets: t, ...props, duration: dur, ease: ease[key] ?? (CALM ? this.calmEase(t, n) : "Sine.inOut"), delay: roleIn ? 150 : 0 });
     }
     if (n === 1 && !CALM) o.gather.start();
     if (n === 2 && !CALM) this.ripple(1.0);
