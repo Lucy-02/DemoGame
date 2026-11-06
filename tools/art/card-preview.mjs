@@ -109,7 +109,7 @@ await page.evaluate((cards) => {
     g.innerHTML = `<h2>${id} ${list[0].name}</h2>`;
     const row = document.createElement("div"); row.className = "row";
     for (const c of list) {
-      const v = document.createElement("div"); v.className = "v";
+      const v = document.createElement("div"); v.className = "v"; v.dataset.case = c.case_id;
       const pair = document.createElement("div"); pair.className = "pair";
       pair.append(mk(hTpl, c, false), mk(hTpl, c, true), mk(xTpl, c, false));
       const cap = document.createElement("div"); cap.className = "cap"; cap.textContent = `${c.case_id} ${c.styleKey}`;
@@ -127,6 +127,11 @@ await page.waitForLoadState("networkidle");
 await page.waitForTimeout(500);
 await page.locator(".sheet").screenshot({ path: path.join(outDir, `sheet@${dpr}x.png`) });
 await page.locator("#hand").screenshot({ path: path.join(outDir, `hand@${dpr}x.png`) });
+// PER_CARD=1이면 후보마다 카드 묶음(손패·흑백·확대)을 따로 저장해요 (보드용, 2x만).
+if (process.env.PER_CARD && dpr === 2) {
+  fs.mkdirSync(path.join(outDir, "cards"), { recursive: true });
+  for (const c of cards) await page.locator(`.v[data-case="${c.case_id}"] .pair`).screenshot({ path: path.join(outDir, "cards", `${c.case_id}.png`) });
+}
 await page.close();
 }
 await browser.close();
