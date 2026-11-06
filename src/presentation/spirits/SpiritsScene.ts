@@ -72,6 +72,8 @@ export class SpiritsScene extends Phaser.Scene {
 
   create() {
     const off = this.session.onChange(() => this.redraw());
+    // 다시 그리면 입력 대상이 새로 생겨요. 마우스를 움직이지 않아도 그 위의 커서를 유지해요
+    this.input.setPollAlways();
     this.reveal(this.selected);
     // 아래 띠 위에서 휠을 굴리면 타일을 한 칸씩 넘겨요
     this.input.on("wheel", (p: Phaser.Input.Pointer, _o: unknown, dx: number, dy: number) => {
@@ -101,7 +103,8 @@ export class SpiritsScene extends Phaser.Scene {
 
   private paint() {
     this.tweens.killAll();
-    this.children.removeAll(true);
+    // children.removeAll(true)는 안 돼요: true가 "콜백 건너뛰기"라서 파괴되지 않고, 퍼핏은 계속 돌고 버튼은 계속 눌려요
+    for (const o of [...this.children.list]) o.destroy();
     const vm = spiritsVM(this.session.state, this.selected, this.mocks);
     const d = vm.detail;
     const before = this.swapPending && this.shown?.id !== vm.selected ? this.shown : undefined;

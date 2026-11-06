@@ -169,6 +169,7 @@ function sharedFor(gl: WebGLRenderingContext, core: PuppetCore): Shared {
 type VaoGL = WebGLRenderingContext & {
   createVertexArray(): WebGLVertexArrayObject;
   bindVertexArray(vao: WebGLVertexArrayObject | null): void;
+  deleteVertexArray(vao: WebGLVertexArrayObject): void;
 };
 
 export class PuppetObject extends Phaser.GameObjects.Extern {
@@ -180,6 +181,7 @@ export class PuppetObject extends Phaser.GameObjects.Extern {
   private readonly tex: PuppetTexture;
   private res: Shared | null = null;
   private vaos: WebGLVertexArrayObject[] = [];
+  private gl?: VaoGL;
   private acc = 0;
   private readonly uJ = new Float32Array(MAX_JOINTS * 4);
   private readonly uB = new Float32Array(MAX_BUNDLES * 4);
@@ -214,7 +216,14 @@ export class PuppetObject extends Phaser.GameObjects.Extern {
     }
   }
 
+  /** 오브젝트마다 만든 VAO만 지워요. 버퍼·프로그램은 같은 리그끼리 나눠 써서 남겨요 */
+  preDestroy(): void {
+    for (const vao of this.vaos) this.gl?.deleteVertexArray(vao);
+    this.vaos = [];
+  }
+
   private init(gl: VaoGL): void {
+    this.gl = gl;
     this.res = sharedFor(gl, this.core);
     const { attr } = this.res.prog;
     this.vaos = this.res.layers.map((L) => {
