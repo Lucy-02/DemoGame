@@ -1,0 +1,44 @@
+{
+  "round": "card-art-r2",
+  "note": "R1 평가 4명(review-*.md) 종합(r1/SYNTHESIS.md) 반영. 화풍 축: o = 레지스트리 묶음 그대로, c = 같은 작가 블록에서 캐릭터용 태그·UC의 negative space/blank page·Variety+를 뺀 사물용. #15 비교는 쉬어 가요. 바탕 톤은 임시 값.",
+  "variants": [{"tag": "o", "mode": "intact"}, {"tag": "c", "mode": "clean"}],
+  "seeds": [3101, 3102, 3201, 3202],
+  "common": {
+    "composition": "1.2::small compact subject that fits inside the central half of the image, wide empty margin on every side::, centered, wide shot, floating in the air, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline",
+    "composition_C": "1.2::the key shape and the impact point sit in the center of the image, nothing enters from the bottom corners, empty top corners::, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline",
+    "quality": "very aesthetic, masterpiece, best quality, no text",
+    "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic",
+    "uc_C": "1girl, 1boy, person, people, human, 1.3::animal, animal head, head, snout, muzzle, fur, body, legs::, 2::face::, eyes, hands, text, logo, watermark, signature, letters, writing, frame, border, picture frame, card, multiple views, 1.2::vignette::, 1.2::floor, ground, pedestal, cast shadow::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, busy background, scenery::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, halftone, screentone::, 3d, photorealistic"
+  },
+  "tones": {
+    "sal": "1.2::plain soft dark warm grey background::",
+    "ibex": "1.2::plain soft dark charcoal grey background::, 1.1::bright rim light outlining the silhouette::",
+    "star": "1.2::plain soft dark navy grey background::"
+  },
+  "cards": [
+    {"id": "sal_01", "name": "유리 벽", "owner": "sal", "comp": "B", "focus": "wide glass pane",
+     "subject": "no humans, still life, object focus, 1.2::a thin wide rectangular sheet of clear red glass standing upright like a window pane, front view, wider than tall::, angular faceted crystal plates along its edges, one small warm glowing core inside the glass",
+     "uc_extra": "1.2::vase, cup, bottle, jar, goblet, container, gem, gemstone::"},
+    {"id": "sal_03", "name": "꼬리 쓸기", "owner": "sal", "comp": "B", "focus": "diagonal glass arc", "seeds": [3101, 3102],
+     "subject": "no humans, still life, object focus, 1.2::a wide crescent arc of red glass shards sweeping diagonally across the center::, short straight speed lines, motion"},
+    {"id": "sal_03", "name": "꼬리 쓸기", "owner": "sal", "comp": "C", "focus": "glass tail tip curl",
+     "subject": "no humans, object focus, 1.3::the tapered tip of a segmented lizard tail made of clear red glass curls into a crescent sweep in the center::, the base of the tail exits the left edge at middle height, one small warm glowing core inside the tail, short speed lines, motion",
+     "uc_extra": "lizard, salamander, ring, loop, circle"},
+    {"id": "sal_08", "name": "유리 파편", "owner": "sal", "comp": "B", "focus": "three shards fan", "seeds": [3101, 3102],
+     "subject": "no humans, still life, object focus, 1.2::three separate sharp jagged red glass shards in a fan, gaps between them, pointing up-right::, a few tiny cracked fragments, motion"},
+    {"id": "ibex_01", "name": "들이받기", "owner": "ibex", "comp": "C", "focus": "horn tip thrust",
+     "subject": "no humans, object focus, 1.3::only the curved horn tip, a dark basalt horn with a network of thin orange cracks, thrusting in from the left edge at middle height toward the center::, a small crack burst at the tip, short straight speed lines, motion, no head, no face",
+     "uc_extra": "goat, ibex, sheep, ram"},
+    {"id": "ibex_01", "name": "들이받기", "owner": "ibex", "comp": "B", "focus": "impact crack burst",
+     "subject": "no humans, still life, object focus, 1.2::a jagged forward-pointing crack burst splitting a slab of dark basalt rock::, flying rock chips, short straight speed lines, thin orange cracks",
+     "uc_extra": "ring, circle, round shockwave, halo"},
+    {"id": "ibex_08", "name": "흑요석 뿔", "owner": "ibex", "comp": "B", "focus": "short spiral horn",
+     "subject": "no humans, still life, object focus, 1.2::a single short thick spiral horn of glossy black obsidian standing upright on its base, compact::, a network of thin orange cracks"},
+    {"id": "ibex_10", "name": "산사태", "owner": "ibex", "comp": "B", "focus": "tumbling boulders",
+     "subject": "no humans, object focus, 1.2::four separate dark basalt boulders of different sizes tumbling down a diagonal from upper left to lower right, largest in front::, thin orange cracks, falling pebbles, motion"},
+    {"id": "star_01", "name": "별빛", "owner": "star", "comp": "B", "focus": "small star mark", "seeds": [3101, 3102],
+     "subject": "no humans, still life, object focus, 1.2::a small five-pointed star of pale gold light::, thin rays, a few tiny star motes"},
+    {"id": "star_03", "name": "별자리", "owner": "star", "comp": "B", "focus": "bold constellation",
+     "subject": "no humans, object focus, 1.2::five large bright four-pointed stars joined by bold thick lines of pale gold light::, the shape fills the middle half"}
+  ]
+}
