@@ -77,8 +77,10 @@ def main():
         for card in b["cards"]:
             own = owner_style[card["owner"]]
             p = presets[own]
-            comp = c["composition_C"] if card["comp"] == "C" else c["composition"]
-            uc_card = c["uc_C"] if card["comp"] == "C" else c["uc"]
+            # 구도 글자(B·C·S·P·M …)마다 common의 composition_<글자>·uc_<글자>, tones의 <정령>_<글자>가 있으면 그걸 써요
+            comp = c.get(f"composition_{card['comp']}", c["composition"])
+            uc_card = c.get(f"uc_{card['comp']}", c["uc"])
+            tone = b["tones"].get(f"{card['owner']}_{card['comp']}", b["tones"][card["owner"]])
             for v in card.get("variants", b["variants"]):
                 prefix, suffix, neg = p.get("prefix", ""), p.get("suffix", ""), p.get("negative", "")
                 params = dict(p.get("params", {}) or {})
@@ -86,7 +88,7 @@ def main():
                     prefix, suffix = strip_tags(prefix, CHAR_TAGS), strip_tags(suffix, CHAR_TAGS)
                     neg = strip_tags(neg, UC_DROP)
                     params["skip_cfg_above_sigma"] = None
-                prompt = join(prefix, card["subject"], comp, b["tones"][card["owner"]], suffix, c["quality"])
+                prompt = join(prefix, card["subject"], comp, tone, suffix, c["quality"])
                 if card.get("uc_drop"):
                     neg = strip_tags(neg, set(card["uc_drop"]))
                 uc = join(uc_card, card.get("uc_extra", ""), neg)
