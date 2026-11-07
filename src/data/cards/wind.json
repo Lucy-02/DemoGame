@@ -1,0 +1,10 @@
+[
+  {"id": "breeze", "element": "wind", "role": "support", "rarity": "common", "cost": 0, "target": "self", "effects": [{"op": "draw", "value": 1}], "unlock": "start"},
+  {"id": "whirl_slash", "element": "wind", "role": "attack", "rarity": "common", "cost": 1, "target": "enemy", "effects": [{"op": "damage", "value": 3}, {"op": "combo", "n": 2, "then": [{"op": "damage", "value": 3, "hits": 2}]}], "unlock": "start"},
+  {"id": "tailwind", "element": "wind", "role": "support", "rarity": "common", "cost": 1, "target": "self", "effects": [{"op": "draw", "value": 2}], "unlock": "start"},
+  {"id": "second_wind", "element": "wind", "role": "support", "rarity": "common", "cost": 1, "target": "self", "effects": [{"op": "draw", "value": 1}, {"op": "manaNextTurn", "value": 1}], "unlock": "start"},
+  {"id": "gust", "element": "wind", "role": "disrupt", "rarity": "advanced", "cost": 2, "target": "allEnemies", "effects": [{"op": "damage", "value": 4}, {"op": "vulnerable", "turns": 1}], "unlock": "start"},
+  {"id": "crosswind", "element": "wind", "role": "disrupt", "rarity": "advanced", "cost": 1, "target": "enemy", "effects": [{"op": "damage", "value": 4}, {"op": "weak", "turns": 1}], "unlock": "start"},
+  {"id": "ride_the_wind", "element": "wind", "role": "support", "rarity": "advanced", "cost": 1, "target": "self", "effects": [{"op": "repeatNext", "maxCost": 2}], "unlock": "any_lv3"},
+  {"id": "eye_of_storm", "element": "wind", "role": "support", "rarity": "rare", "cost": 1, "target": "self", "effects": [{"op": "aura", "aura": "eye_of_storm", "value": 4}], "unlock": "act1_boss"}
+]

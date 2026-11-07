@@ -1,8 +1,11 @@
-export type Element = "fire" | "water" | "forest" | "wind" | "none";
+export const ELEMENTS = ["fire", "water", "forest", "wind", "none"] as const;
+export type Element = (typeof ELEMENTS)[number];
 /** 능력치. 스피드는 카드 시간을 나누는 값이에요 (시간 = 카드 기본 시간 ÷ 스피드, 0036). */
 export type StatKey = "hp" | "power" | "guard" | "focus" | "speed";
-export type Rarity = "basic" | "common" | "advanced" | "rare";
-export type CardTarget = "enemy" | "allEnemies" | "self" | "ally" | "allAllies";
+export const RARITIES = ["basic", "common", "advanced", "rare"] as const;
+export type Rarity = (typeof RARITIES)[number];
+export const CARD_TARGETS = ["enemy", "allEnemies", "self", "ally", "allAllies"] as const;
+export type CardTarget = (typeof CARD_TARGETS)[number];
 
 export interface SpiritDef {
   id: string;
@@ -55,12 +58,19 @@ export type CardOp =
   | { op: "repeatNext"; maxCost: number }
   | { op: "combo"; n: number; then: CardOp[] };
 
+/** 카드 효과 이름 전체. 키가 CardOp와 하나씩 맞아야 컴파일돼요. */
+export const CARD_OPS: Record<CardOp["op"], true> = {
+  damage: true, block: true, heal: true, burn: true, ignite: true, chill: true, freeze: true, thorns: true,
+  grow: true, draw: true, vulnerable: true, weak: true, empower: true, taunt: true, moveFront: true,
+  manaNextTurn: true, aura: true, damageFromBlock: true, keepBlock: true, burnMultiply: true,
+  damagePerPlayed: true, repeatNext: true, combo: true,
+};
+
 export type AuraId = "blaze_wing" | "deep_water" | "root_down" | "eye_of_storm";
 
-export interface CardDef {
+/** 카드 데이터 파일(src/data/cards/*.json)의 한 줄. 이름 같은 문구는 언어별 표(src/data/locales)에 있어요. */
+export interface CardData {
   id: string;
-  name: string;
-  nameEn?: string;
   element: Element;
   role: string;
   rarity: Rarity;
@@ -72,6 +82,11 @@ export interface CardDef {
   /** 시작 덱에서 이 카드를 배운 정령. 없으면 같은 속성의 첫 정령. */
   startOwner?: string;
   unlock: string;
+}
+
+/** 게임이 쓰는 카드 = 데이터 + 지금 언어의 문구 */
+export interface CardDef extends CardData {
+  name: string;
 }
 
 export type EnemyTargetRule = "front" | "random" | "lowest" | "all";

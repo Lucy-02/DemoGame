@@ -1,0 +1,17 @@
+[
+  {"id": "fire_claw", "element": "fire", "role": "attack", "rarity": "basic", "cost": 1, "target": "enemy", "effects": [{"op": "damage", "value": 6}], "start": 2, "startOwner": "fire_fox", "unlock": "start"},
+  {"id": "ember_scatter", "element": "fire", "role": "disrupt", "rarity": "basic", "cost": 1, "target": "enemy", "effects": [{"op": "damage", "value": 3}, {"op": "burn", "value": 3}], "start": 2, "startOwner": "fire_fox", "unlock": "start"},
+  {"id": "fire_guard", "element": "fire", "role": "guard", "rarity": "basic", "cost": 1, "target": "self", "effects": [{"op": "block", "value": 5}], "start": 2, "startOwner": "glass_salamander", "unlock": "start"},
+  {"id": "glass_skin", "element": "fire", "role": "guard", "rarity": "basic", "cost": 1, "target": "self", "effects": [{"op": "block", "value": 4}, {"op": "thorns", "value": 2}], "start": 2, "startOwner": "glass_salamander", "unlock": "start"},
+  {"id": "double_strike", "element": "fire", "role": "attack", "rarity": "common", "cost": 1, "target": "enemy", "effects": [{"op": "damage", "value": 3, "hits": 2}], "unlock": "start"},
+  {"id": "ember_flick", "element": "fire", "role": "disrupt", "rarity": "common", "cost": 0, "target": "enemy", "effects": [{"op": "burn", "value": 2}], "unlock": "start"},
+  {"id": "ignite", "element": "fire", "role": "attack", "rarity": "common", "cost": 1, "target": "enemy", "effects": [{"op": "damage", "value": 2}, {"op": "ignite"}], "unlock": "start"},
+  {"id": "molten_stance", "element": "fire", "role": "guard", "rarity": "common", "cost": 1, "target": "self", "effects": [{"op": "taunt"}, {"op": "block", "value": 6}], "unlock": "start"},
+  {"id": "blaze_aura", "element": "fire", "role": "support", "rarity": "advanced", "cost": 1, "target": "self", "effects": [{"op": "aura", "aura": "blaze_wing", "value": 1}], "unlock": "start"},
+  {"id": "backfire", "element": "fire", "role": "attack", "rarity": "advanced", "cost": 2, "target": "enemy", "effects": [{"op": "damage", "value": 8, "againIf": "burned"}], "unlock": "fire_fox_lv2"},
+  {"id": "fire_storm", "element": "fire", "role": "attack", "rarity": "advanced", "cost": 2, "target": "allEnemies", "effects": [{"op": "damage", "value": 5}, {"op": "burn", "value": 3}], "unlock": "fire_fox_lv3"},
+  {"id": "glass_shatter", "element": "fire", "role": "attack", "rarity": "advanced", "cost": 1, "target": "enemy", "effects": [{"op": "damageFromBlock"}], "unlock": "glass_salamander_lv2"},
+  {"id": "tempered_glass", "element": "fire", "role": "guard", "rarity": "advanced", "cost": 2, "target": "allAllies", "effects": [{"op": "block", "value": 5}, {"op": "thorns", "value": 2}], "unlock": "glass_salamander_lv3"},
+  {"id": "glass_citadel", "element": "fire", "role": "guard", "rarity": "rare", "cost": 2, "target": "self", "effects": [{"op": "block", "value": 6}, {"op": "keepBlock"}], "exhaust": true, "unlock": "glass_salamander_adult"},
+  {"id": "phoenix_breath", "element": "fire", "role": "attack", "rarity": "rare", "cost": 3, "target": "enemy", "effects": [{"op": "burnMultiply", "value": 2}, {"op": "ignite"}], "exhaust": true, "unlock": "fire_fox_adult"}
+]
