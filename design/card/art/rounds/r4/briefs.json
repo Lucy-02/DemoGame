@@ -1,0 +1,78 @@
+{
+  "round": "card-art-r4",
+  "note": "Lucy 피드백(11/07): 들이받기는 꼬리/뿔 끝만 보여 C 대신 물체 전체를 가운데(B)로. 유리 벽은 R3에서 막대로 읽혀 새 문장 둘. 크기는 생성에 맡기지 않고 후처리(tools/art/fit_art.py)에서 등급별로 맞춰요. 그래서 생성은 '전체가 보이게, 여백 넉넉히'만 요구해요. 바탕 톤은 임시 값.",
+  "variants": [
+    {
+      "tag": "o",
+      "mode": "intact"
+    }
+  ],
+  "seeds": [
+    3401,
+    3402,
+    3403,
+    3404
+  ],
+  "common": {
+    "composition": "1.2::one bold chunky silhouette that fits inside the central half of the image, wide empty margin on every side::, centered, wide shot, floating in the air, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline",
+    "composition_C": "1.2::the shape enters only from the middle of the left edge, its tip stops just past the center, empty right side and empty top::, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline",
+    "quality": "very aesthetic, masterpiece, best quality, no text",
+    "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic",
+    "uc_C": "1girl, 1boy, person, people, human, 1.3::animal, animal head, head, snout, muzzle, fur, body, legs::, 2::face::, eyes, hands, text, logo, watermark, signature, letters, writing, frame, border, picture frame, card, multiple views, 1.2::vignette::, 1.2::floor, ground, pedestal, cast shadow::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, busy background, scenery::, ring, loop, circle, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, halftone, screentone::, 3d, photorealistic"
+  },
+  "tones": {
+    "sal": "1.2::plain soft dark warm grey background::, 1.1::thin white edge highlights::",
+    "ibex": "1.2::plain soft dark charcoal grey background::, 1.1::bright rim light outlining the silhouette::",
+    "star": "1.2::plain soft dark navy grey background::"
+  },
+  "cards": [
+    {
+      "id": "ibex_01a",
+      "name": "들이받기",
+      "owner": "ibex",
+      "comp": "B",
+      "focus": "whole horn + impact",
+      "subject": "no humans, still life, object focus, 1.3::one whole curved horn made of dark basalt with thin glowing orange cracks, the entire horn fully visible from base to tip, pointing to the right, a small orange impact burst at the tip::",
+      "uc_extra": "goat, ibex, sheep, ram, animal head, skull, tail, tentacle, snake, worm, claw, tusk, banana"
+    },
+    {
+      "id": "ibex_01b",
+      "name": "들이받기",
+      "owner": "ibex",
+      "comp": "B",
+      "focus": "impact burst with horn at center",
+      "subject": "no humans, object focus, 1.3::a jagged orange impact shockwave burst, star shaped, with the short pointed tip of a dark basalt horn striking its center from the left::, cracks radiating",
+      "uc_extra": "goat, ibex, sheep, animal head, skull, tail, tentacle, snake, explosion cloud, smoke, fire, flames"
+    },
+    {
+      "id": "sal_01a",
+      "name": "유리 벽",
+      "owner": "sal",
+      "comp": "B",
+      "focus": "translucent pane 3/4",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ],
+      "subject": "no humans, still life, object focus, 1.3::a translucent pane of red glass standing upright, three-quarter view, slightly wider than tall, the dark background is visible through the glass::, chipped corners, bright white edges",
+      "uc_extra": "1.2::door, doorway, window frame, pillar, monolith, tower, brick, block, bar, rod, vase, cup, bottle, gem, orb, eye::, 1.3::light on floor, reflection::, opaque"
+    },
+    {
+      "id": "sal_01b",
+      "name": "유리 벽",
+      "owner": "sal",
+      "comp": "B",
+      "focus": "faceted glass shield",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ],
+      "subject": "no humans, still life, object focus, 1.3::a rounded shield made of many translucent red glass facets fitted together, front view, light passes through it::, bright white edges",
+      "uc_extra": "1.2::door, window, pillar, brick, metal, handle, sword, emblem, crest, gem, orb, eye, flower, rose::, 1.3::light on floor, reflection::, opaque"
+    }
+  ]
+}
