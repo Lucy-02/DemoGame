@@ -1,6 +1,6 @@
-# 카드 일러스트를 그림 창 가운데에 정해진 크기로 다시 놓아요 (생성 결과의 크기·위치 편차를 후처리로 맞춤).
+# 카드 일러스트의 물체를 그림 창 가운데에 정해진 크기로 다시 놓아요.
 # 쓰는 법: python3 tools/art/fit_art.py <입력> <출력> --size 0.5 [--cy 0.561] [--out-px 1024] [--debug]
-#   --size: 물체 크기(bbox 긴 변과 넓이 제곱근의 기하평균)가 출력 그림 한 변에서 차지하는 비율 (긴 변은 --max-side를 넘지 않아요). 등급별 값은 Lucy가 정해요(정하기 전엔 시안 값).
+#   --size: 물체 크기(bbox 긴 변과 넓이 제곱근의 기하평균)가 출력 그림 한 변에서 차지하는 비율 (긴 변은 --max-side를 넘지 않아요). 카드별 값은 design/card/art/picks.json.
 #   --cy:   물체 중심의 세로 위치(그림 높이 비율). 기본값은 손패 창(84×90)에서 톱니(위 11px) 아래 영역의 가운데 = (11+90)/2/90.
 # 방식: 테두리 색으로 바탕을 추정해 물체 마스크·bbox를 구하고, 물체가 --size가 되도록 잘라 내거나 넓혀요.
 #       넓힐 때 모자라는 바탕은 물체를 뺀 바탕을 정규화 블러로 바깥까지 이어 그린 판으로 채우고, 원본 경계는 부드럽게 섞어요.
@@ -25,7 +25,7 @@ def _box(a, k, axis):
 
 
 def blur(a, r):
-    """가우시안 근사(상자 평균 3번). scipy 없이 돌아가게 했어요."""
+    """가우시안 근사 (상자 평균 3번)"""
     a = np.asarray(a, np.float32)
     k = max(1, int(round(r * 0.87)))
     for _ in range(3):
@@ -37,7 +37,7 @@ def object_mask(rgb):
     h, w, _ = rgb.shape
     b = max(4, w // 40)
     border = np.concatenate([rgb[:b].reshape(-1, 3), rgb[-b:].reshape(-1, 3), rgb[:, :b].reshape(-1, 3), rgb[:, -b:].reshape(-1, 3)])
-    # 바탕은 완만한 그라데이션이라 테두리 중앙값 하나 대신 크게 흐린 그림을 바탕 추정으로 써요
+    # 바탕 추정 = 크게 흐린 그림과 테두리 중앙값의 평균 (완만한 그라데이션 바탕에 맞춰요)
     bg = np.stack([blur(rgb[..., i], w / 6) for i in range(3)], -1)
     med = np.median(border, 0)
     bg = 0.5 * bg + 0.5 * med
@@ -57,6 +57,33 @@ def bbox(m):
     return x0, y0, x1, y1
 
 
+def object_size(bw, bh):
+    """긴 변과 넓이 제곱근의 기하평균. 긴 변만 쓰면 둥근 물체가, 넓이만 쓰면 가늘고 긴 물체가 커 보여요."""
+    return np.sqrt(max(bw, bh) * np.sqrt(bw * bh))
+
+
+def background_plate(canvas, weight, r):
+    """weight가 1인 바탕 픽셀만으로 정규화 블러를 해서 바탕을 바깥까지 이어 그려요. 먼 곳은 반경을 넓혀 다시 메워요."""
+    plate = np.zeros_like(canvas)
+    den = blur(weight, r) + 1e-4
+    for i in range(3):
+        plate[..., i] = blur(canvas[..., i] * weight, r) / den
+    for rr in (r * 2, r * 4):
+        den_wide = blur(weight, rr) + 1e-4
+        far = den < 0.05
+        for i in range(3):
+            plate[..., i] = np.where(far, blur(canvas[..., i] * weight, rr) / den_wide, plate[..., i])
+        den = np.maximum(den, den_wide)
+    return plate
+
+
+def edge_alpha(h, w, feather):
+    """가장자리에서 feather 픽셀 안쪽으로 0 → 1"""
+    ys, xs = np.arange(h)[:, None], np.arange(w)[None, :]
+    dist = np.minimum(np.minimum(ys, h - 1 - ys), np.minimum(xs, w - 1 - xs))
+    return np.clip(dist / feather, 0, 1).astype(np.float32)
+
+
 def fit(src, size, cy=HAND_CY, cx=0.5, out_px=1024, max_side=0.82):
     rgb = np.asarray(src.convert("RGB"), dtype=np.float32)
     h, w, _ = rgb.shape
@@ -65,47 +92,26 @@ def fit(src, size, cy=HAND_CY, cx=0.5, out_px=1024, max_side=0.82):
     if bb is None:
         raise SystemExit("물체를 못 찾았어요")
     x0, y0, x1, y1 = bb
-    # 크기는 긴 변과 넓이 제곱근의 기하평균으로 재요(긴 변만 쓰면 둥근 물체가, 넓이만 쓰면 가늘고 긴 물체가 커 보여요). 긴 변은 max_side를 넘지 않아요
     bw, bh = x1 - x0, y1 - y0
-    metric = np.sqrt(max(bw, bh) * np.sqrt(bw * bh))
-    crop = max(metric / size, max(bw, bh) / max_side)  # 출력 한 변에 해당하는 원본 픽셀 수
+    crop = max(object_size(bw, bh) / size, max(bw, bh) / max_side)  # 출력 한 변에 해당하는 원본 픽셀 수
     ox = (x0 + x1) / 2 - cx * crop
     oy = (y0 + y1) / 2 - cy * crop
-    # 원본을 출력 좌표로 옮겨요
-    k = out_px / crop
     pad = int(np.ceil(max(0, -ox, -oy, ox + crop - w, oy + crop - h))) + 2
-    # 바탕 판: 물체를 뺀 바탕을 정규화 블러로 바깥까지 이어 그려요
+
     H, W = h + 2 * pad, w + 2 * pad
-    wgt = np.zeros((H, W), np.float32)
-    keep = (~blur(m.astype(np.float32), 12).__gt__(0.02)).astype(np.float32)
-    wgt[pad:pad + h, pad:pad + w] = keep
-    plate = np.zeros((H, W, 3), np.float32)
+    inner = (slice(pad, pad + h), slice(pad, pad + w))
     canvas = np.zeros((H, W, 3), np.float32)
-    canvas[pad:pad + h, pad:pad + w] = rgb
-    r = max(8, w / 10)
-    den = blur(wgt, r) + 1e-4
-    for i in range(3):
-        plate[..., i] = blur(canvas[..., i] * wgt, r) / den
-    # 정규화 블러는 멀리 갈수록 값이 흔들려 두 번 더 넓게 메워요
-    for rr in (r * 2, r * 4):
-        den2 = blur(wgt, rr) + 1e-4
-        far = den < 0.05
-        for i in range(3):
-            plate[..., i] = np.where(far, blur(canvas[..., i] * wgt, rr) / den2, plate[..., i])
-        den = np.maximum(den, den2)
-    # 원본 경계를 부드럽게 섞어요
-    a = np.zeros((H, W), np.float32)
-    a[pad:pad + h, pad:pad + w] = 1
-    feather = max(12, w / 12)
-    edge = np.ones((h, w), np.float32)
-    edge[:, :] = np.minimum.reduce([np.arange(h)[:, None] + 0 * np.arange(w)[None], (h - 1 - np.arange(h))[:, None] + 0 * np.arange(w)[None],
-                                    np.arange(w)[None] + 0 * np.arange(h)[:, None], (w - 1 - np.arange(w))[None] + 0 * np.arange(h)[:, None]])
-    a[pad:pad + h, pad:pad + w] = np.clip(edge / feather, 0, 1)
-    comp = canvas * a[..., None] + plate * (1 - a[..., None])
+    canvas[inner] = rgb
+    weight = np.zeros((H, W), np.float32)
+    weight[inner] = (blur(m.astype(np.float32), 12) <= 0.02).astype(np.float32)
+    plate = background_plate(canvas, weight, max(8, w / 10))
+    alpha = np.zeros((H, W), np.float32)
+    alpha[inner] = edge_alpha(h, w, max(12, w / 12))
+    comp = canvas * alpha[..., None] + plate * (1 - alpha[..., None])
+
     im = Image.fromarray(np.clip(comp, 0, 255).astype(np.uint8))
-    box = (ox + pad, oy + pad, ox + pad + crop, oy + pad + crop)
-    out = im.resize((out_px, out_px), Image.LANCZOS, box=box)
-    return out, (x0, y0, x1, y1), m
+    out = im.resize((out_px, out_px), Image.LANCZOS, box=(ox + pad, oy + pad, ox + pad + crop, oy + pad + crop))
+    return out, bb, m
 
 
 def main():

@@ -1,0 +1,13 @@
+{
+  "$description": "게임에 들어가는 카드 일러스트 목록 (0042). id = 에셋 이름(public/assets/cards/<id>.webp). composition: object·symbol은 fit_size로 크기를 맞추고, scene·backdrop은 창을 채워요(fit_size null). tools/art/import_card_art.py가 읽어요.",
+  "cards": [
+    { "id": "starlight", "name": "별빛", "owner": "star_spirit", "composition": "object", "case_id": "star_01-B-o-s3101", "fit_size": 0.36 },
+    { "id": "constellation", "name": "별자리", "owner": "star_spirit", "composition": "backdrop", "case_id": "star_03-P-o-s3602", "fit_size": null },
+    { "id": "glass_wall", "name": "유리 벽", "owner": "glass_salamander", "composition": "object", "case_id": "sal_01d-B-c-s3504", "fit_size": 0.56 },
+    { "id": "tail_sweep", "name": "꼬리 쓸기", "owner": "glass_salamander", "composition": "object", "case_id": "sal_03-B-o-s3101", "fit_size": 0.42 },
+    { "id": "glass_shatter", "name": "유리 파편", "owner": "glass_salamander", "composition": "symbol", "case_id": "sal_08-M-c-s3601", "fit_size": 0.38 },
+    { "id": "ram", "name": "들이받기", "owner": "magma_ibex", "composition": "scene", "case_id": "ibex_01-S-o-s3601", "fit_size": null },
+    { "id": "obsidian_horn", "name": "흑요석 뿔", "owner": "magma_ibex", "composition": "symbol", "case_id": "ibex_08-M-o-s3602", "fit_size": 0.54 },
+    { "id": "landslide", "name": "산사태", "owner": "magma_ibex", "composition": "scene", "case_id": "ibex_10-S-o-s3601", "fit_size": null }
+  ]
+}

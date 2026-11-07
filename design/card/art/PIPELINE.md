@@ -116,3 +116,10 @@ very aesthetic, masterpiece, no text
 - 공개: Steam은 미리 만든 AI 콘텐츠를 공개해야 해요(R4 3-2, R5 6장). provenance 기록이 그 근거예요. 덱빌더 커뮤니티가 AI 그림에 차갑다는 점(R4 3-2)은 Lucy가 알고 가야 할 위험이에요.
 - 이용약관: NovelAI 약관 원문을 출시 전에 한 번 확인해요(R5 6장, 조사에서 전문을 못 읽었어요).
 - jjal 시트 형식·NAI 노트(`~/workspace/jjal/docs/spirit-deckbuilder-nai5.md`)는 맥 연결 뒤 읽고 ② 형식을 맞춰요.
+
+## 7. 게임에 넣기 (0042)
+1. `design/card/art/picks.json`에 카드 한 줄: `id`(에셋 이름), `case_id`(고른 생성 결과), `composition`(object·symbol·scene·backdrop), `fit_size`(object·symbol만, 실물 크기 순서로 기존 카드 사이에 끼워 정함. scene·backdrop은 null).
+2. 고른 원본 PNG와 `meta.json`(run_id·prompt·uc·seed·설정·image_sha256)을 한 폴더에 받아요. PNG는 바이트 그대로(메타데이터 보존).
+3. `python3 tools/art/import_card_art.py <폴더>` → `public/assets/cards/<id>.webp`(512px), `assets/provenance.jsonl` 갱신.
+4. `src/presentation/card/art.ts`의 `CARD_ART_IDS`에 id를 더하고, 카드 VM의 `illustration`으로 가리켜요. `?scene=art`에서 확인해요.
+

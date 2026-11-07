@@ -1,6 +1,7 @@
 // 고정 장면 고르기 (?scene=…). session 층이 생기면 실제 전투 상태가 이 자리를 대신해요.
 import type { BattleVM } from "../viewmodel";
 import { canonAim, exampleDrag, exampleDragAlly, exampleDragField, exampleDragRandom } from "./canonAim";
+import { exampleCardArt } from "./cardArt";
 import { canonRest } from "./canonRest";
 
 export const FIXTURES: Record<string, BattleVM> = {
@@ -16,4 +17,6 @@ export const FIXTURES: Record<string, BattleVM> = {
   "drag-ally": exampleDragAlly,
   /** 예시: 무작위 카드를 필드로 끌어올림 */
   "drag-random": exampleDragRandom,
+  /** 예시: 손패에 카드 일러스트 (물방울 휘갈기기·물결 장막은 그림 없음) */
+  art: exampleCardArt,
 };

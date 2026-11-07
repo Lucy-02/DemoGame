@@ -1,5 +1,6 @@
 // 카드 한 장이 그리는 값 (확정 구조: 그림 창 + 얇은 이름 띠, 5:7, SD 초상 홈, 기호 + 최종 수치, 단색 속성 기호. 0005·0008~0011)
 import type { FaceId, IconId } from "../faces";
+import type { CardArtId } from "./art";
 
 export type Material = "none" | "fire" | "water" | "wind";
 
@@ -43,8 +44,10 @@ export interface CardVM {
   element: IconId;
   /** 그림 자리 기호 (임시 그림) */
   art: IconId;
+  /** 카드 일러스트. 없으면 그림 자리를 비워 둬요 */
+  illustration?: CardArtId;
   values: CardValueVM[];
-  /** 못 쓰는 카드 (몸체만 가라앉힘) */
+  /** 못 내는 카드: 카드째 회색으로 흐려요. 이유 띠와 비용 동전은 또렷하게 (0043) */
   off?: boolean;
   /** 마력 말고 다른 사유 글 꼬리표 */
   why?: string;

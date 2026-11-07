@@ -4,6 +4,7 @@ import { tokens } from "../../design/tokens";
 import { transparentOf } from "../style/color";
 import { linear, radialTiles, type Stop } from "../style/gradient";
 import type { FaceId } from "../faces";
+import { cardArtKey, type CardArtId } from "./art";
 import { HAND_CARD as C, WINDOW_PATH } from "./layout";
 import type { Material } from "./viewmodel";
 
@@ -49,9 +50,9 @@ function bottomRounded(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
   ctx.closePath();
 }
 
-/** 손패 카드 이름 띠 텍스처 (재질 바탕 + 위 반사선 + 안쪽 테). off는 재질 없이 가라앉힘. */
-export function bandTexture(scene: Phaser.Scene, m: Material, off: boolean): string {
-  const key = `card:band:${m}:${off ? "off" : "on"}`;
+/** 손패 카드 이름 띠 텍스처 (재질 바탕 + 위 반사선 + 안쪽 테). */
+export function bandTexture(scene: Phaser.Scene, m: Material): string {
+  const key = `card:band:${m}`;
   if (scene.textures.exists(key)) return key;
   const { w, h, radius } = C.band;
   const tex = scene.textures.createCanvas(key, w, h)!;
@@ -59,44 +60,52 @@ export function bandTexture(scene: Phaser.Scene, m: Material, off: boolean): str
   bottomRounded(ctx, 0, 0, w, h, radius);
   ctx.save();
   ctx.clip();
-  ctx.fillStyle = off ? P.cardOffWin : MATERIAL_FILL[m].fill;
+  ctx.fillStyle = MATERIAL_FILL[m].fill;
   ctx.fillRect(0, 0, w, h);
-  if (!off) paintPattern(ctx, w, h, m);
+  paintPattern(ctx, w, h, m);
   // inset 0 1px 0 반사선
-  ctx.fillStyle = off ? P.bandShineOff : P.bandShine;
+  ctx.fillStyle = P.bandShine;
   ctx.fillRect(0, 0, w, 1);
-  if (!off) {
-    // inset 0 0 0 1px 테
-    ctx.strokeStyle = MATERIAL_FILL[m].edge;
-    ctx.lineWidth = 1;
-    bottomRounded(ctx, 0.5, 0.5, w - 1, h - 1, radius - 0.5);
-    ctx.stroke();
-  }
+  // inset 0 0 0 1px 테
+  ctx.strokeStyle = MATERIAL_FILL[m].edge;
+  ctx.lineWidth = 1;
+  bottomRounded(ctx, 0.5, 0.5, w - 1, h - 1, radius - 0.5);
+  ctx.stroke();
   ctx.restore();
   tex.refresh();
   return key;
 }
 
-/** 정령별 그림 창 (정본 SVG path, 채움 + 1px 선) */
-export function windowTexture(scene: Phaser.Scene, owner: FaceId, off: boolean): string {
-  const key = `card:win:${owner}:${off ? "off" : "on"}`;
+/** 정령별 그림 창 (정본 SVG path: 채움 → 일러스트 → 1px 선). 일러스트는 창을 덮도록 가운데 맞춤해요. */
+export function windowTexture(scene: Phaser.Scene, owner: FaceId, art?: CardArtId): string {
+  const key = `card:win:${owner}:${art ?? "none"}`;
   if (scene.textures.exists(key)) return key;
   const { w, h } = C.win;
   const tex = scene.textures.createCanvas(key, w, h)!;
   const ctx = tex.getContext();
   const path = new Path2D(WINDOW_PATH[owner]);
-  ctx.fillStyle = off ? P.cardOffWin : P.paper2;
+  ctx.fillStyle = P.paper2;
   ctx.fill(path);
-  ctx.strokeStyle = off ? P.cardOffLine : P.cardLine;
+  if (art) {
+    const img = scene.textures.get(cardArtKey(art)).getSourceImage() as CanvasImageSource & { width: number; height: number };
+    const scale = Math.max(w / img.width, h / img.height);
+    const dw = img.width * scale, dh = img.height * scale;
+    ctx.save();
+    ctx.clip(path);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+    ctx.restore();
+  }
+  ctx.strokeStyle = P.cardLine;
   ctx.lineWidth = 1;
   ctx.stroke(path);
   tex.refresh();
   return key;
 }
 
-/** 들린 카드(.cd.act) 몸 전체: 재질 바탕 + 위 반사선 + 1px 테. off는 회색 몸에 반사선만. */
-export function liftedBodyTexture(scene: Phaser.Scene, m: Material, off: boolean): string {
-  const key = `card:lifted:${m}:${off ? "off" : "on"}`;
+/** 들린 카드(.cd.act) 몸 전체: 재질 바탕 + 위 반사선 + 1px 테. */
+export function liftedBodyTexture(scene: Phaser.Scene, m: Material): string {
+  const key = `card:lifted:${m}`;
   if (scene.textures.exists(key)) return key;
   const { w, h, radius, border } = C;
   const tex = scene.textures.createCanvas(key, w, h)!;
@@ -105,14 +114,14 @@ export function liftedBodyTexture(scene: Phaser.Scene, m: Material, off: boolean
   ctx.roundRect(0, 0, w, h, radius);
   ctx.save();
   ctx.clip();
-  ctx.fillStyle = off ? P.cardOff : MATERIAL_FILL[m].fill;
+  ctx.fillStyle = MATERIAL_FILL[m].fill;
   ctx.fillRect(0, 0, w, h);
-  if (!off) paintPattern(ctx, w, h, m);
+  paintPattern(ctx, w, h, m);
   // inset 0 1px 0 반사선 (테 안쪽)
   ctx.fillStyle = P.cardLiftShine;
   ctx.fillRect(border, border, w - border * 2, 1);
   ctx.restore();
-  ctx.strokeStyle = off ? P.cardOffLine : MATERIAL_FILL[m].edge;
+  ctx.strokeStyle = MATERIAL_FILL[m].edge;
   ctx.lineWidth = border;
   ctx.beginPath();
   ctx.roundRect(border / 2, border / 2, w - border, h - border, radius - border / 2);

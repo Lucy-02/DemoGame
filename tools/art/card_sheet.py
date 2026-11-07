@@ -21,7 +21,7 @@ def load_presets(path):
     return {p["key"]: p for p in items if isinstance(p, dict) and "key" in p}
 
 
-# "clean" 모드에서 떼는 캐릭터용 태그 (R1 평가: 사물 카드에서 초상·피부 쪽으로 끌고, 작고 여백 있는 그림과 반대로 감)
+# "clean" 모드에서 떼는 캐릭터용 태그 (사물 그림을 초상·피부 쪽으로 끌어요)
 CHAR_TAGS = {
     "shiny skin", "masterpiece portrait", "skindentation", "oiled skin", "mature female", "flat color",
     "simple illustration", "chibi", "loli, child, chibi", "beautiful gunbari", "hyper detail", "super detail",

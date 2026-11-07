@@ -127,10 +127,6 @@ export const tokens = {
       "pMute": "#6d6862",
       "cardLine": "#c6c0b5",
       "art": "#b7b1a6",
-      "off": "#aaa69f",
-      "off2": "#9c9891",
-      "offLine": "#7d7a75",
-      "offInk": "#55524e",
       "mana": "#34302c",
       "manaInk": "#f3efe8",
       "material": {
@@ -163,18 +159,12 @@ export const tokens = {
       "plateLine": "rgba(246,241,233,.06)",
       "debuffLine": "rgba(246,241,233,.32)",
       "groundShade": "rgba(0,0,0,.35)",
-      "cardOff": "#bdb9b2",
-      "cardOffLine": "#8d8983",
-      "cardOffWin": "#b1ada6",
-      "cardOffInk": "#34312e",
       "up": "#3f6b38",
-      "upOff": "#2f5229",
       "markBg": "#3a3633",
       "markInk": "#f3efe8",
       "whyBg": "#2f2c29",
       "whyInk": "#f3efe8",
       "bandShine": "rgba(255,255,255,.5)",
-      "bandShineOff": "rgba(255,255,255,.25)",
       "groupFill": "rgba(246,241,233,.05)",
       "groupLine": "rgba(246,241,233,.07)",
       "groupFaceRing": "#2b2927",
@@ -482,6 +472,14 @@ export const tokens = {
           0.2,
           1
         ]
+      }
+    },
+    "effect": {
+      "unplayable": {
+        "grayscale": 1,
+        "contrast": 0.7,
+        "brightness": 1.1,
+        "opacity": 0.62
       }
     }
   }

@@ -29,7 +29,11 @@ R1~R3는 물체 하나를 가운데 두는 구도(B)만 시험했어요. 물체�
 - 물체·상징 그림은 `tools/art/fit_art.py`로 창 가운데(톱니 아래 영역의 중심)에 놓고, **물건의 실제 크기 순서**대로 크기를 정해요. 장면·배경 그림은 창을 채우므로 맞추지 않아요.
 - 파일럿 값(`--size`, 물체 크기 ÷ 그림 한 변): 유리 벽 0.56 · 흑요석 뿔 0.54 · 꼬리 쓸기 0.42 · 유리 파편 0.38 · 별빛 0.36. 결과는 `design/card/art/rounds/picks/fitted/`. 새 카드는 이 다섯 장 사이에 끼워 정해요.
 
+## 게임에 넣은 것
+- 목록 `design/card/art/picks.json` → `tools/art/import_card_art.py <원본 폴더>` → `public/assets/cards/<id>.webp`(512px) + `assets/provenance.jsonl`(status placeholder).
+- 그리기: `CardVM.illustration`(`src/presentation/card/art.ts`의 `CardArtId`)이 있으면 그림 창에 덮어 그리고, 없으면 X 상자 자리. 확인용 장면 `?scene=art`.
+- 유리 도롱뇽·산양은 아직 게임 데이터·얼굴·창 윗선이 없어서, 파일럿 그림은 실제 카드에 연결하지 않았어요.
+
 ## 정하지 않은 것
-- 비활성 카드의 그림 톤 (보드의 안 1~3, Claude 추천 안 1). 지금 정본·게임은 그림 투명도 0.45예요.
 - 장면·배경용 화풍. 별 화풍(b07_v2)은 하늘이 들어가면 픽셀 느낌이 섞여요.
 - 본생산 72장의 카드별 구도 배정.
