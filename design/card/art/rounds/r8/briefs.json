@@ -1,0 +1,172 @@
+{
+ "round": "card-art-r8",
+ "note": "R7에서 쓸 만한 후보가 없던 6장 다시 뽑기. 카멜레온 장면은 형광 초록이 나와서 어두운 이끼색 바탕·낮은 채도로 바꿈. 바탕·팔레트는 임시 값.",
+ "variants": [
+  {
+   "tag": "o",
+   "mode": "intact"
+  }
+ ],
+ "seeds": [
+  3801,
+  3802
+ ],
+ "common": {
+  "composition": "1.2::one bold chunky silhouette that fits inside the central half of the image, wide empty margin on every side::, centered, wide shot, floating in the air, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline",
+  "quality": "very aesthetic, masterpiece, best quality, no text",
+  "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic",
+  "composition_S": "1.2::a dynamic scene, the main action happens in the center, readable at a glance::, medium shot, simple shapes, clean lineart, cel shading, thick outline, limited palette",
+  "composition_P": "1.2::scenery, wide shot, landscape, one clear focal point in the center::, simple shapes, clean lineart, cel shading, thick outline, limited palette, atmospheric perspective",
+  "composition_M": "1.2::symbolic still life, one central object, centered, wide empty margin::, simple background, clean lineart, cel shading, thick outline",
+  "uc_S": "1girl, 1boy, person, people, human, face, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.2::cluttered, crowded, busy::",
+  "uc_P": "1girl, 1boy, person, people, human, character, animal, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.1::cluttered, crowded::",
+  "uc_M": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic"
+ },
+ "tones": {
+  "sal": "1.2::plain soft dark warm grey background::, 1.1::thin white edge highlights::",
+  "ibex": "1.2::plain soft dark charcoal grey background::, 1.1::bright rim light outlining the silhouette::",
+  "star": "1.2::plain soft dark navy grey background::",
+  "sal_S": "1.1::warm red, amber and dark brown palette::",
+  "sal_P": "1.1::warm red, amber and dark brown palette::",
+  "ibex_S": "1.1::charcoal grey and molten orange palette::",
+  "ibex_P": "1.1::charcoal grey and molten orange palette::",
+  "star_S": "1.1::deep navy and pale gold palette::",
+  "star_P": "1.1::deep navy and pale gold palette::",
+  "pearl": "1.2::plain soft dark teal grey background::, 1.1::soft pearly highlights::",
+  "pearl_S": "1.1::deep teal, sea blue and pearl white palette::",
+  "pearl_P": "1.1::deep teal, sea blue and pearl white palette::",
+  "cham": "1.2::plain soft dark moss green grey background::",
+  "cham_S": "1.2::plain soft dark moss green grey background::, 1.1::muted deep green palette, low saturation::",
+  "cham_P": "1.1::deep green palette with small soft rainbow accents::"
+ },
+ "cards": [
+  {
+   "id": "stardust",
+   "name": "스타더스트",
+   "owner": "star",
+   "comp": "B",
+   "seeds": [
+    3801,
+    3802,
+    3803,
+    3804
+   ],
+   "subject": "no humans, still life, object focus, 1.2::a small floating cluster of tiny gold four-pointed stars and glittering gold dust::",
+   "uc_extra": "black blob, silhouette, shadow, animal"
+  },
+  {
+   "id": "glass_scale",
+   "name": "유리 비늘",
+   "owner": "sal",
+   "comp": "B",
+   "seeds": [
+    3801,
+    3802
+   ],
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "subject": "no humans, still life, object focus, 1.2::a single translucent red glass reptile scale, rounded diamond shape, flat::",
+   "uc_extra": "drinking glass, cup, juice, liquid, pendant, necklace, chain, bowl"
+  },
+  {
+   "id": "glass_scale",
+   "name": "유리 비늘",
+   "owner": "sal",
+   "comp": "M",
+   "seeds": [
+    3801,
+    3802
+   ],
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "subject": "no humans, still life, object focus, 1.2::a small round shield covered in overlapping red glass reptile scales::",
+   "uc_extra": "drinking glass, cup, juice, liquid, roof, house, pyramid"
+  },
+  {
+   "id": "ricochet",
+   "name": "리코셰",
+   "owner": "sal",
+   "comp": "S",
+   "seeds": [
+    3801,
+    3802
+   ],
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "subject": "no humans, 1.2::a dark stone bouncing off a translucent red glass wall, a curved arrow motion line shows it flying back the way it came::",
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "ricochet",
+   "name": "리코셰",
+   "owner": "sal",
+   "comp": "M",
+   "seeds": [
+    3801,
+    3802
+   ],
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "subject": "no humans, still life, object focus, 1.2::an angled red glass shield deflecting a beam of orange light back the way it came::",
+   "uc_extra": "drinking glass, cup, juice, liquid, heart"
+  },
+  {
+   "id": "snap",
+   "name": "스냅",
+   "owner": "cham",
+   "comp": "S",
+   "seeds": [
+    3801,
+    3802,
+    3803,
+    3804
+   ],
+   "subject": "no humans, 1.2::a chameleon on a dark branch snapping its jaws shut on a small dark rock creature, quick motion lines::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "eye_roll",
+   "name": "굴리는 눈",
+   "owner": "cham",
+   "comp": "S",
+   "seeds": [
+    3801,
+    3802,
+    3803,
+    3804
+   ],
+   "subject": "no humans, 1.2::a chameleon on a dark branch at dusk, its two turret eyes looking in different directions, watching::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "pounce",
+   "name": "급습",
+   "owner": "cham",
+   "comp": "S",
+   "seeds": [
+    3801,
+    3802,
+    3803,
+    3804
+   ],
+   "subject": "no humans, 1.2::a chameleon leaping down from a dark branch onto a big dark rock creature, dramatic angle::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  }
+ ]
+}
