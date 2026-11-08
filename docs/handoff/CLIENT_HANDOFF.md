@@ -75,7 +75,8 @@
 - Lucy가 값을 고르면 `provisional`에서 확정 구역으로 옮기고, 코드는 확정 토큰을 보게 바꿔요.
 
 ### 그림
-- 미확정 그림(아군 실루엣 sil-*, 적 도형 en-*, 카드 그림 자리)은 `style/placeholder.ts`의 `placeholderArt`(X 상자)로 비워 둬요. 자리와 크기만 맞아요.
+- 미확정 그림(아군 실루엣 sil-*, 적 도형 en-*, 일러스트가 없는 카드의 그림 자리)은 `style/placeholder.ts`의 `placeholderArt`(X 상자)로 비워 둬요. 자리와 크기만 맞아요.
+- 카드 일러스트(0042): `design/card/art/picks.json`에 카드를 적고 `python3 tools/art/import_card_art.py <원본 PNG + meta.json 폴더>`를 돌리면 `public/assets/cards/<id>.webp`와 provenance 줄이 생겨요. 코드에서는 `card/art.ts`의 `CARD_ART_IDS`에 id를 더하고 `CardVM.illustration`으로 가리켜요. 그림 창 텍스처(`windowTexture`)가 창 모양으로 잘라 덮어 그려요.
 - 기능 기호(수치·상태·시스템)는 정본 `<symbol>`을 `tools/canon/extract-icons.ts`로 꺼낸 SVG(`public/assets/ui/icons`)를 써요. 한 색 기호는 흰색으로 저장돼 있고, 틴트로 칠해요(`style/icons.ts`).
 - 정령 얼굴은 `public/assets/ui/faces/<face>-face.webp`(TTI 결과물, provenance 기록됨)예요. `src/presentation/faces.ts`의 `FACES`.
 - 모든 SVG는 `assets/provenance.jsonl`에 placeholder로 기록돼 있어요(37개). `pnpm check:assets --release`는 출시 전에 이걸 잡아요. 새 TTI 에셋은 반드시 기록해요(`assets/PROVENANCE.md`).
@@ -100,11 +101,12 @@ src/presentation/battle/
   views/enemyTip.ts            적 툴팁 (gather로 Container)
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
-  HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }
+  HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }. 몸(drawBody)과 비용 동전·이유 띠(drawSignals)를 나눠 그림
   cardTip.ts                   카드 호버 말풍선 내용 → tooltip/
   materials.ts                 bandTexture, windowTexture, paintPattern, MATERIAL_FILL, liftedBodyTexture
   layout.ts                    HAND_CARD, WINDOW_PATH(정령별 창 윗선 SVG path), BUBBLE
-  viewmodel.ts                 CardVM(key, detail…), CardDetailVM {text, calc?, why?, owner}, RichText
+  viewmodel.ts                 CardVM(key, illustration?, off?, detail…), CardDetailVM {text, calc?, why?, owner}, RichText
+  art.ts                       CARD_ART_IDS, CardArtId, cardArtKey, preloadCardArt (public/assets/cards/<id>.webp)
 src/presentation/tooltip/      말풍선 공용(Tooltip.ts 그리기·배치, skins.ts 유리 스킨, content.ts 문단)
 src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/canon/spirit-r4v5, 탭 내용 0021)
   SpiritsScene.ts              정원 세션 상태 → spiritsVM → 통째로 다시 그리기 (입력 중엔 다음 update에서)
@@ -148,6 +150,7 @@ scripts/                       build-tokens, check-literals, check-assets
 ### 묶음과 움직임
 - `gather(scene, x, y, draw)`: draw 안에서 장면에 바로 올린 객체를 Container로 옮겨요. 기존 그리기 코드를 고치지 않고 통째로 움직이거나 키울 때 써요(카드, 묶음, 툴팁).
 - CSS `opacity`는 자식들을 한 장으로 합친 뒤 흐리게 해요. 컨테이너 `alpha`는 자식마다 따로 흐려서 겹친 부분이 탁해져요. → `root.enableFilters().filters.internal.addColorMatrix()`로 행렬 alpha를 써요(`HandCardView.opacity`).
+- CSS `filter: grayscale() contrast() brightness()` + `opacity`는 `style/opacity.ts`의 `adjustColor(container, {grayscale, contrast, brightness, opacity})` 하나로 걸어요(행렬은 `colorMatrix`, 덧셈 열은 0~255). 못 내는 카드는 몸 컨테이너에만 걸고, 흐리면 안 되는 것은 그 컨테이너 밖에 그려요.
 - 호버 H1 동작(정본 스크립트 "시안 값", `HOVER`)
   - 든 카드: `translateY(-30) scale(1.2)`, 원점은 카드 아래 가운데. 든 몸통 텍스처(재질 전체 + 흰 광택선 + 1px 테)와 그림자 `0 10px 24px`로 바꿔요.
   - 같은 묶음 옆 카드 ±12, 옆 묶음 ±10, 나머지 카드 opacity .62.
@@ -178,7 +181,7 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 ```
 
 - 처음 한 번 `pnpm exec playwright install chromium`. 이미 깔린 크로미움은 `CHROMIUM_PATH=<경로>`.
-- 결과 기준치: rest 3.75%, `--hover claw` 3.85%. 이보다 크게 늘면 무언가 어긋난 거예요.
+- 결과 기준치: rest 3.75%, `--hover claw` 3.85% (0043 이후 못 내는 카드 두 장이 정본과 달라 약 1.8%p 더 나와요). 이보다 크게 늘면 무언가 어긋난 거예요.
 - CI(`.github/workflows`): Node 22, `pnpm install --frozen-lockfile` → typecheck → lint:deps → test → check:design → xvfb e2e.
 
 ### luddal-win(Windows) 주의

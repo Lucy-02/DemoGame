@@ -135,7 +135,7 @@ export function addDeed(g: Garden, id: string, kind: DeedDef["kind"], n: number)
 
 // ───────────────────────── 해금 ─────────────────────────
 
-/** 정원 상태로 열린 해금 키 (cards.json의 unlock 값) */
+/** 정원 상태로 열린 해금 키 (카드 데이터의 unlock 값) */
 export function unlockKeys(g: Garden): Set<string> {
   const keys = new Set<string>(["start"]);
   for (const s of g.spirits) for (const k of spiritUnlocks(s)) keys.add(k);
