@@ -78,3 +78,11 @@
 - 덱 보기 레이어 R1 (리뷰 종합 포함): https://claude.ai/artifact/4HcCn3u5CQ5AcoGVwN7juL
 - 자라는 순간 R1: https://claude.ai/artifact/NEXhRQajDWBmH3WUwRoRAV
 - 덱 보기·자라는 순간 R2: https://claude.ai/artifact/LyNbvdjCFHPSRUdwoYK7uT
+
+## 결과 창 계열 R1~R4 라운드 1 (2026-11-08)
+- 화면 목록: https://claude.ai/artifact/Mxggy6GuQRxWECoGu17xyJ (Claude Doc)
+- A 정산서 다듬기: https://claude.ai/artifact/4qfXrPNveg9vDGv43LC4yV
+- B 정령 무대: https://claude.ai/artifact/BWEHtCZZ52ucT9NoFovbnH
+- C 차오르는 박자: https://claude.ai/artifact/SY7XoB5x2GCiwYH72NZ2eC
+- D 지나온 길: https://claude.ai/artifact/9QNK2TCLPngAo9UrmdYPpo
+- E 정원으로 돌아옴: https://claude.ai/artifact/KYVAgwtWZJmwuGefC5KjEx
