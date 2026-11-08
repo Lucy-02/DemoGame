@@ -1,0 +1,274 @@
+{
+  "round": "card-art-r6",
+  "note": "Lucy 11/07: 물체만 고집하지 말고 상황·배경·상징 일러스트도. 파일럿 8장 × 새 구도 셋(S 장면, P 배경, M 상징) × 시드 둘. 바탕·팔레트는 임시 값.",
+  "variants": [
+    {
+      "tag": "o",
+      "mode": "intact"
+    }
+  ],
+  "seeds": [
+    3601,
+    3602
+  ],
+  "common": {
+    "composition": "1.2::one bold chunky silhouette that fits inside the central half of the image, wide empty margin on every side::, centered, wide shot, floating in the air, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline",
+    "composition_C": "1.2::the shape enters only from the middle of the left edge, its tip stops just past the center, empty right side and empty top::, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline",
+    "quality": "very aesthetic, masterpiece, best quality, no text",
+    "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic",
+    "uc_C": "1girl, 1boy, person, people, human, 1.3::animal, animal head, head, snout, muzzle, fur, body, legs::, 2::face::, eyes, hands, text, logo, watermark, signature, letters, writing, frame, border, picture frame, card, multiple views, 1.2::vignette::, 1.2::floor, ground, pedestal, cast shadow::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, busy background, scenery::, ring, loop, circle, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, halftone, screentone::, 3d, photorealistic",
+    "composition_S": "1.2::a dynamic scene, the main action happens in the center, readable at a glance::, medium shot, simple shapes, clean lineart, cel shading, thick outline, limited palette",
+    "composition_P": "1.2::scenery, wide shot, landscape, one clear focal point in the center::, simple shapes, clean lineart, cel shading, thick outline, limited palette, atmospheric perspective",
+    "composition_M": "1.2::symbolic still life, one central object, centered, wide empty margin::, simple background, clean lineart, cel shading, thick outline",
+    "uc_S": "1girl, 1boy, person, people, human, face, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.2::cluttered, crowded, busy::",
+    "uc_P": "1girl, 1boy, person, people, human, character, animal, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.1::cluttered, crowded::",
+    "uc_M": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic"
+  },
+  "tones": {
+    "sal": "1.2::plain soft dark warm grey background::, 1.1::thin white edge highlights::",
+    "ibex": "1.2::plain soft dark charcoal grey background::, 1.1::bright rim light outlining the silhouette::",
+    "star": "1.2::plain soft dark navy grey background::",
+    "sal_S": "1.1::warm red, amber and dark brown palette::",
+    "sal_P": "1.1::warm red, amber and dark brown palette::",
+    "ibex_S": "1.1::charcoal grey and molten orange palette::",
+    "ibex_P": "1.1::charcoal grey and molten orange palette::",
+    "star_S": "1.1::deep navy and pale gold palette::",
+    "star_P": "1.1::deep navy and pale gold palette::"
+  },
+  "cards": [
+    {
+      "id": "star_01",
+      "name": "별빛",
+      "owner": "star",
+      "comp": "S",
+      "subject": "no humans, 1.2::a streak of falling starlight landing on a small dark rock creature, three small glowing gold star marks appear on its back::, night"
+    },
+    {
+      "id": "star_01",
+      "name": "별빛",
+      "owner": "star",
+      "comp": "P",
+      "subject": "no humans, 1.2::a quiet grassy hill at night under a vast starry sky, one bright star shining right above the hill::"
+    },
+    {
+      "id": "star_01",
+      "name": "별빛",
+      "owner": "star",
+      "comp": "M",
+      "subject": "no humans, still life, object focus, 1.2::a glowing gold star-shaped sigil burned into a small round wooden shield::",
+      "uc_extra": "metal star, 3d star"
+    },
+    {
+      "id": "star_03",
+      "name": "별자리",
+      "owner": "star",
+      "comp": "S",
+      "subject": "no humans, 1.2::three small comets streaking side by side across the night sky toward the right, long pale gold trails::"
+    },
+    {
+      "id": "star_03",
+      "name": "별자리",
+      "owner": "star",
+      "comp": "P",
+      "subject": "no humans, 1.2::rolling dark hills under a night sky with one large constellation of connected stars::, thin gold lines between stars"
+    },
+    {
+      "id": "star_03",
+      "name": "별자리",
+      "owner": "star",
+      "comp": "M",
+      "subject": "no humans, still life, object focus, 1.2::five small paper lanterns floating in the dark, connected by thin glowing gold threads::",
+      "uc_extra": "text, kanji"
+    },
+    {
+      "id": "sal_01",
+      "name": "유리 벽",
+      "owner": "sal",
+      "comp": "S",
+      "subject": "no humans, 1.2::a translucent red glass wall rising from the ground in front of three small round creatures, a dark claw strike bouncing off the glass with sparks::",
+      "uc_extra": "drinking glass, cup, juice, liquid",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ]
+    },
+    {
+      "id": "sal_01",
+      "name": "유리 벽",
+      "owner": "sal",
+      "comp": "P",
+      "subject": "no humans, 1.2::a narrow canyon between tall translucent red glass cliffs, warm sunlight passing through the glass::",
+      "uc_extra": "drinking glass, cup, juice, liquid",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ]
+    },
+    {
+      "id": "sal_01",
+      "name": "유리 벽",
+      "owner": "sal",
+      "comp": "M",
+      "subject": "no humans, still life, object focus, 1.2::a small red glass dome covering a tiny green sprout::",
+      "uc_extra": "drinking glass, cup, juice, liquid, vase, bottle",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ]
+    },
+    {
+      "id": "sal_03",
+      "name": "꼬리 쓸기",
+      "owner": "sal",
+      "comp": "S",
+      "subject": "no humans, 1.2::the tail of a red glass salamander sweeping low through the air in a wide arc, scattering glittering red glass sand::, motion blur",
+      "uc_extra": "human, girl, face",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ]
+    },
+    {
+      "id": "sal_03",
+      "name": "꼬리 쓸기",
+      "owner": "sal",
+      "comp": "P",
+      "subject": "no humans, 1.2::dunes of glittering red glass sand with long wind ripples, a sweeping gust of wind, dusk::",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ]
+    },
+    {
+      "id": "sal_03",
+      "name": "꼬리 쓸기",
+      "owner": "sal",
+      "comp": "M",
+      "subject": "no humans, still life, object focus, 1.2::a single long red glass feather brushing a swirl of dark dust away::",
+      "uc_extra": "drinking glass, cup, juice, liquid",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ]
+    },
+    {
+      "id": "sal_08",
+      "name": "유리 파편",
+      "owner": "sal",
+      "comp": "S",
+      "subject": "no humans, 1.2::a red glass wall shattering, its sharp shards flying forward to the right like arrows::, burst",
+      "uc_extra": "drinking glass, cup, juice, liquid",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ]
+    },
+    {
+      "id": "sal_08",
+      "name": "유리 파편",
+      "owner": "sal",
+      "comp": "P",
+      "subject": "no humans, 1.2::a field of broken red glass shards sticking out of the ground after a storm, glittering, dusk::",
+      "uc_extra": "drinking glass, cup, juice, liquid",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ]
+    },
+    {
+      "id": "sal_08",
+      "name": "유리 파편",
+      "owner": "sal",
+      "comp": "M",
+      "subject": "no humans, still life, object focus, 1.2::a cracked red glass shield whose pieces are turning into arrowheads::",
+      "uc_extra": "drinking glass, cup, juice, liquid",
+      "variants": [
+        {
+          "tag": "c",
+          "mode": "clean"
+        }
+      ]
+    },
+    {
+      "id": "ibex_01",
+      "name": "들이받기",
+      "owner": "ibex",
+      "comp": "S",
+      "subject": "no humans, 1.2::a dark basalt mountain ibex with big curved horns charging head down, crashing horns first into a stone golem, orange impact flash, dust::",
+      "uc_extra": "human, girl, face"
+    },
+    {
+      "id": "ibex_01",
+      "name": "들이받기",
+      "owner": "ibex",
+      "comp": "P",
+      "subject": "no humans, 1.2::a dark basalt cliff face with a deep horn-shaped dent and radiating glowing orange cracks, mountain path::"
+    },
+    {
+      "id": "ibex_01",
+      "name": "들이받기",
+      "owner": "ibex",
+      "comp": "M",
+      "subject": "no humans, still life, object focus, 1.2::a battering ram made of black basalt with a horned ibex head at its front, glowing orange cracks::"
+    },
+    {
+      "id": "ibex_08",
+      "name": "흑요석 뿔",
+      "owner": "ibex",
+      "comp": "S",
+      "subject": "no humans, 1.2::a dizzy dark rock creature with little stars circling its head, being struck from both sides by sparks of black obsidian::"
+    },
+    {
+      "id": "ibex_08",
+      "name": "흑요석 뿔",
+      "owner": "ibex",
+      "comp": "P",
+      "subject": "no humans, 1.2::a volcanic slope at night with black obsidian spikes jutting out like horns, orange lava glow below::"
+    },
+    {
+      "id": "ibex_08",
+      "name": "흑요석 뿔",
+      "owner": "ibex",
+      "comp": "M",
+      "subject": "no humans, still life, object focus, 1.2::a black obsidian horn hanging as a pendant on a red cord, glowing orange cracks, talisman::"
+    },
+    {
+      "id": "ibex_10",
+      "name": "산사태",
+      "owner": "ibex",
+      "comp": "S",
+      "subject": "no humans, 1.2::a landslide of dark basalt boulders crashing down a steep slope onto small dark creatures below, dust clouds::, dynamic angle",
+      "uc_extra": "human, girl, face"
+    },
+    {
+      "id": "ibex_10",
+      "name": "산사태",
+      "owner": "ibex",
+      "comp": "P",
+      "subject": "no humans, 1.2::a mountain pass blocked by a huge pile of fallen basalt boulders, glowing orange cracks, dust hanging in the air, dusk::"
+    },
+    {
+      "id": "ibex_10",
+      "name": "산사태",
+      "owner": "ibex",
+      "comp": "M",
+      "subject": "no humans, still life, object focus, 1.2::a tall cairn of black stones toppling over, stones falling apart::"
+    }
+  ]
+}

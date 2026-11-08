@@ -1,25 +1,37 @@
 import constantsJson from "../data/constants.json";
 import spiritsJson from "../data/spirits.json";
 import personalitiesJson from "../data/personalities.json";
-import cardsJson from "../data/cards.json";
+import { CARD_FILES } from "../data/cards";
 import enemiesJson from "../data/enemies.json";
 import encountersJson from "../data/encounters.json";
 import eventsJson from "../data/events.json";
 import assetsJson from "../data/assets.json";
 import growthJson from "../data/growth.json";
+import { DEFAULT_LOCALE, cardText, type Locale } from "./l10n";
 import type {
-  CardDef, EncounterDef, EnemyDef, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
+  CardData, CardDef, EncounterDef, EnemyDef, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
 } from "./types";
 
 export const C = constantsJson;
 export const SPIRITS = spiritsJson as SpiritDef[];
 export const PERSONALITIES = personalitiesJson as PersonalityDef[];
-export const CARDS = cardsJson as CardDef[];
+/** 모든 카드. 묶음 파일 순서대로 이어 붙여요 (시작 덱 순서가 이 순서를 따라요). */
+export const CARDS: CardDef[] = (Object.values(CARD_FILES).flat() as CardData[]).map((d) => ({ ...d, name: "" }));
 export const ENEMIES = enemiesJson as EnemyDef[];
 export const ENCOUNTERS = encountersJson as EncounterDef[];
 export const EVENTS = eventsJson as EventDef[];
 export const ASSETS = assetsJson as unknown as AssetsConfig;
 export const GROWTH = growthJson as unknown as GrowthDef;
+
+let locale: Locale = DEFAULT_LOCALE;
+export const currentLocale = () => locale;
+
+/** 게임 언어를 바꿔요. 카드 정의의 문구 필드를 그 언어로 다시 채워요. */
+export function setLocale(next: Locale) {
+  locale = next;
+  for (const c of CARDS) c.name = cardText(c.id, next).name;
+}
+setLocale(DEFAULT_LOCALE);
 
 export interface ShapeAsset { type: "shape"; shape: string; color: string; size: number }
 export interface ImageAsset { type: "image"; path: string; scale?: number; offsetY?: number }

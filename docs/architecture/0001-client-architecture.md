@@ -16,7 +16,7 @@ src/presentation  Phaser 화면: scenes / views / viewmodels / fx / style / plac
 src/menu          DOM 앱 메뉴 (C안)
 src/session       명령 받기 → core 호출 → 이벤트, 세이브 스냅샷
 src/core          규칙. 순수 TS
-src/data          JSON (+ 스키마)
+src/data          JSON: 카드 묶음(cards/), 언어별 문구(locales/), 그 밖의 정의. src/data/README.md
 src/platform      Platform 인터페이스, Electron/웹 구현. 저장은 문자열만
 ```
 
