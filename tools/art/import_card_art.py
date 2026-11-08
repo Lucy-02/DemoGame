@@ -1,6 +1,7 @@
 # 고른 카드 일러스트 원본을 게임 에셋으로 만들고 출처 기록을 갱신해요.
 # 쓰는 법: python3 tools/art/import_card_art.py <원본 폴더: <case_id>.png + meta.json> [--manifest design/card/art/picks.json]
-# 결과: public/assets/cards/<id>.webp (OUT_PX 정사각), assets/provenance.jsonl의 해당 path 줄 교체·추가.
+# 결과: public/assets/cards/<id>.webp (OUT_PX 정사각), assets/provenance.jsonl의 해당 path 줄 교체·추가,
+#       src/presentation/card/artIds.json (그림이 있는 카드 id 목록).
 import argparse
 import hashlib
 import io
@@ -17,12 +18,17 @@ OUT_DIR = "public/assets/cards"
 OUT_PX = 512
 WEBP_QUALITY = 90
 PROVENANCE = "assets/provenance.jsonl"
+ART_IDS = "src/presentation/card/artIds.json"
 MODEL_NAMES = {"nai-diffusion-4-5-full": "NovelAI Diffusion V4.5 Full"}
+SELECTION = {
+    "0042": "Lucy가 후보 중 선별(0042)",
+    "0044": "Claude가 고른 1순위를 Lucy가 승인(0044)",
+}
 HUMAN_WORK = {
-    "object": "Lucy가 후보 중 선별(0042). fit_art.py로 물체를 그림 창 가운데로 옮기고 크기를 맞춤(fit_size {size}), 모자란 바탕은 원본 바탕으로 이어 그림. {px}px webp 변환",
-    "symbol": "Lucy가 후보 중 선별(0042). fit_art.py로 물체를 그림 창 가운데로 옮기고 크기를 맞춤(fit_size {size}), 모자란 바탕은 원본 바탕으로 이어 그림. {px}px webp 변환",
-    "scene": "Lucy가 후보 중 선별(0042). {px}px webp 변환만",
-    "backdrop": "Lucy가 후보 중 선별(0042). {px}px webp 변환만",
+    "object": "{selection}. fit_art.py로 물체를 그림 창 가운데로 옮기고 크기를 맞춤(fit_size {size}), 모자란 바탕은 원본 바탕으로 이어 그림. {px}px webp 변환",
+    "symbol": "{selection}. fit_art.py로 물체를 그림 창 가운데로 옮기고 크기를 맞춤(fit_size {size}), 모자란 바탕은 원본 바탕으로 이어 그림. {px}px webp 변환",
+    "scene": "{selection}. {px}px webp 변환만",
+    "backdrop": "{selection}. {px}px webp 변환만",
 }
 
 
@@ -54,7 +60,7 @@ def record(card: dict, path: str, data: bytes, meta: dict) -> dict:
         "settings": {k: m[k] for k in ("width", "height", "steps", "scale", "cfg_rescale", "sampler", "noise_schedule")},
         "source_png": f"jjal {m['source_png']}" if m.get("source_png") else f"jjal runs/{m['run_id']}",
         "source_sha256": m["image_sha256"],
-        "human_work": HUMAN_WORK[card["composition"]].format(size=card["fit_size"], px=OUT_PX),
+        "human_work": HUMAN_WORK[card["composition"]].format(selection=SELECTION[card["decision"]], size=card["fit_size"], px=OUT_PX),
         "note": f"카드 일러스트 {card['name']} ({card['composition']}). 화풍 {m['style_key']} {m['variant']}. 기록 design/card/art/rounds/",
     }
 
@@ -78,6 +84,9 @@ def main():
     with open(PROVENANCE, "w", encoding="utf-8") as f:
         for ln in kept + [json.dumps(r, ensure_ascii=False, separators=(",", ":")) for r in rows.values()]:
             f.write(ln + "\n")
+    with open(ART_IDS, "w", encoding="utf-8") as f:
+        json.dump(sorted(c["id"] for c in cards), f, indent=0)
+        f.write("\n")
     print(f"카드 일러스트 {len(rows)}장")
 
 
