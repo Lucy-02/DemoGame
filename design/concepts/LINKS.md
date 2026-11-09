@@ -103,3 +103,8 @@
 - D2-1 집으면 줄에: https://claude.ai/artifact/4RNffNh5TvktqgWD3v213Y
 - D2-2 카드에 셋 다: https://claude.ai/artifact/WvD6oMY8y6M6mb9nq3wjGr
 - 프레임 비교 이미지: /mnt/project-files/design/result-r4/
+
+## 결과 창 라운드 5 (2026-11-09): D2 정리안
+- R5 정리안 (정령별 차이 안 보임): https://claude.ai/artifact/BGaLyfeT55UJSBJKUUDUYk
+- R5-B 능력치 보임: https://claude.ai/artifact/WVXwBJ9BsSfRhP3TNvQiCM
+- 비교 이미지: /mnt/project-files/design/result-r5/
