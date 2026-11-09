@@ -86,3 +86,8 @@
 - C 차오르는 박자: https://claude.ai/artifact/SY7XoB5x2GCiwYH72NZ2eC
 - D 지나온 길: https://claude.ai/artifact/9QNK2TCLPngAo9UrmdYPpo
 - E 정원으로 돌아옴: https://claude.ai/artifact/KYVAgwtWZJmwuGefC5KjEx
+
+## 결과 창 라운드 2 (2026-11-09, C 뼈대 + A·E·B 조각)
+- R2-1 가운데 판: https://claude.ai/artifact/BkA4uCpc55CjwAwtjnZW4h
+- R2-2 같은 자리: https://claude.ai/artifact/T6c2QPiYXo6AbgmdaukcH9
+- R2-3 올라오는 판: https://claude.ai/artifact/4rv7LSaeAPxPQ3xVsbvgG9
