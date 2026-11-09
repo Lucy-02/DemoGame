@@ -98,3 +98,8 @@
 - D2 셋이 고르는 자리: https://claude.ai/artifact/LwqArdExDLxWMn1Fh8KGto
 - D3 싸운 자리 그대로: https://claude.ai/artifact/XGipL7LSGdtZemYGHN38xu
 - 프레임 비교 이미지: /mnt/project-files/design/result-r3/
+
+## 결과 창 라운드 4 (2026-11-09): D2 두 갈래
+- D2-1 집으면 줄에: https://claude.ai/artifact/4RNffNh5TvktqgWD3v213Y
+- D2-2 카드에 셋 다: https://claude.ai/artifact/WvD6oMY8y6M6mb9nq3wjGr
+- 프레임 비교 이미지: /mnt/project-files/design/result-r4/
