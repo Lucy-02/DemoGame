@@ -91,3 +91,10 @@
 - R2-1 가운데 판: https://claude.ai/artifact/BkA4uCpc55CjwAwtjnZW4h
 - R2-2 같은 자리: https://claude.ai/artifact/T6c2QPiYXo6AbgmdaukcH9
 - R2-3 올라오는 판: https://claude.ai/artifact/4rv7LSaeAPxPQ3xVsbvgG9
+
+## 결과 창 라운드 3 (2026-11-09): 전투 결과 = 보상 + 정령 셋
+- 정보 도출 문서: https://claude.ai/artifact/QhWhVqY9mTqmqHjLX82Pgs
+- D1 보상이 곧 결과: https://claude.ai/artifact/Wj1vfkn3yh3yQ5Fkstdh3w
+- D2 셋이 고르는 자리: https://claude.ai/artifact/LwqArdExDLxWMn1Fh8KGto
+- D3 싸운 자리 그대로: https://claude.ai/artifact/XGipL7LSGdtZemYGHN38xu
+- 프레임 비교 이미지: /mnt/project-files/design/result-r3/
