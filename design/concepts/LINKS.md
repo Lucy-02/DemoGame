@@ -118,3 +118,9 @@
 - A2 필요할 때 펼침: https://claude.ai/artifact/HreUF37YFbbDb3hvt47YVs
 - A3 장면과 세 줄: https://claude.ai/artifact/9jRLFPzKfeZ4J6x9kqa9WR
 - 프레임: /mnt/project-files/design/batch-a/
+- **묶음 A 정리안 (페르소나 컨펌, Lucy 확인 대기)**: https://claude.ai/artifact/CFfTZNCzVXTjiV1f8A697q · 프레임 /mnt/project-files/design/batch-a/final/
+
+## 묶음 B (2026-11-09 밤): 갈래 고르기·정원 허브·일시정지·첫 시작·설정·도감
+- B1 정령 관리 문법: https://claude.ai/artifact/ELsMRkoyowzfA8X4HijXqT
+- B2 공통 오버레이: https://claude.ai/artifact/6VeLu8hRaBUJuDvof6TgtQ
+- 프레임: /mnt/project-files/design/batch-b/
