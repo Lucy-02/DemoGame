@@ -25,6 +25,7 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 - `src/core`, `src/data`: 게임 로직과 데이터. UI 작업에서 건드리지 않아요. 규칙을 바꾸면 골든 테스트 스냅샷이 바뀌니 PR에 이유를 적어요.
 - `src/presentation/placeholder`: 예전 임시 UI(`?screen=legacy`). 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 레거시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 규칙으로 끝까지 플레이되는 화면은 레거시뿐이에요. 작업하면서 안 쓰게 된 코드·토큰도 같은 PR에서 정리해요.
 - 클라이언트(전투 화면) 작업은 `docs/handoff/CLIENT_HANDOFF.md`를 먼저 읽어요. 정본 옮기는 관행과 렌더링 디테일이 있어요.
+- 시안을 구현할 때 시안 HTML을 그대로 옮기지 않아요. 재사용·리팩터링할 수 있는 기존 컴포넌트를 먼저 찾아 쓰고, 실제 코드 구조에 맞게 가져와요 (Lucy 2026-11-09).
 - `src/platform`, `electron/`: 저장·창 같은 바깥 세계. 렌더러는 Electron을 직접 import하지 않아요.
 - `src/design/tokens.ts`: `design/tokens/tokens.json`에서 `pnpm tokens`로 생성. 손으로 고치지 않아요.
 - `pnpm check:design`: 리터럴 값 검사. `design/strict-paths.txt`에 적힌 경로는 위반 시 실패해요.
