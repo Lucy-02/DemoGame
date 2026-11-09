@@ -108,3 +108,7 @@
 - R5 정리안 (정령별 차이 안 보임): https://claude.ai/artifact/BGaLyfeT55UJSBJKUUDUYk
 - R5-B 능력치 보임: https://claude.ai/artifact/WVXwBJ9BsSfRhP3TNvQiCM
 - 비교 이미지: /mnt/project-files/design/result-r5/
+
+## 결과 창 라운드 6 (2026-11-09): R5-B + 정본 카드·툴팁
+- R6: https://claude.ai/artifact/EgCfphx7Z96SGiiNHCCPoF (카드·툴팁은 게임의 HandCard·Tooltip 실제 렌더)
+- 프레임: /mnt/project-files/design/result-r6/
