@@ -112,3 +112,9 @@
 ## 결과 창 라운드 6 (2026-11-09): R5-B + 정본 카드·툴팁
 - R6: https://claude.ai/artifact/EgCfphx7Z96SGiiNHCCPoF (카드·툴팁은 게임의 HandCard·Tooltip 실제 렌더)
 - 프레임: /mnt/project-files/design/result-r6/
+
+## 묶음 A (2026-11-09 밤): 런 결과·상점·휴식·이벤트·정령 보기
+- A1 세 줄 고정: https://claude.ai/artifact/CPfgA4pV9Q4rVvK49QGifr
+- A2 필요할 때 펼침: https://claude.ai/artifact/HreUF37YFbbDb3hvt47YVs
+- A3 장면과 세 줄: https://claude.ai/artifact/9jRLFPzKfeZ4J6x9kqa9WR
+- 프레임: /mnt/project-files/design/batch-a/
