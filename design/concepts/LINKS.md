@@ -124,3 +124,4 @@
 - B1 정령 관리 문법: https://claude.ai/artifact/ELsMRkoyowzfA8X4HijXqT
 - B2 공통 오버레이: https://claude.ai/artifact/6VeLu8hRaBUJuDvof6TgtQ
 - 프레임: /mnt/project-files/design/batch-b/
+- **묶음 B 정리안 (페르소나 컨펌, Lucy 확인 대기)**: https://claude.ai/artifact/WcoL9EGghyJJb5QGsrU1N4 · 프레임 /mnt/project-files/design/batch-b/final/
