@@ -6,6 +6,13 @@
   "opening_window_ms": 300,
   "opening_mult": 1.25,
   "freeze_delay_ms": 800,
+  "star_threshold": 3,
+  "star_falls": ["meteor", "meteor_shower", "comet", "star_veil"],
+  "hold_mult": 1.5,
+  "hold_time_cut_ms": 300,
+  "ready_mult": 2,
+  "hidden_mult": 0.5,
+  "stagger_on_break": 3,
   "enemy_at": {
     "normal": 2000,
     "minion": 1800,
@@ -13,6 +20,7 @@
     "boss": 2400
   },
   "party_size": 3,
+  "default_party": ["fire_fox", "glass_salamander", "mist_cat"],
   "stat_base": 10,
   "release_duration": 2,
   "vuln_base": 0.25,

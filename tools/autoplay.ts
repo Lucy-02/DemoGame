@@ -8,6 +8,8 @@ import { Run } from "../src/core/run";
  *  시간축(0036)에서는 방어가 적 행동보다 먼저 끝나야 해서, 고른 카드는 방어부터 줄에 놓아요. 뽑기 카드는 바로 내요. */
 export function autoPlayTurn(b: Battle, rng: Rng) {
   for (const s of b.aliveSpirits()) if (b.canRelease(s.id)) b.release(s.id);
+  // 낙하 고르기: 유성 → 혜성 순서로 받아요
+  while (b.stars.choice) b.chooseFall(["meteor", "comet", "meteor_shower", "star_veil"]);
   const has = (op: string) => (x: BCard) => cardDef(x.cardId).effects.some((o) => o.op === op);
   for (let round = 0; round < 10 && b.result === "ongoing"; round++) {
     // 이번 마력으로 낼 카드를 예전 규칙대로 고르고
@@ -46,8 +48,9 @@ export interface AutoBattleResult {
 }
 
 /** 시드 i로 런을 만들고 인카운터 하나를 끝까지(최대 40턴) 자동으로 싸워요. 같은 i면 항상 같은 결과예요. */
-export function autoBattle(enemies: string[], i: number): AutoBattleResult {
-  const run = new Run({ seed: 1000 + i, frontId: "glass_salamander", adult: false, unlockAll: false });
+export function autoBattle(enemies: string[], i: number, party?: string[]): AutoBattleResult {
+  const frontId = party?.[0] ?? "glass_salamander";
+  const run = new Run({ seed: 1000 + i, frontId, party, adult: false, unlockAll: false });
   const rng = new Rng(i * 7 + 3);
   const b = new Battle(run.spirits, run.deck, enemies, run.frontId, rng);
   const events: BattleEvent[] = [];

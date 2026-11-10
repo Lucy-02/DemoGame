@@ -1,8 +1,17 @@
 import type { AuraId, DeckCard, EnemyDef, PersonalityDef, RunSpirit, SpiritDef } from "../types";
 
-/** 상태 이름. 표(`statuses.ts`의 STATUSES)가 쌓는 법과 줄어드는 때를 정해요. */
+/** 상태 이름. 표(`statuses.ts`의 STATUSES)가 쌓는 법과 줄어드는 때를 정해요. 턴 끝 처리는 이 순서예요. */
 export const STATUS_IDS = [
-  "burn", "chill", "regen", "vuln", "weak", "thorns", "taunt", "empower", "keepBlock", "bonusDmg",
+  // 공통
+  "burn", "chill", "regen", "vuln", "weak", "thorns", "taunt", "empower", "bonusDmg", "hitBonus",
+  // 별 정령
+  "star", "starlight", "comet",
+  // 유리 도롱뇽
+  "wall", "wallHeat", "wallBroken", "wallTaken", "afterglow",
+  // 산양
+  "stagger", "cancelNext", "footing",
+  // 카멜레온
+  "hidden", "ready",
 ] as const;
 export type StatusId = (typeof STATUS_IDS)[number];
 
@@ -11,8 +20,12 @@ export interface StatusStack {
   n: number;
   /** 적 턴에 걸린 상태: 이번 라운드 끝에는 줄지 않아요 */
   fresh: boolean;
-  /** 세기 (취약: 추가 피해 비율) */
+  /** 세기 (취약: 추가 피해 비율, 타격 보너스: 타격마다 더하는 값) */
   strength: number;
+  /** 이 턴의 라운드 끝에 사라져요 */
+  until?: number;
+  /** 연결된 정령 id (숨음: 받아칠 기회를 받을 아군) */
+  ref?: string;
 }
 export type StatusMap = Partial<Record<StatusId, StatusStack>>;
 
@@ -24,6 +37,13 @@ export const statusStrength = (h: StatusHolder, id: StatusId): number => h.statu
 /** 상태 칸을 돌려줘요. 없으면 0으로 만들어요. */
 export function stackOf(h: StatusHolder, id: StatusId): StatusStack {
   return (h.status[id] ??= { n: 0, fresh: false, strength: 0 });
+}
+/** 상태를 n만큼 쓰고, 0이 되면 지워요. */
+export function spendStatus(h: StatusHolder, id: StatusId, n = 1) {
+  const st = h.status[id];
+  if (!st) return;
+  st.n -= n;
+  if (st.n <= 0) delete h.status[id];
 }
 
 export interface BSpirit extends StatusHolder {
@@ -70,7 +90,12 @@ export interface BCard extends DeckCard {
   tempCostDelta: number;
   locked: boolean;
   isCopy: boolean;
+  /** 이번 전투 동안 쌓인 주 수치 보너스 */
   grow: number;
+  /** 품었다가 돌아온 카드: 효과 × hold_mult, 시간 - hold_time_cut_ms */
+  held: boolean;
+  /** 밀물 뒤에 돌아온 카드: 기본 시간 절반 */
+  heldFast: boolean;
 }
 
 /** 계획된 아군 카드. 턴 종료 때 끝나는 시각 순서로 재생돼요 (0036). */
@@ -91,13 +116,47 @@ export interface EnemySlot {
   done: boolean;
 }
 
+/** 별 정령: 새긴 별을 세고 낙하를 내줘요 */
+export interface StarState {
+  /** 문턱을 향해 세는 별 */
+  count: number;
+  /** 문턱 줄임 (샛별) */
+  thresholdCut: number;
+  /** 다음 턴 시작에 열 낙하 고르기 수 */
+  pendingFalls: number;
+  /** 지금 열린 낙하 고르기 */
+  choice: FallChoice | null;
+}
+export interface FallChoice {
+  /** 고를 수 있는 낙하 카드 id */
+  options: string[];
+  /** 받을 장 수 */
+  picks: number;
+  /** 낙하 카드의 주인 */
+  owner: string;
+}
+
+/** 진주조개: 턴 끝에 품고 다음 턴 시작에 돌려줘요 */
+export interface HoldState {
+  /** 이번 턴 끝에 품을 장 수 */
+  thisTurn: number;
+  /** 플레이어가 먼저 골라 둔 카드 uid (고른 순서) */
+  picks: number[];
+  /** 품고 있는 카드 */
+  held: BCard[];
+  /** 밀물: 다음에 돌아오는 카드는 기본 시간 절반 */
+  highTide: boolean;
+  /** 다음 턴 더 뽑는 수 (용궁) */
+  nextTurnDraw: number;
+}
+
 export type Ref = { side: "s"; id: string } | { side: "e"; uid: number };
 export const refOf = (h: BSpirit | BEnemy): Ref => (isEnemy(h) ? { side: "e", uid: h.uid } : { side: "s", id: h.id });
 
 /** 연출용 이벤트. 확정된 결과만 담아요 (0001). */
 export type BattleEvent =
   | { k: "log"; text: string }
-  | { k: "damage"; ref: Ref; amount: number; blocked: number; crit?: boolean; weakHit?: boolean; resist?: boolean; opening?: boolean }
+  | { k: "damage"; ref: Ref; amount: number; blocked: number; crit?: boolean; weakHit?: boolean; resist?: boolean; opening?: boolean; wall?: number }
   | { k: "heal"; ref: Ref; amount: number }
   | { k: "block"; ref: Ref; amount: number }
   | { k: "status"; ref: Ref; text: string }
@@ -111,7 +170,11 @@ export type BattleEvent =
   | { k: "releaseEnd"; id: string }
   | { k: "downed"; id: string }
   | { k: "enemyDead"; uid: number }
-  | { k: "phase2"; uid: number };
+  | { k: "phase2"; uid: number }
+  | { k: "fallOffer"; owner: string; picks: number }
+  | { k: "fall"; owner: string; card: string }
+  | { k: "hold"; owner: string; card: string }
+  | { k: "ready"; id: string };
 
 export interface Intent {
   name: string;
