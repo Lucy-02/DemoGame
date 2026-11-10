@@ -23,6 +23,13 @@
 - 장비 단계는 규칙이 생긴 뒤에 켜요. 그 전에는 일반 전투 보상(카드 + 넘기기)까지 연결해요.
 - 빠른 두 번 클릭으로 장비가 카드 주인에게 바로 가지 않게 단계 사이 짧은 입력 막기(`TODO_TOKEN`).
 
+## 구현 1단계 (2026-11-10, 고정 장면)
+- `src/presentation/result/` · `?screen=result&scene=normal` (`&hover=<카드 key|skip>`, `&taken=<카드 key|skip>`로 상태 고정). 아직 런에 연결하지 않았고 레거시 `RewardScene`도 그대로예요.
+- 카드에 올리면 주인 줄이 밝아지고 칸에 카드가 비쳐요. 누르면 그 줄로 들어가고 남은 카드는 가라앉아요. 넘기기도 한 번 누르면 끝이에요.
+- 다시 쓴 것: 카드(`createHandCard`에 `showRarity`·`scale`, `CardVM.rarity`·`face`), 말풍선(PAPER), 링(`style/ring.ts`로 올려 정령 관리 띠와 함께 씀), 얼굴 자르기(`spiritArt.ts faceTexture`), 막대·배지(`spirits/views/parts.ts`).
+- 임시 값: `tokens.provisional`의 `text.result`, `palette.stat`·`rarity`·`gold`·`stageHi`·`stageLo`, `veil.20`·`50`. 능력치 기호 셋과 넘기기 기호(점선 칸)는 정본 기호가 없어요.
+- 아직 없는 것: 장비 단계, 넘기기 골드 값(`+?`), 움직임(카드가 줄로 들어가는 전환), 불여우 얼굴 그림, 정령별 카드 창 윗선 모양(속성이 같은 정본 모양을 빌림).
+
 ## 기각
 - E2 줄 맞춤(카드를 세로로 주인 줄 옆에): 카드 넓이가 절반으로 줄고 왼쪽이 크게 비며, 말풍선이 카드 옆으로 가야 해요.
 - 장비 거절, 장비를 카드 고른 뒤에야 보여주기.

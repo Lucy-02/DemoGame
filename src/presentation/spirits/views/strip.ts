@@ -5,7 +5,8 @@ import { box, circle } from "../../style/draw";
 import { render, size, hitArea, type Node } from "../../style/flex";
 import { canvasTexture } from "../../style/gradient";
 import { placeholderArt } from "../../style/placeholder";
-import { paintTileFace } from "../artFit";
+import { ringTexture } from "../../style/ring";
+import { faceTexture } from "../../spiritArt";
 import { COPY } from "../copy";
 import { FRAME, STRIP } from "../layout";
 import type { RingVM, SpiritsVM, TileVM } from "../viewmodel";
@@ -18,25 +19,14 @@ export const STRIP_ICONS = [
 ] as const;
 
 /** 링 텍스처 (.q-ring svg): 바탕 원 + 진행 호. 최종 단계는 얇은 상아 원 */
-function ringTexture(scene: Phaser.Scene, ring: RingVM): string {
+function tileRing(scene: Phaser.Scene, ring: RingVM): string {
   const R = S.ring;
   const pct = Math.round(ring.value * 100);
-  return canvasTexture(scene, `spirits:ring:${ring.kind}:${pct}`, R.d, R.d, (ctx) => {
-    const c = R.d / 2;
-    ctx.lineCap = "round";
-    if (ring.kind !== "final") {
-      ctx.strokeStyle = P.veil["14"];
-      ctx.lineWidth = R.stroke;
-      ctx.beginPath();
-      ctx.arc(c, c, R.r, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.strokeStyle = ring.kind === "final" ? P.ink : ring.kind === "ready" ? P.ok : P.ink2;
-    ctx.lineWidth = ring.kind === "final" ? R.finalStroke : R.stroke;
-    if (pct <= 0) return;
-    ctx.beginPath();
-    ctx.arc(c, c, R.r, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * pct) / 100);
-    ctx.stroke();
+  const final = ring.kind === "final";
+  return ringTexture(scene, `spirits:ring:${ring.kind}:${pct}`, {
+    d: R.d, r: R.r, stroke: R.stroke, cap: "round",
+    track: final ? undefined : { color: P.veil["14"] },
+    arcs: [{ from: 0, to: pct / 100, color: final ? P.ink : ring.kind === "ready" ? P.ok : P.ink2, width: final ? R.finalStroke : R.stroke }],
   });
 }
 
@@ -125,14 +115,13 @@ function drawTile(scene: Phaser.Scene, t: TileVM, selected: boolean, x: number, 
   circle(g, rx + R.d / 2, ry + R.d / 2, faceD, { fill: P.wall });
   const face = t.face;
   if (face && scene.textures.exists(face.key)) {
-    const src = scene.textures.get(face.key).getSourceImage() as HTMLImageElement;
-    const k = canvasTexture(scene, `${face.key}@tile${faceD}:${face.crop.join(",")}`, faceD, faceD, (ctx) => paintTileFace(ctx, src, face.crop, faceD));
+    const k = faceTexture(scene, face, faceD);
     scene.add.image(rx + R.faceInset, ry + R.faceInset, k).setOrigin(0, 0);
   } else {
     const ph = faceD / 2;
     placeholderArt(scene, rx + (R.d - ph) / 2, ry + (R.d - ph) / 2, ph, ph, P.glassLine);
   }
-  scene.add.image(rx, ry, ringTexture(scene, t.ring)).setOrigin(0, 0);
+  scene.add.image(rx, ry, tileRing(scene, t.ring)).setOrigin(0, 0);
   // 단계 칩: 링 아래 가운데에 걸쳐요
   const chip: Node = {
     t: "row", h: S.chip.h, pad: [0, S.chip.padX, 0, S.chip.padX], radius: S.chip.radius, gap: S.chip.gap, align: "center",
