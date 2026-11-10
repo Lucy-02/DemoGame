@@ -165,3 +165,5 @@
 - M2 가지런한 무리: https://claude.ai/artifact/BeoXitUZZrkSGtKsxf7FVX
 - M3 큰 정령 길: https://claude.ai/artifact/BE5ZiNetHzrbnQ9JzC7yMi
 - 프레임: /mnt/project-files/design/batch-c-r2/final·M1·M2·M3/
+- M4 섞기안 (가지런한 무리 + 진입점): https://claude.ai/artifact/95Aij4w11QhtzK9deF1i2h (프레임: /mnt/project-files/design/batch-c-r2/M4/)
+- 비교 시트 (C1~C4, 정리안, M1~M4, Lucy가 정할 것): https://claude.ai/artifact/6mczMhvwmbtF6ryQHWifMG
