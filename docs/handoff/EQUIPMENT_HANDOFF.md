@@ -2,7 +2,7 @@
 
 - 날짜: 2026-11-10 · 작성: 장비 시스템 도입 검토 스레드
 - 근거 결정: 0048 정령 장비·공명, 0049 전투 보상 구조 (PR #59), 0021 성장 메타, 0033 성격, 0036 시간축, 0045 성장 규칙(필러 2 "키우면 강해지고, 달라진다", 재료 보류)
-- 근거 코드: `src/core/stats.ts`(`baseStat`, `maxHpOf`, `stageBonus`, `levelHp`), `src/core/battle.ts` `stat()`(용맹)·치명 계산, `src/core/types.ts` `RunSpirit`, `src/data/personalities.json`, `src/data/constants.json`, `assets/PROVENANCE.md`
+- 근거 코드: `src/core/stats.ts`(`baseStat`, `maxHpOf`, `stageBonus`, `levelHp`), `src/core/battle/battle.ts` `stat()`(용맹)·치명 계산, `src/core/types.ts` `RunSpirit`, `src/data/personalities.json`, `src/data/constants.json`, `assets/PROVENANCE.md`
 - ★ = 아직 정하지 않은 것. 구현은 기본값(제안)으로 하되 데이터로 바꿀 수 있게 두기.
 
 ## 0. 장비 효과의 모양 (Lucy 2026-11-10 확정)
