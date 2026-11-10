@@ -18,9 +18,10 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 5. 리뷰어(`.claude/agents/`)는 Lucy가 원할 때만, 확인이 필요한 화면에만 돌려요. 미적 판단은 하지 않아요.
 - 시안에 쓰는 색·폰트는 임시 값이에요. Lucy가 고르기 전에는 토큰에 넣지 않아요.
 - 리뷰 보드: https://claude.ai/artifact/K2By7mr5uWaJYH4RNWbLJ8 (`db` 컬렉션: personas, rounds, options, cards), 지적 카드 형식: `design/review/card.schema.json`
-- 라운드가 끝나면 `docs/design-decisions/NNNN-주제.md`를 남기고 `docs/handoff/DECISIONS.md`에 한 줄 요약을 더해요.
+- 라운드가 끝나면 `docs/design-decisions/NNNN-주제.md`를 남기고 `docs/handoff/DECISIONS.md`에 한 줄 요약을 더해요. 번호는 쓰기 직전에 폴더와 열린 PR을 보고 잡고, 같은 폴더 `README.md` 색인 표에도 한 줄 더해요(`pnpm check:docs`).
 
 ## 코드 구조
+- 문서가 어디 있는지는 `docs/README.md`(길잡이)에서 찾아요. 스레드 인수인계 문서는 레포 `docs/handoff/`에 둬요.
 - 구조와 의존 방향: `docs/architecture/0001-client-architecture.md`. `pnpm lint:deps`가 강제해요.
 - `src/core`, `src/data`: 게임 로직과 데이터. UI 작업에서 건드리지 않아요. 규칙을 바꾸면 골든 테스트 스냅샷이 바뀌니 PR에 이유를 적어요.
 - `src/presentation/placeholder`: 예전 임시 UI(`?screen=legacy`). 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 레거시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 규칙으로 끝까지 플레이되는 화면은 레거시뿐이에요. 작업하면서 안 쓰게 된 코드·토큰도 같은 PR에서 정리해요.

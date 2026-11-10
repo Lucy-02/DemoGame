@@ -14,11 +14,12 @@
     "test": "vitest run",
     "test:e2e": "electron-vite build && playwright test",
     "lint:deps": "depcruise src electron tools --config .dependency-cruiser.cjs",
-    "check": "pnpm typecheck && pnpm lint:deps && pnpm test && pnpm check:design",
+    "check": "pnpm typecheck && pnpm lint:deps && pnpm test && pnpm check:design && pnpm check:docs",
     "sim": "tsx tools/sim.ts",
     "tokens": "tsx scripts/build-tokens.ts",
     "check:design": "tsx scripts/check-literals.ts",
     "check:assets": "tsx scripts/check-assets.ts",
+    "check:docs": "tsx scripts/check-docs.ts",
     "visual": "tsx tools/visual/compare.ts"
   },
   "devDependencies": {
