@@ -149,3 +149,11 @@
 - E1 가로 그대로: https://claude.ai/artifact/JY6nFw4GK2WCKFwtqo1Cdj
 - E2 줄 맞춤: https://claude.ai/artifact/Ec5PKyy3XEuJ5cyFjhhyCL
 - 프레임: /mnt/project-files/design/round-e/E1~E2/ (소스 /tmp/claude-0/roundE/)
+
+## 묶음 C (2026-11-11): 런 밖 여정 — 만남·해금·출전 준비가 어디서 일어나나
+- 연구 노트: `design/concepts/out-of-run-research.md`, 결정 `0052`
+- C1 정원이 무대: https://claude.ai/artifact/FakW367Fg1xHQvSqHBMcWA
+- C2 유리 틀 하나: https://claude.ai/artifact/4cDNnkZPsuUoGCsjK4FshK
+- C3 정령 줄이 잇는다: https://claude.ai/artifact/FURzzSGZKXstU2uGsxTwiG
+- C4 한 박자씩: https://claude.ai/artifact/4EN59UpcoJ6ZgTEHWTVJ4y
+- 프레임: /mnt/project-files/design/batch-c/C1~C4/ (f1–f10.png)
