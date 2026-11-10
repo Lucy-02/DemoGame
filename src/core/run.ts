@@ -59,7 +59,7 @@ export class Run {
         ? toRunSpirit(garden.spirits.find((g) => g.id === s.id) ?? missing(s.id))
         : {
           id: s.id, hp: 0, maxHpBonus: 0, stage: opts.adult ? "adult" : "baby", level: opts.adult ? ADULT_LEVEL : 1,
-          personality: this.rng.pick(PERSONALITIES).id,
+          personality: this.rng.pick(PERSONALITIES).id, equipment: [],
         };
       rs.hp = maxHpOf(rs);
       return rs;

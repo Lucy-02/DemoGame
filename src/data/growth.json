@@ -6,6 +6,8 @@
   "material": { "normal": 1, "elite": 3, "boss": 5 },
   "stage_main_bonus": 2,
   "stage_hp_main_bonus": 6,
+  "equip_keep_slots": [0, 1, 2],
+  "equip_resonance_cap": [1, 2, 3],
   "evolutions": [
     { "spirit": "fire_fox", "from": "baby", "to": "adult", "level": 4 },
     { "spirit": "fire_fox", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "dealt", "n": 150 } },

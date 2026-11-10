@@ -1,5 +1,5 @@
 import { C, affinity } from "../data";
-import { baseStat, round } from "../stats";
+import { baseStat, conditionHolds, critStat, equipMods, round } from "../stats";
 import type { Element, EnemyTargetRule, StatKey } from "../types";
 import type { Engine } from "./engine";
 import { allPassives, passivesOf } from "./passives";
@@ -26,9 +26,18 @@ export interface StatCalc {
   value: number;
 }
 
-/** 전투 중 능력치: 런의 기본값 → 정령에 붙은 것들(용맹) */
+/** 전투 중 능력치: 런의 기본값 → 장비 조건부(고정값 더한 뒤 비율) → 정령에 붙은 것들(용맹) */
 export const STAT_STAGES: Stage<StatCalc>[] = [
   { id: "base", order: 10, apply: (c) => (c.value = baseStat(c.s.run, c.k)) },
+  {
+    id: "equipConditional", order: 40,
+    apply(c) {
+      const live = equipMods(c.s.run, c.k).filter(([, m]) => m.when && conditionHolds(m.when, c.s));
+      if (!live.length) return;
+      for (const [, m] of live) if (m.op === "add") c.value += m.value;
+      c.value *= 1 + live.filter(([, m]) => m.op === "pct").reduce((a, [, m]) => a + m.value, 0);
+    },
+  },
   {
     id: "passives", order: 50,
     apply(c) {
@@ -90,10 +99,10 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
   {
     id: "crit", order: 40,
     apply(c) {
-      const chance = C.crit_base + c.attacker.critPity;
+      const chance = critStat(c.attacker.run, "crit_chance") + c.attacker.critPity;
       c.crit = c.b.rng.next() < chance;
       c.attacker.critPity = c.crit ? 0 : c.attacker.critPity + C.crit_pity;
-      c.amount *= c.crit ? C.crit_mult : 1;
+      c.amount *= c.crit ? critStat(c.attacker.run, "crit_mult") : 1;
     },
   },
   { id: "vuln", order: 50, apply: (c) => (c.amount *= vulnMult(c.target)) },

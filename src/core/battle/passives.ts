@@ -1,5 +1,5 @@
 import { C } from "../data";
-import { round, scale } from "../stats";
+import { activeTiers, round, scale } from "../stats";
 import { polite } from "../korean";
 import type { AuraId, CardDef, StatKey } from "../types";
 import type { Engine } from "./engine";
@@ -252,12 +252,17 @@ export const PERSONALITY_PASSIVES: Record<string, Passive> = {
 };
 
 /** 이 정령에게 지금 붙어 있는 것들과 값. 순서: 지속 효과 → 해방 → 성격 */
+/** 장비가 정령의 동사를 바꾸는 효과. 장비 데이터의 `effects[].passive`가 여기 키예요 */
+export const EQUIP_PASSIVES: Record<string, Passive> = {};
+
+/** 정령에 붙은 것들: 지속 효과 → 해방 → 성격 → 장비 */
 export function passivesOf(s: BSpirit): [Passive, number][] {
   const out: [Passive, number][] = [];
   for (const [id, v] of s.auras) out.push([AURAS[id], v]);
   if (s.release > 0) out.push([RELEASE, 0]);
   const p = s.personality && PERSONALITY_PASSIVES[s.personality.id];
   if (p) out.push([p, s.personality!.value ?? 1]);
+  for (const e of s.run.equipment) for (const t of activeTiers(e)) for (const ef of t.effects ?? []) out.push([EQUIP_PASSIVES[ef.passive], ef.value]);
   return out;
 }
 

@@ -1,6 +1,7 @@
 // 데이터 파일 검사. 문제마다 "id: 내용" 한 줄을 돌려줘요.
 import { EFFECTS } from "./battle/effects";
-import { CARD_TARGETS, ELEMENTS, OBTAINS, RARITIES } from "./types";
+import { EQUIP_PASSIVES } from "./battle/passives";
+import { CARD_TARGETS, ELEMENTS, EQUIP_GRADES, EQUIP_STATS, OBTAINS, RARITIES, STAT_CONDITION_KINDS, STAT_MOD_OPS } from "./types";
 
 type Row = Record<string, unknown>;
 
@@ -47,5 +48,64 @@ export function cardProblems(card: unknown, spiritIds: ReadonlySet<string>): str
   need(c.obtain === undefined || oneOf(OBTAINS, c.obtain), `모르는 얻는 곳 ${String(c.obtain)}`);
   if (!Array.isArray(c.effects) || !c.effects.length) out.push(`${id}: effects가 비었어요`);
   else c.effects.forEach((op, i) => out.push(...opProblems(op, `${id}.effects[${i}]`)));
+  return out;
+}
+
+function tierProblems(tier: unknown, path: string): string[] {
+  if (typeof tier !== "object" || tier === null) return [`${path}: 층이 객체가 아니에요`];
+  const t = tier as Row;
+  const out: string[] = [];
+  const stats = t.stats === undefined ? [] : t.stats;
+  const effects = t.effects === undefined ? [] : t.effects;
+  if (!Array.isArray(stats)) out.push(`${path}.stats: 목록이 아니에요`);
+  else stats.forEach((m, i) => {
+    const q = `${path}.stats[${i}]`;
+    if (typeof m !== "object" || m === null) return out.push(`${q}: 보정이 객체가 아니에요`);
+    const r = m as Row;
+    if (!oneOf(EQUIP_STATS, r.stat)) out.push(`${q}: 모르는 수치 ${String(r.stat)}`);
+    if (!oneOf(STAT_MOD_OPS, r.op)) out.push(`${q}: 모르는 연산 ${String(r.op)}`);
+    if (typeof r.value !== "number") out.push(`${q}: value는 숫자예요`);
+    if (r.when !== undefined) {
+      const w = r.when as Row | null;
+      if (typeof w !== "object" || w === null || !oneOf(STAT_CONDITION_KINDS, w.k)) out.push(`${q}.when: 모르는 조건`);
+      else if (w.k === "hpBelow" && typeof w.ratio !== "number") out.push(`${q}.when: ratio는 숫자예요`);
+    }
+  });
+  if (!Array.isArray(effects)) out.push(`${path}.effects: 목록이 아니에요`);
+  else effects.forEach((e, i) => {
+    const q = `${path}.effects[${i}]`;
+    const r = (typeof e === "object" && e !== null ? e : {}) as Row;
+    if (!(typeof r.passive === "string" && r.passive in EQUIP_PASSIVES)) out.push(`${q}: 모르는 장비 효과 ${String(r.passive)}`);
+    if (typeof r.value !== "number") out.push(`${q}: value는 숫자예요`);
+  });
+  return out;
+}
+
+/** 장비 데이터 한 줄 검사 */
+export function equipProblems(equip: unknown, spiritIds: ReadonlySet<string>): string[] {
+  if (typeof equip !== "object" || equip === null) return ["장비가 객체가 아니에요"];
+  const e = equip as Row;
+  const id = typeof e.id === "string" && e.id ? e.id : "(id 없음)";
+  const out: string[] = [];
+  const need = (ok: boolean, what: string) => { if (!ok) out.push(`${id}: ${what}`); };
+  need(typeof e.id === "string" && /^[a-z][a-z0-9_]*$/.test(e.id), "id는 소문자·숫자·_ 만 써요");
+  need(!("name" in e), "이름은 src/data/locales에 적어요");
+  need(e.owner === null || spiritIds.has(e.owner as string), `없는 전용 정령 ${String(e.owner)}`);
+  need(oneOf(EQUIP_GRADES, e.grade), `모르는 등급 ${String(e.grade)}`);
+  if (!Array.isArray(e.tiers) || !e.tiers.length) out.push(`${id}: tiers가 비었어요`);
+  else {
+    e.tiers.forEach((t, i) => out.push(...tierProblems(t, `${id}.tiers[${i}]`)));
+    e.tiers.forEach((t, i) => {
+      const n = ((t as Row)?.stats as unknown[] | undefined)?.length ?? 0;
+      const k = ((t as Row)?.effects as unknown[] | undefined)?.length ?? 0;
+      need(n <= 2 && k <= 1, `tiers[${i}]: 능력치 보정은 2개, 효과는 1개까지예요`);
+    });
+  }
+  if (e.downside !== undefined) out.push(...tierProblems(e.downside, `${id}.downside`));
+  need(e.downside === undefined || e.grade === "boss", "대가는 보스 장비에만 있어요");
+  if (e.opensBranch !== undefined) {
+    const ob = e.opensBranch as Row;
+    need(typeof ob === "object" && ob !== null && spiritIds.has(ob.spirit as string) && typeof ob.branch === "string", "opensBranch는 {spirit, branch}예요");
+  }
   return out;
 }

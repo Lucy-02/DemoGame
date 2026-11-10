@@ -2,6 +2,7 @@ export const ELEMENTS = ["fire", "water", "forest", "wind", "light", "earth", "n
 export type Element = (typeof ELEMENTS)[number];
 /** 능력치. 스피드는 카드 시간을 나누는 값이에요 (시간 = 카드 기본 시간 ÷ 스피드, 0036). */
 export type StatKey = "hp" | "power" | "guard" | "focus" | "speed";
+export const STAT_KEYS: readonly StatKey[] = ["hp", "power", "guard", "focus", "speed"];
 export const RARITIES = ["basic", "common", "advanced", "rare"] as const;
 export type Rarity = (typeof RARITIES)[number];
 export const CARD_TARGETS = ["enemy", "allEnemies", "self", "ally", "allAllies"] as const;
@@ -215,6 +216,61 @@ export interface RunSpirit {
   stage: Stage;
   level: number;
   personality: string;
+  /** 이번 런에 지닌 장비 (0048 · 0049) */
+  equipment: RunEquip[];
+}
+
+// ───────────────────────── 장비 (0048 · 0049) ─────────────────────────
+
+/** 장비가 보정하는 수치. 치명 확률 · 치명 피해는 파생 수치예요 */
+export const EQUIP_STATS = [...STAT_KEYS, "crit_chance", "crit_mult"] as const;
+export type EquipStat = (typeof EQUIP_STATS)[number];
+export const STAT_MOD_OPS = ["add", "pct"] as const;
+export type StatModOp = (typeof STAT_MOD_OPS)[number];
+
+/** 전투 중에만 보는 조건. 있으면 전투 조건부 층에서 적용돼요 */
+export type StatCondition = { k: "hpBelow"; ratio: number } | { k: "released" };
+export const STAT_CONDITION_KINDS = ["hpBelow", "released"] as const;
+
+export interface StatMod {
+  stat: EquipStat;
+  /** add: 고정값. pct: 비율(0.1 = +10%) */
+  op: StatModOp;
+  value: number;
+  when?: StatCondition;
+}
+
+/** 정령의 동사를 바꾸는 효과: `EQUIP_PASSIVES`의 항목 하나 */
+export interface EquipEffect {
+  passive: string;
+  value: number;
+}
+
+/** 공명 단계 하나 */
+export interface EquipTier {
+  stats?: StatMod[];
+  effects?: EquipEffect[];
+}
+
+export const EQUIP_GRADES = ["elite", "boss"] as const;
+export type EquipGrade = (typeof EQUIP_GRADES)[number];
+
+export interface EquipDef {
+  id: string;
+  /** 전용 정령 id. null이면 누구나 */
+  owner: string | null;
+  grade: EquipGrade;
+  /** 공명 n이면 tiers[n-1]. 길이 = 공명 상한 */
+  tiers: EquipTier[];
+  /** 보스 장비의 대가. 공명과 무관하게 늘 적용 */
+  downside?: EquipTier;
+  opensBranch?: { spirit: string; branch: string };
+}
+
+export interface RunEquip {
+  id: string;
+  resonance: number;
+  from: "kept" | "run";
 }
 
 /** 자람 조건: 전투 이벤트로 세는 행동 누적 (0021 2절) */
@@ -244,6 +300,10 @@ export interface GrowthDef {
   material: Record<"normal" | "elite" | "boss", number>;
   stage_main_bonus: number;
   stage_hp_main_bonus: number;
+  /** 단계별(유체 · 성체 · 각성체) 런 끝에 남길 장비 칸 수 */
+  equip_keep_slots: number[];
+  /** 단계별 공명 상한 */
+  equip_resonance_cap: number[];
   evolutions: EvolutionDef[];
   feed: { cost: number; affinity: number };
   episodes: EpisodeDef[];
