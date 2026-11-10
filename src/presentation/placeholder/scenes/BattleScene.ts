@@ -464,11 +464,11 @@ export class BattleScene extends Phaser.Scene {
         this.scene.start("EndScene", { victory: true });
         return;
       }
-      const weights = this.kind === "elite" ? C.reward.rarity_elite : C.reward.rarity_normal;
+      const reward = run.rollBattleReward(this.kind);
       this.scene.start("RewardScene", {
         title: this.kind === "elite" ? "정예 처치 보상" : "전투 보상",
-        gold: run.goldReward(this.kind),
-        cardIds: run.rollCards(3, weights).map((x) => x.id),
+        cardIds: reward.cards.map((x) => x.cardId),
+        reward,
       });
     });
   }

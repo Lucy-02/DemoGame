@@ -59,10 +59,7 @@
       35,
       45
     ],
-    "gold_boss": [
-      80,
-      100
-    ],
+    "skip_gold": 10,
     "rarity_normal": {
       "common": 0.6,
       "advanced": 0.35,
@@ -81,6 +78,7 @@
       "rare": 150
     },
     "remove_price": 75,
+    "remove_price_step": 25,
     "heal_price": 40,
     "heal_pct": 0.3,
     "card_count": 5
