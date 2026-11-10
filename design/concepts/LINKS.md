@@ -144,3 +144,8 @@
 - 보석 G2 면 깎은 보석: https://claude.ai/artifact/F9rWRiwQuSEbfTyJnssyi9
 - 보석 G3 정령 결정: https://claude.ai/artifact/1EYq4m1GC7iwEP6mg917VG
 - 보석 프레임·SVG: /mnt/project-files/design/gem/G1~G3/ (소스 /tmp/claude-0/gem/)
+
+## 보상 라운드 E (2026-11-10): 0049 보상 구조를 전투 결과에
+- E1 가로 그대로: https://claude.ai/artifact/JY6nFw4GK2WCKFwtqo1Cdj
+- E2 줄 맞춤: https://claude.ai/artifact/Ec5PKyy3XEuJ5cyFjhhyCL
+- 프레임: /mnt/project-files/design/round-e/E1~E2/ (소스 /tmp/claude-0/roundE/)
