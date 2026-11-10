@@ -1,6 +1,7 @@
 // 카드 동작이 효과 문구와 같은지 (결정 0022: 문구 의도대로 규칙을 고친 카드들)
 import { describe, expect, it } from "vitest";
 import { Battle, type BCard } from "./battle";
+import { stackOf } from "./battle/state";
 import { Rng } from "./rng";
 import { Run } from "./run";
 
@@ -119,9 +120,9 @@ describe("턴 안의 시간축 (0036)", () => {
   it("화상은 턴 끝에 타고 나서 절반으로 줄어요 (0040)", () => {
     const b = battleWith();
     slime(b).hp = 99;
-    slime(b).status.burn = 5;
+    stackOf(slime(b), "burn").n = 5;
     b.endTurn();
-    expect(slime(b).status.burn).toBe(2);
+    expect(stackOf(slime(b), "burn").n).toBe(2);
   });
 
   it("빙결은 적 행동을 없애지 않고 늦춰요 (0039)", () => {

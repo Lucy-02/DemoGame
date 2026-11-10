@@ -1,5 +1,6 @@
 // 데이터 파일 검사. 문제마다 "id: 내용" 한 줄을 돌려줘요.
-import { CARD_OPS, CARD_TARGETS, ELEMENTS, RARITIES } from "./types";
+import { EFFECTS } from "./battle/effects";
+import { CARD_TARGETS, ELEMENTS, RARITIES } from "./types";
 
 type Row = Record<string, unknown>;
 
@@ -9,7 +10,7 @@ const oneOf = (list: readonly string[], v: unknown) => typeof v === "string" && 
 function opProblems(op: unknown, path: string): string[] {
   if (typeof op !== "object" || op === null) return [`${path}: 효과가 객체가 아니에요`];
   const o = op as Row;
-  if (!(typeof o.op === "string" && o.op in CARD_OPS)) return [`${path}: 모르는 효과 ${String(o.op)}`];
+  if (!(typeof o.op === "string" && o.op in EFFECTS)) return [`${path}: 모르는 효과 ${String(o.op)}`];
   const out: string[] = [];
   for (const [k, v] of Object.entries(o)) {
     if (k === "op" || k === "then") continue;

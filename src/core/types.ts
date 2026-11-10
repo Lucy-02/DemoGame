@@ -58,14 +58,6 @@ export type CardOp =
   | { op: "repeatNext"; maxCost: number }
   | { op: "combo"; n: number; then: CardOp[] };
 
-/** 카드 효과 이름 전체. 키가 CardOp와 하나씩 맞아야 컴파일돼요. */
-export const CARD_OPS: Record<CardOp["op"], true> = {
-  damage: true, block: true, heal: true, burn: true, ignite: true, chill: true, freeze: true, thorns: true,
-  grow: true, draw: true, vulnerable: true, weak: true, empower: true, taunt: true, moveFront: true,
-  manaNextTurn: true, aura: true, damageFromBlock: true, keepBlock: true, burnMultiply: true,
-  damagePerPlayed: true, repeatNext: true, combo: true,
-};
-
 export type AuraId = "blaze_wing" | "deep_water" | "root_down" | "eye_of_storm";
 
 /** 카드 데이터 파일(src/data/cards/*.json)의 한 줄. 이름 같은 문구는 언어별 표(src/data/locales)에 있어요. */
