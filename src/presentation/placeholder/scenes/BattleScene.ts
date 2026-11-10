@@ -1,7 +1,7 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
 import { ASSETS, C, ELEMENT_COLOR, ELEMENT_NAME, ROLE_NAME, cardDef, type VisualAsset } from "../../../core/data";
-import { Battle, type BCard, type BEnemy, type BSpirit, type BattleEvent, type Ref } from "../../../core/battle";
+import { Battle, statusN, statusStrength, type BCard, type BEnemy, type BSpirit, type BattleEvent, type Ref } from "../../../core/battle";
 import { Rng } from "../../../core/rng";
 import { getRun } from "../../../core/run";
 import type { Element } from "../../../core/types";
@@ -162,7 +162,7 @@ export class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: ring, scale: 1.08, alpha: 0.6, duration: 500, yoyo: true, repeat: -1 });
     }
     if (s.id === b.frontId && !s.downed) h.add(txt(this, 0, -half - 30, "앞열", 13, COLORS.gold, { stroke: "#000", strokeThickness: 3 }).setOrigin(0.5));
-    if (s.taunt) h.add(txt(this, 0, -half - 48, "도발", 13, "#9fd8ff", { stroke: "#000", strokeThickness: 3 }).setOrigin(0.5));
+    if (statusN(s, "taunt")) h.add(txt(this, 0, -half - 48, "도발", 13, "#9fd8ff", { stroke: "#000", strokeThickness: 3 }).setOrigin(0.5));
     const pers = s.personality ? s.personality.name : "???";
     h.add(txt(this, 0, half + 12, `${s.def.name} · ${pers}`, 15, "#fff", { stroke: "#000", strokeThickness: 3 }).setOrigin(0.5));
     if (s.downed) {
@@ -180,11 +180,17 @@ export class BattleScene extends Phaser.Scene {
       h.add(button(this, 0, half + 58, 90, 24, "해방", () => this.releaseSpirit(s.id), { size: 13, disabled: this.busy }));
     }
     const st: string[] = [];
-    if (s.status.burn) st.push(`화상${s.status.burn}`);
-    if (s.status.weak) st.push(`약화${s.status.weak}`);
-    if (s.status.vuln) st.push(`취약${s.status.vuln}`);
-    if (s.thorns) st.push(`반격${s.thorns}`);
-    if (s.empower) st.push(`강화+${s.empower}`);
+    if (statusN(s, "burn")) st.push(`화상${statusN(s, "burn")}`);
+    if (statusN(s, "weak")) st.push(`약화${statusN(s, "weak")}`);
+    if (statusN(s, "vuln")) st.push(`취약${statusN(s, "vuln")}`);
+    if (statusN(s, "thorns")) st.push(`반격${statusN(s, "thorns")}`);
+    if (statusN(s, "empower")) st.push(`강화+${statusN(s, "empower")}`);
+    if (statusN(s, "wall")) st.push("벽");
+    if (statusN(s, "hitBonus")) st.push(`타격+${statusStrength(s, "hitBonus")}×${statusN(s, "hitBonus")}`);
+    if (statusN(s, "starlight")) st.push(`별빛${statusN(s, "starlight")}`);
+    if (statusN(s, "hidden")) st.push("숨음");
+    if (statusN(s, "ready")) st.push(`받아칠 기회${statusN(s, "ready")}`);
+    if (statusN(s, "footing")) st.push(`디딤-${statusN(s, "footing")}ms`);
     for (const [a] of s.auras) st.push(`지속:${cardDef(a).name}`);
     if (st.length) h.add(txt(this, 0, half + 68, st.join(" "), 12, "#ffcf9a", { stroke: "#000", strokeThickness: 3 }).setOrigin(0.5));
   }
@@ -218,11 +224,15 @@ export class BattleScene extends Phaser.Scene {
     }
     h.add(txt(this, 0, half + 54, weakBy ? `약점 ${ELEMENT_NAME[weakBy]}` : "약점 없음", 11, weakBy ? "#ffe9a8" : COLORS.dim).setOrigin(0.5));
     const st: string[] = [];
-    if (e.status.burn) st.push(`화상${e.status.burn}`);
-    if (e.status.chill) st.push(`냉기${e.status.chill}/${b.chillThreshold(e)}`);
-    if (e.status.weak) st.push(`약화${e.status.weak}`);
-    if (e.status.vuln) st.push(`취약${e.status.vuln}(+${Math.round(e.status.vulnPct * 100)}%)`);
-    if (e.bonusDmg) st.push(`피해+${e.bonusDmg}`);
+    if (statusN(e, "burn")) st.push(`화상${statusN(e, "burn")}`);
+    if (statusN(e, "chill")) st.push(`냉기${statusN(e, "chill")}/${b.chillThreshold(e)}`);
+    if (statusN(e, "weak")) st.push(`약화${statusN(e, "weak")}`);
+    if (statusN(e, "vuln")) st.push(`취약${statusN(e, "vuln")}(+${Math.round(statusStrength(e, "vuln") * 100)}%)`);
+    if (statusN(e, "bonusDmg")) st.push(`피해+${statusN(e, "bonusDmg")}`);
+    if (statusN(e, "star")) st.push(`별${statusN(e, "star")}`);
+    if (statusN(e, "comet")) st.push(`혜성${statusN(e, "comet")}`);
+    if (statusN(e, "stagger")) st.push(`휘청${statusN(e, "stagger")}`);
+    if (statusN(e, "cancelNext")) st.push("행동취소");
     if (e.phase === 2) st.push("2페이즈");
     if (st.length) h.add(txt(this, 0, half + 72, st.join(" "), 12, "#ffcf9a", { stroke: "#000", strokeThickness: 3 }).setOrigin(0.5));
 
@@ -260,6 +270,42 @@ export class BattleScene extends Phaser.Scene {
     u.add(button(this, 1170, 600, 170, 56, "턴 종료", () => this.endTurn(), {
       size: 20, color: 0xb0522e, disabled: this.busy || b.result !== "ongoing",
     }));
+    const stars = b.stars;
+    if (stars.count > 0 || stars.pendingFalls > 0) {
+      u.add(txt(this, 1170, 560, `별 ${stars.count}/${b.starThreshold()}${stars.pendingFalls ? ` · 낙하 ${stars.pendingFalls}` : ""}`, 13, "#ffe9a8").setOrigin(0.5));
+    }
+    if (b.hold.thisTurn > 0) {
+      u.add(txt(this, 1170, 540, `턴 끝에 ${b.hold.thisTurn}장 품기 · 카드 오른쪽 클릭으로 고르기`, 12, "#9fd8ff").setOrigin(0.5));
+    }
+    if (stars.choice) this.drawFallChoice(stars.choice.options, stars.choice.picks);
+  }
+
+  private fallPicks: string[] = [];
+
+  /** 낙하 고르기: 고를 수가 찰 때까지 누르면 손에 받아요 */
+  private drawFallChoice(options: string[], picks: number) {
+    const u = this.uiLayer;
+    const y = 470;
+    u.add(this.add.rectangle(W / 2, y, 760, 90, 0x0e0c15, 0.92).setStrokeStyle(2, 0xffe066));
+    u.add(txt(this, W / 2, y - 32, `낙하 고르기 (${this.fallPicks.length}/${picks})`, 14, COLORS.gold).setOrigin(0.5));
+    const spacing = 180;
+    options.forEach((id, i) => {
+      const x = W / 2 + (i - (options.length - 1) / 2) * spacing;
+      const on = this.fallPicks.includes(id);
+      u.add(button(this, x, y + 10, 160, 40, `${on ? "☑ " : ""}${cardDef(id).name}`, () => {
+        if (on) this.fallPicks = this.fallPicks.filter((p) => p !== id);
+        else this.fallPicks.push(id);
+        if (this.fallPicks.length >= picks) {
+          this.battle.chooseFall(this.fallPicks);
+          this.fallPicks = [];
+          const evts = this.battle.drain();
+          this.refresh();
+          this.animate(evts, () => {});
+          return;
+        }
+        this.drawUi();
+      }, { size: 14, color: on ? 0x3f7a55 : 0x3f3758, disabled: this.busy }));
+    });
   }
 
   private drawHand() {
@@ -272,10 +318,11 @@ export class BattleScene extends Phaser.Scene {
       const owner = b.spirit(c.owner);
       const stats = {
         power: b.stat(owner, "power"), guard: b.stat(owner, "guard"), focus: b.stat(owner, "focus"),
-        empower: owner.empower, grow: c.grow,
+        empower: statusN(owner, "empower"), grow: c.grow,
       };
       const ok = b.canPlay(c);
-      const note = c.locked ? "봉인됨" : owner.downed ? "기절" : undefined;
+      const heldPick = b.hold.picks.includes(c.uid);
+      const note = c.locked ? "봉인됨" : owner.downed ? "기절" : heldPick ? "품기 예약" : c.held ? "품은 카드" : undefined;
       const v = cardView(this, c.cardId, c.owner, stats, { cost: b.cardCost(c), disabled: !ok.ok, note, copy: c.isCopy });
       const x = W / 2 + (i - (n - 1) / 2) * spacing;
       const sel = this.selected?.uid === c.uid;
@@ -296,6 +343,7 @@ export class BattleScene extends Phaser.Scene {
       });
       bg.on("pointerdown", (p: Phaser.Input.Pointer) => {
         if (!p.rightButtonDown()) this.clickCard(c);
+        else if (b.hold.thisTurn > 0 && b.toggleHold(c.uid)) this.refresh();
       });
     });
   }

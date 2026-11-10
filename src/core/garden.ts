@@ -1,6 +1,6 @@
 // 정원: 판 밖에 남는 정령 상태와 그 규칙 (결정 0021). 순수 함수만 있고, 상태는 바꾸지 않고 새로 만들어 돌려줘요.
 // 화면·저장·전투 결과 받기는 session 층이 이 함수들을 불러서 해요.
-import { CARDS, GROWTH, PERSONALITIES, SPIRITS } from "./data";
+import { C, CARDS, GROWTH, PERSONALITIES, SPIRITS } from "./data";
 import { Rng } from "./rng";
 import { isGrown, stageRank } from "./stats";
 import type { CardDef, DeedDef, EpisodeDef, EvolutionDef, RunSpirit, Stage } from "./types";
@@ -25,6 +25,15 @@ export interface GardenSpirit {
   episodes: number;
   /** 플레이어가 이미 본 해금 키 (할 일 배지를 지우는 데 써요) */
   seen: string[];
+  /** 남긴 장비 (0048). 길이 ≤ equipKeepSlots(stage), 공명 ≤ resonanceCap(stage) */
+  equipment?: GardenEquip[];
+  /** 분해로 얻은 그 정령의 공명 권 (이름 TODO_NAME) */
+  resonanceTokens?: number;
+}
+
+export interface GardenEquip {
+  id: string;
+  resonance: number;
 }
 
 export interface Garden {
@@ -38,7 +47,8 @@ export interface Garden {
 // ───────────────────────── 만들기 · 찾기 ─────────────────────────
 
 /** 새 정원: 정령마다 성격을 한 번 뽑아요. 같은 시드면 같은 정원이에요. */
-export function newGarden(seed: number, ids: readonly string[] = SPIRITS.map((s) => s.id)): Garden {
+/** 새 정원. 기본은 constants.default_party 셋이에요 */
+export function newGarden(seed: number, ids: readonly string[] = C.default_party as string[]): Garden {
   const rng = new Rng(seed);
   return {
     version: GARDEN_VERSION,
@@ -204,6 +214,7 @@ export function feed(g: Garden, id: string): Garden {
 export function toRunSpirit(s: GardenSpirit): RunSpirit {
   return {
     id: s.id, hp: 0, maxHpBonus: 0, stage: s.stage, level: levelOf(s.exp), personality: s.personality,
+    equipment: (s.equipment ?? []).map((e) => ({ ...e, from: "kept" })),
   };
 }
 
