@@ -147,8 +147,9 @@ describe("처음 세 마리 (0053)", () => {
     const boss = enemyDef("grimbark");
     const weak = scaleEnemy(boss, { hp: 0.5, dmg: 0.5 });
     expect(weak.hp).toBe(boss.hp / 2);
-    expect(weak.pattern[0].actions[0]).toMatchObject({ type: "attack", dmg: 7 });
-    expect(weak.phase2?.turnStartBlock).toBe(6);
-    expect(boss.hp).toBe(160);
+    const hit = boss.pattern[0].actions[0];
+    expect(weak.pattern[0].actions[0]).toMatchObject({ type: "attack", dmg: hit.type === "attack" ? hit.dmg / 2 : 0 });
+    expect(weak.phase2?.turnStartBlock).toBe(boss.phase2!.turnStartBlock / 2);
+    expect(enemyDef("grimbark")).toBe(boss);
   });
 });
