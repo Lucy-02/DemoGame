@@ -1,14 +1,19 @@
 // 헤드리스 런 시뮬레이터: 단순 AI로 1막 한 판을 처음부터 보스까지 돌려요.
 // 인카운터 하나만 보는 sim.ts와 달리 덱이 자라고 HP가 깎인 채 보스를 만나요.
-// 사용: pnpm runsim [반복 수] [파티 a,b,c] [--adult] [--all]
+// 사용: pnpm runsim [반복 수] [파티 a,b,c] [--adult] [--all] [--basic]
+// 기본은 판단하는 봇(bot.ts). --basic이면 골든 테스트와 같은 예전 봇으로 돌려요.
 import { Battle } from "../src/core/battle";
 import { C, cardDef } from "../src/core/data";
 import { Rng } from "../src/core/rng";
 import { Run, type MapNode } from "../src/core/run";
 import { maxHpOf } from "../src/core/stats";
 import { autoPlayTurn } from "./autoplay";
+import { smartPlayTurn } from "./bot";
 
 const MAX_TURNS = 40;
+let playTurn = smartPlayTurn;
+/** 봇 고르기. basic: 골든 테스트와 같은 예전 봇 */
+export const useBot = (kind: "smart" | "basic") => { playTurn = kind === "basic" ? autoPlayTurn : smartPlayTurn; };
 
 export interface RunSimResult {
   won: boolean;
@@ -29,7 +34,7 @@ const hpPct = (run: Run) => run.spirits.reduce((a, s) => a + s.hp, 0) / run.spir
 function fight(run: Run, enemies: string[], rng: Rng): { won: boolean; turns: number } {
   const b = new Battle(run.spirits, run.deck, enemies, run.frontId, rng);
   while (b.result === "ongoing" && b.turn < MAX_TURNS) {
-    autoPlayTurn(b, rng);
+    playTurn(b, rng);
     b.drain();
     if (b.result === "ongoing") b.endTurn();
     b.drain();
@@ -125,6 +130,7 @@ if (process.argv[1]?.endsWith("runsim.ts")) {
   const rest = args.filter((a) => !a.startsWith("--"));
   const n = Number(rest[0] ?? 200);
   const adult = flags.has("--adult");
+  if (flags.has("--basic")) useBot("basic");
   if (flags.has("--all")) {
     const { SPIRITS } = await import("../src/core/data");
     for (const s of SPIRITS) report(`혼자 ${s.id}${adult ? " (성체)" : ""}`, n, [s.id], adult);
