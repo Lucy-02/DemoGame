@@ -4,7 +4,6 @@ import { box } from "../../style/draw";
 import { render, size, type Node } from "../../style/flex";
 import { P, text } from "../../spirits/views/parts";
 import { tokens } from "../../../design/tokens";
-import { COPY as RUN_COPY } from "../../run/copy";
 import { COPY } from "../copy";
 import { SKIP } from "../layout";
 
@@ -12,7 +11,7 @@ const T = tokens.provisional.text.result;
 
 export const REWARD_ICONS = [["i-coin", SKIP.gold.coin]] as const;
 
-/** 넘기기: 받을 골드가 버튼 안에 늘 붙어 있어요 (0051). 넘기기 기호는 아직 없어서 점선 칸으로 비워 둬요 (TODO_ICON) */
+/** 넘기기: 받을 골드가 있으면 버튼 안에 늘 붙어 있어요 (0051). 넘기기 기호는 아직 없어서 점선 칸으로 비워 둬요 (TODO_ICON) */
 export function drawSkip(scene: Phaser.Scene, gold: number | undefined, hover: boolean, on: { click: () => void; over: () => void; out: () => void }) {
   const S = SKIP;
   const todo: Node = {
@@ -25,13 +24,13 @@ export function drawSkip(scene: Phaser.Scene, gold: number | undefined, hover: b
     children: [
       todo,
       text(COPY.skip, T.button, P.ink),
-      {
+      ...(gold === undefined ? [] : [{
         t: "row", gap: S.gold.gap, ml: S.gold.ml, align: "center",
         children: [
           { t: "icon", id: "i-coin", w: S.gold.coin, h: S.gold.coin, tint: P.gold },
-          text(`+${gold ?? RUN_COPY.unknown}`, T.buttonGold, P.gold),
+          text(`+${gold}`, T.buttonGold, P.gold),
         ],
-      },
+      } as Node]),
     ],
   };
   render(scene, node, S.x, S.y);

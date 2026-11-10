@@ -3,13 +3,13 @@
 import { cardName } from "../../core/text";
 import type { RunSpirit } from "../../core/types";
 import { cardVM, lane, statOf } from "../run/fromCore";
-import { cardDef } from "../../core/data";
+import { C, cardDef } from "../../core/data";
 import type { ResultVM } from "./viewmodel";
 
 const LEVEL = 3;
 const spirit = (id: string, hp: number): RunSpirit => ({ id, hp, maxHpBonus: 0, stage: "baby", level: LEVEL, personality: "", equipment: [] });
 
-const reward = (cardId: string, owner: string) => ({ card: cardVM(cardId, owner), owner, stat: statOf(cardDef(cardId)) });
+const reward = (cardId: string, owner: string) => ({ card: cardVM(cardId, owner), owners: [owner], stat: statOf(cardDef(cardId)) });
 
 const fox = spirit("fire_fox", 14);
 const salamander = spirit("glass_salamander", 1);
@@ -18,6 +18,7 @@ const cat = spirit("mist_cat", 17);
 export const RESULTS: Record<string, ResultVM> = {
   normal: {
     gold: { total: 146, gained: 18 },
+    skipGold: C.reward.skip_gold,
     cards: [
       reward("ember_flick", fox.id),
       reward("glass_shatter", salamander.id),

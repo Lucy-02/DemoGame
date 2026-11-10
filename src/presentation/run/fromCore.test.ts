@@ -20,7 +20,7 @@ describe("런 화면 값", () => {
 
   it("보상 카드는 주인 줄이 있고, 왼→오 순서가 줄 위→아래 순서와 같아요 (0051)", () => {
     for (const vm of Object.values(RESULTS)) {
-      expect(vm.cards.map((c) => c.owner)).toEqual(vm.lanes.map((l) => l.id));
+      expect(vm.cards.map((c) => c.owners)).toEqual(vm.lanes.map((l) => [l.id]));
     }
   });
 });

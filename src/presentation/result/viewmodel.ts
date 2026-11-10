@@ -4,8 +4,9 @@ import type { LaneVM, StatId } from "../run/viewmodel";
 
 export interface RewardCardVM {
   card: CardVM;
-  /** 주인 정령 줄 (LaneVM.id). 보상 카드는 주인이 정해져 있어요 (0040) */
-  owner: string;
+  /** 배울 수 있는 정령 줄 (LaneVM.id). 전투 보상은 주인 하나로 정해져 있어요 (0040).
+   *  여럿이면(이벤트 카드) 카드를 집은 뒤 줄을 눌러 정해요 */
+  owners: string[];
   /** 이 카드가 쓰는 능력치. 집으면 주인 줄에서 밝아져요 */
   stat?: StatId;
 }
@@ -15,7 +16,7 @@ export interface ResultVM {
   gold: { total: number; gained: number };
   /** 왼→오 순서 = 정령 줄 위→아래 순서 (0051) */
   cards: RewardCardVM[];
-  /** 넘기면 받는 골드. 값이 정해지지 않았으면 비워 둬요 (0049 후속) */
+  /** 넘기면 받는 골드. 없으면 버튼에 골드를 붙이지 않아요 (이벤트 카드) */
   skipGold?: number;
   lanes: LaneVM[];
 }
