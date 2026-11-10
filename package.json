@@ -16,6 +16,7 @@
     "lint:deps": "depcruise src electron tools --config .dependency-cruiser.cjs",
     "check": "pnpm typecheck && pnpm lint:deps && pnpm test && pnpm check:design && pnpm check:docs",
     "sim": "tsx tools/sim.ts",
+    "runsim": "tsx tools/runsim.ts",
     "tokens": "tsx scripts/build-tokens.ts",
     "check:design": "tsx scripts/check-literals.ts",
     "check:assets": "tsx scripts/check-assets.ts",

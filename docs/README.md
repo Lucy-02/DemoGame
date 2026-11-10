@@ -23,7 +23,7 @@
 | `docs/handoff/DECISIONS.md` | 지금 유효한 결정의 한 줄 요약 | 결정 기록을 쓸 때 한 줄 더해요 |
 | `docs/design/` | 살아 있는 기획 문서 (짧게, 근거는 결정 기록에) | 결정이 바뀌면 같이 고쳐요 |
 | `docs/architecture/` | 코드 구조 결정 | 구조가 바뀌면 고쳐요 |
-| `docs/handoff/` | 스레드 인수인계와 기획서 | 인수인계는 일을 넘길 때 써요 |
+| `docs/handoff/` | 스레드 인수인계, 기획서, 열린 질문(`OPEN_QUESTIONS.md`) | 인수인계는 일을 넘길 때 써요. 질문은 정해지면 지워요 |
 | `design/canon/` | Lucy가 확정한 시안 원본과 정본 표 | 시안 원본은 고치지 않아요 |
 | `design/concepts/` | 장부, 브리프, 시안 링크, 연구 노트 | 장부는 Lucy가 고른 조각을 빠짐없이 |
 | `docs/archive/`, `design/archive/` | 끝난 조사·리뷰·대체된 문서 | 읽지 않아도 작업할 수 있어요. 새 근거 없이 다시 제안하지 않아요 |
