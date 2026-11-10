@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CARDS, GROWTH } from "./data";
+import { CARDS, GROWTH, SPIRITS } from "./data";
 import {
   addDeed, canEvolve, episodesOpen, evolve, feed, gardenSpirit, grantBattle, isFinalStage, levelOf, newGarden,
   seeEpisode, todos, unlockKeys, type Garden,
@@ -53,7 +53,9 @@ describe("정원 (0021)", () => {
     g = evolve(withExp(g, GROWTH.levels[3]), "mist_cat");
     expect([...unlockKeys(g)].filter((k) => k.endsWith("adult"))).toEqual(["mist_cat_adult", "any_adult"]);
     // 데이터의 해금 키는 모두 정원이 만들 수 있는 키예요
-    const all = unlockKeys(grantBattle(evolve(evolve(evolve(withExp(g, GROWTH.levels[3]), "fire_fox"), "glass_salamander"), "mist_cat"), PARTY, "boss"));
+    let full = withExp(newGarden(1, SPIRITS.map((s) => s.id)), GROWTH.levels[3]);
+    for (const s of SPIRITS) full = evolve(full, s.id);
+    const all = unlockKeys(grantBattle(full, PARTY, "boss"));
     expect(CARDS.filter((c) => !all.has(c.unlock)).map((c) => c.id)).toEqual([]);
   });
 

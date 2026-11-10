@@ -44,9 +44,12 @@ function addJong(stem: string, n: number): string {
   return stem.slice(0, -1) + String.fromCharCode(code + n);
 }
 
-/** 합니다체 평서형. 예: "입히" → "입힙니다", "얻" → "얻습니다", "오르" → "오릅니다" */
+/** 합니다체 평서형. 예: "입히" → "입힙니다", "얻" → "얻습니다", "오르" → "오릅니다", "줄어들" → "줄어듭니다" */
 export function polite(stem: string): string {
-  return jong(stem) === 0 ? `${addJong(stem, BIEUP)}니다` : `${stem}습니다`;
+  const j = jong(stem);
+  if (j === 0) return `${addJong(stem, BIEUP)}니다`;
+  if (j === RIEUL) return `${addJong(stem, BIEUP - RIEUL)}니다`;
+  return `${stem}습니다`;
 }
 
 /** 연결형 "~고". 예: "입히" → "입히고" */

@@ -2,6 +2,7 @@ import constantsJson from "../data/constants.json";
 import spiritsJson from "../data/spirits.json";
 import personalitiesJson from "../data/personalities.json";
 import { CARD_FILES } from "../data/cards";
+import { EQUIP_FILES } from "../data/equipment";
 import enemiesJson from "../data/enemies.json";
 import encountersJson from "../data/encounters.json";
 import eventsJson from "../data/events.json";
@@ -9,7 +10,7 @@ import assetsJson from "../data/assets.json";
 import growthJson from "../data/growth.json";
 import { DEFAULT_LOCALE, cardText, type Locale } from "./l10n";
 import type {
-  CardData, CardDef, EncounterDef, EnemyDef, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
+  CardData, CardDef, EncounterDef, EnemyDef, EquipDef, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
 } from "./types";
 
 export const C = constantsJson;
@@ -18,6 +19,8 @@ export const PERSONALITIES = personalitiesJson as PersonalityDef[];
 /** 모든 카드. 묶음 파일 순서대로 이어 붙여요 (시작 덱 순서가 이 순서를 따라요). */
 export const CARDS: CardDef[] = (Object.values(CARD_FILES).flat() as CardData[]).map((d) => ({ ...d, name: "" }));
 export const ENEMIES = enemiesJson as EnemyDef[];
+/** 장비 정의. 시험에서 항목을 더했다 빼요 */
+export const EQUIPMENT: EquipDef[] = Object.values(EQUIP_FILES).flat() as EquipDef[];
 export const ENCOUNTERS = encountersJson as EncounterDef[];
 export const EVENTS = eventsJson as EventDef[];
 export const ASSETS = assetsJson as unknown as AssetsConfig;
@@ -59,13 +62,19 @@ function must<T>(m: Map<string, T>, id: string, what: string): T {
 export const spiritDef = (id: string) => must(spiritMap, id, "spirit");
 export const cardDef = (id: string) => must(cardMap, id, "card");
 export const enemyDef = (id: string) => must(enemyMap, id, "enemy");
+export function equipDef(id: string): EquipDef {
+  const d = EQUIPMENT.find((e) => e.id === id);
+  if (!d) throw new Error(`unknown equipment: ${id}`);
+  return d;
+}
 export const personalityDef = (id: string) => must(persMap, id, "personality");
 
 export const ELEMENT_NAME: Record<Element, string> = {
-  fire: "불", water: "물", forest: "숲", wind: "바람", none: "무",
+  fire: "불", water: "물", forest: "숲", wind: "바람", light: "빛", earth: "땅", none: "무",
 };
+/** 빛 · 땅은 임시값(TODO_TOKEN) */
 export const ELEMENT_COLOR: Record<Element, number> = {
-  fire: 0xe8643a, water: 0x3d8fe0, forest: 0x4fae5c, wind: 0x8fb8c8, none: 0x9a93a8,
+  fire: 0xe8643a, water: 0x3d8fe0, forest: 0x4fae5c, wind: 0x8fb8c8, light: 0xe8d58a, earth: 0xb08a5a, none: 0x9a93a8,
 };
 export const ROLE_NAME: Record<string, string> = {
   attack: "공격", guard: "수호", support: "보조", disrupt: "교란",
