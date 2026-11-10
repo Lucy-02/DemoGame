@@ -6,7 +6,7 @@
 //   smart  한 장씩 값을 매겨 놓고, 보상 · 이벤트 · 빼기를 가려 골라요 (기본)
 //   search 턴 안의 모든 순서를 돌려 보고 끝까지 굴려 고르는 탐색 봇 (느려요)
 import { Battle } from "../src/core/battle";
-import { C, cardDef } from "../src/core/data";
+import { C, cardDef, spiritDef } from "../src/core/data";
 import { newGarden } from "../src/core/garden";
 import { Rng } from "../src/core/rng";
 import { Run, type MapNode, type RewardCard } from "../src/core/run";
@@ -101,9 +101,11 @@ function removeOne(run: Run, policy: Policy) {
 }
 
 export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false): RunSimResult {
-  const frontId = party?.[0] ?? "glass_salamander";
-  // 성체는 정원을 만들어 넘겨요. Lv2 · Lv3 해금 카드도 보상에 나와야 실제 성체 판과 같아요.
   const ids = party ?? (C.default_party as string[]);
+  // 앞열은 가장 튼튼한 정령(HP + 방어)에게 맡겨요. 앞열을 잘못 세우면 같은 파티도 보스를 못 넘어요.
+  const sturdy = (id: string) => { const st = spiritDef(id).stats; return st.hp + st.guard * 2; };
+  const frontId = [...ids].sort((a, z) => sturdy(z) - sturdy(a))[0];
+  // 성체는 정원을 만들어 넘겨요. Lv2 · Lv3 해금 카드도 보상에 나와야 실제 성체 판과 같아요.
   const base = newGarden(seed, ids);
   const garden = adult ? { ...base, spirits: base.spirits.map((s) => ({ ...s, exp: ADULT_EXP, stage: "adult" as const })) } : undefined;
   const run = new Run({ seed: 5000 + seed, frontId, party, garden, adult, unlockAll: false });
