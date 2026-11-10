@@ -136,3 +136,6 @@
 - W1 의미색 채움: https://claude.ai/artifact/8hUmquRTWEV7Sh3WnHUjzZ
 - W2 의미색 표지: https://claude.ai/artifact/3rFqeVnKd84WuXbzcpDFd4
 - 프레임: /mnt/project-files/design/round-w/W1~W2/f1–f9.png (소스 /tmp/claude-0/roundW/)
+
+## 폴리싱 라운드 P (2026-11-10): W2 바탕
+- P1: https://claude.ai/artifact/Amo4umtjRj1ng12sfCbU5k (W2와 비교 토글) · 프레임 /mnt/project-files/design/round-p/P1/ · 소스 /tmp/claude-0/roundP/P1/
