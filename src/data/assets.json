@@ -3,7 +3,11 @@
   "spirits": {
     "fire_fox":         { "type": "shape", "shape": "wolf", "color": "#ff7a3d", "size": 90 },
     "glass_salamander": { "type": "shape", "shape": "turtle", "color": "#ffb347", "size": 100 },
-    "mist_cat":         { "type": "shape", "shape": "wolf", "color": "#a9d6ff", "size": 85 }
+    "mist_cat":         { "type": "shape", "shape": "wolf", "color": "#a9d6ff", "size": 85 },
+    "star_spirit":      { "type": "shape", "shape": "orb", "color": "#e8d58a", "size": 70 },
+    "pearl_oyster":     { "type": "shape", "shape": "turtle", "color": "#f0e6dc", "size": 90 },
+    "magma_ibex":       { "type": "shape", "shape": "wolf", "color": "#b08a5a", "size": 95 },
+    "prism_chameleon":  { "type": "shape", "shape": "wolf", "color": "#6fc28a", "size": 85 }
   },
   "enemies": {
     "moss_slime":   { "type": "shape", "shape": "blob", "color": "#5fae5a", "size": 80 },

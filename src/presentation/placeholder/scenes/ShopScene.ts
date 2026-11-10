@@ -18,7 +18,7 @@ export class ShopScene extends Phaser.Scene {
 
   init() {
     const run = getRun();
-    this.stock = run.rollCards(C.shop.card_count, C.reward.rarity_normal).map((card) => ({ card, sold: false }));
+    this.stock = run.rollCards(C.shop.card_count, C.reward.rarity_normal, undefined, "shop").map((card) => ({ card, sold: false }));
     this.removed = false;
     this.healed = false;
   }

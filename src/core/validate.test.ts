@@ -11,11 +11,13 @@ describe("카드 데이터 검사", () => {
   });
 
   it("틀린 값을 하나씩 짚어요", () => {
-    expect(cardProblems({ ...ok, element: "light" }, spirits)).toHaveLength(1);
+    expect(cardProblems({ ...ok, element: "void" }, spirits)).toHaveLength(1);
     expect(cardProblems({ ...ok, cost: -1 }, spirits)).toHaveLength(1);
     expect(cardProblems({ ...ok, name: "이름" }, spirits)).toHaveLength(1);
     expect(cardProblems({ ...ok, startOwner: "nobody" }, spirits)).toHaveLength(1);
     expect(cardProblems({ ...ok, effects: [{ op: "explode" }] }, spirits)).toHaveLength(1);
+    expect(cardProblems({ ...ok, spirit: "nobody" }, spirits)).toHaveLength(1);
+    expect(cardProblems({ ...ok, obtain: "sky" }, spirits)).toHaveLength(1);
     expect(cardProblems({ ...ok, effects: [{ op: "combo", n: 2, then: [] }] }, spirits)).toHaveLength(1);
   });
 });
