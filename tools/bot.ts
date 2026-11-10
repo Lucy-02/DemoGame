@@ -1,4 +1,4 @@
-// 판단하는 자동 플레이 봇. 균형을 볼 때 써요 (runsim · sim --smart).
+// 판단하는 자동 플레이 봇. 균형을 볼 때 써요 (runsim의 smart, 탐색 봇의 롤아웃).
 // 골든 테스트는 예전 봇(autoplay.ts의 autoPlayTurn)을 그대로 써서 스냅샷이 흔들리지 않아요.
 // 한 장씩 "지금 놓으면 가장 값진 카드와 대상"을 골라 마력이 떨어질 때까지 놓아요.
 import type { Battle, BCard } from "../src/core/battle";
@@ -12,7 +12,7 @@ type Spirit = ReturnType<Battle["aliveSpirits"]>[number];
 type Target = { side: "e"; uid: number } | { side: "s"; id: string } | undefined;
 
 /** 값을 매길 때 쓰는 무게. 피해 1 = 1점이 기준이에요. */
-const W = { block: 1.3, burn: 0.9, chill: 1, draw: 3, kill: 5, breakCharge: 1.2, hide: 0.5, setup: 4, small: 2 , ...JSON.parse(process.env.BOT_W ?? "{}") };
+const W = { block: 1.3, burn: 0.9, chill: 1, draw: 3, kill: 5, breakCharge: 1.2, hide: 0.5, setup: 4, small: 2  };
 
 interface Plan {
   /** 이번 턴 적 공격이 아군마다 입힐 피해 (막기 전) */
@@ -55,6 +55,8 @@ const unblocked = (plan: Plan, s: Spirit) => Math.max(0, (plan.incoming.get(s.id
 
 function scoreCard(b: Battle, c: BCard, plan: Plan, enemy?: Enemy, ally?: Spirit): number {
   const def = cardDef(c.cardId);
+  // 적이 하나면 needsTarget이 null이라 대상이 안 넘어와요
+  if (def.target === "enemy" && !enemy) enemy = b.aliveEnemies()[0];
   const owner = b.spirit(c.owner);
   const end = b.previewEnd(c);
   const enemies = def.target === "enemy" ? (enemy ? [enemy] : []) : b.aliveEnemies();
@@ -127,6 +129,7 @@ function scoreCard(b: Battle, c: BCard, plan: Plan, enemy?: Enemy, ally?: Spirit
 /** 놓은 카드가 줄 피해 · 방어도를 적어 두어 넘치게 놓지 않아요 */
 function note(b: Battle, c: BCard, plan: Plan, enemy?: Enemy, ally?: Spirit) {
   const def = cardDef(c.cardId);
+  if (def.target === "enemy" && !enemy) enemy = b.aliveEnemies()[0];
   const owner = b.spirit(c.owner);
   for (const op of def.effects) {
     if (op.op === "damage") {
