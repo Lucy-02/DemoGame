@@ -38,17 +38,17 @@
 - 시작 덱이 0040대로 바뀌어 골든 스냅샷이 바뀌었어요. 기본 파티의 보스 승률(자동 플레이)이 83% → 14%로 떨어졌어요. 균형은 ★ Lucy와 정할 일이에요.
 - ★ 가정(확인 필요): 아래 2-2 · 2-3의 ★ 항목 그대로 구현했고, 추가로: 불여우 시작 = 잉걸 흩뿌리기 2, 고양이 시작 = 입김 2 · 기본 카드 id `basic_claw` · `basic_block` · 스타폴 낙하는 서로 다른 둘 · 혜성 2타는 방어도 무시 아님(일반 피해) · 벽 깨짐 = 벽이 다 떨어지고 피해가 남을 때 · 숨음은 적의 공격 행동 하나가 끝난 뒤 받아낸 것으로 쳐요 · 빛 · 땅은 상성 고리에 안 넣었어요 · 정원 기본 정령은 `default_party` 셋.
 
-### 장비 기반 (장비 핸드오프 `/mnt/project-files/handoff/EQUIPMENT_HANDOFF.md`)
+### 장비 기반 (장비 핸드오프 `docs/handoff/EQUIPMENT_HANDOFF.md`)
 - 들어간 것: `EquipDef` 스키마 · `src/data/equipment/`(비어 있음) · `validate.ts`의 `equipProblems` · 능력치 층 리졸버 `resolveStat`(출처 태그) · 전투 조건부 층 · `critStat` · `EQUIP_PASSIVES` · `RunSpirit.equipment` · `GardenSpirit.equipment` · `growth.json` 칸 수 · 공명 상한. 테스트 `src/core/stats.test.ts`.
 - 남은 것: 장비 데이터(이름 · 그림은 Lucy), 보상 · 남기기 · 분해 흐름(0049), 장비 효과 훅 항목, 문구(`locales/<lang>/equipment.json`), 화면.
 
 ### 2단계 시도본 (참고만)
-- `/mnt/project-files/handoff/stage2-wip-reference.diff` (리팩터링 전 방식, 규칙 해석 참고용)
+- 리팩터링 전 방식의 시도본은 2단계가 머지된 뒤 지웠어요 (2026-11-11).
 
 ## 2. 남은 일
 
-### 2-1. 토대 리팩터링 (먼저, 규칙은 그대로)
-지금 `src/core/battle.ts`(약 1,000줄)는 효과가 `resolveOp`의 큰 `switch`, 상태가 `Status`의 고정 필드, 지속 효과가 `AuraId`별 `if`로 흩어져 있어요. 새 기믹을 넣기 전에 구조부터 세우는 PR을 하나 따로 내는 걸 권해요. 골든 스냅샷이 **바뀌지 않는 것**이 이 PR의 합격선이에요.
+### 2-1. 토대 리팩터링 (끝남, PR #60)
+리팩터링 전의 전투 규칙 파일(지금 `src/core/battle/`)은 효과가 `resolveOp`의 큰 `switch`, 상태가 `Status`의 고정 필드, 지속 효과가 `AuraId`별 `if`로 흩어져 있어요. 새 기믹을 넣기 전에 구조부터 세우는 PR을 하나 따로 내는 걸 권해요. 골든 스냅샷이 **바뀌지 않는 것**이 이 PR의 합격선이었어요. 지금 구조는 `docs/architecture/0003-battle-engine.md`에 있어요.
 
 손볼 자리(구조는 새 스레드가 설계해서 Lucy에게 보여 주고 정해요):
 - 효과(op): 효과마다 핸들러 하나(계산 · 처리 · 놓는 즉시인지 · 효과문). 지금은 처리(`battle.ts`), 문구(`text.ts`), 검사(`validate.ts`), 타입(`types.ts`)이 따로 놀아요.

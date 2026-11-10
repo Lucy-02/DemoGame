@@ -20,5 +20,6 @@ jobs:
       - run: pnpm lint:deps
       - run: pnpm test
       - run: pnpm check:design
+      - run: pnpm check:docs
       - name: Electron smoke test
         run: xvfb-run -a pnpm test:e2e
