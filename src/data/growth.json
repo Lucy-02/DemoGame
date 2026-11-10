@@ -12,7 +12,15 @@
     { "spirit": "glass_salamander", "from": "baby", "to": "adult", "level": 4 },
     { "spirit": "glass_salamander", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "blocked", "n": 150 } },
     { "spirit": "mist_cat", "from": "baby", "to": "adult", "level": 4 },
-    { "spirit": "mist_cat", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "freeze", "n": 8 } }
+    { "spirit": "mist_cat", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "freeze", "n": 8 } },
+    { "spirit": "star_spirit", "from": "baby", "to": "adult", "level": 4 },
+    { "spirit": "star_spirit", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "dealt", "n": 150 } },
+    { "spirit": "pearl_oyster", "from": "baby", "to": "adult", "level": 4 },
+    { "spirit": "pearl_oyster", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "blocked", "n": 150 } },
+    { "spirit": "magma_ibex", "from": "baby", "to": "adult", "level": 4 },
+    { "spirit": "magma_ibex", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "dealt", "n": 150 } },
+    { "spirit": "prism_chameleon", "from": "baby", "to": "adult", "level": 4 },
+    { "spirit": "prism_chameleon", "from": "adult", "to": "awakened", "level": 6, "deed": { "kind": "dealt", "n": 150 } }
   ],
   "feed": { "cost": 1, "affinity": 10 },
   "episodes": [

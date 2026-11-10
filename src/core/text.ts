@@ -25,6 +25,8 @@ const ALLY = {
 } as const;
 /** 아군의 수치가 바뀌는 효과 (회복): "아군 하나의 HP를 …" */
 const ALLY_OF: Partial<Record<CardTarget, string>> = { ally: "아군 하나의 ", allAllies: "모든 아군의 " };
+/** 아군에게 거는 상태의 주어 */
+const ALLY_WHO: Partial<Record<CardTarget, string>> = { ally: "고른 아군의 ", allAllies: "모든 아군의 " };
 
 /** 시전 정령의 능력치를 반영한 최종 수치로 카드 문구를 만들어요. 효과마다의 문장은 효과 핸들러(`battle/effects.ts`)에 있어요. */
 export function describeCard(def: CardDef, st: CasterStats | null): string {
@@ -35,6 +37,8 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
     foeOf: t === "allEnemies" ? "모든 적의" : "대상의",
     me: t === "ally" || t === "allAllies" ? "이 정령이 " : "",
     allyOf: ALLY_OF[t] ?? "",
+    allyWho: ALLY_WHO[t] ?? "",
+    enemies: t === "enemy" || t === "allEnemies",
     ally: (op, what): Clause => {
       const [to, verb] = (ALLY[op] as Record<string, readonly [string, string]>)[t] ?? ALLY[op].self;
       return { to, core: `${what} ${verb}` };

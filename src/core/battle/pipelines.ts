@@ -2,8 +2,8 @@ import { C, affinity } from "../data";
 import { baseStat, round } from "../stats";
 import type { Element, EnemyTargetRule, StatKey } from "../types";
 import type { Engine } from "./engine";
-import { passivesOf } from "./passives";
-import { statusN, type BEnemy, type BSpirit } from "./state";
+import { allPassives, passivesOf } from "./passives";
+import { spendStatus, statusN, statusStrength, type BCard, type BEnemy, type BSpirit } from "./state";
 import { vulnMult } from "./statuses";
 
 /** 판정 단계. order가 작은 것부터 차례로 적용돼요. 단계를 끼우거나 바꿀 때는 이 목록만 고쳐요. */
@@ -54,9 +54,23 @@ export interface HitCalc {
   opening: boolean;
 }
 
-/** 기본값 → 타격 보너스 → 파워 → 상성 → 치명 → 취약 → 약화 → 해방 → 허점타 → 반올림 */
+/** 기본값 → 강화 → 타격 보너스 → 지속 효과 보너스 → 파워 → 상성 → 치명 → 취약 → 약화 → 해방 → 허점타(창 또는 휘청) → 반올림 */
 export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
   { id: "empower", order: 10, apply: (c) => (c.amount = c.base + statusN(c.attacker, "empower")) },
+  {
+    id: "hitBonus", order: 15,
+    apply(c) {
+      if (statusN(c.attacker, "hitBonus") === 0) return;
+      c.amount += statusStrength(c.attacker, "hitBonus");
+      spendStatus(c.attacker, "hitBonus");
+    },
+  },
+  {
+    id: "passiveBonus", order: 16,
+    apply(c) {
+      for (const [p, v, s] of allPassives(c.b)) c.amount += p.hitBonusAny?.(c.b, s, v, c.attacker, c.target) ?? 0;
+    },
+  },
   {
     id: "power", order: 20,
     apply(c) {
@@ -89,6 +103,10 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
     id: "opening", order: 80,
     apply(c) {
       c.opening = c.b.replaying && c.b.inOpening(c.target, c.b.now);
+      if (!c.opening && statusN(c.target, "stagger") > 0) {
+        c.opening = true;
+        spendStatus(c.target, "stagger");
+      }
       c.amount *= c.opening ? C.opening_mult : 1;
     },
   },
@@ -105,11 +123,12 @@ export interface EnemyHitCalc {
   amount: number;
 }
 
-/** 기본값 → 피해 보너스 → 약화 → 대상 취약 → 반올림 */
+/** 기본값 → 피해 보너스 → 약화 → 대상 취약 → 대상 숨음(절반) → 반올림 */
 export const ENEMY_HIT_STAGES: Stage<EnemyHitCalc>[] = [
   { id: "bonus", order: 10, apply: (c) => (c.amount = c.base + statusN(c.attacker, "bonusDmg")) },
   { id: "weak", order: 20, apply: (c) => (c.amount *= statusN(c.attacker, "weak") > 0 ? C.weak_mult : 1) },
   { id: "vuln", order: 30, apply: (c) => (c.amount *= c.target ? vulnMult(c.target) : 1) },
+  { id: "hidden", order: 40, apply: (c) => (c.amount *= c.target && statusN(c.target, "hidden") > 0 ? C.hidden_mult : 1) },
   { id: "round", order: 90, apply: (c) => (c.amount = round(c.amount)) },
 ];
 
@@ -122,9 +141,17 @@ export interface TargetPick {
   picked: BSpirit[] | null;
 }
 
-/** 전체 공격 → 도발 → 해방 도발 → 규칙(앞열 · 최저 · 무작위). 먼저 고른 단계가 이겨요. */
+/** 전체 공격 → 숨음 → 도발 → 해방 도발 → 규칙(앞열 · 최저 · 무작위). 먼저 고른 단계가 이겨요. */
 export const ENEMY_TARGET_STAGES: Stage<TargetPick>[] = [
   { id: "all", order: 10, apply: (c) => { if (c.rule === "all") c.picked = c.alive; } },
+  {
+    id: "hidden", order: 15,
+    apply(c) {
+      if (c.picked) return;
+      const t = c.alive.find((s) => statusN(s, "hidden") > 0);
+      if (t) c.picked = [t];
+    },
+  },
   {
     id: "taunt", order: 20,
     apply(c) {
@@ -157,13 +184,18 @@ export const ENEMY_TARGET_STAGES: Stage<TargetPick>[] = [
 export interface TimeCalc {
   b: Engine;
   owner: BSpirit;
+  card: BCard;
   base: number;
   ms: number;
 }
 
-/** 기본 시간 → 스피드 (시간 = 기본 시간 × 기준 스피드 ÷ 스피드, 0036) */
+/** 기본 시간 → 밀물(절반) → 품기(-hold_time_cut_ms) → 디딤 → 0 아래 금지 → 스피드 (시간 = 기본 시간 × 기준 스피드 ÷ 스피드, 0036) */
 export const CARD_TIME_STAGES: Stage<TimeCalc>[] = [
   { id: "base", order: 10, apply: (c) => (c.ms = c.base) },
+  { id: "highTide", order: 20, apply: (c) => { if (c.card.heldFast) c.ms = Math.round(c.ms / 2); } },
+  { id: "held", order: 30, apply: (c) => { if (c.card.held) c.ms -= C.hold_time_cut_ms; } },
+  { id: "footing", order: 40, apply: (c) => (c.ms -= statusN(c.owner, "footing")) },
+  { id: "floor", order: 50, apply: (c) => (c.ms = Math.max(0, c.ms)) },
   {
     id: "speed", order: 90,
     apply(c) {
@@ -176,16 +208,37 @@ export const CARD_TIME_STAGES: Stage<TimeCalc>[] = [
 // ───────────────────────── 피해 받기 ─────────────────────────
 
 export interface Incoming {
+  b: Engine;
   target: BSpirit | BEnemy;
+  /** 적의 공격이면 그 적 */
+  attacker: BEnemy | null;
   dmg: number;
   pierce: boolean;
+  /** 벽이 대신 받은 양 */
+  wall: number;
+  /** 벽을 가진 정령 (벽이 받았을 때) */
+  wallKeeper: BSpirit | null;
   blocked: number;
   /** 방어도를 뺀 뒤 HP에서 깎인 양 */
   real: number;
 }
 
-/** 자기 방어도 → HP */
+/** 벽(다른 아군의 벽이 먼저) → 자기 방어도 → HP */
 export const INCOMING_STAGES: Stage<Incoming>[] = [
+  {
+    id: "wall", order: 10,
+    apply(c) {
+      if (c.pierce || !c.attacker || "uid" in c.target) return;
+      const target = c.target;
+      const keeper = c.b.aliveSpirits().find((s) => s !== target && statusN(s, "wall") > 0 && s.block > 0);
+      if (!keeper) return;
+      c.wall = Math.min(keeper.block, c.dmg);
+      keeper.block -= c.wall;
+      c.dmg -= c.wall;
+      c.wallKeeper = keeper;
+      if (keeper.block === 0 && c.dmg > 0) c.b.addStatus(keeper, "wallBroken", 1);
+    },
+  },
   {
     id: "block", order: 20,
     apply(c) {

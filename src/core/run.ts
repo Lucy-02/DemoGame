@@ -2,7 +2,7 @@ import { C, CARDS, ENCOUNTERS, EVENTS, PERSONALITIES, SPIRITS, cardDef } from ".
 import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
 import { Rng } from "./rng";
 import { maxHpOf } from "./stats";
-import type { CardDef, DeckCard, EncounterDef, EventDef, Rarity, RunSpirit } from "./types";
+import type { CardDef, DeckCard, EncounterDef, EventDef, Obtain, Rarity, RunSpirit } from "./types";
 
 export type NodeType = "battle" | "elite" | "event" | "shop" | "rest" | "boss";
 
@@ -17,6 +17,8 @@ export interface MapNode {
 export interface RunOptions {
   seed: number;
   frontId: string;
+  /** 파티 정령 id. 없으면 constants.default_party */
+  party?: string[];
   /** 정원 상태. 있으면 단계·레벨·성격·해금을 여기서 읽어요 (결정 0021) */
   garden?: Garden;
   /** 정원 없이 시작할 때(테스트·자동 플레이): 성체 Lv4로 시작 */
@@ -51,7 +53,8 @@ export class Run {
     this.rng = new Rng(opts.seed);
     this.frontId = opts.frontId;
     const garden = opts.garden;
-    this.spirits = SPIRITS.map((s) => {
+    const party = (opts.party ?? (C.default_party as string[])).map((id) => SPIRITS.find((s) => s.id === id) ?? missing(id));
+    this.spirits = party.map((s) => {
       const rs: RunSpirit = garden
         ? toRunSpirit(garden.spirits.find((g) => g.id === s.id) ?? missing(s.id))
         : {
@@ -61,10 +64,11 @@ export class Run {
       rs.hp = maxHpOf(rs);
       return rs;
     });
-    // 시작 덱: 정령 카드의 start 수만큼
+    // 시작 덱 (0040): 모든 정령이 배우는 카드(startEach)는 정령마다, 정령 카드는 start 수만큼 그 주인에게
     for (const card of CARDS) {
+      if (card.startEach) for (const s of party) for (let i = 0; i < card.startEach; i++) this.addCard(card.id, s.id);
       if (!card.start) continue;
-      const owner = SPIRITS.find((s) => s.id === card.startOwner) ?? SPIRITS.find((s) => s.element === card.element);
+      const owner = party.find((s) => s.id === card.startOwner) ?? party.find((s) => s.element === card.element);
       if (!owner) continue;
       for (let i = 0; i < card.start; i++) this.addCard(card.id, owner.id);
     }
@@ -164,26 +168,29 @@ export class Run {
     return false;
   }
 
-  rewardPool(rarity: Rarity): CardDef[] {
-    return CARDS.filter((c) => c.rarity === rarity && this.isUnlocked(c));
+  /** 이 자리에서 나올 수 있는 카드: 해금됐고, 파티가 배울 수 있고, 얻는 곳이 맞는 카드 (0040) */
+  rewardPool(rarity: Rarity, where: "reward" | "shop" = "reward"): CardDef[] {
+    const places: Obtain[] = where === "shop" ? ["reward", "shop"] : ["reward"];
+    return CARDS.filter((c) => c.rarity === rarity && places.includes(c.obtain ?? "reward") && this.isUnlocked(c) && this.learnersOf(c.id).length > 0);
   }
 
-  rollCards(n: number, weights: Record<string, number>, forced?: Rarity): CardDef[] {
+  rollCards(n: number, weights: Record<string, number>, forced?: Rarity, where: "reward" | "shop" = "reward"): CardDef[] {
     const out: CardDef[] = [];
     for (let guard = 0; out.length < n && guard < 100; guard++) {
       let r = forced ?? (this.rng.weighted(weights) as Rarity);
-      let pool = this.rewardPool(r).filter((c) => !out.includes(c));
-      if (!pool.length) pool = this.rewardPool("common").filter((c) => !out.includes(c));
+      let pool = this.rewardPool(r, where).filter((c) => !out.includes(c));
+      if (!pool.length) pool = this.rewardPool("common", where).filter((c) => !out.includes(c));
       if (!pool.length) break;
       out.push(this.rng.pick(pool));
     }
     return out;
   }
 
-  /** 이 카드를 배울 수 있는 정령. 속성 카드는 같은 속성만, 바람·무속성은 누구나. */
+  /** 이 카드를 배울 수 있는 정령. 전용 카드는 그 정령만, 속성 카드는 같은 속성만, 바람·무속성은 누구나. */
   learnersOf(cardId: string): RunSpirit[] {
-    const el = cardDef(cardId).element;
-    const same = this.spirits.filter((s) => SPIRITS.find((d) => d.id === s.id)!.element === el);
+    const def = cardDef(cardId);
+    if (def.spirit) return this.spirits.filter((s) => s.id === def.spirit);
+    const same = this.spirits.filter((s) => SPIRITS.find((d) => d.id === s.id)!.element === def.element);
     return same.length ? same : this.spirits;
   }
 

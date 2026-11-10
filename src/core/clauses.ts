@@ -49,6 +49,10 @@ export interface TextContext {
   me: string;
   /** 아군 회복처럼 수치가 바뀌는 효과의 대상 ("아군 하나의 " 등) */
   allyOf: string;
+  /** 아군에게 거는 상태의 주어 ("고른 아군의 " · "모든 아군의 " · 자기 자신은 빈 문자열) */
+  allyWho: string;
+  /** 적을 고르는 카드인지 */
+  enemies: boolean;
   /** 아군에게 가는 효과의 [대상, 동사]를 붙인 문장 */
   ally: (op: "block" | "empower" | "thorns", what: string) => Clause;
   /** 시전 정령 능력치로 보정한 수치 */

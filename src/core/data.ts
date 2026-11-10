@@ -62,10 +62,11 @@ export const enemyDef = (id: string) => must(enemyMap, id, "enemy");
 export const personalityDef = (id: string) => must(persMap, id, "personality");
 
 export const ELEMENT_NAME: Record<Element, string> = {
-  fire: "불", water: "물", forest: "숲", wind: "바람", none: "무",
+  fire: "불", water: "물", forest: "숲", wind: "바람", light: "빛", earth: "땅", none: "무",
 };
+/** 빛 · 땅은 임시값(TODO_TOKEN) */
 export const ELEMENT_COLOR: Record<Element, number> = {
-  fire: 0xe8643a, water: 0x3d8fe0, forest: 0x4fae5c, wind: 0x8fb8c8, none: 0x9a93a8,
+  fire: 0xe8643a, water: 0x3d8fe0, forest: 0x4fae5c, wind: 0x8fb8c8, light: 0xe8d58a, earth: 0xb08a5a, none: 0x9a93a8,
 };
 export const ROLE_NAME: Record<string, string> = {
   attack: "공격", guard: "수호", support: "보조", disrupt: "교란",

@@ -17,18 +17,16 @@ function battleWith(...cardIds: string[]): Battle {
 }
 
 const card = (cardId: string, i: number): BCard =>
-  ({ uid: 100 + i, cardId, owner: OWNER, tempCostDelta: 0, locked: false, isCopy: false, grow: 0 });
+  ({ uid: 100 + i, cardId, owner: OWNER, tempCostDelta: 0, locked: false, isCopy: false, grow: 0, held: false, heldFast: false });
 
 describe("문구대로 동작하는 카드 (0022)", () => {
-  it("담금질 유리: 모든 아군이 방어도와 반격을 얻습니다", () => {
-    const b = battleWith("tempered_glass");
+  it("잉걸 비늘: 벽 방어도와 반격을 얻습니다", () => {
+    const b = battleWith("glass_skin");
     b.play(100);
     b.endTurn();
     const ev = b.drain();
-    for (const s of b.spirits) {
-      expect(ev.some((e) => e.k === "block" && e.ref.side === "s" && e.ref.id === s.id && e.amount > 0)).toBe(true);
-      expect(ev.some((e) => e.k === "status" && e.ref.side === "s" && e.ref.id === s.id && e.text.startsWith("반격"))).toBe(true);
-    }
+    expect(ev.some((e) => e.k === "block" && e.ref.side === "s" && e.ref.id === OWNER && e.amount > 0)).toBe(true);
+    expect(ev.some((e) => e.k === "status" && e.ref.side === "s" && e.ref.id === OWNER && e.text.startsWith("반격"))).toBe(true);
   });
 
   it("뿌리내리기: 비율이 아니라 HP가 가장 낮은 아군을 회복합니다", () => {
@@ -91,7 +89,7 @@ describe("턴 안의 시간축 (0036)", () => {
   });
 
   it("적 행동은 박힌 시각에, 그보다 먼저 끝난 방어도가 막아요", () => {
-    const b = battleWith("fire_guard");
+    const b = battleWith("basic_block");
     const at = b.intent(slime(b)).at!;
     b.hand[0].owner = "glass_salamander";
     b.play(100);

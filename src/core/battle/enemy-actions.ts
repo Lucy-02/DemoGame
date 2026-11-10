@@ -37,6 +37,7 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
         }
         if (e.dead) break;
       }
+      b.settleHidden();
     },
   },
   block: {

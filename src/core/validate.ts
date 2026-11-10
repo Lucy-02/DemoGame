@@ -1,6 +1,6 @@
 // 데이터 파일 검사. 문제마다 "id: 내용" 한 줄을 돌려줘요.
 import { EFFECTS } from "./battle/effects";
-import { CARD_TARGETS, ELEMENTS, RARITIES } from "./types";
+import { CARD_TARGETS, ELEMENTS, OBTAINS, RARITIES } from "./types";
 
 type Row = Record<string, unknown>;
 
@@ -14,7 +14,7 @@ function opProblems(op: unknown, path: string): string[] {
   const out: string[] = [];
   for (const [k, v] of Object.entries(o)) {
     if (k === "op" || k === "then") continue;
-    if (typeof v !== "number" && typeof v !== "string") out.push(`${path}.${k}: 숫자나 글자가 아니에요`);
+    if (typeof v !== "number" && typeof v !== "string" && v !== true) out.push(`${path}.${k}: 숫자 · 글자 · true가 아니에요`);
   }
   if (o.op === "combo") {
     if (!Array.isArray(o.then) || !o.then.length) out.push(`${path}.then: 효과 목록이 비었어요`);
@@ -42,6 +42,9 @@ export function cardProblems(card: unknown, spiritIds: ReadonlySet<string>): str
   need(c.start === undefined || isInt(c.start, 1), "start는 1 이상 정수예요");
   need(c.exhaust === undefined || typeof c.exhaust === "boolean", "exhaust는 true/false예요");
   need(c.startOwner === undefined || spiritIds.has(c.startOwner as string), `없는 정령 ${String(c.startOwner)}`);
+  need(c.startEach === undefined || isInt(c.startEach, 1), "startEach는 1 이상 정수예요");
+  need(c.spirit === undefined || spiritIds.has(c.spirit as string), `없는 전용 정령 ${String(c.spirit)}`);
+  need(c.obtain === undefined || oneOf(OBTAINS, c.obtain), `모르는 얻는 곳 ${String(c.obtain)}`);
   if (!Array.isArray(c.effects) || !c.effects.length) out.push(`${id}: effects가 비었어요`);
   else c.effects.forEach((op, i) => out.push(...opProblems(op, `${id}.effects[${i}]`)));
   return out;

@@ -1,9 +1,9 @@
-import { C, cardDef } from "../data";
+import { C } from "../data";
 import { round, scale } from "../stats";
 import { polite } from "../korean";
 import type { AuraId, CardDef, StatKey } from "../types";
 import type { Engine } from "./engine";
-import type { BCard, BSpirit } from "./state";
+import { statusN, type BCard, type BEnemy, type BSpirit } from "./state";
 
 /** 비용 계산 중간값 */
 export interface CostCalc {
@@ -14,7 +14,8 @@ export interface CostCalc {
 
 /**
  * 정령에 붙어 이벤트에 반응하는 것: 지속 효과(aura) · 성격 · 해방.
- * 훅은 쓰이는 자리의 순서대로 불려요. 한 정령 안에서는 지속 효과 → 해방 → 성격 순서예요.
+ * 한 정령 안에서는 지속 효과 → 해방 → 성격 순서예요.
+ * 이름이 `Any`로 끝나는 훅은 누구의 일이든 모든 정령의 것이 불려요. 그 밖의 훅은 그 정령 자신의 일에만 불려요.
  */
 export interface Passive {
   /** 턴 시작, 이 정령의 턴 값이 지워진 직후 */
@@ -23,14 +24,20 @@ export interface Passive {
   firstHand?: (b: Engine, s: BSpirit, v: number) => void;
   /** 매 턴, 손패를 받은 직후 */
   afterHand?: (b: Engine, s: BSpirit, v: number) => void;
-  /** 턴 끝, 이 정령의 상태 처리 직후 */
+  /** 턴 끝, 이 정령의 상태 처리 직후 (품기 전) */
   turnEnd?: (b: Engine, s: BSpirit, v: number) => void;
+  /** 턴 끝, 품기가 끝나고 손을 버리기 전 */
+  beforeDiscard?: (b: Engine, s: BSpirit, v: number) => void;
   /** 카드를 놓은 직후 */
   afterPlay?: (b: Engine, s: BSpirit, v: number, card: BCard, def: CardDef) => void;
+  /** 누구의 카드든 재생된 직후 */
+  resolvedAny?: (b: Engine, s: BSpirit, v: number, owner: BSpirit, card: BCard, def: CardDef) => void;
   /** 능력치 보정 */
   stat?: (s: BSpirit, k: StatKey, value: number, v: number) => number;
-  /** 카드 비용 보정 */
+  /** 이 정령 카드의 비용 보정 */
   cost?: (b: Engine, calc: CostCalc, v: number) => void;
+  /** 누구의 카드든 비용 보정 */
+  costAny?: (b: Engine, calc: CostCalc, v: number) => void;
   /** 화상 부여량에 더하는 값 */
   burnBonus?: (s: BSpirit, v: number) => number;
   healMult?: (s: BSpirit, v: number) => number;
@@ -39,15 +46,33 @@ export interface Passive {
   damageMult?: (s: BSpirit, v: number) => number;
   burnMult?: (s: BSpirit, v: number) => number;
   chillMult?: (s: BSpirit, v: number) => number;
-  /** 턴 시작에 방어도를 지키는지 */
+  /** 누구의 타격이든 기본값에 더하는 값 */
+  hitBonusAny?: (b: Engine, s: BSpirit, v: number, attacker: BSpirit, target: BEnemy) => number;
+  /** 턴 시작에 방어도를 전부 지키는지 */
   keepsBlock?: (s: BSpirit, v: number) => boolean;
+  /** 턴 시작에 남기는 방어도 (지키지 않을 때) */
+  carryBlock?: (s: BSpirit, block: number, v: number) => number;
   /** 적의 단일 공격을 받는지 (도발 다음 순서) */
   taunts?: (s: BSpirit, v: number) => boolean;
+  /** 이 정령이 벽을 얻은 직후 */
+  wallGained?: (b: Engine, s: BSpirit, v: number, amount: number) => void;
+  /** 이 정령의 벽이 다른 아군을 대신 막은 직후 */
+  wallBlocked?: (b: Engine, s: BSpirit, v: number, attacker: BEnemy, blocked: number) => void;
+  /** 누구든 적에게 별을 새긴 직후 */
+  starMarkedAny?: (b: Engine, s: BSpirit, v: number, marker: BSpirit, target: BEnemy) => void;
+  /** 낙하를 고를 때 받는 장 수에 더하는 값 */
+  fallPicksAny?: (v: number) => number;
+  /** 받아칠 기회가 쌓이는지 (아니면 하나만) */
+  readyStacks?: (v: number) => boolean;
+  /** 누구든 받아칠 기회를 얻은 직후 */
+  readyGainedAny?: (b: Engine, s: BSpirit, v: number, gainer: BSpirit) => void;
+  /** 누구든 쓰러뜨린 적 */
+  enemyDiedAny?: (b: Engine, s: BSpirit, v: number, e: BEnemy) => void;
 }
 
 export interface AuraDef extends Passive {
-  /** owner: 카드 주인에게 걸려요. battle: 주인 없이 전투 전체에 걸려요 */
-  scope: "owner" | "battle";
+  /** owner: 카드 주인에게 걸려요. target: 카드가 고른 아군에게 걸려요 */
+  scope: "owner" | "target";
   /** 효과문 ("지속." 뒤의 완결문). sc는 시전 정령 능력치로 보정한 수치예요 */
   text: (v: number, sc: (v: number, k: "guard" | "focus") => number) => string;
 }
@@ -73,10 +98,104 @@ export const AURAS: Record<AuraId, AuraDef> = {
     },
   },
   eye_of_storm: {
-    scope: "battle",
+    scope: "owner",
     text: (v) => `매 턴 ${v}번째로 사용하는 카드의 비용이 0이 ${polite("되")}.`,
-    cost(b, calc, v) {
+    costAny(b, calc, v) {
       if (b.playedThisTurn.length === v - 1) calc.cost = 0;
+    },
+  },
+
+  // 별 정령
+  milky_way: {
+    scope: "owner",
+    text: (v) => `별을 새긴 아군은 방어도를 ${v} ${polite("얻")}.`,
+    starMarkedAny: (b, _s, v, marker) => b.gainBlock(marker, v),
+  },
+  astraea: {
+    scope: "owner",
+    text: (v) => `별을 새긴 적은 약화를 ${v}턴 ${polite("받")}.`,
+    starMarkedAny: (b, _s, v, _marker, target) => b.addStatus(target, "weak", v),
+  },
+  starfall: {
+    scope: "owner",
+    text: (v) => `낙하를 고를 때 ${v} 더 ${polite("받")}.`,
+    fallPicksAny: (v) => v,
+  },
+
+  // 유리 도롱뇽
+  bellows: {
+    scope: "owner",
+    text: (v) => `이 정령이 벽을 얻을 때마다 반격을 ${v} ${polite("얻")}.`,
+    wallGained: (b, s, v) => b.addStatus(s, "thorns", v),
+  },
+  glass_citadel: {
+    scope: "owner",
+    text: () => `이 정령의 벽이 내 턴 시작 시 절반 ${polite("남")}.`,
+    carryBlock: (_s, block) => Math.floor(block / 2),
+  },
+  hall_of_mirrors: {
+    scope: "owner",
+    text: () => `이 정령의 벽이 막은 피해의 절반을 공격한 적에게 ${polite("되돌리")}.`,
+    wallBlocked(b, s, _v, attacker, blocked) {
+      const back = Math.floor(blocked / 2);
+      if (attacker.dead || back <= 0) return;
+      b.log(`${s.def.name}: 거울의 방 ${back}`);
+      b.hurtEnemy(attacker, back, false);
+    },
+  },
+
+  // 진주조개
+  najeon: {
+    scope: "owner",
+    text: (v) => `품은 카드를 쓸 때마다 그 주인이 방어도를 ${v} ${polite("얻")}.`,
+    resolvedAny(b, _s, v, owner, card) {
+      if (card.held) b.gainBlock(owner, v);
+    },
+  },
+  black_pearl: {
+    scope: "owner",
+    text: (v) => `턴 끝에 카드를 ${v}장 더 ${polite("품")}.`,
+    turnEnd: (b, _s, v) => void (b.hold.thisTurn += v),
+  },
+  dragon_palace: {
+    scope: "owner",
+    text: (v) => `턴 끝 손에 남은 카드 1장당 다음 턴에 카드를 1장 더 ${polite("뽑")}. 최대 ${v}장.`,
+    beforeDiscard: (b, _s, v) => void (b.hold.nextTurnDraw += Math.min(v, b.hand.length)),
+  },
+
+  // 산양
+  obsidian_horn: {
+    scope: "owner",
+    text: (v) => `아군이 휘청인 적을 치면 피해가 ${v} ${polite("늘어나")}.`,
+    hitBonusAny: (_b, _s, v, _attacker, target) => (statusN(target, "stagger") > 0 ? v : 0),
+  },
+  rockfall: {
+    scope: "owner",
+    text: (v) => `휘청인 적이 쓰러지면 다른 적이 모두 휘청을 ${v} ${polite("받")}.`,
+    enemyDiedAny(b, _s, v, e) {
+      if (statusN(e, "stagger") === 0) return;
+      for (const o of b.aliveEnemies()) b.addStatus(o, "stagger", v);
+    },
+  },
+
+  // 카멜레온
+  disguise_veil: {
+    scope: "owner",
+    text: (v) => `받아칠 기회가 생길 때마다 모든 아군의 다음 타격 피해가 ${v} ${polite("늘어나")}.`,
+    readyGainedAny(b, _s, v) {
+      for (const a of b.aliveSpirits()) b.addStatus(a, "hitBonus", 1, { strength: v });
+    },
+  },
+  thousand_eyes: {
+    scope: "owner",
+    text: () => `받아칠 기회가 ${polite("쌓이")}.`,
+    readyStacks: () => true,
+  },
+  rainbow: {
+    scope: "target",
+    text: () => `다른 아군이 받아칠 기회를 얻으면 이 아군도 같은 기회를 ${polite("얻")}.`,
+    readyGainedAny(b, s, _v, gainer) {
+      if (gainer !== s && !s.downed) b.gainReady(s);
     },
   },
 };
@@ -116,14 +235,17 @@ export const PERSONALITY_PASSIVES: Record<string, Passive> = {
       if (!mine.length) return;
       const c = b.rng.pick(mine);
       c.tempCostDelta -= 1;
-      b.log(`${s.def.name}(장난): ${cardDef(c.cardId).name} 비용 -1`);
+      b.log(`${s.def.name}(장난): ${b.cardDefOf(c).name} 비용 -1`);
     },
   },
   stubborn: {
     afterPlay(b, s, _v, c, def) {
       if (c.isCopy || s.stubbornUsed || s.playedThisTurn !== 2 || b.hand.length >= C.hand_max) return;
       s.stubbornUsed = true;
-      b.hand.push({ uid: b.newCardUid(), cardId: c.cardId, owner: c.owner, tempCostDelta: 0, locked: false, isCopy: true, grow: 0 });
+      b.hand.push({
+        uid: b.newCardUid(), cardId: c.cardId, owner: c.owner,
+        tempCostDelta: 0, locked: false, isCopy: true, grow: 0, held: false, heldFast: false,
+      });
       b.log(`${s.def.name}(고집): ${def.name} 복사본 얻음`);
     },
   },
@@ -139,11 +261,18 @@ export function passivesOf(s: BSpirit): [Passive, number][] {
   return out;
 }
 
-/** 카드 비용. 기본값 + 임시 보정 → 주인에게 붙은 것들 → 전투 전체 지속 효과 → 0 아래로 내려가지 않아요. */
+/** `Any` 훅: 쓰러진 정령 것까지 모든 정령의 것을 정령 순서로 */
+export function allPassives(b: Engine): [Passive, number, BSpirit][] {
+  const out: [Passive, number, BSpirit][] = [];
+  for (const s of b.spirits) for (const [p, v] of passivesOf(s)) out.push([p, v, s]);
+  return out;
+}
+
+/** 카드 비용. 기본값 + 임시 보정 → 주인에게 붙은 것들 → 모든 정령의 지속 효과 → 0 아래로 내려가지 않아요. */
 export function cardCostOf(b: Engine, c: BCard): number {
   const owner = b.spirit(c.owner);
-  const calc: CostCalc = { card: c, owner, cost: cardDef(c.cardId).cost + c.tempCostDelta };
+  const calc: CostCalc = { card: c, owner, cost: b.cardDefOf(c).cost + c.tempCostDelta };
   for (const [p, v] of passivesOf(owner)) p.cost?.(b, calc, v);
-  for (const [id, v] of b.battleAuras) AURAS[id].cost?.(b, calc, v);
+  for (const [p, v] of allPassives(b)) p.costAny?.(b, calc, v);
   return Math.max(0, calc.cost);
 }

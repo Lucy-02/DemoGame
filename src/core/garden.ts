@@ -1,6 +1,6 @@
 // 정원: 판 밖에 남는 정령 상태와 그 규칙 (결정 0021). 순수 함수만 있고, 상태는 바꾸지 않고 새로 만들어 돌려줘요.
 // 화면·저장·전투 결과 받기는 session 층이 이 함수들을 불러서 해요.
-import { CARDS, GROWTH, PERSONALITIES, SPIRITS } from "./data";
+import { C, CARDS, GROWTH, PERSONALITIES, SPIRITS } from "./data";
 import { Rng } from "./rng";
 import { isGrown, stageRank } from "./stats";
 import type { CardDef, DeedDef, EpisodeDef, EvolutionDef, RunSpirit, Stage } from "./types";
@@ -38,7 +38,8 @@ export interface Garden {
 // ───────────────────────── 만들기 · 찾기 ─────────────────────────
 
 /** 새 정원: 정령마다 성격을 한 번 뽑아요. 같은 시드면 같은 정원이에요. */
-export function newGarden(seed: number, ids: readonly string[] = SPIRITS.map((s) => s.id)): Garden {
+/** 새 정원. 기본은 constants.default_party 셋이에요 */
+export function newGarden(seed: number, ids: readonly string[] = C.default_party as string[]): Garden {
   const rng = new Rng(seed);
   return {
     version: GARDEN_VERSION,

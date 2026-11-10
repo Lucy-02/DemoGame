@@ -1,4 +1,4 @@
-export const ELEMENTS = ["fire", "water", "forest", "wind", "none"] as const;
+export const ELEMENTS = ["fire", "water", "forest", "wind", "light", "earth", "none"] as const;
 export type Element = (typeof ELEMENTS)[number];
 /** 능력치. 스피드는 카드 시간을 나누는 값이에요 (시간 = 카드 기본 시간 ÷ 스피드, 0036). */
 export type StatKey = "hp" | "power" | "guard" | "focus" | "speed";
@@ -34,8 +34,9 @@ export interface PersonalityDef {
 }
 
 export type CardOp =
-  | { op: "damage"; value: number; hits?: number; againIf?: "burned" }
-  | { op: "block"; value: number }
+  // 공통
+  | { op: "damage"; value: number; hits?: number; againIf?: "burned"; /** 대상의 별 하나마다 더해요 */ perStar?: number; /** 타격 수 = 대상의 별 수 */ hitsPerStar?: true }
+  | { op: "block"; value: number; /** 아군 대상: 모든 적의 별 하나마다 더해요 */ perStar?: number; /** 대상이 품었던 카드의 주인이면 이 값 */ heldOwner?: number }
   | { op: "heal"; value: number }
   | { op: "burn"; value: number }
   | { op: "ignite" }
@@ -43,7 +44,7 @@ export type CardOp =
   | { op: "freeze"; bossChill: number }
   | { op: "thorns"; value: number }
   | { op: "grow"; value: number }
-  | { op: "draw"; value: number }
+  | { op: "draw"; value: number; /** 받아칠 기회가 있으면 이만큼 */ ifReady?: number }
   | { op: "vulnerable"; turns: number }
   | { op: "weak"; turns: number }
   | { op: "empower"; value: number }
@@ -51,14 +52,63 @@ export type CardOp =
   | { op: "moveFront" }
   | { op: "manaNextTurn"; value: number }
   | { op: "aura"; aura: AuraId; value: number }
-  | { op: "damageFromBlock" }
-  | { op: "keepBlock" }
+  | { op: "damageFromBlock"; /** 쓴 방어도를 없애요 */ spend?: true }
   | { op: "burnMultiply"; value: number }
   | { op: "damagePerPlayed"; element: Element; value: number }
   | { op: "repeatNext"; maxCost: number }
-  | { op: "combo"; n: number; then: CardOp[] };
+  | { op: "combo"; n: number; then: CardOp[] }
+  /** 다음 타격 hits번에 value를 더해요 */
+  | { op: "hitBonus"; value: number; hits: number }
+  // 별 정령
+  /** 대상 아군의 다음 타격 hits번이 맞힌 적에게 별을 새겨요 */
+  | { op: "starlight"; hits: number }
+  /** 대상 적에게 별을 새겨요. ifStarred: 별이 있는 적에게만 */
+  | { op: "star"; value: number; ifStarred?: true }
+  | { op: "clearStars" }
+  | { op: "starThresholdCut"; value: number }
+  /** 지금 낙하를 골라요 (문턱 무관) */
+  | { op: "fallNow" }
+  /** 다음 턴 시작에 같은 적에게 피해 */
+  | { op: "delayedHit"; value: number }
+  // 유리 도롱뇽
+  | { op: "wall"; value: number }
+  | { op: "wallHeat"; value: number }
+  | { op: "afterglow"; value: number }
+  /** 이번 턴 벽이 막은 피해의 pct만큼 그 적에게 */
+  | { op: "ricochet"; pct: number }
+  // 진주조개
+  | { op: "hold"; value: number }
+  | { op: "highTide" }
+  /** 이 카드를 품을 때마다 수치가 value 늘어나요 */
+  | { op: "growOnHold"; value: number }
+  // 산양
+  /** 차징 중인 적이면 브레이크 + 휘청 onBreak, 아니고 허점 창이면 휘청 value */
+  | { op: "ram"; value: number; onBreak: number }
+  | { op: "staggerIfOpening"; value: number }
+  | { op: "staggerIfStaggered"; value: number }
+  | { op: "timeCutNext"; value: number }
+  | { op: "breakCharging" }
+  | { op: "cancelNext" }
+  // 카멜레온
+  /** 숨어요. readyTo: 받아칠 기회를 고른 아군이 받아요 */
+  | { op: "hide"; readyTo?: "target" }
+  /** 이 카드는 받아칠 기회를 쓰지 않아요 */
+  | { op: "keepReady" }
+  | { op: "passReady" };
 
-export type AuraId = "blaze_wing" | "deep_water" | "root_down" | "eye_of_storm";
+export const AURA_IDS = [
+  "blaze_wing", "deep_water", "root_down", "eye_of_storm",
+  "milky_way", "astraea", "starfall",
+  "bellows", "glass_citadel", "hall_of_mirrors",
+  "najeon", "black_pearl", "dragon_palace",
+  "obsidian_horn", "rockfall",
+  "disguise_veil", "thousand_eyes", "rainbow",
+] as const;
+export type AuraId = (typeof AURA_IDS)[number];
+
+/** 카드를 얻는 곳 (0040). reward: 전투 보상(기본). shop: 상점 · 이벤트만. start: 시작 덱만. generated: 전투 중 생기는 카드 */
+export const OBTAINS = ["reward", "shop", "start", "generated"] as const;
+export type Obtain = (typeof OBTAINS)[number];
 
 /** 카드 데이터 파일(src/data/cards/*.json)의 한 줄. 이름 같은 문구는 언어별 표(src/data/locales)에 있어요. */
 export interface CardData {
@@ -75,6 +125,12 @@ export interface CardData {
   start?: number;
   /** 시작 덱에서 이 카드를 배운 정령. 없으면 같은 속성의 첫 정령. */
   startOwner?: string;
+  /** 파티의 모든 정령이 시작 덱에 이만큼씩 배워요 (할퀴기 · 막기) */
+  startEach?: number;
+  /** 이 정령만 배우는 전용 카드 (0041). 없으면 속성으로 정해요. */
+  spirit?: string;
+  /** 얻는 곳. 없으면 reward */
+  obtain?: Obtain;
   unlock: string;
 }
 
