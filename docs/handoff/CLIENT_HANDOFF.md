@@ -212,6 +212,8 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 
 ---
 
+런 밖 여정 화면(타이틀·정원 허브·출전 준비·설정·도감 등)을 맡는 스레드는 `SCREEN_HANDOFF.md`를 먼저 읽어요.
+
 ## 9. 다음 할 일 (순서는 Lucy에게 확인)
 
 전투
