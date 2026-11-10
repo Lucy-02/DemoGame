@@ -8,5 +8,7 @@
 
 - 카드 형식은 `src/core/types.ts`의 `CardData`, 검사는 `src/core/validate.ts`예요. 새 필드는 두 곳에 함께 더해요.
 - 카드 데이터 파일에는 문구를 적지 않아요. 이름은 `design/canon/naming/cards.csv`에서 정하고 `locales`로 옮겨요.
+- 카드 `ms`는 기본 시간이에요. 실제 시간 = ms × 10 ÷ 정령 스피드(0036). 지금 값은 비용·역할로 잡은 시험 가정값이에요(`TODO_TOKEN`, 플레이테스트 뒤 정함).
+- 적 행동 시각은 패턴 행동의 `at`(ms), 없으면 `constants.json`의 `enemy_at`(등급별). 축 길이 `axis_ms`, 허점 창 `opening_window_ms` · 배율 `opening_mult`, 빙결 늦춤 `freeze_delay_ms`도 시험 가정값이에요.
 - 카드 그림은 `public/assets/cards/<카드 id>.webp`예요.
 - `pnpm test`(`data.test.ts`)가 형식, id 중복, 묶음·언어 목록 누락, 문구 누락을 잡아요.

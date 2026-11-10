@@ -36,6 +36,7 @@ export function cardProblems(card: unknown, spiritIds: ReadonlySet<string>): str
   need(oneOf(CARD_TARGETS, c.target), `모르는 대상 ${String(c.target)}`);
   need(typeof c.role === "string" && c.role.length > 0, "role이 없어요");
   need(isInt(c.cost), "cost는 0 이상 정수예요");
+  need(isInt(c.ms), "ms(기본 시간)는 0 이상 정수예요");
   need(typeof c.unlock === "string" && c.unlock.length > 0, "unlock이 없어요");
   need(c.start === undefined || isInt(c.start, 1), "start는 1 이상 정수예요");
   need(c.exhaust === undefined || typeof c.exhaust === "boolean", "exhaust는 true/false예요");

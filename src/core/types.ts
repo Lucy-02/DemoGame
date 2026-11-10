@@ -75,6 +75,8 @@ export interface CardData {
   role: string;
   rarity: Rarity;
   cost: number;
+  /** 기본 시간(ms). 실제 시간 = 기본 시간 × 기준 스피드 ÷ 정령 스피드 (0036) */
+  ms: number;
   target: CardTarget;
   effects: CardOp[];
   exhaust?: boolean;
@@ -104,6 +106,8 @@ export type EnemyAction =
 
 export interface EnemyMove {
   name: string;
+  /** 턴 안에서 이 행동이 일어나는 시각(ms). 없으면 등급 기본값 C.enemy_at (0036) */
+  at?: number;
   charge?: boolean;
   actions: EnemyAction[];
 }

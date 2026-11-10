@@ -52,14 +52,36 @@ export interface BEnemy {
   hp: number;
   maxHp: number;
   block: number;
-  skip: boolean;
-  skipReason: string;
   status: Status;
   patternIdx: number;
   phase: 1 | 2;
   charging: boolean;
+  /** 차징을 시작한 턴. 그 턴에는 행동하지 않고 다음 턴 박힌 시각에 터져요. */
+  chargeTurn: number;
+  /** 빙결로 다음 턴 행동에 더해질 늦춤(ms) */
+  delayNext: number;
+  /** 축 끝을 넘겨 밀린 행동: 다음 턴 이 시각에 일어나요 (0036 뼈대 2) */
+  carryAt: number | null;
   bonusDmg: number;
   dead: boolean;
+}
+
+/** 계획된 아군 카드. 턴 종료 때 끝나는 시각 순서로 재생돼요 (0036). */
+export interface Planned {
+  card: BCard;
+  owner: string;
+  target?: Ref;
+  start: number;
+  end: number;
+  comboCount: number;
+  repeat: boolean;
+}
+
+/** 이번 턴 시간축에 박힌 적 행동 */
+export interface EnemySlot {
+  uid: number;
+  at: number;
+  done: boolean;
 }
 
 export interface BCard extends DeckCard {
@@ -73,11 +95,12 @@ export type Ref = { side: "s"; id: string } | { side: "e"; uid: number };
 
 export type BattleEvent =
   | { k: "log"; text: string }
-  | { k: "damage"; ref: Ref; amount: number; blocked: number; crit?: boolean; weakHit?: boolean; resist?: boolean }
+  | { k: "damage"; ref: Ref; amount: number; blocked: number; crit?: boolean; weakHit?: boolean; resist?: boolean; opening?: boolean }
   | { k: "heal"; ref: Ref; amount: number }
   | { k: "block"; ref: Ref; amount: number }
   | { k: "status"; ref: Ref; text: string }
   | { k: "freeze"; uid: number }
+  | { k: "delay"; uid: number; ms: number; nextTurn: boolean }
   | { k: "cancel"; uid: number; reason: string }
   | { k: "charge"; uid: number; move: string }
   | { k: "enemyAct"; uid: number; move: string }
@@ -90,6 +113,8 @@ export type BattleEvent =
 
 export interface Intent {
   name: string;
+  /** 이번 턴 이 행동이 일어나는 시각(ms). 이번 턴에 행동하지 않으면 null */
+  at: number | null;
   /** "피해 6", "4×2" 같은 짧은 표기 */
   text: string;
   kind: "attack" | "defend" | "debuff" | "buff" | "charge" | "chargeReady" | "skip";
@@ -118,7 +143,14 @@ export class Battle {
   private repeatNext: { maxCost: number } | null = null;
   private eyeOfStorm = 0;
   private nextUid = 10000;
+  /** 턴 종료 뒤 시간축을 재생하는 중 */
   private inEnemyTurn = false;
+  /** 이번 턴 계획한 아군 카드 (놓은 순서) */
+  planned: Planned[] = [];
+  /** 이번 턴 적 행동 칸 */
+  slots: EnemySlot[] = [];
+  /** 재생 중 지금 시각(ms) */
+  now = 0;
 
   constructor(
     runSpirits: RunSpirit[],
@@ -139,8 +171,8 @@ export class Battle {
       const def = enemyDef(id);
       this.enemies.push({
         uid: i + 1, def, hp: def.hp, maxHp: def.hp, block: 0,
-        skip: false, skipReason: "", status: newStatus(), patternIdx: 0, phase: 1,
-        charging: false, bonusDmg: 0, dead: false,
+        status: newStatus(), patternIdx: 0, phase: 1,
+        charging: false, chargeTurn: 0, delayNext: 0, carryAt: null, bonusDmg: 0, dead: false,
       });
     });
     this.frontId = this.aliveSpirits().some((s) => s.id === frontId) ? frontId : this.aliveSpirits()[0].id;
@@ -209,15 +241,71 @@ export class Battle {
 
   intent(e: BEnemy): Intent {
     const move = this.currentMove(e);
-    if (e.skip) return { name: move.name, text: e.skipReason || "행동 불가", kind: "skip" };
+    const slot = this.slots.find((x) => x.uid === e.uid && !x.done);
+    const at = slot ? slot.at : null;
     const desc = move.actions.map((a) => this.actionText(e, a)).join(", ");
-    if (move.charge && !e.charging) return { name: move.name, text: `차징 시작 → ${desc}`, kind: "charge" };
-    if (move.charge && e.charging) return { name: move.name, text: `${desc} (끊기 가능)`, kind: "chargeReady" };
+    if (!slot && move.charge && e.charging) return { name: move.name, at, text: `차징 중 → 다음 턴 ${desc}`, kind: "charge" };
+    if (!slot) return { name: move.name, at, text: "이번 턴 행동 없음", kind: "skip" };
+    if (move.charge && e.charging) return { name: move.name, at, text: `${desc} (끊기 가능)`, kind: "chargeReady" };
     const a0 = move.actions.find((a) => a.type === "attack");
-    if (a0) return { name: move.name, text: desc, kind: "attack" };
-    if (move.actions.some((a) => a.type === "block" || a.type === "sapHeal")) return { name: move.name, text: desc, kind: "defend" };
-    if (move.actions.some((a) => a.type === "buffMinions")) return { name: move.name, text: desc, kind: "buff" };
-    return { name: move.name, text: desc, kind: "debuff" };
+    if (a0) return { name: move.name, at, text: desc, kind: "attack" };
+    if (move.actions.some((a) => a.type === "block" || a.type === "sapHeal")) return { name: move.name, at, text: desc, kind: "defend" };
+    if (move.actions.some((a) => a.type === "buffMinions")) return { name: move.name, at, text: desc, kind: "buff" };
+    return { name: move.name, at, text: desc, kind: "debuff" };
+  }
+
+  // ───────────────────────── 시간축 (0036) ─────────────────────────
+
+  /** 이 카드가 이 주인 줄에서 걸리는 시간(ms) = 기본 시간 × 기준 스피드 ÷ 스피드 */
+  cardTime(c: BCard): number {
+    const owner = this.spirit(c.owner);
+    const speed = Math.max(1, this.stat(owner, "speed"));
+    return Math.round((cardDef(c.cardId).ms * C.stat_base) / speed);
+  }
+
+  /** 이 정령 줄에서 다음 카드가 시작하는 시각 */
+  laneEnd(id: string): number {
+    return this.planned.filter((p) => p.owner === id).reduce((m, p) => Math.max(m, p.end), 0);
+  }
+
+  /** 지금 놓으면 끝나는 시각 (미리보기) */
+  previewEnd(c: BCard): number {
+    return this.laneEnd(c.owner) + this.cardTime(c);
+  }
+
+  /** 끝나는 시각 t가 적 e의 남은 행동 직전 창 안인지 (허점타) */
+  inOpening(e: BEnemy, t: number): boolean {
+    return this.slots.some((x) => x.uid === e.uid && !x.done && x.at >= t && x.at - t <= C.opening_window_ms);
+  }
+
+  private moveAt(e: BEnemy): number {
+    const move = this.currentMove(e);
+    const def = (C.enemy_at as Record<string, number>)[e.def.tier] ?? C.enemy_at.normal;
+    return move.at ?? def;
+  }
+
+  /** 턴 시작: 적 행동을 시간축에 박아요. 차징을 시작하는 적은 이번 턴엔 행동하지 않아요. */
+  private placeEnemySlots() {
+    this.slots = [];
+    for (const e of this.aliveEnemies()) {
+      if (e.carryAt !== null) {
+        this.slots.push({ uid: e.uid, at: e.carryAt, done: false });
+        e.carryAt = null;
+        continue;
+      }
+      const move = this.currentMove(e);
+      if (move.charge && !e.charging) {
+        e.charging = true;
+        e.chargeTurn = this.turn;
+        this.events.push({ k: "charge", uid: e.uid, move: move.name });
+        this.log(`${e.def.name}: ${move.name} 차징 시작`);
+        continue;
+      }
+      const at = this.moveAt(e) + e.delayNext;
+      e.delayNext = 0;
+      if (at >= C.axis_ms) e.carryAt = at - C.axis_ms;
+      else this.slots.push({ uid: e.uid, at, done: false });
+    }
   }
 
   private targetName(t: EnemyTargetRule) {
@@ -266,6 +354,17 @@ export class Battle {
       const dw = s.auras.get("deep_water");
       if (dw) this.gainBlock(s, scale(dw, this.stat(s, "guard")));
     }
+    for (const e of this.aliveEnemies()) {
+      e.block = 0;
+      const p2 = e.phase === 2 ? e.def.phase2 : undefined;
+      if (p2?.turnStartBlock) {
+        e.block = p2.turnStartBlock;
+        this.events.push({ k: "block", ref: { side: "e", uid: e.uid }, amount: p2.turnStartBlock });
+      }
+    }
+    this.planned = [];
+    this.now = 0;
+    this.placeEnemySlots();
     this.mana = C.mana_per_turn + this.nextTurnMana;
     this.nextTurnMana = 0;
     this.drawCards(C.hand_draw);
@@ -304,13 +403,50 @@ export class Battle {
     this.pendingSeal = 0;
   }
 
+  /** 턴 종료: 계획한 카드와 적 행동을 시각 순서로 재생해요. 같은 시각이면 아군 먼저 (0036). */
   endTurn() {
     if (this.result !== "ongoing" || this.inEnemyTurn) return;
-    // 정령 턴 끝: 화상, 재생, 라딕스
+    this.inEnemyTurn = true;
+    const allies = this.planned.slice().sort((x, y) => x.end - y.end);
+    let ai = 0;
+    for (let guard = 0; guard < 500 && this.result === "ongoing"; guard++) {
+      const nextAlly = allies[ai];
+      const nextEnemy = this.slots.filter((x) => !x.done).sort((x, y) => x.at - y.at)[0];
+      if (!nextAlly && !nextEnemy) break;
+      if (nextAlly && (!nextEnemy || nextAlly.end <= nextEnemy.at)) {
+        ai++;
+        this.now = nextAlly.end;
+        this.resolvePlanned(nextAlly);
+      } else {
+        nextEnemy.done = true;
+        this.now = nextEnemy.at;
+        const e = this.enemy(nextEnemy.uid);
+        if (!e.dead) this.enemyAct(e);
+      }
+      if (this.checkEnd()) return;
+    }
+    // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
+    for (const p of allies.slice(ai)) this.discard.push(p.card);
+    this.planned = [];
+    this.turnEndEffects();
+    if (this.checkEnd()) return;
+    for (const c of this.hand) {
+      c.tempCostDelta = 0;
+      c.locked = false;
+      (c.isCopy ? this.exhaust : this.discard).push(c);
+    }
+    this.hand = [];
+    this.roundEnd();
+    if (this.checkEnd()) return;
+    this.startPlayerTurn();
+  }
+
+  /** 턴 끝: 화상(타고 나서 절반, 0040), 재생, 라딕스 */
+  private turnEndEffects() {
     for (const s of this.aliveSpirits()) {
       if (s.status.burn > 0) {
         this.hurtSpirit(s, s.status.burn, true, "화상");
-        s.status.burn--;
+        s.status.burn = Math.floor(s.status.burn / 2);
       }
       if (s.status.regen > 0 && !s.downed) {
         this.healSpirit(s, s.status.regen);
@@ -322,24 +458,11 @@ export class Battle {
         if (tgt) this.healSpirit(tgt, round(scale(rd, this.stat(s, "focus")) * this.healMult(s)));
       }
     }
-    if (this.checkEnd()) return;
-    // 손패 정리
-    for (const c of this.hand) {
-      c.tempCostDelta = 0;
-      c.locked = false;
-      (c.isCopy ? this.exhaust : this.discard).push(c);
-    }
-    this.hand = [];
-
-    this.inEnemyTurn = true;
     for (const e of this.enemies) {
-      if (e.dead) continue;
-      this.enemyTurn(e);
-      if (this.checkEnd()) return;
+      if (e.dead || e.status.burn <= 0) continue;
+      this.hurtEnemy(e, round(e.status.burn * this.vulnMult(e.status)), true);
+      e.status.burn = Math.floor(e.status.burn / 2);
     }
-    this.roundEnd();
-    if (this.checkEnd()) return;
-    this.startPlayerTurn();
   }
 
   private roundEnd() {
@@ -362,40 +485,17 @@ export class Battle {
     for (const e of this.enemies) tick(e.status);
   }
 
-  private enemyTurn(e: BEnemy) {
-    const p2 = e.phase === 2 ? e.def.phase2 : undefined;
-    e.block = 0;
-    if (p2?.turnStartBlock) {
-      e.block = p2.turnStartBlock;
-      this.events.push({ k: "block", ref: { side: "e", uid: e.uid }, amount: p2.turnStartBlock });
-    }
+  /** 박힌 시각에 적 행동 하나 */
+  private enemyAct(e: BEnemy) {
     const move = this.currentMove(e);
-    if (e.skip) {
-      e.skip = false;
-      const what = e.charging ? `${move.name} 끊김` : `${move.name} 취소`;
-      this.events.push({ k: "cancel", uid: e.uid, reason: e.skipReason });
-      this.log(`${e.def.name}: ${e.skipReason} → ${what}`);
-      e.charging = false;
-      e.patternIdx++;
-    } else if (move.charge && !e.charging) {
-      e.charging = true;
-      this.events.push({ k: "charge", uid: e.uid, move: move.name });
-      this.log(`${e.def.name}: ${move.name} 차징 시작`);
-    } else {
-      e.charging = false;
-      this.events.push({ k: "enemyAct", uid: e.uid, move: move.name });
-      this.log(`${e.def.name}: ${move.name}`);
-      for (const a of move.actions) {
-        this.doEnemyAction(e, a);
-        if (this.aliveSpirits().length === 0 || e.dead) break;
-      }
-      e.patternIdx++;
+    e.charging = false;
+    this.events.push({ k: "enemyAct", uid: e.uid, move: move.name });
+    this.log(`${e.def.name}: ${move.name}`);
+    for (const a of move.actions) {
+      this.doEnemyAction(e, a);
+      if (this.aliveSpirits().length === 0 || e.dead) break;
     }
-    // 적 턴 끝: 화상
-    if (!e.dead && e.status.burn > 0) {
-      this.hurtEnemy(e, round(e.status.burn * this.vulnMult(e.status)), true);
-      e.status.burn = Math.max(0, e.status.burn - 1);
-    }
+    e.patternIdx++;
   }
 
   private pickTargets(rule: EnemyTargetRule): BSpirit[] {
@@ -494,6 +594,8 @@ export class Battle {
     return null;
   }
 
+  /** 카드를 그 주인 줄 끝에 계획해요. 효과는 턴 종료 때 끝나는 시각에 들어가요.
+   *  새 정보를 여는 효과(뽑기)와 다음 카드에 거는 효과(바람길)는 놓는 즉시 처리해요 (0036). */
   play(uid: number, target?: Ref): boolean {
     const c = this.hand.find((x) => x.uid === uid);
     if (!c) return false;
@@ -502,38 +604,21 @@ export class Battle {
     const def = cardDef(c.cardId);
     const owner = this.spirit(c.owner);
     const cost = this.cardCost(c);
+    const time = this.cardTime(c);
+    const start = this.laneEnd(owner.id);
     this.mana -= cost;
     this.hand.splice(this.hand.indexOf(c), 1);
     const comboCount = this.playedThisTurn.length;
     this.playedThisTurn.push(c);
     owner.playedThisTurn++;
-    this.events.push({ k: "spiritAct", id: owner.id, card: def.name });
-    this.log(`${owner.def.name}: ${def.name}`);
+    const repeat = !!this.repeatNext && def.id !== "ride_the_wind" && cost <= this.repeatNext.maxCost;
+    if (repeat) this.repeatNext = null;
+    this.planned.push({ card: c, owner: owner.id, target, start, end: start + time, comboCount, repeat });
 
-    const resolveTargets = () => {
-      let enemies: BEnemy[] = [];
-      let allies: BSpirit[] = [];
-      if (def.target === "enemy") {
-        let e = target?.side === "e" ? this.enemy(target.uid) : undefined;
-        if (!e || e.dead) e = this.aliveEnemies()[0];
-        if (e) enemies = [e];
-      } else if (def.target === "allEnemies") enemies = this.aliveEnemies();
-      else if (def.target === "self") allies = [owner];
-      else if (def.target === "ally") {
-        let s = target?.side === "s" ? this.spirit(target.id) : undefined;
-        if (!s || s.downed) s = owner;
-        allies = [s];
-      } else allies = this.aliveSpirits();
-      return { enemies, allies };
-    };
-
-    this.resolve(def, c, owner, resolveTargets(), comboCount);
-
-    const repeat = this.repeatNext;
-    if (repeat && def.id !== "ride_the_wind" && cost <= repeat.maxCost && this.result === "ongoing") {
-      this.repeatNext = null;
-      this.log(`제피로스: ${def.name} 한 번 더`);
-      this.resolve(def, c, owner, resolveTargets(), comboCount);
+    // 놓는 즉시 처리하는 효과
+    for (const op of def.effects) {
+      if (op.op === "draw") this.drawCards(op.value);
+      if (op.op === "repeatNext") this.repeatNext = { maxCost: op.maxCost };
     }
 
     // 고집: 같은 턴 두 번째 카드면 복사본
@@ -545,14 +630,46 @@ export class Battle {
       this.hand.push({ uid: this.nextUid++, cardId: c.cardId, owner: c.owner, tempCostDelta: 0, locked: false, isCopy: true, grow: 0 });
       this.log(`${owner.def.name}(고집): ${def.name} 복사본 얻음`);
     }
-
     this.playedByElement[def.element] = (this.playedByElement[def.element] ?? 0) + 1;
+    c.tempCostDelta = 0;
+    return true;
+  }
+
+  /** 재생: 계획한 카드 하나가 끝나는 시각에 들어가요. 주인이 쓰러졌으면 봉인돼요. */
+  private resolvePlanned(p: Planned) {
+    const c = p.card;
+    const def = cardDef(c.cardId);
+    const owner = this.spirit(p.owner);
+    if (owner.downed) {
+      this.sealed.push(c);
+      return;
+    }
+    this.events.push({ k: "spiritAct", id: owner.id, card: def.name });
+    this.log(`${owner.def.name}: ${def.name}`);
+    const resolveTargets = () => {
+      let enemies: BEnemy[] = [];
+      let allies: BSpirit[] = [];
+      if (def.target === "enemy") {
+        let e = p.target?.side === "e" ? this.enemy(p.target.uid) : undefined;
+        if (!e || e.dead) e = this.aliveEnemies()[0];
+        if (e) enemies = [e];
+      } else if (def.target === "allEnemies") enemies = this.aliveEnemies();
+      else if (def.target === "self") allies = [owner];
+      else if (def.target === "ally") {
+        let s = p.target?.side === "s" ? this.spirit(p.target.id) : undefined;
+        if (!s || s.downed) s = owner;
+        allies = [s];
+      } else allies = this.aliveSpirits();
+      return { enemies, allies };
+    };
+    this.resolve(def, c, owner, resolveTargets(), p.comboCount);
+    if (p.repeat && this.result === "ongoing") {
+      this.log(`제피로스: ${def.name} 한 번 더`);
+      this.resolve(def, c, owner, resolveTargets(), p.comboCount);
+    }
     const isAura = def.effects.some((o) => o.op === "aura");
     if (def.exhaust || c.isCopy || isAura) this.exhaust.push(c);
     else this.discard.push(c);
-    c.tempCostDelta = 0;
-    this.checkEnd();
-    return true;
   }
 
   private resolve(
@@ -660,7 +777,7 @@ export class Battle {
         this.log(`${def.name} 성장 +${op.value} (이번 전투 누적 +${c.grow})`);
         break;
       case "draw":
-        this.drawCards(op.value);
+        // 놓는 즉시 처리했어요 (play)
         break;
       case "vulnerable": {
         const pct = Math.min(C.vuln_cap, C.vuln_base + Math.max(0, focus - C.stat_base) * C.vuln_focus_step);
@@ -707,7 +824,7 @@ export class Battle {
         this.events.push({ k: "status", ref: { side: "s", id: owner.id }, text: `지속: ${def.name}` });
         break;
       case "repeatNext":
-        this.repeatNext = { maxCost: op.maxCost };
+        // 놓는 즉시 처리했어요 (play)
         break;
       case "combo":
         if (comboCount >= op.n) {
@@ -746,11 +863,14 @@ export class Battle {
     const crit = this.rng.next() < chance;
     owner.critPity = crit ? 0 : owner.critPity + C.crit_pity;
     const release = owner.release > 0 ? ((C.release_damage_mult as Record<string, number>)[owner.id] ?? 1) : 1;
+    // 허점타: 적 행동 직전 창 안에 끝나는 공격 (0036 뼈대 8). 치명과 따로 곱해요.
+    const opening = this.inEnemyTurn && this.inOpening(e, this.now);
     const dmg = round(
       (base + owner.empower) * (power / C.stat_base) * aff * (crit ? C.crit_mult : 1) *
-      this.vulnMult(e.status) * (owner.status.weak > 0 ? C.weak_mult : 1) * release,
+      this.vulnMult(e.status) * (owner.status.weak > 0 ? C.weak_mult : 1) * release *
+      (opening ? C.opening_mult : 1),
     );
-    this.hurtEnemy(e, dmg, false, { crit, weakHit: aff > 1, resist: aff < 1 });
+    this.hurtEnemy(e, dmg, false, { crit, weakHit: aff > 1, resist: aff < 1, ...(opening ? { opening } : {}) });
   }
 
   private addChill(e: BEnemy, v: number) {
@@ -762,11 +882,28 @@ export class Battle {
     }
   }
 
+  /** 빙결 = 늦추기 (0039). 이번 턴 남은 행동을 늦추고, 축 끝을 넘으면 다음 턴으로 밀려요. 이미 행동했으면 다음 턴 행동이 늦어져요. */
   private freezeEnemy(e: BEnemy) {
-    e.skip = true;
-    e.skipReason = "빙결";
+    const d = C.freeze_delay_ms;
     this.events.push({ k: "freeze", uid: e.uid });
-    this.log(`${e.def.name} 빙결${e.charging ? " · 캐스팅 끊김" : ""}`);
+    const slot = this.slots.find((x) => x.uid === e.uid && !x.done);
+    if (slot) {
+      const at = slot.at + d;
+      if (at >= C.axis_ms) {
+        slot.done = true;
+        e.carryAt = at - C.axis_ms;
+        this.events.push({ k: "delay", uid: e.uid, ms: d, nextTurn: true });
+        this.log(`${e.def.name} 빙결: 행동이 다음 턴으로 밀림`);
+      } else {
+        slot.at = at;
+        this.events.push({ k: "delay", uid: e.uid, ms: d, nextTurn: false });
+        this.log(`${e.def.name} 빙결: 행동 ${d}ms 늦어짐`);
+      }
+    } else {
+      e.delayNext += d;
+      this.events.push({ k: "delay", uid: e.uid, ms: d, nextTurn: true });
+      this.log(`${e.def.name} 빙결: 다음 턴 행동 ${d}ms 늦어짐`);
+    }
   }
 
   private hurtEnemy(e: BEnemy, dmg: number, pierce: boolean, extra: { crit?: boolean; weakHit?: boolean; resist?: boolean } = {}) {
@@ -845,7 +982,7 @@ export class Battle {
     this.events.push({ k: "heal", ref: { side: "s", id: s.id }, amount: amt });
   }
 
-  /** 해방할 수 있는지: 각성체만, 전투마다 한 번, 내 턴에. 마력은 들지 않아요(시간축이 들어오면 칸 비용, 0036). */
+  /** 해방할 수 있는지: 각성체만, 전투마다 한 번, 내 턴에. 놓는 즉시 켜져요. 칸 비용은 정령마다 다르게 정할 예정(0036 4절, `TODO_TOKEN`). */
   canRelease(id: string): boolean {
     const s = this.spirit(id);
     return this.result === "ongoing" && !this.inEnemyTurn && !s.downed && !s.releaseUsed && s.run.stage === "awakened";

@@ -1,8 +1,8 @@
 [
-  {"id": "catch_breath", "element": "none", "role": "guard", "rarity": "common", "cost": 1, "target": "allAllies", "effects": [{"op": "block", "value": 3}], "unlock": "start"},
-  {"id": "find_weakness", "element": "none", "role": "disrupt", "rarity": "common", "cost": 1, "target": "enemy", "effects": [{"op": "damage", "value": 2}, {"op": "vulnerable", "turns": 2}], "unlock": "start"},
-  {"id": "step_forward", "element": "none", "role": "guard", "rarity": "common", "cost": 0, "target": "self", "effects": [{"op": "moveFront"}, {"op": "block", "value": 4}], "unlock": "start"},
-  {"id": "cheer", "element": "none", "role": "support", "rarity": "common", "cost": 0, "target": "ally", "effects": [{"op": "empower", "value": 3}], "unlock": "start"},
-  {"id": "mend", "element": "none", "role": "support", "rarity": "common", "cost": 1, "target": "ally", "effects": [{"op": "heal", "value": 4}], "unlock": "start"},
-  {"id": "deep_breath", "element": "none", "role": "support", "rarity": "advanced", "cost": 1, "target": "self", "effects": [{"op": "heal", "value": 3}, {"op": "draw", "value": 1}], "unlock": "start"}
+  {"id": "catch_breath", "element": "none", "role": "guard", "rarity": "common", "cost": 1, "ms": 900, "target": "allAllies", "effects": [{"op": "block", "value": 3}], "unlock": "start"},
+  {"id": "find_weakness", "element": "none", "role": "disrupt", "rarity": "common", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 2}, {"op": "vulnerable", "turns": 2}], "unlock": "start"},
+  {"id": "step_forward", "element": "none", "role": "guard", "rarity": "common", "cost": 0, "ms": 400, "target": "self", "effects": [{"op": "moveFront"}, {"op": "block", "value": 4}], "unlock": "start"},
+  {"id": "cheer", "element": "none", "role": "support", "rarity": "common", "cost": 0, "ms": 400, "target": "ally", "effects": [{"op": "empower", "value": 3}], "unlock": "start"},
+  {"id": "mend", "element": "none", "role": "support", "rarity": "common", "cost": 1, "ms": 800, "target": "ally", "effects": [{"op": "heal", "value": 4}], "unlock": "start"},
+  {"id": "deep_breath", "element": "none", "role": "support", "rarity": "advanced", "cost": 1, "ms": 800, "target": "self", "effects": [{"op": "heal", "value": 3}, {"op": "draw", "value": 1}], "unlock": "start"}
 ]

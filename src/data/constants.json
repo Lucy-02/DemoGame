@@ -2,6 +2,16 @@
   "mana_per_turn": 3,
   "hand_draw": 5,
   "hand_max": 10,
+  "axis_ms": 3000,
+  "opening_window_ms": 300,
+  "opening_mult": 1.25,
+  "freeze_delay_ms": 800,
+  "enemy_at": {
+    "normal": 2000,
+    "minion": 1800,
+    "elite": 2200,
+    "boss": 2400
+  },
   "party_size": 3,
   "stat_base": 10,
   "release_duration": 2,

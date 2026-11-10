@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { cardProblems } from "./validate";
 
-const ok = { id: "x", element: "fire", role: "attack", rarity: "common", cost: 1, target: "enemy", effects: [{ op: "damage", value: 6 }], unlock: "start" };
+const ok = { id: "x", element: "fire", role: "attack", rarity: "common", cost: 1, ms: 1000, target: "enemy", effects: [{ op: "damage", value: 6 }], unlock: "start" };
 const spirits = new Set(["fire_fox"]);
 
 describe("카드 데이터 검사", () => {
