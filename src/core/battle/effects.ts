@@ -318,7 +318,7 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
     describe: (op) => [{ to: "", core: `이번 턴에 다음으로 얻는 벽이 ${op.value} 늘어나` }],
   },
   afterglow: {
-    resolve: (ctx, op) => ctx.b.addStatus(ctx.owner, "afterglow", ctx.main(op.value)),
+    resolve: (ctx, op) => ctx.b.addStatus(ctx.owner, "afterglow", scale(op.value, ctx.b.stat(ctx.owner, "guard"))),
     describe: (op, t) => [{ to: "", core: `이번 턴에 벽이 깨지면 다음 턴 시작에 벽 방어도를 ${t.sc(op.value, "guard")} 얻` }],
   },
   ricochet: {

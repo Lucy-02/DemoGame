@@ -297,10 +297,10 @@ export class Battle implements Engine {
       id: "resetAllies", order: 20,
       run: () => {
         for (const s of this.aliveSpirits()) {
-          this.runStatusHook(s, "turnStart");
           const keep = passivesOf(s).some(([p, v]) => p.keepsBlock?.(s, v));
           if (!keep) s.block = passivesOf(s).reduce((m, [p, v]) => Math.max(m, p.carryBlock?.(s, s.block, v) ?? 0), 0);
           clearStatuses(s, "clearsAtTurnStart");
+          this.runStatusHook(s, "turnStart");
           s.playedThisTurn = 0;
           s.stubbornUsed = false;
           this.hookEach(s, "turnStart");
@@ -763,6 +763,9 @@ export class Battle implements Engine {
 
   // ───────────────────────── 받아칠 기회 ─────────────────────────
 
+  /** 훅이 다시 준 기회에는 훅이 또 반응하지 않아요 */
+  private echoingReady = false;
+
   gainReady(s: BSpirit) {
     const stacks = passivesOf(s).some(([p, v]) => p.readyStacks?.(v));
     const st = stackOf(s, "ready");
@@ -770,7 +773,10 @@ export class Battle implements Engine {
     st.until = this.turn + 1;
     this.emit({ k: "status", ref: refOf(s), text: STATUSES.ready.gainText(1, st.n) });
     this.emit({ k: "ready", id: s.id });
+    if (this.echoingReady) return;
+    this.echoingReady = true;
     for (const [p, v, h] of allPassives(this)) p.readyGainedAny?.(this, h, v, s);
+    this.echoingReady = false;
   }
 
   // ───────────────────────── 규칙 원시 동작 ─────────────────────────

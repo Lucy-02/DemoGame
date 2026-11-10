@@ -90,6 +90,16 @@ describe("벽 (유리 도롱뇽)", () => {
     expect(blocks.map((e) => e.k === "block" && e.amount)).toEqual([Math.round(4 * g), Math.round(2 * g) + 3]);
   });
 
+  it("잔열: 이번 턴 벽이 깨지면 다음 턴 시작에 벽을 다시 얻어요", () => {
+    const b = battleWith(PARTY, [["afterglow", "glass_salamander"]]);
+    const sal = b.spirit("glass_salamander");
+    b.play(100);
+    b.endTurn();
+    expect(b.drain().some((e) => e.k === "log" && e.text.includes("잔열"))).toBe(true);
+    expect(sal.block).toBe(Math.round(4 * guardScale(b, "glass_salamander")));
+    expect(sal.status.afterglow).toBeUndefined();
+  });
+
   it("관통 공격은 벽을 지나쳐요", () => {
     const b = battleWith(PARTY, [], ["moss_slime"]);
     const sal = b.spirit("glass_salamander");
@@ -185,6 +195,14 @@ describe("숨음과 받아칠 기회 (프리즘 카멜레온)", () => {
     const power = b.stat(cham, "power") / (C.stat_base as number);
     expect(d.amount).toBe(Math.round(6 * (C.ready_mult as number) * power));
     expect(statusN(cham, "ready")).toBe(0);
+  });
+
+  it("레인보우가 둘이어도 기회는 한 번씩만 따라와요", () => {
+    const b = battleWith(PARTY, []);
+    b.addAura(b.spirit("fire_fox"), "rainbow", 1);
+    b.addAura(b.spirit("mist_cat"), "rainbow", 1);
+    b.gainReady(b.spirit("prism_chameleon"));
+    expect(b.spirits.map((s) => statusN(s, "ready"))).toEqual([1, 1, 1]);
   });
 
   it("덩굴 꼬리는 기회를 쓰지 않고, 프리즘은 기회를 아군에게 넘겨요", () => {

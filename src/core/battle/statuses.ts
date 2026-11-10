@@ -11,7 +11,7 @@ export interface StatusDef {
   countsTurns?: boolean;
   /** thisTurn: 이 턴의 라운드 끝에 사라져요. nextTurn: 다음 턴의 라운드 끝에 사라져요 */
   lasts?: "thisTurn" | "nextTurn";
-  /** 아군 턴 시작에 사라져요 (turnStart 훅이 먼저 돌아요) */
+  /** 아군 턴 시작에 사라져요 (turnStart 훅보다 먼저) */
   clearsAtTurnStart?: boolean;
   /** 정령이 쓰러지면 사라져요 */
   clearsWhenDowned?: boolean;
@@ -21,7 +21,7 @@ export interface StatusDef {
   gainText: (added: number, total: number) => string;
   /** 쌓인 직후 */
   onGain?: (b: Engine, h: BSpirit | BEnemy, st: StatusStack) => void;
-  /** 턴 시작, 턴 값이 지워지기 전 */
+  /** 턴 시작, 방어도와 턴 값이 지워진 뒤 */
   turnStart?: (b: Engine, h: BSpirit | BEnemy, st: StatusStack) => void;
   /** 턴 끝 처리. 아군 전부 → 적 전부, 같은 쪽 안에서는 표 순서 */
   turnEnd?: (b: Engine, h: BSpirit | BEnemy, st: StatusStack) => void;
@@ -114,13 +114,17 @@ export const STATUSES: Record<StatusId, StatusDef> = {
   wallBroken: { name: "벽 깨짐", stack: "max", clearsAtTurnStart: true, silent: true, gainText: () => "벽 깨짐" },
   /** 이 적의 공격을 이번 턴 벽이 막은 양 */
   wallTaken: { name: "벽이 막음", clearsAtTurnStart: true, silent: true, gainText: () => "" },
-  /** 이번 턴 벽이 깨졌으면 다음 턴 시작에 수치만큼 벽을 얻어요 */
+  /** 턴 끝에 벽이 깨져 있었으면 남아서, 다음 턴 시작에 수치만큼 벽을 얻어요 */
   afterglow: {
     name: "잔열",
-    clearsAtTurnStart: true,
+    clearsWhenDowned: true,
     gainText: (n) => `잔열 ${n}`,
+    turnEnd(_b, h) {
+      if (statusN(h, "wallBroken") === 0) delete h.status.afterglow;
+    },
     turnStart(b, h, st) {
-      if (isEnemy(h) || statusN(h, "wallBroken") === 0) return;
+      delete h.status.afterglow;
+      if (isEnemy(h)) return;
       b.log(`${h.def.name}: 잔열`);
       b.gainWall(h, st.n);
     },
