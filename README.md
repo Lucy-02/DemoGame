@@ -25,7 +25,7 @@ Electron + Vite + TypeScript + Phaser 4 + Spine. 구조는 `docs/architecture/00
 
 ## 디자인 작업
 브랜딩·UI/UX는 Lucy가 정하고 Claude가 제안·구현해요. 규칙은 `CLAUDE.md`, 문서 길잡이는 `docs/README.md`.
-- `docs/handoff/`: 기획서, 체형 템플릿 가설, 결정 요약(`DECISIONS.md`), 열린 질문(`OPEN_QUESTIONS.md`), 스레드 인수인계
+- `docs/handoff/`: 기획서, 결정 요약(`DECISIONS.md`), 열린 질문(`OPEN_QUESTIONS.md`), 스레드 인수인계
 - `docs/design-decisions/`: 라운드별 결정 기록 (결정의 정본)
 - `docs/design/`: 살아 있는 GDD (비전·필러·세계)
 - `design/canon/`: Lucy가 확정한 시안 원본, 밸런스 기준선, 정령 풀, 네이밍, 문구 규칙
