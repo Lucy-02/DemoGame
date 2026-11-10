@@ -20,7 +20,12 @@
     "boss": 2400
   },
   "party_size": 3,
+  "party_scale": {
+    "1": { "hp": 0.6, "dmg": 0.6 },
+    "2": { "hp": 0.85, "dmg": 0.85 }
+  },
   "default_party": ["fire_fox", "glass_salamander", "mist_cat"],
+  "start_pool": ["fire_fox", "glass_salamander", "magma_ibex", "prism_chameleon"],
   "stat_base": 10,
   "release_duration": 2,
   "vuln_base": 0.25,

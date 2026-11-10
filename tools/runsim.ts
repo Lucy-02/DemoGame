@@ -11,7 +11,7 @@ import { newGarden } from "../src/core/garden";
 import { Rng } from "../src/core/rng";
 import { Run, type MapNode, type RewardCard } from "../src/core/run";
 import { maxHpOf } from "../src/core/stats";
-import type { EventDef } from "../src/core/types";
+import type { EncounterDef, EventDef } from "../src/core/types";
 import { autoPlayTurn } from "./autoplay";
 import { smartPlayTurn } from "./bot";
 import { makeSearchBot, type Bot } from "./search";
@@ -72,8 +72,8 @@ export interface RunSimResult {
 const hpPct = (run: Run) => run.spirits.reduce((a, s) => a + s.hp, 0) / run.spirits.reduce((a, s) => a + maxHpOf(s), 0);
 
 /** 전투 하나. 이기면 true. HP를 런에 되돌려요 (쓰러진 정령은 복귀 HP). */
-function fight(run: Run, enemies: string[], rng: Rng, bot: Bot): { won: boolean; turns: number } {
-  const b = new Battle(run.spirits, run.deck, enemies, run.frontId, rng);
+function fight(run: Run, enc: EncounterDef, rng: Rng, bot: Bot): { won: boolean; turns: number } {
+  const b = new Battle(run.spirits, run.deck, enc.enemies, run.frontId, rng, run.enemyScale());
   while (b.result === "ongoing" && b.turn < MAX_TURNS) {
     bot(b, rng);
     b.drain();
@@ -118,7 +118,7 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
     if (node.type === "battle" || node.type === "elite" || node.type === "boss") {
       const enc = run.pickEncounter(node.type);
       const before = { bossDeck: run.deck.length, bossHpPct: hpPct(run) };
-      const { won, turns } = fight(run, enc.enemies, battleRng, bot);
+      const { won, turns } = fight(run, enc, battleRng, bot);
       battles++;
       if (node.type === "boss") return { won, endedAt: won ? "clear" : enc.id, floor: node.floor, reachedBoss: true, ...before, bossTurns: turns, battles };
       if (!won) return { won: false, endedAt: enc.id, floor: node.floor, reachedBoss: false, battles };
