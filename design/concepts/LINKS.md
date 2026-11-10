@@ -157,3 +157,11 @@
 - C3 정령 줄이 잇는다: https://claude.ai/artifact/FURzzSGZKXstU2uGsxTwiG
 - C4 한 박자씩: https://claude.ai/artifact/4EN59UpcoJ6ZgTEHWTVJ4y
 - 프레임: /mnt/project-files/design/batch-c/C1~C4/ (f1–f10.png)
+
+## 묶음 C 라운드 2 (2026-11-11 새벽): 메인 화면 3안 + 정리안
+- 페르소나 1차: `design/review/persona/batch-c.md` · 메인 화면 조사: `docs/archive/research/out-of-run/D-main-screen.md`
+- 정리안 (런 밖 여정 12프레임): https://claude.ai/artifact/8H2Zzwh38hzRbaJqvnQC3A
+- M1 울타리 한 장: https://claude.ai/artifact/Tqn8PszZua9c7fyM6ftAZx
+- M2 가지런한 무리: https://claude.ai/artifact/BeoXitUZZrkSGtKsxf7FVX
+- M3 큰 정령 길: https://claude.ai/artifact/BE5ZiNetHzrbnQ9JzC7yMi
+- 프레임: /mnt/project-files/design/batch-c-r2/final·M1·M2·M3/
