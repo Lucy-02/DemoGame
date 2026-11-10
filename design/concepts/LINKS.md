@@ -131,3 +131,8 @@
 - V2 사물과 진열: https://claude.ai/artifact/2gGxvfqikr7DTDHxso8Dju
 - V3 큰 숫자: https://claude.ai/artifact/XbGWzGZ6fK9MpGPBpRBavv
 - 프레임: /mnt/project-files/design/round-v/V1~V3/f1–f9.png (소스 /tmp/claude-0/roundV/)
+
+## 표현 라운드 W (2026-11-10): V3 + V1 기호, 의미색
+- W1 의미색 채움: https://claude.ai/artifact/8hUmquRTWEV7Sh3WnHUjzZ
+- W2 의미색 표지: https://claude.ai/artifact/3rFqeVnKd84WuXbzcpDFd4
+- 프레임: /mnt/project-files/design/round-w/W1~W2/f1–f9.png (소스 /tmp/claude-0/roundW/)
