@@ -9,7 +9,7 @@ import { exhaustsAfterUse, handlerOf, resolveOp, usesReady, type EffectContext }
 import type { Engine, HurtOptions, MultHook } from "./engine";
 import { AURAS, allPassives, cardCostOf, passivesOf, type Passive } from "./passives";
 import {
-  ALLY_HIT_STAGES, CARD_TIME_STAGES, ENEMY_HIT_STAGES, ENEMY_TARGET_STAGES, INCOMING_STAGES, STAT_STAGES, runStages, type Incoming,
+  ALLY_HIT_STAGES, CARD_TIME_STAGES, ENEMY_HIT_STAGES, ENEMY_TARGET_STAGES, INCOMING_STAGES, STAT_STAGES, byOrder, runStages, type Incoming,
 } from "./pipelines";
 import {
   STATUS_IDS, refOf, spendStatus, stackOf, statusN,
@@ -282,7 +282,7 @@ export class Battle implements Engine {
   // ───────────────────────── 턴 흐름 ─────────────────────────
 
   /** 턴 시작 처리 목록 */
-  private readonly turnStartSteps: Step[] = [
+  private readonly turnStartSteps: Step[] = byOrder([
     {
       id: "header", order: 10,
       run: () => {
@@ -400,10 +400,10 @@ export class Battle implements Engine {
         this.pendingSeal = 0;
       },
     },
-  ];
+  ]);
 
   /** 턴 끝 처리 목록 (재생이 끝난 뒤, 손을 버리기 전) */
-  private readonly turnEndSteps: Step[] = [
+  private readonly turnEndSteps: Step[] = byOrder([
     {
       id: "countStars", order: 5,
       run: () => {
@@ -426,10 +426,10 @@ export class Battle implements Engine {
     { id: "enemyStatuses", order: 20, run: () => { for (const e of this.enemies) if (!e.dead) this.runStatusHook(e, "turnEnd"); } },
     { id: "hold", order: 40, run: () => this.holdCards() },
     { id: "beforeDiscard", order: 50, run: () => { for (const s of this.aliveSpirits()) this.hookEach(s, "beforeDiscard"); } },
-  ];
+  ]);
 
   /** 라운드 끝 처리 목록 (손을 버린 뒤) */
-  private readonly roundEndSteps: Step[] = [
+  private readonly roundEndSteps: Step[] = byOrder([
     {
       id: "allies", order: 10,
       run: () => {
@@ -446,10 +446,10 @@ export class Battle implements Engine {
       },
     },
     { id: "enemies", order: 20, run: () => { for (const e of this.enemies) tickStatuses(e, this.turn); } },
-  ];
+  ]);
 
   private runSteps(steps: readonly Step[]) {
-    for (const st of steps.slice().sort((a, b) => a.order - b.order)) st.run();
+    for (const st of steps) st.run();
   }
 
   /** 상태 표의 훅을 표 순서대로 */

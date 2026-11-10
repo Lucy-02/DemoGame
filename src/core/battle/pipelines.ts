@@ -6,7 +6,7 @@ import { allPassives, passivesOf } from "./passives";
 import { spendStatus, statusN, statusStrength, type BCard, type BEnemy, type BSpirit } from "./state";
 import { vulnMult } from "./statuses";
 
-/** 판정 단계. order가 작은 것부터 차례로 적용돼요. 단계를 끼우거나 바꿀 때는 이 목록만 고쳐요. */
+/** 판정 단계. order가 작은 것부터 차례로 적용돼요. 단계를 끼우거나 바꿀 때는 이 목록만 고쳐요. 목록은 모듈을 읽을 때 한 번 정렬해요. */
 export interface Stage<T> {
   id: string;
   order: number;
@@ -14,9 +14,11 @@ export interface Stage<T> {
 }
 
 export function runStages<T>(stages: readonly Stage<T>[], ctx: T): T {
-  for (const s of stages.slice().sort((a, b) => a.order - b.order)) s.apply(ctx);
+  for (const s of stages) s.apply(ctx);
   return ctx;
 }
+
+export const byOrder = <T extends { order: number }>(list: T[]) => list.sort((a, b) => a.order - b.order);
 
 // ───────────────────────── 능력치 ─────────────────────────
 
@@ -264,3 +266,5 @@ export const INCOMING_STAGES: Stage<Incoming>[] = [
     },
   },
 ];
+
+for (const list of [STAT_STAGES, ALLY_HIT_STAGES, ENEMY_HIT_STAGES, ENEMY_TARGET_STAGES, CARD_TIME_STAGES, INCOMING_STAGES]) byOrder(list as Stage<unknown>[]);

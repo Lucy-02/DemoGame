@@ -101,10 +101,12 @@ export const STAT_LAYERS: StatLayer[] = [
   },
 ];
 
+STAT_LAYERS.sort((a, b) => a.order - b.order);
+
 /** 전투 밖 능력치. HP는 반올림한 뒤 런에서 오른 최대 HP(maxHpBonus)를 더해요 */
 export function resolveStat(rs: RunSpirit, k: StatKey): StatCalc {
   const c: StatCalc = { rs, k, value: 0, parts: [] };
-  for (const l of STAT_LAYERS.slice().sort((a, b) => a.order - b.order)) l.apply(c);
+  for (const l of STAT_LAYERS) l.apply(c);
   if (k === "hp") {
     c.value = round(c.value);
     add(c, "run", rs.maxHpBonus);
