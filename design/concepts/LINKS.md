@@ -125,3 +125,9 @@
 - B2 공통 오버레이: https://claude.ai/artifact/6VeLu8hRaBUJuDvof6TgtQ
 - 프레임: /mnt/project-files/design/batch-b/
 - **묶음 B 정리안 (페르소나 컨펌, Lucy 확인 대기)**: https://claude.ai/artifact/WcoL9EGghyJJb5QGsrU1N4 · 프레임 /mnt/project-files/design/batch-b/final/
+
+## 표현 라운드 V (2026-11-10): 게임답게, 글자보다 기호
+- V1 기호 HUD: https://claude.ai/artifact/52qFj5rDwLTj2n6qBf21oo
+- V2 사물과 진열: https://claude.ai/artifact/2gGxvfqikr7DTDHxso8Dju
+- V3 큰 숫자: https://claude.ai/artifact/XbGWzGZ6fK9MpGPBpRBavv
+- 프레임: /mnt/project-files/design/round-v/V1~V3/f1–f9.png (소스 /tmp/claude-0/roundV/)
