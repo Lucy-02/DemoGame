@@ -5,7 +5,8 @@ import type * as Phaser from "phaser";
 import { STAGES, type Stage } from "../core/types";
 import framesJson from "./spiritFrames.json";
 import fitJson from "./spiritFit.json";
-import { tileCrop, type Crop, type Fit, type Fits, type Frame, type Frames } from "./spirits/artFit";
+import { paintTileFace, tileCrop, type Crop, type Fit, type Fits, type Frame, type Frames } from "./spirits/artFit";
+import { canvasTexture } from "./style/gradient";
 
 const FRAMES = framesJson as unknown as Frames;
 const FITS = fitJson as unknown as Fits;
@@ -40,4 +41,10 @@ export function preloadSpiritArt(scene: Phaser.Scene, ids: readonly string[]) {
       if (!scene.textures.exists(k)) scene.load.image(k, spiritArtFile(id, stage));
     }
   }
+}
+
+/** 본그림에서 얼굴을 지름 d 원으로 잘라 구운 텍스처 (띠 타일, 전투 결과 줄, 카드 초상 홈) */
+export function faceTexture(scene: Phaser.Scene, face: { key: string; crop: Crop }, d: number): string {
+  const src = scene.textures.get(face.key).getSourceImage() as HTMLImageElement;
+  return canvasTexture(scene, `${face.key}@tile${d}:${face.crop.join(",")}`, d, d, (ctx) => paintTileFace(ctx, src, face.crop, d));
 }

@@ -78,3 +78,74 @@
 - 덱 보기 레이어 R1 (리뷰 종합 포함): https://claude.ai/artifact/4HcCn3u5CQ5AcoGVwN7juL
 - 자라는 순간 R1: https://claude.ai/artifact/NEXhRQajDWBmH3WUwRoRAV
 - 덱 보기·자라는 순간 R2: https://claude.ai/artifact/LyNbvdjCFHPSRUdwoYK7uT
+
+## 결과 창 계열 R1~R4 라운드 1 (2026-11-08)
+- 화면 목록: https://claude.ai/artifact/Mxggy6GuQRxWECoGu17xyJ (Claude Doc)
+- A 정산서 다듬기: https://claude.ai/artifact/4qfXrPNveg9vDGv43LC4yV
+- B 정령 무대: https://claude.ai/artifact/BWEHtCZZ52ucT9NoFovbnH
+- C 차오르는 박자: https://claude.ai/artifact/SY7XoB5x2GCiwYH72NZ2eC
+- D 지나온 길: https://claude.ai/artifact/9QNK2TCLPngAo9UrmdYPpo
+- E 정원으로 돌아옴: https://claude.ai/artifact/KYVAgwtWZJmwuGefC5KjEx
+
+## 결과 창 라운드 2 (2026-11-09, C 뼈대 + A·E·B 조각)
+- R2-1 가운데 판: https://claude.ai/artifact/BkA4uCpc55CjwAwtjnZW4h
+- R2-2 같은 자리: https://claude.ai/artifact/T6c2QPiYXo6AbgmdaukcH9
+- R2-3 올라오는 판: https://claude.ai/artifact/4rv7LSaeAPxPQ3xVsbvgG9
+
+## 결과 창 라운드 3 (2026-11-09): 전투 결과 = 보상 + 정령 셋
+- 정보 도출 문서: https://claude.ai/artifact/QhWhVqY9mTqmqHjLX82Pgs
+- D1 보상이 곧 결과: https://claude.ai/artifact/Wj1vfkn3yh3yQ5Fkstdh3w
+- D2 셋이 고르는 자리: https://claude.ai/artifact/LwqArdExDLxWMn1Fh8KGto
+- D3 싸운 자리 그대로: https://claude.ai/artifact/XGipL7LSGdtZemYGHN38xu
+- 프레임 비교 이미지: /mnt/project-files/design/result-r3/
+
+## 결과 창 라운드 4 (2026-11-09): D2 두 갈래
+- D2-1 집으면 줄에: https://claude.ai/artifact/4RNffNh5TvktqgWD3v213Y
+- D2-2 카드에 셋 다: https://claude.ai/artifact/WvD6oMY8y6M6mb9nq3wjGr
+- 프레임 비교 이미지: /mnt/project-files/design/result-r4/
+
+## 결과 창 라운드 5 (2026-11-09): D2 정리안
+- R5 정리안 (정령별 차이 안 보임): https://claude.ai/artifact/BGaLyfeT55UJSBJKUUDUYk
+- R5-B 능력치 보임: https://claude.ai/artifact/WVXwBJ9BsSfRhP3TNvQiCM
+- 비교 이미지: /mnt/project-files/design/result-r5/
+
+## 결과 창 라운드 6 (2026-11-09): R5-B + 정본 카드·툴팁
+- R6: https://claude.ai/artifact/EgCfphx7Z96SGiiNHCCPoF (카드·툴팁은 게임의 HandCard·Tooltip 실제 렌더)
+- 프레임: /mnt/project-files/design/result-r6/
+
+## 묶음 A (2026-11-09 밤): 런 결과·상점·휴식·이벤트·정령 보기
+- A1 세 줄 고정: https://claude.ai/artifact/CPfgA4pV9Q4rVvK49QGifr
+- A2 필요할 때 펼침: https://claude.ai/artifact/HreUF37YFbbDb3hvt47YVs
+- A3 장면과 세 줄: https://claude.ai/artifact/9jRLFPzKfeZ4J6x9kqa9WR
+- 프레임: /mnt/project-files/design/batch-a/
+- **묶음 A 정리안 (페르소나 컨펌, Lucy 확인 대기)**: https://claude.ai/artifact/CFfTZNCzVXTjiV1f8A697q · 프레임 /mnt/project-files/design/batch-a/final/
+
+## 묶음 B (2026-11-09 밤): 갈래 고르기·정원 허브·일시정지·첫 시작·설정·도감
+- B1 정령 관리 문법: https://claude.ai/artifact/ELsMRkoyowzfA8X4HijXqT
+- B2 공통 오버레이: https://claude.ai/artifact/6VeLu8hRaBUJuDvof6TgtQ
+- 프레임: /mnt/project-files/design/batch-b/
+- **묶음 B 정리안 (페르소나 컨펌, Lucy 확인 대기)**: https://claude.ai/artifact/WcoL9EGghyJJb5QGsrU1N4 · 프레임 /mnt/project-files/design/batch-b/final/
+
+## 표현 라운드 V (2026-11-10): 게임답게, 글자보다 기호
+- V1 기호 HUD: https://claude.ai/artifact/52qFj5rDwLTj2n6qBf21oo
+- V2 사물과 진열: https://claude.ai/artifact/2gGxvfqikr7DTDHxso8Dju
+- V3 큰 숫자: https://claude.ai/artifact/XbGWzGZ6fK9MpGPBpRBavv
+- 프레임: /mnt/project-files/design/round-v/V1~V3/f1–f9.png (소스 /tmp/claude-0/roundV/)
+
+## 표현 라운드 W (2026-11-10): V3 + V1 기호, 의미색
+- W1 의미색 채움: https://claude.ai/artifact/8hUmquRTWEV7Sh3WnHUjzZ
+- W2 의미색 표지: https://claude.ai/artifact/3rFqeVnKd84WuXbzcpDFd4
+- 프레임: /mnt/project-files/design/round-w/W1~W2/f1–f9.png (소스 /tmp/claude-0/roundW/)
+
+## 폴리싱 라운드 P (2026-11-10): W2 바탕
+- P1: https://claude.ai/artifact/Amo4umtjRj1ng12sfCbU5k (W2와 비교 토글) · 프레임 /mnt/project-files/design/round-p/P1/ · 소스 /tmp/claude-0/roundP/P1/
+- 희귀도 표기 시안 (R-A 색 테 · R-B 보석 기호 · R-C 판 밖 보석): https://claude.ai/artifact/8nxfPoHZFXDnCB5SZBy7UZ · 프레임 /mnt/project-files/design/rarity/
+- 보석 G1 정본 기호 결: https://claude.ai/artifact/1ZN6Rsu9dFtpjBQZZUKty8
+- 보석 G2 면 깎은 보석: https://claude.ai/artifact/F9rWRiwQuSEbfTyJnssyi9
+- 보석 G3 정령 결정: https://claude.ai/artifact/1EYq4m1GC7iwEP6mg917VG
+- 보석 프레임·SVG: /mnt/project-files/design/gem/G1~G3/ (소스 /tmp/claude-0/gem/)
+
+## 보상 라운드 E (2026-11-10): 0049 보상 구조를 전투 결과에
+- E1 가로 그대로: https://claude.ai/artifact/JY6nFw4GK2WCKFwtqo1Cdj
+- E2 줄 맞춤: https://claude.ai/artifact/Ec5PKyy3XEuJ5cyFjhhyCL
+- 프레임: /mnt/project-files/design/round-e/E1~E2/ (소스 /tmp/claude-0/roundE/)

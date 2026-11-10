@@ -190,6 +190,8 @@ export const tokens = {
         "12": "rgba(246,241,233,.12)",
         "14": "rgba(246,241,233,.14)",
         "16": "rgba(246,241,233,.16)",
+        "20": "rgba(246,241,233,.2)",
+        "50": "rgba(246,241,233,.5)",
         "04": "rgba(246,241,233,.04)",
         "05": "rgba(246,241,233,.05)",
         "06": "rgba(246,241,233,.06)",
@@ -198,7 +200,20 @@ export const tokens = {
         "09": "rgba(246,241,233,.09)"
       },
       "ringOuter": "rgba(31,29,27,.92)",
-      "tileOrd": "rgba(31,29,27,.86)"
+      "tileOrd": "rgba(31,29,27,.86)",
+      "stageHi": "#2b2826",
+      "stageLo": "#1c1a19",
+      "gold": "#d6ad62",
+      "stat": {
+        "power": "#ee9a5c",
+        "guard": "#8fb0dc",
+        "focus": "#7cc6c0"
+      },
+      "rarity": {
+        "common": "#c3c8cb",
+        "advanced": "#8079e0",
+        "rare": "#e5799c"
+      }
     },
     "text": {
       "battle": {
@@ -288,6 +303,18 @@ export const tokens = {
         "tool": "12.5px",
         "partyNum": "15px",
         "tileName": "13px"
+      },
+      "result": {
+        "gold": "30px",
+        "goldPlus": "18px",
+        "name": "19px",
+        "level": "13px",
+        "hp": "30px",
+        "hpMax": "15px",
+        "stat": "20px",
+        "statOn": "24px",
+        "button": "16px",
+        "buttonGold": "17px"
       }
     },
     "pattern": {
