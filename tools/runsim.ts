@@ -65,11 +65,10 @@ export function simulateRun(seed: number, party?: string[], adult = false): RunS
     run.enter(node);
     if (node.type === "battle" || node.type === "elite" || node.type === "boss") {
       const enc = run.pickEncounter(node.type);
-      const boss = node.type === "boss";
-      const before = boss ? { bossDeck: run.deck.length, bossHpPct: hpPct(run) } : {};
+      const before = { bossDeck: run.deck.length, bossHpPct: hpPct(run) };
       const { won, turns } = fight(run, enc.enemies, rng);
       battles++;
-      if (boss) return { won, endedAt: won ? "clear" : enc.id, floor: node.floor, reachedBoss: true, ...before, bossTurns: turns, battles };
+      if (node.type === "boss") return { won, endedAt: won ? "clear" : enc.id, floor: node.floor, reachedBoss: true, ...before, bossTurns: turns, battles };
       if (!won) return { won: false, endedAt: enc.id, floor: node.floor, reachedBoss: false, battles };
       const reward = run.rollBattleReward(node.type);
       if (!reward.cardsDone) run.takeRewardCard(reward, rng.pick(reward.cards).cardId);
