@@ -3,21 +3,17 @@
 // 지금은 고정 장면으로만 떠요. 규칙(런)에 연결하면 onDone으로 고른 결과를 넘겨요.
 import * as Phaser from "phaser";
 import { createHandCard, preloadHandCard } from "../card/HandCard";
-import { cardTipContent } from "../card/cardTip";
 import { HAND_CARD } from "../card/layout";
-import type { CardVM } from "../card/viewmodel";
-import { faceTexture, preloadSpiritArt } from "../spiritArt";
-import { tokens } from "../../design/tokens";
-import { canvasTexture } from "../style/gradient";
+import { drawBackdrop } from "../run/backdrop";
+import { cardWithFace, drawCardTip } from "../run/cards";
+import { GOLD_ICONS, drawGold } from "../run/gold";
+import { LANE_ICONS, drawLane, type LaneState } from "../run/lanes";
+import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
-import { PAPER } from "../tooltip/skins";
-import { clampLeft, drawTooltip } from "../tooltip/Tooltip";
 import { DEFAULT_RESULT, RESULTS } from "./fixtures";
-import { FRAME, GRID, REWARD } from "./layout";
-import type { LaneVM, ResultVM } from "./viewmodel";
-import { drawBackdrop } from "./views/backdrop";
-import { LANE_ICONS, drawLane, type LaneState } from "./views/lanes";
-import { REWARD_ICONS, drawGold, drawSkip } from "./views/reward";
+import { REWARD } from "./layout";
+import type { ResultVM } from "./viewmodel";
+import { REWARD_ICONS, drawSkip } from "./views/reward";
 
 export const RESULT_SCENE = "result";
 
@@ -35,10 +31,6 @@ export interface ResultSceneData {
   /** 다 고른 뒤에 불려요 (런 연결용) */
   onDone?: (choice: ResultChoice) => void;
 }
-
-const P = tokens.provisional.palette;
-/** 카드 초상 홈 얼굴은 키운 보상 카드에서도 또렷하게 그 크기로 구워요 */
-const NOTCH = Math.round((HAND_CARD.notch.d - HAND_CARD.notch.inset * 2) * REWARD.scale);
 
 export class ResultScene extends Phaser.Scene {
   private vm!: ResultVM;
@@ -65,7 +57,7 @@ export class ResultScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const [id, w] of [...LANE_ICONS, ...REWARD_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...REWARD_ICONS]) loadIcon(this, id, w);
     for (const c of this.vm.cards) preloadHandCard(this, c.card, { showRarity: true, scale: REWARD.scale });
     preloadSpiritArt(this, this.vm.lanes.map((l) => l.id));
   }
@@ -97,19 +89,6 @@ export class ResultScene extends Phaser.Scene {
     this.onDone?.(choice);
   }
 
-  /** 카드 초상 홈 얼굴: 주인 줄의 얼굴 그림. 그림이 없는 정령은 빈 자리로 */
-  private cardWithFace(card: CardVM, lane?: LaneVM): CardVM {
-    const face = lane?.face && this.textures.exists(lane.face.key)
-      ? faceTexture(this, lane.face, NOTCH)
-      : canvasTexture(this, `result:no-face:${NOTCH}`, NOTCH, NOTCH, (ctx) => {
-        ctx.fillStyle = P.wall;
-        ctx.beginPath();
-        ctx.arc(NOTCH / 2, NOTCH / 2, NOTCH / 2, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    return { ...card, face };
-  }
-
   private paint() {
     for (const o of [...this.children.list]) o.destroy();
     const { vm, hover, taken } = this;
@@ -120,11 +99,11 @@ export class ResultScene extends Phaser.Scene {
     const skipHover = hover === "skip";
     const total = vm.gold.total + (skipped ? vm.skipGold ?? 0 : 0);
     const plus = skipHover ? `+${vm.skipGold ?? "?"}` : !done && vm.gold.gained ? `+${vm.gold.gained}` : undefined;
-    drawGold(this, total, plus);
+    drawGold(this, total, { plus });
 
     // 줄: 올리거나 받은 카드의 주인 줄에 카드가 놓여요
     const shown = typeof taken === "number" ? taken : typeof hover === "number" ? hover : undefined;
-    const cards = vm.cards.map((c) => ({ ...c, card: this.cardWithFace(c.card, vm.lanes.find((l) => l.id === c.owner)) }));
+    const cards = vm.cards.map((c) => ({ ...c, card: cardWithFace(this, c.card, vm.lanes.find((l) => l.id === c.owner), REWARD.scale) }));
     vm.lanes.forEach((l, i) => {
       const c = shown === undefined ? undefined : cards[shown];
       const mine = c?.owner === l.id;
@@ -149,11 +128,7 @@ export class ResultScene extends Phaser.Scene {
         .on("pointerover", () => this.setHover(i))
         .on("pointerout", () => { if (this.hover === i) this.setHover(undefined); })
         .on("pointerup", () => this.take(i));
-      if (held) {
-        const cx = x + REWARD.w / 2;
-        const left = clampLeft(cx - PAPER.w / 2, PAPER.w, FRAME.w, GRID.gutter);
-        drawTooltip(this, { skin: PAPER, content: cardTipContent(c.card.detail), at: { left, bottom: y - REWARD.tipGap, tailX: cx - left } });
-      }
+      if (held) drawCardTip(this, c.card, x, y, REWARD.w);
     });
 
     if (!done) {

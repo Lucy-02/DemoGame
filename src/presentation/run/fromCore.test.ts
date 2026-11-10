@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { cardDef } from "../../core/data";
 import { richText, statOf } from "./fromCore";
-import { RESULTS } from "./fixtures";
+import { RESULTS } from "../result/fixtures";
 
-describe("전투 결과 화면 값", () => {
+describe("런 화면 값", () => {
   it("카드가 쓰는 능력치를 효과문에서 찾아요", () => {
     expect(statOf(cardDef("ember_flick"))).toBe("focus");
     expect(statOf(cardDef("ignite"))).toBe("power");

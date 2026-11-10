@@ -1,15 +1,15 @@
-// 규칙 데이터(정령·카드) → 전투 결과 화면 값. 고정 장면과, 나중에 런에 연결할 때 함께 써요.
+// 규칙 데이터(정령·카드) → 런 화면 값 (카드, 정령 줄). 고정 장면과, 런에 연결할 때 함께 써요.
 import { C, ELEMENT_NAME, cardDef, spiritDef } from "../../core/data";
 import { baseStat, maxHpOf, round } from "../../core/stats";
 import { describeCard } from "../../core/text";
-import type { CardDef, RunSpirit } from "../../core/types";
+import type { CardDef, CardOp, RunSpirit } from "../../core/types";
 import { isCardArtId } from "../card/art";
 import type { CardRarity, CardVM, CardValueVM, Material, RichText } from "../card/viewmodel";
 import type { FaceId } from "../faces";
 import { spiritArt } from "../spiritArt";
 import { ELEMENT_ICON } from "../spirits/fromGarden";
 import { COPY, MATERIAL_NAME } from "./copy";
-import { STAT_IDS, type LaneVM, type RewardCardVM, type StatId } from "./viewmodel";
+import { STAT_IDS, type LaneVM, type StatId } from "./viewmodel";
 
 /** 카드 그림 창 윗선은 정본 세 정령 모양뿐이에요. 다른 정령은 속성이 같은 모양을 임시로 빌려요 (0044 열린 질문) */
 const WINDOW_OF: Record<string, FaceId> = { fire: "fire", water: "jelly" };
@@ -25,9 +25,21 @@ export function richText(text: string): RichText {
   return text.split(SPLIT).filter(Boolean).map((t) => (/^\d+$/.test(t) ? { text: t, strong: true } : TERMS.includes(t) ? { text: t, term: true } : { text: t }));
 }
 
-export interface RewardLook {
-  /** 카드 수치판 (기호 + 숫자). 효과 → 기호 표가 생기기 전까지 장면에서 적어 줘요 */
-  values: CardValueVM[];
+/** 카드 수치판 기호 (임시: 효과 → 기호 표가 정본으로 정해지면 거기서 읽어요). 숫자가 있는 효과만 실어요 */
+const OP_ICON: Partial<Record<CardOp["op"], string>> = {
+  damage: "fx-damage", block: "fx-block", wall: "fx-block", heal: "fx-heal", draw: "fx-draw",
+  burn: "kw-burn", chill: "kw-chill", weak: "kw-weak", vulnerable: "kw-vuln", thorns: "kw-thorns",
+};
+const PLATE_MAX = 2;
+
+/** 수치판: 앞에서부터 기호가 있는 효과 두 개까지, 원래 숫자로 */
+export function valuesOf(def: CardDef): CardValueVM[] {
+  return def.effects.flatMap((op): CardValueVM[] => {
+    const icon = OP_ICON[op.op];
+    const n = "value" in op && typeof op.value === "number" ? op.value : "turns" in op && typeof op.turns === "number" ? op.turns : undefined;
+    if (!icon || n === undefined) return [];
+    return [{ icon, n, mult: "hits" in op ? op.hits : undefined }];
+  }).slice(0, PLATE_MAX);
 }
 
 /** 이 카드가 쓰는 능력치: 그 능력치만 두 배로 했을 때 효과문 숫자가 달라지는 첫 번째 */
@@ -37,20 +49,19 @@ export function statOf(def: CardDef): StatId | undefined {
   return STAT_IDS.find((k) => describeCard(def, { ...base, [k]: base[k] * 2 }) !== plain);
 }
 
-/** 보상 카드 한 장. 숫자는 원래 값이에요 (0044: describeCard(def, null)) */
-export function rewardCard(cardId: string, ownerId: string, look: RewardLook): RewardCardVM {
+/** 카드 한 장. 숫자는 원래 값이에요 (0044: describeCard(def, null)). ownerId가 없으면 주인이 정해지지 않은 카드 */
+export function cardVM(cardId: string, ownerId?: string): CardVM {
   const def = cardDef(cardId);
-  const owner = spiritDef(ownerId);
   const material = materialOf(def.element);
-  const card: CardVM = {
-    key: cardId, name: def.name, cost: def.cost, owner: windowOf(ownerId), material,
+  const who = ownerId ? spiritDef(ownerId).name : COPY.shared;
+  return {
+    key: cardId, name: def.name, cost: def.cost, owner: ownerId ? windowOf(ownerId) : "star", material,
     element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, art: "i-spark",
     illustration: isCardArtId(cardId) ? cardId : undefined,
     rarity: def.rarity === "basic" ? undefined : (def.rarity as CardRarity),
-    values: look.values,
-    detail: { text: richText(describeCard(def, null)), owner: [owner.name, ELEMENT_NAME[def.element], MATERIAL_NAME[material]].join(COPY.sep) },
+    values: valuesOf(def),
+    detail: { text: richText(describeCard(def, null)), owner: [who, ELEMENT_NAME[def.element], MATERIAL_NAME[material]].filter(Boolean).join(COPY.sep) },
   };
-  return { card, owner: ownerId, stat: statOf(def) };
 }
 
 export interface LaneExtras {
@@ -59,16 +70,17 @@ export interface LaneExtras {
   down?: boolean;
   badges?: LaneVM["badges"];
   unlocked?: string[];
+  deck?: number;
 }
 
 /** 정령 줄. 능력치는 단계·성격 보정을 넣은 값이에요 (0044) */
-export function lane(rs: RunSpirit, extras: LaneExtras): LaneVM {
+export function lane(rs: RunSpirit, extras: LaneExtras = { exp: { before: 0, after: 0 } }): LaneVM {
   const art = spiritArt(rs.id, rs.stage);
   const stats = Object.fromEntries(STAT_IDS.map((k) => [k, round(baseStat(rs, k))])) as Record<StatId, number>;
   return {
     id: rs.id, name: spiritDef(rs.id).name, level: rs.level, levelUp: extras.levelUp,
     hp: rs.hp, maxHp: maxHpOf(rs), down: extras.down, exp: extras.exp,
     face: art?.crop && { key: art.body, crop: art.crop },
-    stats, badges: extras.badges ?? [], unlocked: extras.unlocked ?? [],
+    stats, badges: extras.badges ?? [], unlocked: extras.unlocked ?? [], deck: extras.deck,
   };
 }
