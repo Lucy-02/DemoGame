@@ -140,3 +140,7 @@
 ## 폴리싱 라운드 P (2026-11-10): W2 바탕
 - P1: https://claude.ai/artifact/Amo4umtjRj1ng12sfCbU5k (W2와 비교 토글) · 프레임 /mnt/project-files/design/round-p/P1/ · 소스 /tmp/claude-0/roundP/P1/
 - 희귀도 표기 시안 (R-A 색 테 · R-B 보석 기호 · R-C 판 밖 보석): https://claude.ai/artifact/8nxfPoHZFXDnCB5SZBy7UZ · 프레임 /mnt/project-files/design/rarity/
+- 보석 G1 정본 기호 결: https://claude.ai/artifact/1ZN6Rsu9dFtpjBQZZUKty8
+- 보석 G2 면 깎은 보석: https://claude.ai/artifact/F9rWRiwQuSEbfTyJnssyi9
+- 보석 G3 정령 결정: https://claude.ai/artifact/1EYq4m1GC7iwEP6mg917VG
+- 보석 프레임·SVG: /mnt/project-files/design/gem/G1~G3/ (소스 /tmp/claude-0/gem/)
