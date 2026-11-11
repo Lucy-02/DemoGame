@@ -332,6 +332,8 @@ export interface EvolutionDef {
   branch?: string;
   /** 갈래가 열리는 조건. 없으면 늘 열려 있어요. cards = 한 탐험에서 이 갈래 표시 카드를 받은 수 */
   opens?: { cards: number };
+  /** 이 갈래의 주 성장 능력치 (0027: 갈래 차이는 능력치 배분). 없으면 정령의 adultMain */
+  main?: StatKey[];
 }
 
 export interface EpisodeDef {

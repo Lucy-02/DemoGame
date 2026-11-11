@@ -123,3 +123,32 @@ export const STRIP = {
 
 /** 배지 공통 (.q-badge 20, svg 12) · 버튼 위 배지 .onbtn right -6 top -6 */
 export const BADGE = { d: 20, icon: 12, onButton: -6 };
+
+/** 갈래 고르기 창 (0047 S15 · 라운드 G1, P1 f7 바탕). 값은 G1 시안 CSS 그대로, 임시예요 */
+export const BRANCH = {
+  /** .bw-dim rgba(18,16,15,.6) 위 · .bw-tag left 24 top 20 34×34, svg 18 */
+  tag: { x: 24, y: 20, d: 34, icon: 18 },
+  /** .bw-p left 112 top 64 1056×672 radius 18 */
+  panel: { x: 112, y: 64, w: 1056, h: 672, radius: 18 },
+  /** .bw-head padding 18 28 14 gap 12 · .bw-face 56, 테 3 · .bw-el · .bw-role 18 · .bw-per padding 1 10 radius 10 ml 8 */
+  head: { pad: [18, 28, 14, 28] as [number, number, number, number], gap: 12, face: 56, faceRing: 3, icon: 18, per: { pad: [1, 10, 1, 10] as [number, number, number, number], radius: 10, ml: 8 } },
+  /** .bw-cmp inset 0 24 18 · 열 132 / 1fr / 1fr gap 16 · .bw-col radius 14 padding 0 16 (지금 열 0 4) · 고른 판 테 1.5 */
+  body: { padX: 24, padBottom: 18, nowW: 132, gap: 16, radius: 14, padX2: 16, nowPadX: 4, selRing: 1.5 },
+  /** .bw-r.h 68 · .bw-r.k 44 · .bw-r.s 44 · 줄 사이 선 1 · .bw-r gap 10 · 머리 얼굴 40 */
+  row: { head: 68, cond: 44, stat: 44, line: 1, gap: 10, face: 40, role: 22, cardsTop: 12, statIcon: 15 },
+  /** .bw-ph img 116×163, 카드 사이 12, 이름 위 6 */
+  card: { w: 116, h: 163, gap: 12, nameGap: 6 },
+  /** .bw-foot height 72 padding 0 28 gap 12 · 버튼 height 48 padding 0 22 radius 12 · 주 버튼 min 240 · kbd padding 0 6 radius 5 lh 18 */
+  foot: { h: 72, padX: 28, gap: 12, btnH: 48, btnPadX: 22, radius: 12, goMinW: 240, btnGap: 8, btnIcon: 16, kbd: { padX: 6, radius: 5, h: 18 } },
+  /** .brm height 22 padding 0 7 0 4 gap 3 radius 11 · .brs 13 테 1.2 radius 4 · .lg height 36 padding 0 13 0 8 gap 7 · .brs 20 */
+  mark: { h: 22, padL: 4, padR: 7, gap: 3, slot: 13, slotLine: 1.2, slotRadius: 4, lg: { h: 36, padL: 8, padR: 13, gap: 7, slot: 20, slotLine: 1.5, slotRadius: 5 } },
+  /** .cmark right -9 top -10, 바깥 테 3 (--floor) */
+  cardMark: { dx: 9, dy: 10, ring: 3 },
+  /** .bw-r.k gap 8 · .klk 15 · .kok 13 · .ksep 1×14 margin 0 2 · .kbar height 8 min 48 radius 4 · .chip3 height 24 padding 0 9 gap 5 svg 14 */
+  cond: { gap: 8, lock: 15, ok: 13, okGap: 3, sep: { w: 1, h: 14, mx: 2 }, bar: { h: 8, minW: 48 }, chip: { h: 24, padX: 9, gap: 5, icon: 14 } },
+  /** 잠긴 갈래: 능력치·카드·얼굴 opacity .42, 머리 표지 .7 */
+  lockAlpha: 0.42,
+  lockMarkAlpha: 0.7,
+  /** .bw-bg filter blur(5px): 아래 화면 흐림 (Phaser Blur quality · x · y · strength, 눈으로 맞춘 임시 값) */
+  blur: { quality: 1, x: 2, y: 2, strength: 2 },
+};

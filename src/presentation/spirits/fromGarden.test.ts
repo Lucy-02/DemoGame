@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { GardenSession } from "../../session/garden";
 import { GARDENS } from "./fixtures";
-import { spiritsVM } from "./fromGarden";
+import { branchPickVM, spiritsVM } from "./fromGarden";
 import { MOCKUPS } from "./mockups";
 
 describe("정령 관리 화면 데이터", () => {
@@ -57,5 +57,25 @@ describe("정령 관리 화면 데이터", () => {
     // 성체 카드가 새로 열렸어요
     expect(d.tabs[1].badge).toBe("g-cardnew");
     expect(GardenSession.restore(s.snapshot()).state).toEqual(s.state);
+  });
+});
+
+describe("갈래 고르기 창 (0047 S15)", () => {
+  it("열린 갈래만 고를 수 있고, 잠긴 갈래는 조건과 이번 탐험 진척을 보여요", () => {
+    const g = GARDENS.branch;
+    const vm = branchPickVM(g, "glass_salamander", "runResult", ["glass_shatter", "ricochet"])!;
+    expect(vm.branches.map((b) => [b.id, b.open])).toEqual([["hold", true], ["return", false]]);
+    expect(vm.selected).toBe(0);
+    expect(vm.condRow).toBe(true);
+    expect(vm.branches[1].cond).toEqual({ level: { need: 4, ok: true }, cards: { have: 2, need: 3 } });
+    // 갈래 2는 가드·파워가 주 성장 (작업 가정)
+    expect(vm.branches[1].stats.map((s) => s.gain > 0)).toEqual([true, true, true, false]);
+    expect(vm.branches[0].cards.map((c) => c.key)).toEqual(["glass_citadel"]);
+    expect(branchPickVM(g, "glass_salamander", "garden", [], "return")!.selected).toBe(0);
+    expect(branchPickVM(g, "fire_fox", "garden")).toBeUndefined();
+  });
+
+  it("둘 다 잠기면 고른 갈래가 없어요", () => {
+    expect(branchPickVM(GARDENS.branchLocked, "glass_salamander", "garden")!.selected).toBeUndefined();
   });
 });

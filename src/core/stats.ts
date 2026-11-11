@@ -16,9 +16,15 @@ export function activePersonality(rs: RunSpirit): PersonalityDef | null {
 }
 
 /** 단계로 오른 값 (0021 3절): 주 성장 능력치에 단계마다 +2, HP가 주 성장이면 단계마다 +6. 레벨은 카드 숫자를 바꾸지 않아요. */
-export function stageBonus(rs: Pick<RunSpirit, "id" | "stage">, k: StatKey): number {
-  if (!spiritDef(rs.id).adultMain.includes(k)) return 0;
+export function stageBonus(rs: Pick<RunSpirit, "id" | "stage" | "branch">, k: StatKey): number {
+  if (!mainStats(rs).includes(k)) return 0;
   return stageRank(rs.stage) * (k === "hp" ? GROWTH.stage_hp_main_bonus : GROWTH.stage_main_bonus);
+}
+
+/** 주 성장 능력치: 갈래가 있으면 그 갈래 줄의 main, 없으면 정령의 adultMain (0027) */
+export function mainStats(rs: Pick<RunSpirit, "id" | "branch">): readonly StatKey[] {
+  const row = rs.branch ? GROWTH.evolutions.find((e) => e.spirit === rs.id && e.branch === rs.branch) : undefined;
+  return row?.main ?? spiritDef(rs.id).adultMain;
 }
 
 /** 레벨로 오른 최대 HP (레벨당 +2, Lv1은 0) */

@@ -19,7 +19,8 @@ function jong(word: string): number | null {
   const code = ch.charCodeAt(0);
   if (code >= HANGUL_START && code <= HANGUL_END) return (code - HANGUL_START) % JONG;
   // 0으로 끝나는 수(10 십, 100 백, 1000 천)는 모두 받침이 있어서 DIGIT_BATCHIM[0]과 같아요
-  if (/[0-9]/.test(ch)) return DIGIT_BATCHIM[Number(ch)] ? 1 : 0;
+  // 일·칠·팔은 ㄹ 받침이라 "으로/로"에서 "로"가 붙어요 (1로, 7로)
+  if (/[0-9]/.test(ch)) return "178".includes(ch) ? RIEUL : DIGIT_BATCHIM[Number(ch)] ? 1 : 0;
   return null;
 }
 

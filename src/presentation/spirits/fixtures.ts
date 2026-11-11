@@ -24,6 +24,20 @@ export const GARDENS: Record<string, Garden> = {
       exp: L[5] + 20, stage: "awakened", seen: ["mist_cat_lv2", "mist_cat_lv3", "mist_cat_adult"], affinity: 160, episodes: 3,
     },
   }, 12),
+  /** 갈래 고르기 (0047 S15): 도롱뇽 Lv4 · 갈래 1만 열림 */
+  branch: shape({
+    fire_fox: { exp: L[1] },
+    glass_salamander: { exp: L[3] + 10, seen: ["glass_salamander_lv2", "glass_salamander_lv3"], openBranches: ["hold"] },
+    mist_cat: { exp: L[2] },
+  }, 0),
+  /** 갈래 고르기: 둘 다 열림 */
+  branchOpen: shape({
+    glass_salamander: { exp: L[3] + 10, seen: ["glass_salamander_lv2", "glass_salamander_lv3"], openBranches: ["hold", "return"] },
+  }, 0),
+  /** 갈래 고르기: 둘 다 잠김 (Lv4는 됨) */
+  branchLocked: shape({
+    glass_salamander: { exp: L[3] + 10, seen: ["glass_salamander_lv2", "glass_salamander_lv3"] },
+  }, 0),
 };
 
 export const DEFAULT_GARDEN = "mixed";

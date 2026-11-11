@@ -9,6 +9,7 @@ describe("한국어 도우미", () => {
       .toEqual(["불여우가", "유리 도롱뇽이", "성체로", "물로"]);
     expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 100].map((n) => hasBatchim(String(n))))
       .toEqual([true, false, true, false, false, true, true, true, false, true, true, true]);
+    expect([1, 2, 3, 6, 7, 8].map((n) => josa(String(n), "으로/로"))).toEqual(["1로", "2로", "3으로", "6으로", "7로", "8로"]);
   });
 
   it("동사 줄기를 합니다체·연결형으로", () => {

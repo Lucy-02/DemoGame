@@ -17,7 +17,7 @@ async function start() {
     ? await startPlaceholderGame("game")
     : await startGame("game", {
       screen: screen === "spirits" || screen === "result" ? screen : "battle",
-      hover: get("hover"), scene: get("scene"), lift: get("lift"), select: get("select"), tab: get("tab"), closed: params.has("closed"), taken: get("taken"),
+      hover: get("hover"), scene: get("scene"), lift: get("lift"), select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
     });
   Object.assign(window, { game });
   if (platform.kind === "web") mountDevWindow(platform);

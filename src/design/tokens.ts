@@ -315,6 +315,21 @@ export const tokens = {
         "statOn": "24px",
         "button": "16px",
         "buttonGold": "17px"
+      },
+      "branch": {
+        "name": "26px",
+        "level": "13px",
+        "branchNum": "24px",
+        "mark": "13px",
+        "stat": "22px",
+        "statSame": "19px",
+        "gain": "15px",
+        "cond": "14px",
+        "count": "17px",
+        "countUnit": "13px",
+        "button": "16px",
+        "kbd": "12px",
+        "cardName": "12px"
       }
     },
     "pattern": {

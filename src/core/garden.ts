@@ -259,7 +259,14 @@ export const SPIRIT_UNLOCK_STEPS = ["lv2", "lv3", "adult"] as const;
 
 const hasCard = (key: string) => CARDS.some((c) => c.unlock === key);
 
-export const isCardUnlocked = (g: Garden, card: CardDef) => unlockKeys(g).has(card.unlock);
+/** 해금됐나. 갈래 카드의 성체 해금은 고른 갈래의 카드만 열려요 (0027 갈래 고유 카드) */
+export function isCardUnlocked(g: Garden, card: CardDef): boolean {
+  if (!unlockKeys(g).has(card.unlock)) return false;
+  return !isBranchAdultCard(card) || g.spirits.find((s) => s.id === card.spirit)?.branch === card.branch;
+}
+
+/** 갈래 표시가 있는 성체 해금 카드 (갈래마다 하나) */
+export const isBranchAdultCard = (card: CardDef) => !!card.branch && !!card.spirit && card.unlock === `${card.spirit}_adult`;
 
 /** 해금을 봤다고 표시해요 (보면 배지가 사라져요, "받기" 버튼 없음) */
 export function markSeen(g: Garden, id: string, keys: readonly string[]): Garden {
