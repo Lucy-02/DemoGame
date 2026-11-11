@@ -32,6 +32,7 @@ export function autoPlayTurn(b: Battle, rng: Rng) {
       let target;
       if (def.target === "enemy") {
         const es = b.aliveEnemies();
+        if (!es.length) break; // 앞 카드의 즉시 효과로 전투가 끝났어요
         target = { side: "e" as const, uid: es.sort((a, z) => a.hp - z.hp)[0].uid };
       } else if (def.target === "ally") {
         const ss = b.aliveSpirits().sort((a, z) => a.hp / a.maxHp - z.hp / z.maxHp);

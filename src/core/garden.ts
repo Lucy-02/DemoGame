@@ -25,7 +25,7 @@ export interface GardenSpirit {
   episodes: number;
   /** 플레이어가 이미 본 해금 키 (할 일 배지를 지우는 데 써요) */
   seen: string[];
-  /** 남긴 장비 (0048). 길이 ≤ equipKeepSlots(stage), 공명 ≤ resonanceCap(stage) */
+  /** 남긴 장비 (0048 · 0056). 길이 ≤ equipSlots(stage), 공명 ≤ resonanceCap(stage) */
   equipment?: GardenEquip[];
   /** 분해로 얻은 그 정령의 공명 권 (이름 TODO_NAME) */
   resonanceTokens?: number;
@@ -42,22 +42,62 @@ export interface Garden {
   /** 정원 재료 (이름 TODO_NAME) */
   material: number;
   act1Boss: boolean;
+  /** 깃들기 후보를 뽑는 씨앗 (0053). 같은 정원이면 다시 켜도 같은 후보예요 */
+  seed?: number;
+  /** 끝낸 판 수 (져도 세요) */
+  runs?: number;
+  /** 아직 고르지 않은 깃들기 수 (0053) */
+  joins?: number;
 }
 
 // ───────────────────────── 만들기 · 찾기 ─────────────────────────
 
-/** 새 정원: 정령마다 성격을 한 번 뽑아요. 같은 시드면 같은 정원이에요. */
-/** 새 정원. 기본은 constants.default_party 셋이에요 */
+/** 정령을 골라 만드는 정원(시험 · 자동 플레이). 정령마다 성격을 한 번 뽑아요. 같은 시드면 같은 정원이에요. 기본은 constants.default_party 셋이에요 */
 export function newGarden(seed: number, ids: readonly string[] = C.default_party as string[]): Garden {
   const rng = new Rng(seed);
   return {
     version: GARDEN_VERSION,
     material: 0,
     act1Boss: false,
+    seed, runs: 0, joins: 0,
     spirits: ids.map((id) => ({
       id, exp: 0, stage: "baby", personality: rng.pick(PERSONALITIES).id, deed: 0, affinity: 0, episodes: 0, seen: [],
     })),
   };
+}
+
+/** 새로 하기의 정원 (0053): 시작 풀에서 무작위 하나로 시작해요 */
+export function startGarden(seed: number): Garden {
+  return newGarden(seed, [new Rng(seed ^ START_SALT).pick(C.start_pool as string[])]);
+}
+
+const START_SALT = 0x51ed;
+
+/** 지금 깃들 수 있는 후보: 시작 풀에서 아직 없는 정령 가운데 둘 (0053). 고를 것이 없으면 빈 목록 */
+export function joinOffer(g: Garden): string[] {
+  if (!g.joins) return [];
+  const left = (C.start_pool as string[]).filter((id) => !g.spirits.some((s) => s.id === id));
+  return new Rng((g.seed ?? 0) + g.spirits.length * 7919).shuffle(left).slice(0, 2);
+}
+
+/** 후보 가운데 하나가 깃들어요 */
+export function join(g: Garden, id: string): Garden {
+  if (!joinOffer(g).includes(id)) return g;
+  const personality = new Rng((g.seed ?? 0) + g.spirits.length * 104729).pick(PERSONALITIES).id;
+  return {
+    ...g, joins: (g.joins ?? 0) - 1,
+    spirits: [...g.spirits, { id, exp: 0, stage: "baby", personality, deed: 0, affinity: 0, episodes: 0, seen: [] }],
+  };
+}
+
+/** 시작 풀에 아직 없는 정령이 남았을 때만 깃들기를 하나 더해요 */
+const grantJoin = (g: Garden): Garden =>
+  (C.start_pool as string[]).filter((id) => !g.spirits.some((s) => s.id === id)).length > (g.joins ?? 0) ? { ...g, joins: (g.joins ?? 0) + 1 } : g;
+
+/** 판이 끝났어요(져도). 첫 판을 끝내면 둘째 정령이 깃들어요 (0053) */
+export function endRun(g: Garden): Garden {
+  const runs = (g.runs ?? 0) + 1;
+  return runs === 1 ? grantJoin({ ...g, runs }) : { ...g, runs };
 }
 
 export function gardenSpirit(g: Garden, id: string): GardenSpirit {
@@ -125,9 +165,11 @@ export const nextDeed = (s: GardenSpirit): DeedDef | undefined => evolutionsFrom
 
 // ───────────────────────── 판에서 받는 것 ─────────────────────────
 
-/** 이긴 전투 하나: 출전한 셋이 똑같이 경험을 받고(쓰러져도), 재료가 쌓여요. 판이 실패해도 이긴 만큼은 남아요. */
+/** 이긴 전투 하나: 출전한 정령이 똑같이 경험을 받고(쓰러져도), 재료가 쌓여요. 판이 실패해도 이긴 만큼은 남아요.
+ *  출전하지 않은 정령은 받지 않아요. 첫 보스를 가라앉히면 정령이 하나 더 깃들어요 (0053). */
 export function grantBattle(g: Garden, party: readonly string[], tier: BattleTier): Garden {
   const exp = GROWTH.exp[tier];
+  if (tier === "boss" && !g.act1Boss) g = grantJoin(g);
   return {
     ...g,
     material: g.material + GROWTH.material[tier],
@@ -213,7 +255,7 @@ export function feed(g: Garden, id: string): Garden {
 /** 정원의 정령을 판의 정령으로. HP는 최대 HP로 채워요 (부르는 쪽에서 maxHpOf로) */
 export function toRunSpirit(s: GardenSpirit): RunSpirit {
   return {
-    id: s.id, hp: 0, maxHpBonus: 0, stage: s.stage, level: levelOf(s.exp), personality: s.personality,
+    id: s.id, hp: 0, maxHpBonus: 0, stage: s.stage, level: levelOf(s.exp), personality: s.personality, branch: s.branch,
     equipment: (s.equipment ?? []).map((e) => ({ ...e, from: "kept" })),
   };
 }

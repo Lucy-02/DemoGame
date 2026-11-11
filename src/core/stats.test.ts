@@ -5,12 +5,12 @@ import { EQUIP_PASSIVES } from "./battle/passives";
 import { C, EQUIPMENT } from "./data";
 import { Rng } from "./rng";
 import { Run } from "./run";
-import { activeTiers, critStat, equipKeepSlots, maxHpOf, resolveStat, resonanceCap } from "./stats";
+import { activeTiers, critStat, equipSlots, maxHpOf, resolveStat, resonanceCap } from "./stats";
 import type { EquipDef, RunSpirit } from "./types";
 import { equipProblems } from "./validate";
 
 const FIXTURE: EquipDef = {
-  id: "test_charm", owner: "fire_fox", grade: "boss",
+  id: "test_charm", owner: null, rarity: "boss",
   tiers: [
     { stats: [{ stat: "power", op: "add", value: 2 }] },
     { stats: [{ stat: "power", op: "add", value: 2 }, { stat: "hp", op: "pct", value: 0.1 }], effects: [{ passive: "test_passive", value: 1 }] },
@@ -82,12 +82,19 @@ describe("능력치 층", () => {
   });
 
   it("단계별 칸 수 · 공명 상한, 데이터 검사", () => {
-    expect([equipKeepSlots("baby"), equipKeepSlots("awakened")]).toEqual([0, 2]);
+    expect([equipSlots("baby"), equipSlots("adult"), equipSlots("awakened")]).toEqual([1, 1, 2]);
     expect([resonanceCap("baby"), resonanceCap("awakened")]).toEqual([1, 3]);
     const spiritIds = new Set(["fire_fox"]);
     EQUIP_PASSIVES.test_passive = {};
     expect(equipProblems(FIXTURE, spiritIds)).toEqual([]);
-    expect(equipProblems({ ...FIXTURE, grade: "elite" }, spiritIds)).toEqual(["test_charm: 대가는 보스 장비에만 있어요"]);
+    expect(equipProblems({ ...FIXTURE, rarity: "generic" }, spiritIds)).toEqual(["test_charm: 대가는 보스 장비에만 있어요"]);
+    expect(equipProblems({ ...FIXTURE, owner: "fire_fox" }, spiritIds)).toEqual(["test_charm: 범용 · 보스 장비는 누구나 받아요"]);
+    const weapon = { id: "test_weapon", owner: "fire_fox", rarity: "exclusive", tiers: [{}, {}], signature: { card: "ember_scatter", techniques: { burst: ["backfire", "ignite"] } } };
+    const cardIds = new Set(["ember_scatter", "backfire", "ignite"]);
+    expect(equipProblems(weapon, spiritIds, cardIds)).toEqual([]);
+    expect(equipProblems({ ...weapon, owner: null }, spiritIds, cardIds)).toEqual(["test_weapon: 전용 무기에는 전용 정령이 있어요"]);
+    expect(equipProblems({ ...weapon, signature: { card: "ember_scatter", techniques: { burst: ["backfire"] } } }, spiritIds, cardIds)).toHaveLength(1);
+    expect(equipProblems({ ...weapon, signature: { card: "nope", techniques: {} } }, spiritIds, cardIds)).toEqual(["test_weapon: 없는 대표 카드 nope"]);
     expect(equipProblems({ ...FIXTURE, tiers: [{ stats: [{ stat: "luck", op: "add", value: 1 }] }] }, spiritIds)).toEqual(["test_charm.tiers[0].stats[0]: 모르는 수치 luck"]);
   });
 });

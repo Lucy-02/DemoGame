@@ -42,10 +42,10 @@ describe("데이터 무결성", () => {
 
   it("장비 데이터가 형식에 맞고, 묶음 파일이 모두 목록에 있어요", () => {
     const spiritIds = ids(SPIRITS);
-    expect(Object.values(EQUIP_FILES).flat().flatMap((e) => equipProblems(e, spiritIds))).toEqual([]);
+    expect(Object.values(EQUIP_FILES).flat().flatMap((e) => equipProblems(e, spiritIds, ids(CARDS)))).toEqual([]);
     const files = readdirSync(new URL("./equipment", import.meta.url)).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5));
     expect(files.sort()).toEqual(Object.keys(EQUIP_FILES).sort());
-    expect(GROWTH.equip_keep_slots).toHaveLength(3);
+    expect(GROWTH.equip_slots).toHaveLength(3);
     expect(GROWTH.equip_resonance_cap).toHaveLength(3);
   });
 

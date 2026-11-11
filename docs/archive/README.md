@@ -7,5 +7,9 @@
 | `KICKOFF_PROMPT.md` | 첫 브랜딩·UI/UX 세션 킥오프 프롬프트 (2026-10-28). 파일 표·단계는 지금 구조와 달라요 | `CLAUDE.md`, `docs/handoff/DECISIONS.md` |
 | `design-workflow-report.md` | 디자인 루프 재설계 리서치 리포트 | 결정 0001·0002, `CLAUDE.md` 디자인 루프 |
 | `research/core-design/` | 코어 기획 조사 R1~R6 (워크플로우·서사·경쟁작·카드 네이밍·호칭·효과문·UI 문구) | 결정 0015~0033, `design/canon/naming/`, `design/canon/text/TEXT_RULES.md`, `docs/design/` |
+| `handoff/04_Lucy_결정_대기.md` | 2026-11-04 기준 결정 대기 목록 | `docs/handoff/OPEN_QUESTIONS.md`, 결정 0033~0045 |
+| `handoff/03_화면별_정보·행동_목록_미검토.md` | 화면별 정보·행동 초안 (2026-10-28) | `design/concepts/screen-flow.md`, 결정 0044~0051 |
+| `04-usp-validation.md` | "누가 배울까" 검증 계획 (기록 없음, 0045로 전제가 바뀜) | 결정 0045 |
+| `handoff/04_체형_템플릿_가설.md` | 체형 템플릿 4종과 NAI5 프롬프트 시트 가설 (Lucy 태그 없이 뽑은 이미지 기준) | `docs/architecture/0002-spirit-puppet.md`, `design/card/art/PIPELINE.md` |
 | `handoff/02_MVP_콘텐츠_데이터_미검토.md` | 옛 MVP 데이터 (이그니·테스투·실바) | `src/data/*.json`, 결정 0016·0017 |
 | `handoff/03_MVP_데이터_재설계_제안.md` | 지금 `src/data`의 재설계 제안 (수락됨, 2026-10-30) | `src/data/*.json`, `design/canon/BALANCE_BASELINE.md` |

@@ -1,7 +1,7 @@
 # 글로 된 피드백 전수 조사와 시각화 안 (0019)
 
 - 날짜: 2026-10-30. 원칙: `docs/design-decisions/0019-feedback-over-text.md`
-- 대상: `src/presentation/battle/` (정본 전투 화면), `src/presentation/placeholder/` (임시 화면), `src/core/battle.ts`의 사유 문자열
+- 대상: `src/presentation/battle/` (정본 전투 화면), `src/presentation/placeholder/` (임시 화면), `src/core/battle/battle.ts`의 사유 문자열
 - 각 사례에 2~3안. 2026-10-30 Lucy 포괄 승인("머지하고 쭉쭉 진행해")으로 **각 행의 추천안을 채택**했어요(0019 추기). Lucy가 다른 안을 고르면 메모 열의 "채택"을 바꿔요. 색·크기·시간 값은 전부 TODO_TOKEN이에요.
 
 ## 1. 전투 화면 (정본)
@@ -31,5 +31,5 @@
 
 ## 4. 코드 영향 (고른 뒤)
 - `src/presentation/battle/viewmodel.ts` `CardDetailVM.why: string` → `block: { kind: "mana" | "condition" | "downed" | "sealed", need?: number, have?: number }` 같은 **상태 값**으로. 글은 뷰에서 만들지 않아요.
-- `src/core/battle.ts` `canPlay().why` 문자열은 코어 쪽 사유 코드라 그대로 두고, 뷰가 코드→형태로 바꿔요(코어 미수정).
+- `src/core/battle/battle.ts` `canPlay().why` 문자열은 코어 쪽 사유 코드라 그대로 두고, 뷰가 코드→형태로 바꿔요(코어 미수정).
 - 정본 픽스처 `fixtures/canonRest.ts`의 `why` 문장 3건 교체.
