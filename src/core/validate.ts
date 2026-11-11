@@ -45,6 +45,7 @@ export function cardProblems(card: unknown, spiritIds: ReadonlySet<string>): str
   need(c.startOwner === undefined || spiritIds.has(c.startOwner as string), `없는 정령 ${String(c.startOwner)}`);
   need(c.startEach === undefined || isInt(c.startEach, 1), "startEach는 1 이상 정수예요");
   need(c.spirit === undefined || spiritIds.has(c.spirit as string), `없는 전용 정령 ${String(c.spirit)}`);
+  need(c.branch === undefined || (typeof c.branch === "string" && c.spirit !== undefined), "갈래 표시(branch)는 전용 카드(spirit)에만 붙어요");
   need(c.obtain === undefined || oneOf(OBTAINS, c.obtain), `모르는 얻는 곳 ${String(c.obtain)}`);
   if (!Array.isArray(c.effects) || !c.effects.length) out.push(`${id}: effects가 비었어요`);
   else c.effects.forEach((op, i) => out.push(...opProblems(op, `${id}.effects[${i}]`)));
