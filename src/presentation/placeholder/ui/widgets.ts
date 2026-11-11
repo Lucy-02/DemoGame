@@ -6,7 +6,8 @@ import type { ShapeAsset } from "../../../core/data";
 
 export const FONT = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'WenQuanYi Zen Hei', sans-serif";
 export const W = 1280;
-export const H = 720;
+/** 새 화면과 같은 1280×800 (전투 결과 화면이 이 게임 안에서 떠요) */
+export const H = 800;
 
 export const COLORS = {
   bg: 0x1b1826,

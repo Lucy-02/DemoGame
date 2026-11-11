@@ -1,4 +1,6 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
+import { RewardSession } from "../../../session/reward";
+import { RESULT_SCENE, type ResultSceneData } from "../../result/ResultScene";
 import * as Phaser from "phaser";
 import { C } from "../../../core/data";
 import { getRun } from "../../../core/run";
@@ -40,7 +42,11 @@ export class EventScene extends Phaser.Scene {
         case "maxHpAll": for (const s of run.spirits) { s.maxHpBonus += o.value; s.hp = Math.min(maxHpOf(s), s.hp + o.value); } break;
         case "cardReward": {
           const cards = run.rollCards(3, C.reward.rarity_normal, o.rarity);
-          next = () => this.scene.start("RewardScene", { title: "두루마리에서 배운 마법", cardIds: cards.map((c) => c.id) });
+          next = () => {
+            const session = new RewardSession(run, { kind: "cards", cardIds: cards.map((c) => c.id) });
+            const data: ResultSceneData = { session, onDone: (scene) => scene.scene.start("MapScene") };
+            this.scene.start(RESULT_SCENE, data);
+          };
           break;
         }
         case "removeCard":

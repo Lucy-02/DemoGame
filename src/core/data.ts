@@ -10,7 +10,7 @@ import assetsJson from "../data/assets.json";
 import growthJson from "../data/growth.json";
 import { DEFAULT_LOCALE, cardText, type Locale } from "./l10n";
 import type {
-  CardData, CardDef, EncounterDef, EnemyDef, EnemyMove, EnemyScale, EquipDef, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
+  CardData, CardDef, EncounterDef, EnemyDef, EnemyMove, EnemyScale, EquipDef, EquipRarity, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
 } from "./types";
 
 export const C = constantsJson;
@@ -75,7 +75,7 @@ export function scaleEnemy(def: EnemyDef, k: EnemyScale): EnemyDef {
     ...m,
     actions: m.actions.map((a) =>
       a.type === "attack" ? { ...a, dmg: up(a.dmg, k.dmg) }
-      : a.type === "burn" || a.type === "buffMinions" ? { ...a, value: up(a.value, k.dmg) }
+      : a.type === "burn" || a.type === "buffMinions" || a.type === "burnRamp" ? { ...a, value: up(a.value, k.dmg) }
       : a.type === "block" || a.type === "sapHeal" ? { ...a, value: up(a.value, k.hp) }
       : a),
   });
@@ -86,6 +86,17 @@ export function scaleEnemy(def: EnemyDef, k: EnemyScale): EnemyDef {
     phase2: def.phase2 && { ...def.phase2, turnStartBlock: up(def.phase2.turnStartBlock, k.hp), pattern: def.phase2.pattern.map(move) },
   };
 }
+/** 거친 특성 가운데 데이터를 바꾸는 것: 묵직한 = 모든 공격 +heavy_dmg, 차징 공격은 배율까지 (0062) */
+export function applyTraits(def: EnemyDef, traits: readonly string[]): EnemyDef {
+  if (!traits.includes("heavy")) return def;
+  const { heavy_charge_mult: m, heavy_dmg: plus } = C.traits;
+  const move = (mv: EnemyMove): EnemyMove => ({
+    ...mv,
+    actions: mv.actions.map((a) => (a.type === "attack" ? { ...a, dmg: mv.charge ? Math.round(a.dmg * m) : a.dmg + plus } : a)),
+  });
+  return { ...def, pattern: def.pattern.map(move), phase2: def.phase2 && { ...def.phase2, pattern: def.phase2.pattern.map(move) } };
+}
+
 export function equipDef(id: string): EquipDef {
   const d = EQUIPMENT.find((e) => e.id === id);
   if (!d) throw new Error(`unknown equipment: ${id}`);
@@ -96,6 +107,8 @@ export const personalityDef = (id: string) => must(persMap, id, "personality");
 export const ELEMENT_NAME: Record<Element, string> = {
   fire: "불", water: "물", forest: "숲", wind: "바람", light: "빛", earth: "땅", none: "무",
 };
+/** 거친 특성 이름 (후보, Lucy 확인 전) */
+export const TRAIT_NAME: Record<string, string> = { burning: "타오르는", sturdy: "단단한", swift: "재빠른", heavy: "묵직한" };
 /** 빛 · 땅은 임시값(TODO_TOKEN) */
 export const ELEMENT_COLOR: Record<Element, number> = {
   fire: 0xe8643a, water: 0x3d8fe0, forest: 0x4fae5c, wind: 0x8fb8c8, light: 0xe8d58a, earth: 0xb08a5a, none: 0x9a93a8,
@@ -106,6 +119,8 @@ export const ROLE_NAME: Record<string, string> = {
 export const RARITY_NAME: Record<string, string> = {
   basic: "기본", common: "일반", advanced: "고급", rare: "희귀",
 };
+/** 장비 희귀도 이름 (0061) */
+export const EQUIP_RARITY_NAME: Record<EquipRarity, string> = { generic: "일반", exclusive: "유니크", boss: "전설" };
 
 /** 공격 속성 → 대상 속성 배율. */
 export function affinity(atk: Element, def: Element): number {

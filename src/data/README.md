@@ -15,4 +15,6 @@
 - 장비의 능력치 보정 `op: add`는 층 4(고정값), `op: pct`는 층 5(영구 배율, 성격과 더해서 한 번 곱함), `when`이 있으면 전투 조건부 층이에요(`src/core/stats.ts` · `docs/architecture/0003-battle-engine.md`). `effects[].passive`는 `src/core/battle/passives.ts`의 `EQUIP_PASSIVES` 키예요.
 - `growth.json`의 `equip_slots`는 단계별(유체 · 성체 · 각성체) 장비 칸 수예요. 지니는 수와 런 끝에 남기는 수가 같아요(0056). `equip_resonance_cap`은 단계별 공명 상한 시험 가정값이에요.
 - `pnpm test`(`data.test.ts`)가 형식, id 중복, 묶음·언어 목록 누락, 문구 누락을 잡아요.
-- `cards/techniques.json`은 전용 무기가 대표 카드 자리에 넣는 기술 카드예요(`obtain: "equipment"`). id는 `<대표 카드>_<갈래>_<공명>`이고, 이름은 대표 카드와 같아요. 보상이나 상점에는 나오지 않아요.
+- `cards/techniques.json`은 전용 무기가 대표 카드 자리에 넣는 기술 카드예요(`obtain: "equipment"`). id는 `<대표 카드>_<갈래>_<공명>`이고, 이름은 갈래마다 하나예요(0061). 보상이나 상점에는 나오지 않아요.
+- `encounters.json`: 일반 편성은 `pool`(`weak` 처음 전투들 · `strong` 그 뒤)과 `element`(오늘 센 기운과 같으면 더 자주)를 적어요. 보스 편성의 `element`는 그 기운이 센 런의 보스라는 뜻이에요 (0062).
+- `enemies.json`: `acts`는 턴마다 움직이는 시각 목록(여러 번 행동), 행동의 `big`은 틈이 열릴 수 있는 큰 차징이에요. 틈 · 거친 특성 · 풀 값은 `constants.json`의 `gap` · `traits` · `run_pool` (0062).

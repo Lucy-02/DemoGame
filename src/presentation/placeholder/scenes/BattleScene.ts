@@ -1,4 +1,6 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
+import { RewardSession } from "../../../session/reward";
+import { RESULT_SCENE, type ResultSceneData } from "../../result/ResultScene";
 import * as Phaser from "phaser";
 import { ASSETS, C, ELEMENT_COLOR, ELEMENT_NAME, ROLE_NAME, cardDef, type VisualAsset } from "../../../core/data";
 import { returnHp } from "../../../core/stats";
@@ -64,7 +66,7 @@ export class BattleScene extends Phaser.Scene {
     const run = getRun();
     bgFill(this, this.kind === "boss" ? 0x2c1f2a : 0x1f2a2a, 0x14121c);
     this.add.ellipse(W / 2, 470, W * 1.1, 160, 0x000000, 0.25);
-    this.battle = new Battle(run.spirits, run.battleDeck(), this.enemyIds, run.frontId, new Rng(run.rng.int(0, 1e9)), run.enemyScale());
+    this.battle = new Battle(run.spirits, run.battleDeck(), this.enemyIds, run.frontId, new Rng(run.rng.int(0, 1e9)), run.enemyScale(), run.battleTraits());
 
     for (const s of this.battle.spirits) {
       const v = makeVisual(this, "spirits", s.id, false);
@@ -465,12 +467,10 @@ export class BattleScene extends Phaser.Scene {
         this.scene.start("EndScene", { victory: true });
         return;
       }
-      const reward = run.rollBattleReward(this.kind);
-      this.scene.start("RewardScene", {
-        title: this.kind === "elite" ? "정예 처치 보상" : "전투 보상",
-        cardIds: reward.cards.map((x) => x.cardId),
-        reward,
-      });
+      // 전투 결과는 새 화면이 맡아요 (0044 · 0051). 고르면 지도로 돌아가요
+      const session = new RewardSession(run, { kind: "battle", reward: run.rollBattleReward(this.kind) });
+      const data: ResultSceneData = { session, onDone: (scene) => scene.scene.start("MapScene") };
+      this.scene.start(RESULT_SCENE, data);
     });
   }
 
