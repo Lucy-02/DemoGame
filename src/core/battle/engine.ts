@@ -99,6 +99,11 @@ export interface Engine {
   addAura(holder: BSpirit, id: AuraId, value: number): void;
   cardDefOf(c: BCard): CardDef;
 
+  /** 보스의 틈이 열려 있는지 (0062) */
+  inGap(e: BEnemy): boolean;
+  /** 앞열을 바꿔요 */
+  setFront(id: string): void;
+
   log(text: string): void;
   emit(e: BattleEvent): void;
 }

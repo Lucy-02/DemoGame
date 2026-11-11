@@ -119,6 +119,7 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
     id: "opening", order: 80,
     apply(c) {
       c.opening = c.b.replaying && c.b.inOpening(c.target, c.b.now);
+      if (!c.opening && statusN(c.target, "gap") > 0) c.opening = true;
       if (!c.opening && statusN(c.target, "stagger") > 0) {
         c.opening = true;
         spendStatus(c.target, "stagger");
@@ -129,6 +130,7 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
       c.amount *= mult;
     },
   },
+  { id: "gap", order: 85, apply: (c) => { if (statusN(c.target, "gap") > 0) c.amount *= C.gap.dmg_mult; } },
   { id: "round", order: 90, apply: (c) => (c.amount = round(c.amount)) },
 ];
 

@@ -2,7 +2,7 @@
 // 화면·저장·전투 결과 받기는 session 층이 이 함수들을 불러서 해요.
 import { C, CARDS, GROWTH, PERSONALITIES, SPIRITS } from "./data";
 import { Rng } from "./rng";
-import { isGrown, stageRank } from "./stats";
+import { equipSlots, isGrown, resonanceCap, stageRank } from "./stats";
 import type { CardDef, DeedDef, EpisodeDef, EvolutionDef, RunSpirit, Stage } from "./types";
 
 export const GARDEN_VERSION = 1;
@@ -328,6 +328,27 @@ export function toRunSpirit(s: GardenSpirit): RunSpirit {
     id: s.id, hp: 0, maxHpBonus: 0, stage: s.stage, level: levelOf(s.exp), personality: s.personality, branch: s.branch,
     equipment: (s.equipment ?? []).map((e) => ({ ...e, from: "kept" })),
   };
+}
+
+/**
+ * 판이 끝나고 장비를 남겨요 (0056). keep은 정령 id → 남길 장비 id 목록이에요.
+ * 판에 나간 정령의 장비는 고른 것만 남고 나머지는 사라져요. 정원에 있던 장비를 다시 남기면 공명이 1 올라요(단계 상한까지).
+ */
+export function keepEquipment(g: Garden, party: readonly RunSpirit[], keep: Readonly<Record<string, readonly string[]>>): Garden {
+  let out = g;
+  for (const rs of party) {
+    const ids = keep[rs.id] ?? [];
+    const missing = ids.find((id) => !rs.equipment.some((e) => e.id === id));
+    if (missing) throw new Error(`${rs.id}가 지니지 않은 장비: ${missing}`);
+    const stage = gardenSpirit(g, rs.id).stage;
+    if (ids.length > equipSlots(stage)) throw new Error(`${rs.id}의 장비 칸보다 많이 남길 수 없어요`);
+    const cap = resonanceCap(stage);
+    const equipment = rs.equipment
+      .filter((e) => ids.includes(e.id))
+      .map((e): GardenEquip => ({ id: e.id, resonance: Math.min(cap, e.from === "kept" ? e.resonance + 1 : 1) }));
+    out = withSpirit(out, rs.id, (s) => ({ ...s, equipment }));
+  }
+  return out;
 }
 
 // ───────────────────────── 할 일 ─────────────────────────

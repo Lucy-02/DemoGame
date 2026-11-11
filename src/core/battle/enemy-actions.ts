@@ -86,10 +86,41 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
     text: (_b, _e, a) => `카드 ${a.count}장 봉인`,
     run: (b, _e, a) => b.queueSeal(a.count),
   },
+  burnRamp: {
+    kind: "debuff",
+    text: (_b, e, a) => `${TARGET_NAME[a.target]} 화상 ${a.value + e.ramp * a.step}`,
+    run(b, e, a) {
+      const v = a.value + e.ramp * a.step;
+      e.ramp++;
+      for (const s of b.pickTargets(a.target)) b.addStatus(s, "burn", v);
+    },
+  },
+  detonateBurn: {
+    kind: "attack",
+    text: (_b, _e, a) => `전체 화상 ×${a.mult} 피해`,
+    run(b, e, a) {
+      for (const s of b.aliveSpirits()) {
+        const n = statusN(s, "burn");
+        if (n > 0) b.hurtSpirit(s, round(n * a.mult), false, { attacker: e });
+      }
+    },
+  },
+  swapFront: {
+    kind: "debuff",
+    text: () => "앞열 바꿈",
+    run(b) {
+      const others = b.aliveSpirits().filter((s) => s.id !== b.frontId).sort((x, y) => x.hp - y.hp);
+      if (others.length) b.setFront(others[0].id);
+    },
+  },
   sapHeal: {
     kind: "defend",
     text: (_b, e, a) => (statusN(e, "burn") > 0 ? `회복 ${a.value} → 화상 ${statusN(e, "burn") * 2} 역류` : `회복 ${a.value}`),
     run(b, e, a) {
+      if (b.inGap(e)) {
+        b.log(`${e.def.name}: 틈이라 회복하지 못함`);
+        return;
+      }
       if (statusN(e, "burn") > 0) {
         b.log(`수액에 불 붙음: 화상 피해 2배`);
         b.hurtEnemy(e, round(stackOf(e, "burn").n * 2 * vulnMult(e)), true);

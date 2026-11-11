@@ -1,4 +1,4 @@
-import type { AuraId, DeckCard, EnemyDef, PersonalityDef, RunSpirit, SpiritDef } from "../types";
+import type { AuraId, DeckCard, EnemyDef, EnemyTrait, PersonalityDef, RunSpirit, SpiritDef } from "../types";
 
 /** 상태 이름. 표(`statuses.ts`의 STATUSES)가 쌓는 법과 줄어드는 때를 정해요. 턴 끝 처리는 이 순서예요. */
 export const STATUS_IDS = [
@@ -14,6 +14,8 @@ export const STATUS_IDS = [
   "stagger", "cancelNext", "footing",
   // 안개 고양이
   "delayed",
+  // 보스의 틈 (0062)
+  "gap",
   // 카멜레온
   "hidden", "ready",
 ] as const;
@@ -86,6 +88,14 @@ export interface BEnemy extends StatusHolder {
   /** 축 끝을 넘겨 밀린 행동: 다음 턴 이 시각에 일어나요 (0036 뼈대 2) */
   carryAt: number | null;
   dead: boolean;
+  /** 거친 특성 (정예, 0062) */
+  traits: EnemyTrait[];
+  /** 이번 큰 차징 동안 받은 피해 */
+  chargeDmg: number;
+  /** 이번 큰 차징에서 틈이 이미 열렸는지 */
+  gapOpened: boolean;
+  /** 세지는 화상을 쓴 횟수 */
+  ramp: number;
 }
 
 export const isEnemy = (h: BSpirit | BEnemy): h is BEnemy => "uid" in h;
@@ -180,7 +190,8 @@ export type BattleEvent =
   | { k: "fallOffer"; owner: string; picks: number }
   | { k: "fall"; owner: string; card: string }
   | { k: "hold"; owner: string; card: string }
-  | { k: "ready"; id: string };
+  | { k: "ready"; id: string }
+  | { k: "gap"; uid: number; turns: number; reason: "break" | "delay" | "burst" };
 
 export interface Intent {
   name: string;

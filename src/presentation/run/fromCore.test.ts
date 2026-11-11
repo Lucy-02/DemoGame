@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { cardDef } from "../../core/data";
 import { richText, statOf } from "./fromCore";
-import { RESULTS } from "./fixtures";
+import { RESULTS } from "../result/fixtures";
 
-describe("전투 결과 화면 값", () => {
+describe("런 화면 값", () => {
   it("카드가 쓰는 능력치를 효과문에서 찾아요", () => {
     expect(statOf(cardDef("ember_flick"))).toBe("focus");
     expect(statOf(cardDef("ignite"))).toBe("power");
@@ -20,7 +20,7 @@ describe("전투 결과 화면 값", () => {
 
   it("보상 카드는 주인 줄이 있고, 왼→오 순서가 줄 위→아래 순서와 같아요 (0051)", () => {
     for (const vm of Object.values(RESULTS)) {
-      expect(vm.cards.map((c) => c.owner)).toEqual(vm.lanes.map((l) => l.id));
+      expect(vm.cards.map((c) => c.owners)).toEqual(vm.lanes.map((l) => [l.id]));
     }
   });
 });

@@ -5,12 +5,13 @@ import { BootScene } from "./scenes/BootScene";
 import { TitleScene } from "./scenes/TitleScene";
 import { MapScene } from "./scenes/MapScene";
 import { BattleScene } from "./scenes/BattleScene";
-import { RewardScene } from "./scenes/RewardScene";
 import { ShopScene } from "./scenes/ShopScene";
 import { EventScene } from "./scenes/EventScene";
 import { RestScene } from "./scenes/RestScene";
 import { DeckScene } from "./scenes/DeckScene";
 import { EndScene } from "./scenes/EndScene";
+import { ResultScene } from "../result/ResultScene";
+import { loadFonts } from "../style/fonts";
 import { H, W } from "./ui/widgets";
 
 /** 한글 웹폰트가 준비된 뒤 시작해야 텍스트 폭이 어긋나지 않아요. */
@@ -26,7 +27,8 @@ async function waitForFonts() {
 }
 
 export async function startPlaceholderGame(parent: string): Promise<Phaser.Game> {
-  await waitForFonts();
+  // 새 화면(전투 결과)은 번들 글꼴을 써요
+  await Promise.all([waitForFonts(), loadFonts()]);
   return new Phaser.Game({
     type: Phaser.WEBGL,
     parent,
@@ -35,6 +37,6 @@ export async function startPlaceholderGame(parent: string): Promise<Phaser.Game>
     backgroundColor: "#14121c",
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     plugins: { scene: [{ key: "spine.SpinePlugin", plugin: SpinePlugin, mapping: "spine" }] },
-    scene: [BootScene, TitleScene, MapScene, BattleScene, RewardScene, ShopScene, EventScene, RestScene, DeckScene, EndScene],
+    scene: [BootScene, TitleScene, MapScene, BattleScene, ResultScene, ShopScene, EventScene, RestScene, DeckScene, EndScene],
   });
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { C, CARDS, GROWTH, SPIRITS, enemyDef, partyScale, scaleEnemy } from "./data";
 import {
-  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, join, joinOffer, levelOf, newGarden,
+  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, join, joinOffer, keepEquipment, levelOf, newGarden,
   seeEpisode, startGarden, todos, unlockKeys, type Garden,
 } from "./garden";
 import { Run } from "./run";
@@ -208,5 +208,47 @@ describe("갈래 고르기 (0027)", () => {
     run.addCard("backfire", "fire_fox");
     run.removeCard(run.received[0].uid);
     expect(run.receivedBySpirit()).toEqual({ fire_fox: ["backfire"] });
+  });
+});
+
+describe("장비 남기기 (0056)", () => {
+  const withStage = (stage: "baby" | "adult" | "awakened") => {
+    const g = newGarden(1);
+    return { ...g, spirits: g.spirits.map((s) => (s.id === "fire_fox" ? { ...s, stage } : s)) };
+  };
+  const foxRun = (g: ReturnType<typeof newGarden>) => toRunSpirit(gardenSpirit(g, "fire_fox"));
+
+  it("고른 장비만 남고, 처음 남긴 장비는 공명 1이에요", () => {
+    const g = withStage("awakened");
+    const fox = foxRun(g);
+    fox.equipment = [{ id: "fox_spear", resonance: 1, from: "run" }, { id: "bone_sword", resonance: 1, from: "run", runBonus: 1 }];
+    const kept = keepEquipment(g, [fox], { fire_fox: ["bone_sword"] });
+    expect(gardenSpirit(kept, "fire_fox").equipment).toEqual([{ id: "bone_sword", resonance: 1 }]);
+    expect(gardenSpirit(g, "fire_fox").equipment).toBeUndefined();
+  });
+
+  it("남겼던 장비를 다시 남기면 공명이 오르고, 단계 상한에서 멈춰요", () => {
+    let g = withStage("adult");
+    for (const expected of [1, 2, 2]) {
+      const fox = foxRun(g);
+      if (!fox.equipment.length) fox.equipment = [{ id: "fox_spear", resonance: 1, from: "run" }];
+      g = keepEquipment(g, [fox], { fire_fox: ["fox_spear"] });
+      expect(gardenSpirit(g, "fire_fox").equipment).toEqual([{ id: "fox_spear", resonance: expected }]);
+    }
+  });
+
+  it("남기지 않으면 사라지고, 판에 나가지 않은 정령의 장비는 그대로예요", () => {
+    let g = withStage("adult");
+    g = { ...g, spirits: g.spirits.map((s) => (s.id === "mist_cat" ? { ...s, equipment: [{ id: "cat_fan", resonance: 1 }] } : s)) };
+    const fox = foxRun(g);
+    fox.equipment = [{ id: "fox_spear", resonance: 1, from: "run" }];
+    const after = keepEquipment(g, [fox], {});
+    expect(gardenSpirit(after, "fire_fox").equipment).toEqual([]);
+    expect(gardenSpirit(after, "mist_cat").equipment).toEqual([{ id: "cat_fan", resonance: 1 }]);
+  });
+
+  it("지니지 않은 장비는 남길 수 없어요", () => {
+    const g = withStage("adult");
+    expect(() => keepEquipment(g, [foxRun(g)], { fire_fox: ["fox_spear"] })).toThrow();
   });
 });

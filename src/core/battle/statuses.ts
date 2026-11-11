@@ -209,6 +209,8 @@ export const STATUSES: Record<StatusId, StatusDef> = {
 
   /** 아군 타격 n번이 허점타로 들어가요. 다음 턴 끝까지 */
   stagger: { name: "휘청", lasts: "nextTurn", gainText: (_n, total) => `휘청 ${total}` },
+  /** 틈: 받는 타격 피해가 늘고 아군 타격이 모두 허점타. 턴당 방어도와 회복이 멈춰요 (0062) */
+  gap: { name: "틈", stack: "max", gainText: () => "틈" },
   /** 다음 행동이 없어져요 */
   cancelNext: { name: "행동 취소", stack: "max", gainText: () => "다음 행동 취소" },
   /** 이번 턴 늦춰진 횟수 */

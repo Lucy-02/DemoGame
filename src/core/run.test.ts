@@ -108,6 +108,20 @@ describe("정예 장비 (0048 1절 · 0051)", () => {
     expect(() => r.giveRewardEquipment(reward, "fire_fox")).toThrow();
   });
 
+  it("정예 장비는 꼭 받아요. 모두 칸이 꽉 찼을 때만 넘길 수 있어요", () => {
+    EQUIPMENT.push(ELITE_ANY);
+    const r = run(2);
+    const reward = r.rollBattleReward("elite");
+    expect(r.canSkipRewardEquipment(reward)).toBe(false);
+    expect(() => r.skipRewardEquipment(reward)).toThrow();
+    for (const s of r.spirits) s.equipment = [{ id: "test_other", resonance: 1, from: "run" }];
+    expect(r.canSkipRewardEquipment(reward)).toBe(true);
+    r.skipRewardEquipment(reward);
+    expect(reward.equipDone).toBe(true);
+    expect(r.spirits.every((s) => s.equipment[0].id === "test_other")).toBe(true);
+    expect(() => r.skipRewardEquipment(reward)).toThrow();
+  });
+
   it("전용 장비는 그 정령만 받아요", () => {
     EQUIPMENT.push(ELITE_CAT);
     const r = run(4);
