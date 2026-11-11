@@ -40,7 +40,12 @@
 
 ### 장비 기반 (장비 핸드오프 `docs/handoff/EQUIPMENT_HANDOFF.md`)
 - 들어간 것: `EquipDef` 스키마 · `src/data/equipment/`(비어 있음) · `validate.ts`의 `equipProblems` · 능력치 층 리졸버 `resolveStat`(출처 태그) · 전투 조건부 층 · `critStat` · `EQUIP_PASSIVES` · `RunSpirit.equipment` · `GardenSpirit.equipment` · `growth.json` 칸 수 · 공명 상한. 테스트 `src/core/stats.test.ts`.
-- 남은 것: 장비 데이터(이름 · 그림은 Lucy), 보상 · 남기기 · 분해 흐름(0049), 장비 효과 훅 항목, 전용 장비의 대표 카드 변형(0055, `EquipTier` 필드), 문구(`locales/<lang>/equipment.json`), 화면.
+- 규칙(0055 · 0056): 희귀도 `rarity`(범용 · 전용 무기 · 보스 장비), 칸 수 `equip_slots` 1 · 1 · 2, 꽉 차면 바꿔 끼기(`Run.giveEquipment(…, replaceId)`), 같은 장비를 또 얻으면 이번 런 공명 +1(`RunEquip.runBonus`), 전용 무기의 대표 카드 변형(`EquipDef.signature`, `Run.battleDeck()`). 갈래는 `RunSpirit.branch`를 읽어요. 갈래 고르기가 아직 없어서 실제 판에서는 기술이 켜지지 않아요.
+- 전용 무기 3개(`src/data/equipment/exclusive.json`)와 기술 카드 18장(`src/data/cards/techniques.json`, 정령 3 × 갈래 2 × 공명 3)이 들어 있어요. 숫자는 시험 값이에요. 기술용 효과: `damage`의 `burnedBonus` · `perBurn`, `burnHold`, `burnSpread`, `burnCarry`, `chill`의 `freezeKeep` · `freezeDelayMs` · `freezeWeak`, `blockLowest`, `wallKeep`, `wallEcho`, `wallBurst`. 테스트 `src/core/battle.techniques.test.ts`. 시뮬은 `pnpm runsim --branch 정령:갈래,…`로 갈래를 줘요.
+- 장비 데이터가 있어서 정예 보상이 런 난수를 한 번 더 쓰고, 시뮬의 정령이 무기를 받아요. 장비 없는 기준선과 숫자가 조금 달라요.
+- 범용 6개(`generic.json`)와 보스 3개(`boss.json`)도 들어 있어요. 효과는 `EQUIP_PASSIVES`: `start_block`, `start_block_return`, `first_hit`, `longest_card_hit`, `linger_once`, `linger_turn`, `first_card_time`, `first_card_time_opening`, `crit_vs_full`, `crit_vs_healthy`, `first_card_cost`, `time_cut`, `carry_block`. 방패는 조건부 능력치(`hpBelow`, `hurt`)만 써요. 테스트 `src/core/battle.equipment.test.ts`.
+- 활의 "덜 줄어듦"은 누가 건 상태인지 가리지 않고 적의 화상 · 약화 · 취약에 적용돼요. 쓰러졌다 돌아올 때의 HP는 `stats.ts`의 `returnHp()`가 정해요.
+- 남은 것: 장비와 기술 카드의 이름 · 그림(Lucy), 보스 보상 고르기 · 남기기 · 분해 흐름(0049), 문구(`locales/<lang>/equipment.json`), 화면.
 
 ### 2단계 시도본 (참고만)
 - 리팩터링 전 방식의 시도본은 2단계가 머지된 뒤 지웠어요 (2026-11-11).

@@ -1,6 +1,7 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
 import { ASSETS, C, ELEMENT_COLOR, ELEMENT_NAME, ROLE_NAME, cardDef, type VisualAsset } from "../../../core/data";
+import { returnHp } from "../../../core/stats";
 import { Battle, statusN, statusStrength, type BCard, type BEnemy, type BSpirit, type BattleEvent, type Ref } from "../../../core/battle";
 import { Rng } from "../../../core/rng";
 import { getRun } from "../../../core/run";
@@ -63,7 +64,7 @@ export class BattleScene extends Phaser.Scene {
     const run = getRun();
     bgFill(this, this.kind === "boss" ? 0x2c1f2a : 0x1f2a2a, 0x14121c);
     this.add.ellipse(W / 2, 470, W * 1.1, 160, 0x000000, 0.25);
-    this.battle = new Battle(run.spirits, run.deck, this.enemyIds, run.frontId, new Rng(run.rng.int(0, 1e9)), run.enemyScale());
+    this.battle = new Battle(run.spirits, run.battleDeck(), this.enemyIds, run.frontId, new Rng(run.rng.int(0, 1e9)), run.enemyScale());
 
     for (const s of this.battle.spirits) {
       const v = makeVisual(this, "spirits", s.id, false);
@@ -451,7 +452,7 @@ export class BattleScene extends Phaser.Scene {
     if (b.result === "ongoing" || this.finished) return;
     this.finished = true;
     const run = getRun();
-    for (const s of b.spirits) run.spirit(s.id).hp = s.downed ? C.downed_return_hp : s.hp;
+    for (const s of b.spirits) run.spirit(s.id).hp = s.downed ? returnHp(run.spirit(s.id)) : s.hp;
     if (b.result === "defeat") {
       this.banner("모두 쓰러졌어요…", 0x5a2020);
       this.time.delayedCall(1400, () => this.scene.start("EndScene", { victory: false }));

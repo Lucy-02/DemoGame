@@ -1,7 +1,7 @@
 // 데이터 파일 검사. 문제마다 "id: 내용" 한 줄을 돌려줘요.
 import { EFFECTS } from "./battle/effects";
 import { EQUIP_PASSIVES } from "./battle/passives";
-import { CARD_TARGETS, ELEMENTS, EQUIP_GRADES, EQUIP_STATS, OBTAINS, RARITIES, STAT_CONDITION_KINDS, STAT_MOD_OPS } from "./types";
+import { CARD_TARGETS, ELEMENTS, EQUIP_RARITIES, EQUIP_STATS, OBTAINS, RARITIES, STAT_CONDITION_KINDS, STAT_MOD_OPS } from "./types";
 
 type Row = Record<string, unknown>;
 
@@ -82,7 +82,7 @@ function tierProblems(tier: unknown, path: string): string[] {
 }
 
 /** 장비 데이터 한 줄 검사 */
-export function equipProblems(equip: unknown, spiritIds: ReadonlySet<string>): string[] {
+export function equipProblems(equip: unknown, spiritIds: ReadonlySet<string>, cardIds?: ReadonlySet<string>): string[] {
   if (typeof equip !== "object" || equip === null) return ["장비가 객체가 아니에요"];
   const e = equip as Row;
   const id = typeof e.id === "string" && e.id ? e.id : "(id 없음)";
@@ -91,7 +91,9 @@ export function equipProblems(equip: unknown, spiritIds: ReadonlySet<string>): s
   need(typeof e.id === "string" && /^[a-z][a-z0-9_]*$/.test(e.id), "id는 소문자·숫자·_ 만 써요");
   need(!("name" in e), "이름은 src/data/locales에 적어요");
   need(e.owner === null || spiritIds.has(e.owner as string), `없는 전용 정령 ${String(e.owner)}`);
-  need(oneOf(EQUIP_GRADES, e.grade), `모르는 등급 ${String(e.grade)}`);
+  need(oneOf(EQUIP_RARITIES, e.rarity), `모르는 희귀도 ${String(e.rarity)}`);
+  need(e.rarity !== "exclusive" || e.owner !== null, "전용 무기에는 전용 정령이 있어요");
+  need(e.rarity === "exclusive" || e.owner === null, "범용 · 보스 장비는 누구나 받아요");
   if (!Array.isArray(e.tiers) || !e.tiers.length) out.push(`${id}: tiers가 비었어요`);
   else {
     e.tiers.forEach((t, i) => out.push(...tierProblems(t, `${id}.tiers[${i}]`)));
@@ -102,7 +104,22 @@ export function equipProblems(equip: unknown, spiritIds: ReadonlySet<string>): s
     });
   }
   if (e.downside !== undefined) out.push(...tierProblems(e.downside, `${id}.downside`));
-  need(e.downside === undefined || e.grade === "boss", "대가는 보스 장비에만 있어요");
+  need(e.downside === undefined || e.rarity === "boss", "대가는 보스 장비에만 있어요");
+  if (e.signature !== undefined) {
+    const sg = e.signature as Row;
+    const n = Array.isArray(e.tiers) ? e.tiers.length : 0;
+    need(e.rarity === "exclusive", "대표 카드 변형은 전용 무기에만 있어요");
+    const shaped = typeof sg === "object" && sg !== null && typeof sg.card === "string" && typeof sg.techniques === "object" && sg.techniques !== null;
+    need(shaped, "signature는 {card, techniques}예요");
+    if (shaped) {
+      const known = (c: unknown) => typeof c === "string" && (!cardIds || cardIds.has(c));
+      need(known(sg.card), `없는 대표 카드 ${String(sg.card)}`);
+      for (const [branch, list] of Object.entries(sg.techniques as Row)) {
+        need(Array.isArray(list) && list.length === n, `signature.techniques.${branch}: 공명 단계마다 기술 카드가 하나씩 있어요`);
+        if (Array.isArray(list)) for (const c of list) need(known(c), `signature.techniques.${branch}: 없는 카드 ${String(c)}`);
+      }
+    }
+  }
   if (e.opensBranch !== undefined) {
     const ob = e.opensBranch as Row;
     need(typeof ob === "object" && ob !== null && spiritIds.has(ob.spirit as string) && typeof ob.branch === "string", "opensBranch는 {spirit, branch}예요");
