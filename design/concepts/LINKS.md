@@ -167,3 +167,10 @@
 - 프레임: /mnt/project-files/design/batch-c-r2/final·M1·M2·M3/
 - M4 섞기안 (가지런한 무리 + 진입점): https://claude.ai/artifact/95Aij4w11QhtzK9deF1i2h (프레임: /mnt/project-files/design/batch-c-r2/M4/)
 - 비교 시트 (C1~C4, 정리안, M1~M4, Lucy가 정할 것): https://claude.ai/artifact/6mczMhvwmbtF6ryQHWifMG
+
+## 묶음 C 라운드 3 (2026-11-11 오전, 메인 화면 다시. M1~M4는 Lucy 폐기)
+- N1 메뉴가 곧 메인: https://claude.ai/artifact/C8KeA5Dg4UTvrtDPY597nN
+- N2 한 아이: https://claude.ai/artifact/ErhBYixxiwsCcDbXrE6Lhf
+- N3 떠날 곳: https://claude.ai/artifact/72FhtacRUUBnhh3BAZok9S
+- N4 돌아오는 곳: https://claude.ai/artifact/4For9c73Q1tshMcagjExrU
+- 프레임: /mnt/project-files/design/batch-c-r3/N1~N4/
