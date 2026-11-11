@@ -1,8 +1,8 @@
-import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, cardDef, equipDef } from "./data";
+import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, cardDef, equipDef, partyScale } from "./data";
 import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
 import { Rng } from "./rng";
 import { maxHpOf } from "./stats";
-import type { CardDef, DeckCard, EncounterDef, EquipDef, EventDef, Obtain, Rarity, RunSpirit } from "./types";
+import type { CardDef, DeckCard, EncounterDef, EnemyScale, EquipDef, EventDef, Obtain, Rarity, RunSpirit } from "./types";
 
 export type NodeType = "battle" | "elite" | "event" | "shop" | "rest" | "boss";
 
@@ -17,7 +17,7 @@ export interface MapNode {
 export interface RunOptions {
   seed: number;
   frontId: string;
-  /** 파티 정령 id. 없으면 constants.default_party */
+  /** 파티 정령 id. 없으면 정원의 정령(최대 party_size), 정원도 없으면 constants.default_party */
   party?: string[];
   /** 정원 상태. 있으면 단계·레벨·성격·해금을 여기서 읽어요 (결정 0021) */
   garden?: Garden;
@@ -78,7 +78,9 @@ export class Run {
     this.rng = new Rng(opts.seed);
     this.frontId = opts.frontId;
     const garden = opts.garden;
-    const party = (opts.party ?? (C.default_party as string[])).map((id) => SPIRITS.find((s) => s.id === id) ?? missing(id));
+    // 정원이 있으면 가진 정령으로 떠나요 (최대 party_size, 0053)
+    const owned = garden?.spirits.slice(0, C.party_size).map((g) => g.id);
+    const party = (opts.party ?? owned ?? (C.default_party as string[])).map((id) => SPIRITS.find((s) => s.id === id) ?? missing(id));
     this.spirits = party.map((s) => {
       const rs: RunSpirit = garden
         ? toRunSpirit(garden.spirits.find((g) => g.id === s.id) ?? missing(s.id))
@@ -178,6 +180,11 @@ export class Run {
     const enc = this.rng.pick(pool);
     this.lastEncounter = enc.id;
     return enc;
+  }
+
+  /** 지금 인원에 맞춘 적 세기 (0053). 셋이면 undefined */
+  enemyScale(): EnemyScale | undefined {
+    return partyScale(this.spirits.length);
   }
 
   pickEvent(): EventDef {

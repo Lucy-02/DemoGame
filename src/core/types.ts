@@ -181,6 +181,12 @@ export interface EncounterDef {
   enemies: string[];
 }
 
+/** 출전 인원에 맞춘 적 세기 (0053). HP · 방어 · 회복에 hp, 피해에 dmg를 곱해요 */
+export interface EnemyScale {
+  hp: number;
+  dmg: number;
+}
+
 export type EventOutcome =
   | { type: "healPct"; value: number }
   | { type: "gold"; value: number }

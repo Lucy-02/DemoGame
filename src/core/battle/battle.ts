@@ -1,8 +1,8 @@
-import { C, cardDef, enemyDef, spiritDef } from "../data";
+import { C, cardDef, enemyDef, scaleEnemy, spiritDef } from "../data";
 import { Rng } from "../rng";
 import { activePersonality, maxHpOf } from "../stats";
 import type {
-  AuraId, CardDef, CardOp, DeckCard, Element, EnemyMove, EnemyTargetRule, RunSpirit, StatKey,
+  AuraId, CardDef, CardOp, DeckCard, Element, EnemyMove, EnemyScale, EnemyTargetRule, RunSpirit, StatKey,
 } from "../types";
 import { ENEMY_ACTIONS, intentKind } from "./enemy-actions";
 import { exhaustsAfterUse, handlerOf, resolveOp, usesReady, type EffectContext } from "./effects";
@@ -63,6 +63,8 @@ export class Battle implements Engine {
     enemyIds: string[],
     frontId: string,
     readonly rng: Rng,
+    /** 출전 인원에 맞춘 적 세기 (0053). 없으면 데이터 그대로 */
+    scale?: EnemyScale,
   ) {
     for (const rs of runSpirits) {
       this.spirits.push({
@@ -72,7 +74,7 @@ export class Battle implements Engine {
       });
     }
     enemyIds.forEach((id, i) => {
-      const def = enemyDef(id);
+      const def = scale ? scaleEnemy(enemyDef(id), scale) : enemyDef(id);
       this.enemies.push({
         uid: i + 1, def, hp: def.hp, maxHp: def.hp, block: 0, status: {}, patternIdx: 0, phase: 1,
         charging: false, chargeTurn: 0, delayNext: 0, carryAt: null, dead: false,
