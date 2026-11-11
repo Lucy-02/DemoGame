@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { C, CARDS, GROWTH, SPIRITS, enemyDef, partyScale, scaleEnemy } from "./data";
 import {
-  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, join, joinOffer, levelOf, newGarden,
+  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, join, joinOffer, levelOf, newGarden,
   seeEpisode, startGarden, todos, unlockKeys, type Garden,
 } from "./garden";
 import { Run } from "./run";
@@ -193,7 +193,7 @@ describe("갈래 고르기 (0027)", () => {
     } finally { restore(); }
   });
 
-  it("잠긴 갈래는 한 탐험에서 그 갈래 카드를 받아야 열리고, 열리면 판을 넘어 남아요", () => {
+  it("잠긴 갈래는 그 갈래 카드를 모아야 열리고, 모은 수와 열린 갈래는 판을 넘어 남아요", () => {
     withBranches();
     try {
       let g = withExp(newGarden(1), GROWTH.levels[3]);
@@ -201,8 +201,14 @@ describe("갈래 고르기 (0027)", () => {
       expect(evolve(g, "fire_fox", undefined, "spread")).toBe(g);
       g = openBranches(g, { fire_fox: ["backfire"] });
       expect(fox(g).openBranches ?? []).toEqual([]);
-      g = openBranches(g, { fire_fox: ["backfire", "backfire"], mist_cat: ["backfire", "backfire"] });
+      expect(fox(g).branchCards).toEqual({ spread: 1 });
+      const spreadEvo = evolveChoices(fox(g))[1].evo;
+      expect(branchProgress(fox(g), spreadEvo, ["backfire"])).toEqual({ have: 2, need: 2 });
+      g = openBranches(g, { mist_cat: ["backfire"] });
+      expect(fox(g).branchCards).toEqual({ spread: 1 });
+      g = openBranches(g, { fire_fox: ["backfire"] });
       expect(fox(g).openBranches).toEqual(["spread"]);
+      expect(fox(g).branchCards).toBeUndefined();
       expect(gardenSpirit(g, "mist_cat").openBranches).toBeUndefined();
       g = openBranches(g, {});
       expect(evolveChoices(fox(g)).map((c) => c.ok)).toEqual([true, true]);

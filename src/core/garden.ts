@@ -18,6 +18,8 @@ export interface GardenSpirit {
   branch?: string;
   /** 열린 갈래. 한 번 열리면 판을 넘어 남아요 (0047 Lucy 2026-11-10) */
   openBranches?: string[];
+  /** 아직 안 열린 갈래마다 지금까지 받은 그 갈래 카드 수. 탐험이 끝나도 이어져요 (0058) */
+  branchCards?: Record<string, number>;
   /** 부화 때 한 번 정하고 유지해요. 유체부터 보여요 (0033) */
   personality: string;
   /** 다음 진화의 자람 조건 누적값. 진화하면 0으로 */
@@ -181,28 +183,42 @@ export function evolve(g: Garden, id: string, to?: Stage, branch?: string): Gard
   return withSpirit(g, id, (x) => ({ ...x, stage: c.evo.to, deed: 0, ...(c.evo.branch ? { branch: c.evo.branch } : {}) }));
 }
 
-/** 이번 탐험에서 받은 카드로 갈래를 열어요 (0027). received = 정령 id → 받은 카드 id들. 열린 갈래는 남아요. */
+const branchCount = (branch: string, ids: readonly string[]) =>
+  ids.filter((id) => CARDS.find((c) => c.id === id)?.branch === branch).length;
+
+/** 탐험에서 받은 카드를 갈래마다 더하고, 모인 수가 조건에 닿으면 갈래를 열어요 (0058).
+ *  received = 정령 id → 이번 탐험에서 받은 카드 id들. 센 수와 열린 갈래는 판을 넘어 남아요. */
 export function openBranches(g: Garden, received: Readonly<Record<string, readonly string[]>>): Garden {
   return {
     ...g,
     spirits: g.spirits.map((s) => {
       const got = received[s.id] ?? [];
       const opened = new Set(s.openBranches ?? []);
+      const counts = { ...(s.branchCards ?? {}) };
+      let changed = false;
       for (const evo of GROWTH.evolutions) {
         if (evo.spirit !== s.id || !evo.branch || !evo.opens || opened.has(evo.branch)) continue;
-        const n = got.filter((id) => CARDS.find((c) => c.id === id)?.branch === evo.branch).length;
-        if (n >= evo.opens.cards) opened.add(evo.branch);
+        const n = branchCount(evo.branch, got);
+        if (!n) continue;
+        changed = true;
+        const total = (counts[evo.branch] ?? 0) + n;
+        if (total >= evo.opens.cards) {
+          opened.add(evo.branch);
+          delete counts[evo.branch];
+        } else counts[evo.branch] = total;
       }
-      return opened.size === (s.openBranches ?? []).length ? s : { ...s, openBranches: [...opened] };
+      if (!changed) return s;
+      const { branchCards: _, ...rest } = s;
+      return { ...rest, openBranches: [...opened], ...(Object.keys(counts).length ? { branchCards: counts } : {}) };
     }),
   };
 }
 
-/** 갈래 조건 진척: 이번 탐험에서 받은 그 갈래 카드 수 (잠긴 갈래 판의 막대) */
-export function branchProgress(evo: EvolutionDef, received: readonly string[]): { have: number; need: number } | null {
+/** 갈래 조건 진척: 지금까지 모은 수 + 이번 탐험에서 받은 수 (잠긴 갈래 판의 막대) */
+export function branchProgress(s: Pick<GardenSpirit, "branchCards">, evo: EvolutionDef, received: readonly string[] = []): { have: number; need: number } | null {
   if (!evo.branch || !evo.opens) return null;
-  const have = received.filter((id) => CARDS.find((c) => c.id === id)?.branch === evo.branch).length;
-  return { have, need: evo.opens.cards };
+  const have = (s.branchCards?.[evo.branch] ?? 0) + branchCount(evo.branch, received);
+  return { have: Math.min(have, evo.opens.cards), need: evo.opens.cards };
 }
 
 export const isFinalStage = (s: Pick<GardenSpirit, "id" | "stage">) => evolutionsFrom(s).length === 0;

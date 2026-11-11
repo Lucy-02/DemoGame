@@ -280,7 +280,7 @@ const BRANCH_STATS: { k: StatKey; icon: string; color: string }[] = [
   { k: "focus", icon: "i-spark", color: tokens.provisional.palette.stat.focus },
 ];
 
-/** 갈래 고르기 창 데이터. received = 이번 탐험에서 이 정령이 받은 카드 id (런 결과에서 부를 때). 갈래 고르기가 아니면 undefined */
+/** 갈래 고르기 창 데이터. received = 이번 탐험에서 이 정령이 받은 카드 id (런 결과에서 부를 때, 아직 정원에 더하기 전). 갈래 고르기가 아니면 undefined */
 export function branchPickVM(g: Garden, id: string, from: BranchPickVM["from"], received: readonly string[] = [], selected?: string): BranchPickVM | undefined {
   const s = gardenSpirit(g, id);
   const choices = evolveChoices(s);
@@ -290,7 +290,7 @@ export function branchPickVM(g: Garden, id: string, from: BranchPickVM["from"], 
   const valueOf = (rs: typeof now, k: StatKey) => (k === "hp" ? maxHpOf(rs) : round(baseStat(rs, k)));
   const branches = choices.map((c, i) => {
     const after = { ...now, stage: c.evo.to, branch: c.evo.branch };
-    const prog = branchProgress(c.evo, received);
+    const prog = branchProgress(s, c.evo, received);
     return {
       id: c.evo.branch!, n: i + 1, name: COPY.branchName, role: ROLE_ICON[def.role], open: c.open,
       stats: BRANCH_STATS.map(({ k }) => {

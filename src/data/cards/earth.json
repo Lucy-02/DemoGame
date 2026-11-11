@@ -1,7 +1,7 @@
 [
   {"id": "ram", "element": "earth", "role": "attack", "rarity": "basic", "cost": 1, "ms": 1600, "target": "enemy", "effects": [{"op": "damage", "value": 6}, {"op": "ram", "value": 1, "onBreak": 3}], "start": 1, "startOwner": "magma_ibex", "spirit": "magma_ibex", "unlock": "start"},
   {"id": "horn_strike", "element": "earth", "role": "attack", "rarity": "common", "cost": 1, "ms": 1300, "target": "enemy", "effects": [{"op": "damage", "value": 7}], "start": 1, "startOwner": "magma_ibex", "spirit": "magma_ibex", "unlock": "start"},
-  {"id": "foothold", "element": "earth", "role": "support", "rarity": "common", "cost": 0, "ms": 400, "target": "self", "effects": [{"op": "timeCutNext", "value": 400}], "spirit": "magma_ibex", "unlock": "start", "branch": "crack"},
+  {"id": "foothold", "element": "earth", "role": "support", "rarity": "common", "cost": 0, "ms": 400, "target": "self", "effects": [{"op": "timeCutNext", "value": 400}], "spirit": "magma_ibex", "unlock": "start"},
   {"id": "brace", "element": "earth", "role": "guard", "rarity": "common", "cost": 1, "ms": 1000, "target": "self", "effects": [{"op": "block", "value": 6}], "spirit": "magma_ibex", "unlock": "start"},
   {"id": "climb", "element": "earth", "role": "guard", "rarity": "common", "cost": 1, "ms": 900, "target": "self", "effects": [{"op": "draw", "value": 1}, {"op": "block", "value": 3}], "spirit": "magma_ibex", "unlock": "start", "branch": "landslide"},
   {"id": "stampede", "element": "earth", "role": "attack", "rarity": "advanced", "cost": 1, "ms": 2000, "target": "enemy", "effects": [{"op": "damage", "value": 9}, {"op": "staggerIfOpening", "value": 2}], "spirit": "magma_ibex", "unlock": "start", "branch": "crack"},

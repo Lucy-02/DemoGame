@@ -1,7 +1,7 @@
 [
   {"id": "fire_claw", "element": "fire", "role": "attack", "rarity": "basic", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 6}], "unlock": "start"},
   {"id": "ember_scatter", "element": "fire", "role": "disrupt", "rarity": "basic", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 3}, {"op": "burn", "value": 3}], "start": 2, "startOwner": "fire_fox", "unlock": "start"},
-  {"id": "glass_skin", "element": "fire", "role": "guard", "rarity": "common", "cost": 1, "ms": 900, "target": "self", "effects": [{"op": "wall", "value": 4}, {"op": "thorns", "value": 2}], "spirit": "glass_salamander", "unlock": "start", "branch": "return"},
+  {"id": "glass_skin", "element": "fire", "role": "guard", "rarity": "common", "cost": 1, "ms": 900, "target": "self", "effects": [{"op": "wall", "value": 4}, {"op": "thorns", "value": 2}], "spirit": "glass_salamander", "unlock": "start"},
   {"id": "glass_wall", "element": "fire", "role": "guard", "rarity": "basic", "cost": 1, "ms": 700, "target": "self", "effects": [{"op": "wall", "value": 5}], "start": 2, "startOwner": "glass_salamander", "spirit": "glass_salamander", "unlock": "start"},
   {"id": "glass_scale", "element": "fire", "role": "guard", "rarity": "common", "cost": 0, "ms": 350, "target": "self", "effects": [{"op": "wall", "value": 2}], "spirit": "glass_salamander", "unlock": "start"},
   {"id": "tail_sweep", "element": "fire", "role": "attack", "rarity": "common", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 3}, {"op": "wall", "value": 3}], "spirit": "glass_salamander", "unlock": "start"},
