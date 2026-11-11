@@ -304,9 +304,15 @@ export class Run {
     reward.equipDone = true;
   }
 
-  /** 정예 보상의 장비를 받지 않고 넘겨요 */
+  /** 정예 장비는 꼭 받아요 (0051). 받을 정령이 모두 지닌 것을 내려놓아야 할 때만 넘길 수 있어요 (0056) */
+  canSkipRewardEquipment(reward: BattleReward): boolean {
+    if (!reward.equipment || reward.equipDone) return false;
+    const id = reward.equipment.equipId;
+    return this.equipTakers(id).every((s) => this.needsReplace(id, s.id));
+  }
+
   skipRewardEquipment(reward: BattleReward) {
-    if (!reward.equipment || reward.equipDone) throw new Error("줄 장비가 없어요");
+    if (!this.canSkipRewardEquipment(reward)) throw new Error("장비를 넘길 수 없어요");
     reward.equipDone = true;
   }
 
