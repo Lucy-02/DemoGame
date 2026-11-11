@@ -18,6 +18,7 @@ const entries = Array.isArray(src) ? src : Object.entries(src).map(([case_id, v]
 const briefsPath = process.env.BRIEFS || path.join(root, "design/card/art/rounds/r1/briefs.json");
 const briefs = JSON.parse(fs.readFileSync(briefsPath, "utf8"));
 const names = Object.fromEntries(briefs.cards.map((c) => [c.id, c.name]));
+const owners = Object.fromEntries(briefs.cards.map((c) => [c.id, c.owner]));
 const faces = JSON.parse(fs.readFileSync(path.join(root, "tools/art/faces.json"), "utf8"));
 const OWNER_DIR = { sal: "glass-salamander", ibex: "magma-ibex", pearl: "pearl-oyster", cham: "prism-chameleon" };
 
@@ -35,7 +36,7 @@ function faceFor(owner) {
 
 const cards = entries.map((e) => {
   const [id, comp, style, seed] = e.case_id.split("-");
-  const owner = id.split("_")[0];
+  const owner = owners[id] ?? id.split("_")[0];
   return {
     case_id: e.case_id, id, comp, style, seed, owner, name: names[id] ?? id,
     img: pathToFileURL(path.resolve(previewDir, `${e.case_id}.jpg`)).href,

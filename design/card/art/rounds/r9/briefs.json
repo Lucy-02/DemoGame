@@ -1,0 +1,924 @@
+{
+ "round": "card-art-r9",
+ "note": "Lucy 11/08: R7은 카드 이름에 매몰됐고 스타더스트는 해석이 틀렸다, 상징이나 장면에 가깝게 미적으로. 52장 모두 카드 효과(누구에게 무엇을 하는지)와 분위기로 다시 씀. 장면(S) 하나 + 상징(M) 하나 × 시드 둘. 장면·상징 구도에 분위기 있는 빛을 더함. 바탕·팔레트는 임시 값.",
+ "variants": [
+  {
+   "tag": "o",
+   "mode": "intact"
+  }
+ ],
+ "seeds": [
+  3901,
+  3902
+ ],
+ "common": {
+  "composition": "1.2::one bold chunky silhouette that fits inside the central half of the image, wide empty margin on every side::, centered, wide shot, floating in the air, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline",
+  "quality": "very aesthetic, masterpiece, best quality, no text",
+  "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic",
+  "composition_S": "1.2::a dynamic scene, the main action happens in the center, readable at a glance::, medium shot, simple shapes, clean lineart, cel shading, thick outline, limited palette, 1.1::beautiful atmospheric lighting, evocative mood::",
+  "composition_P": "1.2::scenery, wide shot, landscape, one clear focal point in the center::, simple shapes, clean lineart, cel shading, thick outline, limited palette, atmospheric perspective",
+  "composition_M": "1.2::symbolic still life, one central object, centered, wide empty margin::, simple background, clean lineart, cel shading, thick outline, 1.1::elegant, evocative::",
+  "uc_S": "1girl, 1boy, person, people, human, face, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.2::cluttered, crowded, busy::",
+  "uc_P": "1girl, 1boy, person, people, human, character, animal, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.1::cluttered, crowded::",
+  "uc_M": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic"
+ },
+ "tones": {
+  "sal": "1.2::plain soft dark warm grey background::, 1.1::thin white edge highlights::",
+  "ibex": "1.2::plain soft dark charcoal grey background::, 1.1::bright rim light outlining the silhouette::",
+  "star": "1.2::plain soft dark navy grey background::",
+  "sal_S": "1.1::warm red, amber and dark brown palette::",
+  "sal_P": "1.1::warm red, amber and dark brown palette::",
+  "ibex_S": "1.1::charcoal grey and molten orange palette::",
+  "ibex_P": "1.1::charcoal grey and molten orange palette::",
+  "star_S": "1.1::deep navy and pale gold palette::",
+  "star_P": "1.1::deep navy and pale gold palette::",
+  "pearl": "1.2::plain soft dark teal grey background::, 1.1::soft pearly highlights::",
+  "pearl_S": "1.1::deep teal, sea blue and pearl white palette::",
+  "pearl_P": "1.1::deep teal, sea blue and pearl white palette::",
+  "cham": "1.2::plain soft dark moss green grey background::",
+  "cham_S": "1.2::plain soft dark moss green grey background::, 1.1::muted deep green palette, low saturation::",
+  "cham_P": "1.1::deep green palette with small soft rainbow accents::"
+ },
+ "cards": [
+  {
+   "id": "stardust",
+   "name": "스타더스트",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::a tiny shooting star grazing a dark rock creature, leaving one small glowing gold star mark on its shell, night::",
+   "uc_extra": "pouch, bag, black blob"
+  },
+  {
+   "id": "stardust",
+   "name": "스타더스트",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a single gold star mark glowing on a dark stone, a faint sparkle trail falling onto it::",
+   "uc_extra": "pouch, bag, black blob"
+  },
+  {
+   "id": "star_mantle",
+   "name": "별 망토",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round creature wrapped in a cloak of night sky, enemy claws glancing off it, gold stars glinting in the cloak::"
+  },
+  {
+   "id": "star_mantle",
+   "name": "별 망토",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a constellation shaped like a shield shining above a small sleeping round creature::"
+  },
+  {
+   "id": "star_link",
+   "name": "스타 링크",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::a beam of starlight jumping between two gold star marks on a dark rock creature, linking them::"
+  },
+  {
+   "id": "star_link",
+   "name": "스타 링크",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::two stars in the night sky joined by a new bright line, forming a constellation::"
+  },
+  {
+   "id": "astrolabe",
+   "name": "아스트롤라베",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::gold star marks on a dark rock creature bursting one by one into flashes of light::"
+  },
+  {
+   "id": "astrolabe",
+   "name": "아스트롤라베",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::star marks being pulled off a dark stone into a brass astrolabe, turning into light::"
+  },
+  {
+   "id": "good_omen",
+   "name": "길조",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::a shooting star passing over a small round creature whose paws glow with gold light, ready to strike::"
+  },
+  {
+   "id": "good_omen",
+   "name": "길조",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a gold shooting star landing on a small sword, the blade starting to glow::"
+  },
+  {
+   "id": "milky_way",
+   "name": "은하수",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::the milky way flowing down from the sky like a river, wrapping around small round creatures as a shimmering veil::"
+  },
+  {
+   "id": "milky_way",
+   "name": "은하수",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a river of stars flowing around a small round shield::"
+  },
+  {
+   "id": "morning_star",
+   "name": "샛별",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::dawn breaking over a sleeping valley, the morning star shining brighter than all others::"
+  },
+  {
+   "id": "morning_star",
+   "name": "샛별",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::three star slots carved in a stone tablet, one already glowing gold before dawn::"
+  },
+  {
+   "id": "astraea",
+   "name": "아스트레아",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark rock creature covered in star marks kneeling under the weight of falling starlight::"
+  },
+  {
+   "id": "astraea",
+   "name": "아스트레아",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::golden scales tipping down under the weight of a single star::"
+  },
+  {
+   "id": "starfall",
+   "name": "스타폴",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::two large meteors falling side by side from the night sky toward dark hills::"
+  },
+  {
+   "id": "starfall",
+   "name": "스타폴",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::two falling stars crossing paths in the night sky::"
+  },
+  {
+   "id": "wish_star",
+   "name": "위시 스타",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::all the star marks on a dark rock creature rising up and merging into one big wishing star::"
+  },
+  {
+   "id": "wish_star",
+   "name": "위시 스타",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::many tiny stars flowing upward and merging into one bright wishing star::"
+  },
+  {
+   "id": "glass_scale",
+   "name": "유리 비늘",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a thin shimmering red glass scale floating in front of three small round creatures like a tiny shield::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "glass_scale",
+   "name": "유리 비늘",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a single red glass scale catching warm light, a small flicker of fire inside it::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "glass_skin",
+   "name": "잉걸 비늘",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a red glass wall bristling with ember thorns, a dark claw pulling back from it with sparks::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "glass_skin",
+   "name": "잉걸 비늘",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a red glass rose with glowing ember thorns::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "heated_glass",
+   "name": "달군 유리",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a red glass wall glowing orange hot, a second layer of glass forming behind it::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "heated_glass",
+   "name": "달군 유리",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::molten glass being poured into a mold, glowing orange::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "tempered_glass",
+   "name": "템퍼드 글래스",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a massive red glass wall holding firm as a giant stone golem's fist smashes into it, only surface cracks::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "tempered_glass",
+   "name": "템퍼드 글래스",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a thick glowing red glass ingot on an anvil, sparks::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "afterglow",
+   "name": "잔열",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::shards of a broken red glass wall glowing on the ground at dusk, slowly growing back into a wall::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "afterglow",
+   "name": "잔열",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a broken glass shard with a tiny new crystal sprouting from it, warm glow::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "ricochet",
+   "name": "리코셰",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark rock creature's punch bouncing off a red glass wall, the shockwave flying back at it::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "ricochet",
+   "name": "리코셰",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a ray of light hitting a red glass pane and reflecting straight back::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "bellows",
+   "name": "풀무",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a glassmaker's forge with bellows pumping, red glass spikes growing out of the fire::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "bellows",
+   "name": "풀무",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::flames from a bellows turning into sharp red glass spikes::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "glass_citadel",
+   "name": "유리 성채",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a red glass fortress on a hill at dawn, half of its walls still standing after a battle::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "glass_citadel",
+   "name": "유리 성채",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a red glass tower half crumbled but still glowing from within::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "hall_of_mirrors",
+   "name": "거울의 방",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark rock creature trapped in a hall of red glass mirrors, its own attacks reflecting back from every side::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "hall_of_mirrors",
+   "name": "거울의 방",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a red glass mirror reflecting a claw strike back::",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ],
+   "uc_extra": "drinking glass, cup, juice, liquid"
+  },
+  {
+   "id": "embrace",
+   "name": "품기",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::a large pearl oyster closing gently around a small glowing light on the sea floor, warm and protective::"
+  },
+  {
+   "id": "embrace",
+   "name": "품기",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a glowing light held safely inside a half-closed pearl shell::"
+  },
+  {
+   "id": "current",
+   "name": "물살",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::a strong ocean current slamming into a dark rock creature and sweeping it off its feet, foam::"
+  },
+  {
+   "id": "current",
+   "name": "물살",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::swirling water lines curling into a cresting wave::"
+  },
+  {
+   "id": "glare",
+   "name": "눈부심",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::a pearl flashing brilliant light in the dark sea, a dark rock creature turning away dazzled::"
+  },
+  {
+   "id": "glare",
+   "name": "눈부심",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a pearl with sharp beams of light radiating out::"
+  },
+  {
+   "id": "nacre_glow",
+   "name": "자개빛",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::iridescent mother-of-pearl light forming a shimmering dome around a small round creature underwater::"
+  },
+  {
+   "id": "nacre_glow",
+   "name": "자개빛",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::an iridescent mother-of-pearl shield shimmering::"
+  },
+  {
+   "id": "sand_grain",
+   "name": "모래알",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::a single grain of sand slipping into an open oyster, the first glimmer of a pearl::"
+  },
+  {
+   "id": "sand_grain",
+   "name": "모래알",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::an hourglass of white sand with one glowing grain falling::"
+  },
+  {
+   "id": "twin_pearl",
+   "name": "쌍진주",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::an oyster holding two glowing pearls side by side in its open shell, soft light::"
+  },
+  {
+   "id": "twin_pearl",
+   "name": "쌍진주",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::two pearls orbiting each other like twin moons::"
+  },
+  {
+   "id": "nest",
+   "name": "보금자리",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::a giant seashell curling protectively around a small round creature, falling rocks bouncing off::"
+  },
+  {
+   "id": "nest",
+   "name": "보금자리",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a cozy seashell cradle holding a small glowing pearl::"
+  },
+  {
+   "id": "high_tide",
+   "name": "밀물",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::a fast tide rushing forward under the moon, glowing pearls riding the wave crest::"
+  },
+  {
+   "id": "high_tide",
+   "name": "밀물",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a crescent moon pulling a wave upward::"
+  },
+  {
+   "id": "baroque_pearl",
+   "name": "바로크 펄",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::a lumpy iridescent pearl shooting through the water and hitting a dark rock creature, splash::"
+  },
+  {
+   "id": "baroque_pearl",
+   "name": "바로크 펄",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a baroque pearl growing layer by layer, each layer glowing::"
+  },
+  {
+   "id": "najeon",
+   "name": "나전",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::an iridescent mother-of-pearl pattern spreading across a black lacquer surface like a protective charm::"
+  },
+  {
+   "id": "najeon",
+   "name": "나전",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a black lacquer box with shimmering mother-of-pearl crane inlay::"
+  },
+  {
+   "id": "black_pearl",
+   "name": "흑진주",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::a black pearl glowing under a full moon in a dark oyster shell at the bottom of the sea::"
+  },
+  {
+   "id": "black_pearl",
+   "name": "흑진주",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a black pearl with a faint green and purple sheen floating::"
+  },
+  {
+   "id": "dragon_palace",
+   "name": "용궁",
+   "owner": "pearl",
+   "comp": "S",
+   "subject": "no humans, 1.2::a glowing underwater palace with curved korean roofs, schools of fish swirling, deep sea::"
+  },
+  {
+   "id": "dragon_palace",
+   "name": "용궁",
+   "owner": "pearl",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a tiny coral palace gate glowing with pearls::"
+  },
+  {
+   "id": "horn_strike",
+   "name": "뿔 찍기",
+   "owner": "ibex",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark basalt mountain ibex rearing up, about to bring its huge curved horns down, dust swirling, dusk::"
+  },
+  {
+   "id": "horn_strike",
+   "name": "뿔 찍기",
+   "owner": "ibex",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a curved black horn cracking a stone in two, orange glow from the crack::"
+  },
+  {
+   "id": "foothold",
+   "name": "디딤",
+   "owner": "ibex",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark basalt mountain ibex leaping across a gap between two cliffs, silhouette against an orange sky::"
+  },
+  {
+   "id": "foothold",
+   "name": "디딤",
+   "owner": "ibex",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::glowing orange hoof prints leading up a stone staircase::"
+  },
+  {
+   "id": "brace",
+   "name": "버팀목",
+   "owner": "ibex",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark basalt mountain ibex standing firm on a ledge as a rockslide pours around it::"
+  },
+  {
+   "id": "brace",
+   "name": "버팀목",
+   "owner": "ibex",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::an old gnarled tree rooted deep into a cliff, unbent by the wind::"
+  },
+  {
+   "id": "climb",
+   "name": "비탈 오르기",
+   "owner": "ibex",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark basalt mountain ibex on a narrow ledge high on a cliff, looking up at the peak, morning light::"
+  },
+  {
+   "id": "climb",
+   "name": "비탈 오르기",
+   "owner": "ibex",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a narrow mountain path zigzagging up toward a glowing peak::"
+  },
+  {
+   "id": "stampede",
+   "name": "스탬피드",
+   "owner": "ibex",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark basalt mountain ibex charging down a mountain slope in a cloud of dust and sparks::"
+  },
+  {
+   "id": "stampede",
+   "name": "스탬피드",
+   "owner": "ibex",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a long trail of glowing hoof marks running down a slope::"
+  },
+  {
+   "id": "locked_horns",
+   "name": "맞뿔",
+   "owner": "ibex",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark basalt mountain ibex locking horns with a dizzy stone golem, the golem stumbling backwards::"
+  },
+  {
+   "id": "locked_horns",
+   "name": "맞뿔",
+   "owner": "ibex",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::two horns interlocked into a ring, orange sparks::"
+  },
+  {
+   "id": "fault_line",
+   "name": "단층",
+   "owner": "ibex",
+   "comp": "S",
+   "subject": "no humans, 1.2::the ground splitting under several dark rock creatures, all of them losing balance, orange glow below::"
+  },
+  {
+   "id": "fault_line",
+   "name": "단층",
+   "owner": "ibex",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a stone tablet cracking down the middle, orange light pouring out::"
+  },
+  {
+   "id": "caldera",
+   "name": "칼데라",
+   "owner": "ibex",
+   "comp": "S",
+   "subject": "no humans, 1.2::a volcano erupting beneath a giant stone golem, swallowing it in molten light::"
+  },
+  {
+   "id": "caldera",
+   "name": "칼데라",
+   "owner": "ibex",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a crater of glowing lava seen from above::"
+  },
+  {
+   "id": "rockfall",
+   "name": "붕락",
+   "owner": "ibex",
+   "comp": "S",
+   "subject": "no humans, 1.2::one dark rock creature collapsing, the shock making the others nearby stumble, falling rocks::"
+  },
+  {
+   "id": "rockfall",
+   "name": "붕락",
+   "owner": "ibex",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a row of standing stones toppling one after another like dominoes::"
+  },
+  {
+   "id": "camouflage",
+   "name": "보호색",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a chameleon fading into the leaves as a dark claw strike passes harmlessly through where it was::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "camouflage",
+   "name": "보호색",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a leaf with the faint outline of a chameleon in its veins::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "flick",
+   "name": "날름",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a chameleon's tongue flicking a small pebble at a dark rock creature, quick::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "flick",
+   "name": "날름",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a quick pink curve slicing through the air like a whip::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "snap",
+   "name": "스냅",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a chameleon lunging from a branch with jaws open, a dark rock creature flinching::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "snap",
+   "name": "스냅",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a flytrap leaf snapping shut::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "eye_roll",
+   "name": "굴리는 눈",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a chameleon on a branch, one eye watching a dark rock creature, the other eye watching a falling leaf::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "eye_roll",
+   "name": "굴리는 눈",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::two small brass telescopes on a branch pointing in different directions::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "blend_in",
+   "name": "풍경에 녹기",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a chameleon on a mossy branch, its skin taking on the leaf patterns around it, almost invisible::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "blend_in",
+   "name": "풍경에 녹기",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::chameleon skin pattern melting into forest leaves::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "pounce",
+   "name": "급습",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a chameleon dropping from the canopy onto a big dark rock creature, dramatic low angle::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "pounce",
+   "name": "급습",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a falling leaf turning into a sharp claw in mid-air::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "vine_tail",
+   "name": "덩굴 꼬리",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a chameleon hanging by its coiled tail, swinging a strike at a dark rock creature::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "vine_tail",
+   "name": "덩굴 꼬리",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a vine coiled into a spiral like a chameleon tail::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "ambush",
+   "name": "매복",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a chameleon hidden in tall grass beside a small round ally creature, both watching a dark rock creature pass::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "ambush",
+   "name": "매복",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::tall grass parted slightly, a hidden shape inside::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "disguise_veil",
+   "name": "위장막",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a net of leaves draped over small round creatures, hiding them in a sunlit clearing::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "disguise_veil",
+   "name": "위장막",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a camouflage net woven from leaves::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "prism",
+   "name": "프리즘",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a chameleon holding up a prism, splitting light into a rainbow that lands on a small round ally creature::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "prism",
+   "name": "프리즘",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a glass prism splitting a beam of light into a rainbow::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "thousand_eyes",
+   "name": "천 개의 눈",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark jungle at night, a chameleon among countless glowing eye spots on the leaves::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "thousand_eyes",
+   "name": "천 개의 눈",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a leaf covered with many eye spots like a moth wing::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "rainbow",
+   "name": "레인보우",
+   "owner": "cham",
+   "comp": "S",
+   "subject": "no humans, 1.2::a rainbow arching from a chameleon to a small round ally creature over a jungle valley::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  },
+  {
+   "id": "rainbow",
+   "name": "레인보우",
+   "owner": "cham",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a small rainbow arching over a single leaf::",
+   "uc_extra": "neon green, lime green, bright green background, chibi, sticker, white outline"
+  }
+ ]
+}
