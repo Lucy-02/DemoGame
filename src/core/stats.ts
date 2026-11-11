@@ -26,15 +26,20 @@ export const levelHp = (level: number) => (level - 1) * GROWTH.level_hp;
 
 // ───────────────────────── 장비 ─────────────────────────
 
-/** 런 끝에 남길 장비 칸 수 (단계별) */
-export const equipKeepSlots = (stage: Stage) => GROWTH.equip_keep_slots[stageRank(stage)];
+/** 장비 칸 수 (단계별). 지니는 수 = 런 끝에 남기는 수 (0056) */
+export const equipSlots = (stage: Stage) => GROWTH.equip_slots[stageRank(stage)];
 /** 공명 상한 (단계별) */
 export const resonanceCap = (stage: Stage) => GROWTH.equip_resonance_cap[stageRank(stage)];
+
+/** 지금 공명: 남긴 공명 + 이번 런에 오른 공명. 장비의 단계 수를 넘지 않아요 */
+export function resonanceOf(e: RunEquip): number {
+  return Math.min(Math.max(1, e.resonance + (e.runBonus ?? 0)), equipDef(e.id).tiers.length);
+}
 
 /** 지닌 장비 하나에서 지금 켜진 층: 공명 단계 하나 + 대가 */
 export function activeTiers(e: RunEquip): EquipTier[] {
   const def = equipDef(e.id);
-  const tier = def.tiers[Math.min(Math.max(1, e.resonance), def.tiers.length) - 1];
+  const tier = def.tiers[resonanceOf(e) - 1];
   return def.downside ? [tier, def.downside] : [tier];
 }
 
