@@ -36,15 +36,19 @@ function readThreat(b: Battle): Plan {
     plan.threat.set(e.uid, (plan.threat.get(e.uid) ?? 0) + v);
   };
   for (const e of b.aliveEnemies()) {
-    const slot = b.slots.find((x) => x.uid === e.uid && !x.done);
-    if (!slot) continue;
-    for (const a of b.currentMove(e).actions) {
-      if (a.type !== "attack") continue;
-      const dmg = b.enemyDmgPreview(e, a.dmg) * (a.hits ?? 1);
-      plan.firstHit = Math.min(plan.firstHit, slot.at);
-      if (a.target === "all") for (const s of spirits) add(s, e, dmg);
-      else if (a.target === "front") add(spirits.find((s) => s.id === b.frontId) ?? spirits[0], e, dmg);
-      else add(lowest, e, dmg);
+    for (const { at, move } of b.moveQueue(e)) {
+      for (const a of move.actions) {
+        if (a.type === "detonateBurn") {
+          plan.firstHit = Math.min(plan.firstHit, at);
+          for (const s of spirits) add(s, e, (s.status.burn?.n ?? 0) * a.mult);
+        }
+        if (a.type !== "attack") continue;
+        const dmg = b.enemyDmgPreview(e, a.dmg) * (a.hits ?? 1);
+        plan.firstHit = Math.min(plan.firstHit, at);
+        if (a.target === "all") for (const s of spirits) add(s, e, dmg);
+        else if (a.target === "front") add(spirits.find((s) => s.id === b.frontId) ?? spirits[0], e, dmg);
+        else add(lowest, e, dmg);
+      }
     }
   }
   return plan;

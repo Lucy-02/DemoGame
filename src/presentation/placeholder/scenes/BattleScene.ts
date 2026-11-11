@@ -66,7 +66,7 @@ export class BattleScene extends Phaser.Scene {
     const run = getRun();
     bgFill(this, this.kind === "boss" ? 0x2c1f2a : 0x1f2a2a, 0x14121c);
     this.add.ellipse(W / 2, 470, W * 1.1, 160, 0x000000, 0.25);
-    this.battle = new Battle(run.spirits, run.battleDeck(), this.enemyIds, run.frontId, new Rng(run.rng.int(0, 1e9)), run.enemyScale());
+    this.battle = new Battle(run.spirits, run.battleDeck(), this.enemyIds, run.frontId, new Rng(run.rng.int(0, 1e9)), run.enemyScale(), run.battleTraits());
 
     for (const s of this.battle.spirits) {
       const v = makeVisual(this, "spirits", s.id, false);

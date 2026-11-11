@@ -2,7 +2,8 @@ import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, cardDe
 import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
 import { Rng } from "./rng";
 import { equipSlots, maxHpOf, resonanceOf } from "./stats";
-import type { CardDef, DeckCard, EncounterDef, EnemyScale, EquipDef, EventDef, Obtain, Rarity, RunSpirit } from "./types";
+import { ENEMY_TRAITS } from "./types";
+import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, Obtain, Rarity, RunSpirit } from "./types";
 
 export type NodeType = "battle" | "elite" | "event" | "shop" | "rest" | "boss";
 
@@ -12,6 +13,8 @@ export interface MapNode {
   col: number;
   type: NodeType;
   next: string[];
+  /** 정예 칸에 미리 정해 둔 거친 특성. 지도에서 보여요 (0062) */
+  trait?: EnemyTrait;
 }
 
 export interface RunOptions {
@@ -24,6 +27,8 @@ export interface RunOptions {
   /** 정원 없이 시작할 때(테스트·자동 플레이): 성체 Lv4로 시작 */
   adult: boolean;
   unlockAll: boolean;
+  /** 오늘 센 기운을 정해 두고 시작해요 (시험 · 자동 플레이). 없으면 뽑아요 */
+  strongElement?: Element;
 }
 
 /** 정원 없이 "성체로 시작"할 때의 레벨 (성체 문 = Lv4, growth.json evolutions) */
@@ -68,7 +73,12 @@ export class Run {
   map: Map<string, MapNode> = new Map();
   current: MapNode | null = null;
   visited: string[] = [];
-  lastEncounter = "";
+  /** 오늘 센 기운: 이 막의 세 기운 중 하나. 그 기운의 편성이 자주 나오고 보스도 그 기운이에요 (0062) */
+  strongElement: Element;
+  /** 최근에 만난 편성 (같은 편성은 바로 다시 안 나와요) */
+  recentEncounters: string[] = [];
+  /** 지금까지 치른 일반 전투 수 (처음 몇 번은 약한 풀) */
+  normalBattles = 0;
   /** 이번 런에서 상점 카드 빼기를 쓴 횟수 (0049 4절: 쓸 때마다 값이 올라요) */
   removals = 0;
   bossDefeated = false;
@@ -100,6 +110,9 @@ export class Run {
       for (let i = 0; i < card.start; i++) this.addCard(card.id, owner.id);
     }
     this.generateMap();
+    const drawn = this.rng.pick(C.acts[0].elements as Element[]);
+    this.strongElement = opts.strongElement ?? drawn;
+    for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
   }
 
   addCard(cardId: string, owner: string) {
@@ -174,12 +187,36 @@ export class Run {
 
   pickEncounter(type: "battle" | "elite" | "boss"): EncounterDef {
     const tier = type === "battle" ? "normal" : type;
-    const floor = this.current?.floor ?? 1;
-    let pool = ENCOUNTERS.filter((e) => e.tier === tier && floor >= e.floors[0] && floor <= e.floors[1]);
-    if (pool.length > 1) pool = pool.filter((e) => e.id !== this.lastEncounter);
-    const enc = this.rng.pick(pool);
-    this.lastEncounter = enc.id;
+    const rule = C.run_pool;
+    let pool = ENCOUNTERS.filter((e) => e.tier === tier);
+    if (tier === "normal") {
+      const want = this.normalBattles < rule.weak_battles ? "weak" : "strong";
+      pool = pool.filter((e) => e.pool === want);
+      this.normalBattles++;
+    }
+    if (tier === "boss") {
+      // 보스는 센 기운의 큰 정령
+      const own = pool.filter((e) => e.element === this.strongElement);
+      if (own.length) pool = own;
+    }
+    const fresh = pool.filter((e) => !this.recentEncounters.includes(e.id));
+    if (fresh.length) pool = fresh;
+    const weights = Object.fromEntries(pool.map((e) => [e.id, e.element === this.strongElement ? rule.strong_weight : 1]));
+    const id = this.rng.weighted(weights);
+    const enc = pool.find((e) => e.id === id)!;
+    this.recentEncounters = [...this.recentEncounters, enc.id].slice(-rule.no_repeat);
     return enc;
+  }
+
+  /** 이 막의 보스 편성. 지도에 처음부터 보여 줘요 */
+  bossEncounter(): EncounterDef {
+    const bosses = ENCOUNTERS.filter((e) => e.tier === "boss");
+    return bosses.find((e) => e.element === this.strongElement) ?? bosses[0];
+  }
+
+  /** 지금 칸의 전투에 붙는 거친 특성 */
+  battleTraits(): EnemyTrait[] {
+    return this.current?.trait ? [this.current.trait] : [];
   }
 
   /** 지금 인원에 맞춘 적 세기 (0053). 셋이면 undefined */
