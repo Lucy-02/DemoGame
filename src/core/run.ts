@@ -1,7 +1,7 @@
 import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, cardDef, equipDef, partyScale } from "./data";
 import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
 import { Rng } from "./rng";
-import { maxHpOf } from "./stats";
+import { equipSlots, maxHpOf, resonanceOf } from "./stats";
 import type { CardDef, DeckCard, EncounterDef, EnemyScale, EquipDef, EventDef, Obtain, Rarity, RunSpirit } from "./types";
 
 export type NodeType = "battle" | "elite" | "event" | "shop" | "rest" | "boss";
@@ -266,9 +266,9 @@ export class Run {
     return def.owner ? this.spirits.filter((s) => s.id === def.owner) : this.spirits;
   }
 
-  /** 이 등급에서 파티가 받을 수 있는 장비 */
-  equipPool(grade: EquipDef["grade"]): EquipDef[] {
-    return EQUIPMENT.filter((e) => e.grade === grade && this.equipTakers(e.id).length > 0);
+  /** 이 자리에서 파티가 받을 수 있는 장비 (0056). 정예: 범용 · 전용 무기. 보스: 보스 장비 */
+  equipPool(from: "elite" | "boss"): EquipDef[] {
+    return EQUIPMENT.filter((e) => (e.rarity === "boss") === (from === "boss") && this.equipTakers(e.id).length > 0);
   }
 
   /** 이긴 전투의 보상을 만들고 골드를 넣어요. 보스는 전투 보상 없이 런 결과로 가요 (0049 3절). */
@@ -297,16 +297,55 @@ export class Run {
     reward.cardsDone = true;
   }
 
-  /** 정예 장비를 정령에게 줘요. 이번 런 동안 써요 (0048 1절) */
-  giveRewardEquipment(reward: BattleReward, spiritId: string) {
+  /** 정예 장비를 정령에게 줘요. 이번 런 동안 써요 (0048 1절). 칸이 꽉 찼으면 replaceId를 내려놓아요 */
+  giveRewardEquipment(reward: BattleReward, spiritId: string, replaceId?: string) {
     if (!reward.equipment || reward.equipDone) throw new Error("줄 장비가 없어요");
-    this.giveEquipment(reward.equipment.equipId, spiritId);
+    this.giveEquipment(reward.equipment.equipId, spiritId, replaceId);
     reward.equipDone = true;
   }
 
-  giveEquipment(equipId: string, spiritId: string) {
+  /** 이 정령이 이 장비를 받으려면 지닌 것 하나를 내려놓아야 하는지 (0056) */
+  needsReplace(equipId: string, spiritId: string): boolean {
+    const s = this.spirit(spiritId);
+    return !s.equipment.some((e) => e.id === equipId) && s.equipment.length >= equipSlots(s.stage);
+  }
+
+  /**
+   * 장비를 정령에게 줘요 (0056). 다른 정령에게 옮기지 못해요.
+   * 같은 장비를 이미 지녔으면 이번 런 동안 공명이 1 올라요. 칸이 꽉 찼으면 replaceId를 내려놓고 받아요(내려놓은 장비는 사라져요).
+   */
+  giveEquipment(equipId: string, spiritId: string, replaceId?: string) {
     if (!this.equipTakers(equipId).some((s) => s.id === spiritId)) throw new Error(`${spiritId}는 ${equipId}를 받을 수 없어요`);
-    this.spirit(spiritId).equipment.push({ id: equipId, resonance: 1, from: "run" });
+    const s = this.spirit(spiritId);
+    const held = s.equipment.find((e) => e.id === equipId);
+    if (held) {
+      held.runBonus = (held.runBonus ?? 0) + 1;
+      return;
+    }
+    if (this.needsReplace(equipId, spiritId)) {
+      const i = s.equipment.findIndex((e) => e.id === replaceId);
+      if (i < 0) throw new Error(`${spiritId}의 장비 칸이 꽉 찼어요`);
+      s.equipment.splice(i, 1);
+    }
+    s.equipment.push({ id: equipId, resonance: 1, from: "run" });
+  }
+
+  /**
+   * 전투에 들고 가는 덱 (0055 · 0056). 전용 무기를 지닌 정령은 대표 카드 한 장이 갈래의 기술로 바뀌어요.
+   * 덱 장수와 카드 uid는 그대로예요. 갈래가 없으면(유체) 바뀌지 않아요.
+   */
+  battleDeck(): DeckCard[] {
+    const swap = new Map<number, string>();
+    for (const s of this.spirits) {
+      for (const e of s.equipment) {
+        const sig = equipDef(e.id).signature;
+        const technique = sig && s.branch ? sig.techniques[s.branch]?.[resonanceOf(e) - 1] : undefined;
+        if (!sig || !technique) continue;
+        const card = this.deck.find((c) => c.owner === s.id && c.cardId === sig.card && !swap.has(c.uid));
+        if (card) swap.set(card.uid, technique);
+      }
+    }
+    return this.deck.map((c) => (swap.has(c.uid) ? { ...c, cardId: swap.get(c.uid)! } : c));
   }
 
   /** 보스를 이기면 런 결과에서 고를 보스 장비 3개 (0049 3절). 데이터가 모자라면 있는 만큼 */

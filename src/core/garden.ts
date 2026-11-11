@@ -25,7 +25,7 @@ export interface GardenSpirit {
   episodes: number;
   /** 플레이어가 이미 본 해금 키 (할 일 배지를 지우는 데 써요) */
   seen: string[];
-  /** 남긴 장비 (0048). 길이 ≤ equipKeepSlots(stage), 공명 ≤ resonanceCap(stage) */
+  /** 남긴 장비 (0048 · 0056). 길이 ≤ equipSlots(stage), 공명 ≤ resonanceCap(stage) */
   equipment?: GardenEquip[];
   /** 분해로 얻은 그 정령의 공명 권 (이름 TODO_NAME) */
   resonanceTokens?: number;
@@ -255,7 +255,7 @@ export function feed(g: Garden, id: string): Garden {
 /** 정원의 정령을 판의 정령으로. HP는 최대 HP로 채워요 (부르는 쪽에서 maxHpOf로) */
 export function toRunSpirit(s: GardenSpirit): RunSpirit {
   return {
-    id: s.id, hp: 0, maxHpBonus: 0, stage: s.stage, level: levelOf(s.exp), personality: s.personality,
+    id: s.id, hp: 0, maxHpBonus: 0, stage: s.stage, level: levelOf(s.exp), personality: s.personality, branch: s.branch,
     equipment: (s.equipment ?? []).map((e) => ({ ...e, from: "kept" })),
   };
 }

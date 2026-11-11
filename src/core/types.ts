@@ -222,11 +222,13 @@ export interface RunSpirit {
   stage: Stage;
   level: number;
   personality: string;
-  /** 이번 런에 지닌 장비 (0048 · 0049) */
+  /** 성체에서 고른 갈래 (0027). 유체이거나 아직 갈래가 없으면 비어요 */
+  branch?: string;
+  /** 이번 런에 지닌 장비 (0048 · 0049 · 0056). 길이 ≤ 단계별 칸 수 */
   equipment: RunEquip[];
 }
 
-// ───────────────────────── 장비 (0048 · 0049) ─────────────────────────
+// ───────────────────────── 장비 (0048 · 0049 · 0055 · 0056) ─────────────────────────
 
 /** 장비가 보정하는 수치. 치명 확률 · 치명 피해는 파생 수치예요 */
 export const EQUIP_STATS = [...STAT_KEYS, "crit_chance", "crit_mult"] as const;
@@ -258,18 +260,29 @@ export interface EquipTier {
   effects?: EquipEffect[];
 }
 
-export const EQUIP_GRADES = ["elite", "boss"] as const;
-export type EquipGrade = (typeof EQUIP_GRADES)[number];
+/** 희귀도 (0056). generic: 누구나, 능력치 위주(정예). exclusive: 정령 전용 무기, 대표 카드를 바꿈(정예). boss: 규칙을 건드리고 대가가 붙음(보스) */
+export const EQUIP_RARITIES = ["generic", "exclusive", "boss"] as const;
+export type EquipRarity = (typeof EQUIP_RARITIES)[number];
+
+/** 전용 무기가 대표 카드 한 장을 무기의 기술로 바꿔요 (0055). 기술은 정령의 갈래를 따라요 (0056) */
+export interface SignatureSwap {
+  /** 바뀌는 대표 카드 id */
+  card: string;
+  /** 갈래 → 공명 단계별 기술 카드 id. 길이는 tiers와 같아요 */
+  techniques: Record<string, string[]>;
+}
 
 export interface EquipDef {
   id: string;
   /** 전용 정령 id. null이면 누구나 */
   owner: string | null;
-  grade: EquipGrade;
+  rarity: EquipRarity;
   /** 공명 n이면 tiers[n-1]. 길이 = 공명 상한 */
   tiers: EquipTier[];
   /** 보스 장비의 대가. 공명과 무관하게 늘 적용 */
   downside?: EquipTier;
+  /** 전용 무기만: 대표 카드 변형 */
+  signature?: SignatureSwap;
   opensBranch?: { spirit: string; branch: string };
 }
 
@@ -277,6 +290,8 @@ export interface RunEquip {
   id: string;
   resonance: number;
   from: "kept" | "run";
+  /** 이번 런에 같은 장비를 또 얻어 오른 공명. 런이 끝나면 사라져요 (0056) */
+  runBonus?: number;
 }
 
 /** 자람 조건: 전투 이벤트로 세는 행동 누적 (0021 2절) */
@@ -306,8 +321,8 @@ export interface GrowthDef {
   material: Record<"normal" | "elite" | "boss", number>;
   stage_main_bonus: number;
   stage_hp_main_bonus: number;
-  /** 단계별(유체 · 성체 · 각성체) 런 끝에 남길 장비 칸 수 */
-  equip_keep_slots: number[];
+  /** 단계별(유체 · 성체 · 각성체) 장비 칸 수. 지니는 수와 런 끝에 남기는 수가 같아요 (0056) */
+  equip_slots: number[];
   /** 단계별 공명 상한 */
   equip_resonance_cap: number[];
   evolutions: EvolutionDef[];
