@@ -149,3 +149,8 @@
 - E1 가로 그대로: https://claude.ai/artifact/JY6nFw4GK2WCKFwtqo1Cdj
 - E2 줄 맞춤: https://claude.ai/artifact/Ec5PKyy3XEuJ5cyFjhhyCL
 - 프레임: /mnt/project-files/design/round-e/E1~E2/ (소스 /tmp/claude-0/roundE/)
+
+## 갈래 고르기 라운드 G (2026-11-11): P1 f7 다듬기, 갈래 조건 반영
+- G1 판 둘 다듬기: https://claude.ai/artifact/LpmKWC5f9rsbPYWVCFqbpm
+- G2 모습이 주인공: https://claude.ai/artifact/LVbKAYB3dzgZDLfFsXbyMR
+- 프레임: /mnt/project-files/design/round-g/G1~G2/f1–f5.png
