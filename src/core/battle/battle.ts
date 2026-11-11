@@ -16,7 +16,7 @@ import {
   type BCard, type BEnemy, type BSpirit, type BattleEvent, type BattleResult, type EnemySlot, type HoldState, type Intent,
   type Planned, type Ref, type StarState, type StatusId,
 } from "./state";
-import { STATUSES, clearStatuses, tickStatuses, vulnMult } from "./statuses";
+import { STATUSES, clearStatuses, readyMult, tickStatuses, vulnMult } from "./statuses";
 
 /** 턴 흐름의 한 단계. order가 작은 것부터 차례로 돌아요. */
 interface Step {
@@ -46,7 +46,7 @@ export class Battle implements Engine {
   repeatNext: { maxCost: number } | null = null;
   replaying = false;
   /** 지금 재생 중인 계획 카드 */
-  private resolving: Planned | null = null;
+  resolving: Planned | null = null;
   /** 이번 턴 계획한 아군 카드 (놓은 순서) */
   planned: Planned[] = [];
   /** 이번 턴 적 행동 칸 */
@@ -57,6 +57,8 @@ export class Battle implements Engine {
   /** 적이 걸어 둔 다음 턴 손패 효과 */
   private pendingCostUp = 0;
   private pendingSeal = 0;
+  /** 숨은 정령이 이번 턴 끌어온 공격 피해 (가장 큰 것) */
+  private pulled = new Map<string, number>();
   private nextUid = 10000;
 
   constructor(
@@ -157,7 +159,7 @@ export class Battle implements Engine {
   }
 
   enemyDmgPreview(e: BEnemy, base: number): number {
-    return runStages(ENEMY_HIT_STAGES, { attacker: e, target: null, base, amount: 0 }).amount;
+    return runStages(ENEMY_HIT_STAGES, { b: this, attacker: e, target: null, base, amount: 0 }).amount;
   }
 
   passiveMult(s: BSpirit, hook: MultHook): number {
@@ -317,7 +319,7 @@ export class Battle implements Engine {
       run: () => {
         for (const s of this.aliveSpirits()) {
           const keep = passivesOf(s).some(([p, v]) => p.keepsBlock?.(s, v));
-          if (!keep) s.block = passivesOf(s).reduce((m, [p, v]) => Math.max(m, p.carryBlock?.(s, s.block, v) ?? 0), Math.min(s.block, statusN(s, "wallKeep")));
+          if (!keep) s.block = passivesOf(s).reduce((m, [p, v]) => Math.max(m, p.carryBlock?.(s, s.block, v) ?? 0), 0);
           clearStatuses(s, "clearsAtTurnStart");
           this.runStatusHook(s, "turnStart");
           s.playedThisTurn = 0;
@@ -547,9 +549,12 @@ export class Battle implements Engine {
 
   /** 적 공격 1타: 피해 파이프라인 → 피해 받기 → 맞은 뒤 반응(반격). 숨은 정령이 맞으면 받아낸 것으로 표시해요. */
   enemyHit(e: BEnemy, s: BSpirit, base: number, pierce: boolean) {
-    const dmg = runStages(ENEMY_HIT_STAGES, { attacker: e, target: s, base, amount: 0 }).amount;
+    const dmg = runStages(ENEMY_HIT_STAGES, { b: this, attacker: e, target: s, base, amount: 0 }).amount;
     const hidden = s.status.hidden;
-    if (hidden) hidden.strength = 1;
+    if (hidden) {
+      hidden.strength = 1;
+      this.pulled.set(s.id, Math.max(this.pulled.get(s.id) ?? 0, base));
+    }
     this.hurtSpirit(s, dmg, pierce, { attacker: e });
     this.runAfterAttacked(s, e);
   }
@@ -569,8 +574,9 @@ export class Battle implements Engine {
       if (s.downed) continue;
       this.log(`${s.def.name}: 받아냄`);
       const to = st.ref ? this.spirit(st.ref) : s;
-      this.gainReady(to.downed ? s : to);
+      this.gainReady(to.downed ? s : to, this.pulled.get(s.id) ?? 0);
     }
+    this.pulled.clear();
   }
 
   queueCostUp(v: number) {
@@ -635,9 +641,11 @@ export class Battle implements Engine {
     this.emit({ k: "spiritAct", id: owner.id, card: def.name });
     this.log(`${owner.def.name}: ${def.name}`);
     let mult = c.held ? C.hold_mult : 1;
+    p.pulled = 0;
     if (usesReady(def) && statusN(owner, "ready") > 0) {
+      p.pulled = statusStrength(owner, "ready");
       spendStatus(owner, "ready");
-      mult *= C.ready_mult;
+      mult *= readyMult(p.pulled);
       this.log(`${owner.def.name}: 받아치기`);
     }
     this.resolve(def, c, owner, this.cardTargets(def, p.target, owner), p.comboCount, mult);
@@ -787,10 +795,12 @@ export class Battle implements Engine {
   /** 훅이 다시 준 기회에는 훅이 또 반응하지 않아요 */
   private echoingReady = false;
 
-  gainReady(s: BSpirit) {
+  /** pulled: 끌어온 공격 피해. 작으면 받아치기 배율이 작아요 (readyMult) */
+  gainReady(s: BSpirit, pulled: number = C.ready_big_at) {
     const stacks = passivesOf(s).some(([p, v]) => p.readyStacks?.(v));
     const st = stackOf(s, "ready");
     st.n = stacks ? st.n + 1 : Math.max(st.n, 1);
+    st.strength = Math.max(st.strength, pulled);
     st.until = this.turn + 1;
     this.emit({ k: "status", ref: refOf(s), text: STATUSES.ready.gainText(1, st.n) });
     this.emit({ k: "ready", id: s.id });
@@ -812,6 +822,11 @@ export class Battle implements Engine {
     if (statusN(owner, "starlight") > 0) {
       spendStatus(owner, "starlight");
       this.markStar(owner, e, 1);
+    }
+    const aim = statusN(owner, "starAim");
+    if (aim > 0) {
+      delete owner.status.starAim;
+      if (!e.dead) this.markStar(owner, e, aim);
     }
   }
 
@@ -864,7 +879,10 @@ export class Battle implements Engine {
       for (const [p, v] of passivesOf(keeper)) p.wallBlocked?.(this, keeper, v, opts.attacker, r.wall);
       const echo = keeper.status.wallEcho;
       if (echo) echo.strength = 1;
-      if (keeper.block === 0 && statusN(keeper, "wallBroken") > 0) this.burstWall(keeper, opts.attacker);
+      if (keeper.block === 0 && statusN(keeper, "wallBroken") > 0) {
+        this.burstWall(keeper, opts.attacker);
+        for (const [p, v] of passivesOf(keeper)) p.wallBroke?.(this, keeper, v);
+      }
       this.runAfterAttacked(keeper, opts.attacker);
     }
     if (opts.attacker && r.blocked > 0 && s.block === 0 && statusStrength(s, "wallBurst") > 0) this.burstWall(s, opts.attacker);

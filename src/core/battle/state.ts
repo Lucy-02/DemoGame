@@ -5,11 +5,11 @@ export const STATUS_IDS = [
   // 공통
   "burn", "chill", "regen", "vuln", "weak", "thorns", "taunt", "empower", "bonusDmg", "hitBonus",
   // 전용 무기의 기술 (0055)
-  "burnHold", "spreadStack", "burnCarry", "wallKeep", "wallEcho", "wallBurst", "frostGuard", "struck", "lingerUsed", "lingerTurnUsed",
+  "burnHold", "spreadStack", "burnCarry", "wallEcho", "wallBurst", "frostGuard", "struck", "lingerUsed", "lingerTurnUsed",
   // 별 정령
-  "star", "starlight", "comet",
+  "star", "starlight", "starAim", "omen", "comet",
   // 유리 도롱뇽
-  "wall", "wallHeat", "wallBroken", "wallTaken", "afterglow",
+  "wall", "wallHeat", "wallBroken", "wallTaken", "afterglow", "tempered",
   // 산양
   "stagger", "cancelNext", "footing",
   // 카멜레온
@@ -109,6 +109,8 @@ export interface Planned {
   end: number;
   comboCount: number;
   repeat: boolean;
+  /** 재생할 때 쓴 받아칠 기회가 끌어온 공격 피해 (안 썼으면 0) */
+  pulled?: number;
 }
 
 /** 이번 턴 시간축에 박힌 적 행동 */

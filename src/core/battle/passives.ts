@@ -58,6 +58,10 @@ export interface Passive {
   wallGained?: (b: Engine, s: BSpirit, v: number, amount: number) => void;
   /** 이 정령의 벽이 다른 아군을 대신 막은 직후 */
   wallBlocked?: (b: Engine, s: BSpirit, v: number, attacker: BEnemy, blocked: number) => void;
+  /** 이 정령의 벽이 다른 아군을 막다가 깨진 직후 */
+  wallBroke?: (b: Engine, s: BSpirit, v: number) => void;
+  /** 누구에게든 적의 공격 1타가 들어갈 때 줄이는 값. target이 없으면 미리보기예요 */
+  enemyHitCutAny?: (b: Engine, s: BSpirit, v: number, attacker: BEnemy, target: BSpirit | null) => number;
   /** 누구든 적에게 별을 새긴 직후 */
   starMarkedAny?: (b: Engine, s: BSpirit, v: number, marker: BSpirit, target: BEnemy) => void;
   /** 낙하를 고를 때 받는 장 수에 더하는 값 */
@@ -121,8 +125,8 @@ export const AURAS: Record<AuraId, AuraDef> = {
   },
   astraea: {
     scope: "owner",
-    text: (v) => `별을 새긴 적은 약화를 ${v}턴 ${polite("받")}.`,
-    starMarkedAny: (b, _s, v, _marker, target) => b.addStatus(target, "weak", v),
+    text: (v) => `별이 새겨진 적이 아군을 공격하면 피해가 ${v} ${polite("줄어들")}.`,
+    enemyHitCutAny: (_b, _s, v, attacker) => (statusN(attacker, "star") > 0 ? v : 0),
   },
   starfall: {
     scope: "owner",
@@ -143,12 +147,11 @@ export const AURAS: Record<AuraId, AuraDef> = {
   },
   hall_of_mirrors: {
     scope: "owner",
-    text: () => `이 정령의 벽이 막은 피해의 절반을 공격한 적에게 ${polite("되돌리")}.`,
-    wallBlocked(b, s, _v, attacker, blocked) {
-      const back = Math.floor(blocked / 2);
-      if (attacker.dead || back <= 0) return;
-      b.log(`${s.def.name}: 거울의 방 ${back}`);
-      b.hurtEnemy(attacker, back, false);
+    text: (v, sc) => `이 정령의 벽이 깨지면 모든 적에게 피해를 ${sc(v, "guard")} ${polite("입히")}.`,
+    wallBroke(b, s, v) {
+      const dmg = round(scale(v, b.stat(s, "guard")));
+      b.log(`${s.def.name}: 거울의 방 ${dmg}`);
+      for (const e of b.aliveEnemies()) b.hurtEnemy(e, dmg, false);
     },
   },
 
@@ -167,8 +170,8 @@ export const AURAS: Record<AuraId, AuraDef> = {
   },
   dragon_palace: {
     scope: "owner",
-    text: (v) => `턴 끝 손에 남은 카드 1장당 다음 턴에 카드를 1장 더 ${polite("뽑")}. 최대 ${v}장.`,
-    beforeDiscard: (b, _s, v) => void (b.hold.nextTurnDraw += Math.min(v, b.hand.length)),
+    text: (v) => `품은 카드의 주인은 그 카드를 쓰기 전까지 받는 피해가 ${v} ${polite("줄어들")}.`,
+    enemyHitCutAny: (b, _s, v, _attacker, target) => (target && b.holdsHeldCard(target) ? v : 0),
   },
 
   // 산양
@@ -189,10 +192,8 @@ export const AURAS: Record<AuraId, AuraDef> = {
   // 카멜레온
   disguise_veil: {
     scope: "owner",
-    text: (v) => `받아칠 기회가 생길 때마다 모든 아군의 다음 타격 피해가 ${v} ${polite("늘어나")}.`,
-    readyGainedAny(b, _s, v) {
-      for (const a of b.aliveSpirits()) b.addStatus(a, "hitBonus", 1, { strength: v });
-    },
+    text: (v) => `받아칠 기회를 가진 다른 아군은 받는 피해가 ${v} ${polite("줄어들")}.`,
+    enemyHitCutAny: (_b, s, v, _attacker, target) => (target && target !== s && statusN(target, "ready") > 0 ? v : 0),
   },
   thousand_eyes: {
     scope: "owner",
@@ -203,7 +204,7 @@ export const AURAS: Record<AuraId, AuraDef> = {
     scope: "target",
     text: () => `다른 아군이 받아칠 기회를 얻으면 이 아군도 같은 기회를 ${polite("얻")}.`,
     readyGainedAny(b, s, _v, gainer) {
-      if (gainer !== s && !s.downed) b.gainReady(s);
+      if (gainer !== s && !s.downed) b.gainReady(s, gainer.status.ready?.strength ?? 0);
     },
   },
 };

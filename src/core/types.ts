@@ -40,6 +40,7 @@ export type CardOp =
       op: "damage"; value: number; hits?: number; againIf?: "burned"; /** 대상의 별 하나마다 더해요 */ perStar?: number; /** 타격 수 = 대상의 별 수 */ hitsPerStar?: true;
       /** 대상이 화상 상태이면 더해요 */ burnedBonus?: number;
       /** 대상의 화상 1마다 더해요 (내림, perBurnMax까지) */ perBurn?: number; perBurnMax?: number;
+      /** 받아칠 기회를 쓰면 끌어온 공격 피해의 이 비율만큼 더해요 (내림, pulledMax까지) */ perPulled?: number; pulledMax?: number;
     }
   | { op: "block"; value: number; /** 아군 대상: 모든 적의 별 하나마다 더해요 */ perStar?: number; /** 대상이 품었던 카드의 주인이면 이 값 */ heldOwner?: number }
   | { op: "heal"; value: number }
@@ -57,7 +58,7 @@ export type CardOp =
   | { op: "freeze"; bossChill: number }
   | { op: "thorns"; value: number }
   | { op: "grow"; value: number }
-  | { op: "draw"; value: number; /** 받아칠 기회가 있으면 이만큼 */ ifReady?: number }
+  | { op: "draw"; value: number; /** 받아칠 기회가 있으면 이만큼 */ ifReady?: number; /** 품은 카드가 있으면 이만큼 */ ifHeld?: number }
   | { op: "vulnerable"; turns: number }
   | { op: "weak"; turns: number }
   | { op: "empower"; value: number }
@@ -71,10 +72,14 @@ export type CardOp =
   | { op: "repeatNext"; maxCost: number }
   | { op: "combo"; n: number; then: CardOp[] }
   /** 다음 타격 hits번에 value를 더해요 */
-  | { op: "hitBonus"; value: number; hits: number }
+  | { op: "hitBonus"; value: number; hits: number; /** 별을 새긴 적을 칠 때만 */ vsStarred?: true }
   // 별 정령
   /** 대상 아군의 다음 타격 hits번이 맞힌 적에게 별을 새겨요 */
   | { op: "starlight"; hits: number }
+  /** 대상 아군의 다음 타격이 맞힌 적에게 별을 value 새겨요 */
+  | { op: "starAim"; value: number }
+  /** 모든 적의 별을 지우고, 지운 별 하나마다 대상 아군의 다음 타격 피해 +value */
+  | { op: "starsToHitBonus"; value: number }
   /** 대상 적에게 별을 새겨요. ifStarred: 별이 있는 적에게만 */
   | { op: "star"; value: number; ifStarred?: true }
   | { op: "clearStars" }
@@ -85,8 +90,6 @@ export type CardOp =
   | { op: "delayedHit"; value: number }
   // 유리 도롱뇽
   | { op: "wall"; value: number }
-  /** 다음 턴 시작에 방어도가 이만큼까지 남아요 */
-  | { op: "wallKeep"; value: number }
   /** 이번 턴 이 정령의 벽이 아군을 대신 막으면 다음 턴 시작에 벽을 얻어요 */
   | { op: "wallEcho"; value: number }
   /** 이번 턴 벽이 깨지면 깬 적에게 피해. direct: 직접 맞아 방어도가 다 떨어져도 */
@@ -95,15 +98,21 @@ export type CardOp =
   | { op: "afterglow"; value: number }
   /** 이번 턴 벽이 막은 피해의 pct만큼 그 적에게 */
   | { op: "ricochet"; pct: number }
+  /** 이번 턴 벽이 막은 피해의 pct만큼 다음 턴에 얻는 벽이 늘어나요 */
+  | { op: "tempered"; pct: number }
   // 진주조개
   | { op: "hold"; value: number }
   | { op: "highTide" }
   /** 이 카드를 품을 때마다 수치가 value 늘어나요 */
   | { op: "growOnHold"; value: number }
+  /** 품은 카드의 주인에게 방어도 */
+  | { op: "blockHeldOwners"; value: number }
   // 산양
   /** 차징 중인 적이면 브레이크 + 휘청 onBreak, 아니고 허점 창이면 휘청 value */
   | { op: "ram"; value: number; onBreak: number }
-  | { op: "staggerIfOpening"; value: number }
+  | { op: "staggerIfOpening"; value: number; /** 살아 있는 적이 하나면 휘청 이만큼 더 */ solo?: number }
+  /** 휘청 중인 적 하나마다 방어도 */
+  | { op: "blockPerStaggered"; value: number }
   | { op: "staggerIfStaggered"; value: number }
   | { op: "timeCutNext"; value: number }
   | { op: "breakCharging" }

@@ -53,7 +53,8 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
         const hits = op.hitsPerStar ? statusN(e, "star") : (op.hits ?? 1);
         const burn = statusN(e, "burn");
         const burnBonus = (burn > 0 ? (op.burnedBonus ?? 0) : 0) + Math.min(op.perBurnMax ?? Infinity, Math.floor((op.perBurn ?? 0) * burn));
-        const perHit = base + (op.perStar ?? 0) * statusN(e, "star") + burnBonus;
+        const pulled = Math.min(op.pulledMax ?? Infinity, Math.floor((op.perPulled ?? 0) * (ctx.b.resolving?.pulled ?? 0)));
+        const perHit = base + (op.perStar ?? 0) * statusN(e, "star") + burnBonus + pulled;
         for (let t = 0; t < times; t++)
           for (let h = 0; h < hits; h++) if (!e.dead) ctx.b.hit(ctx.owner, e, perHit, ctx.def.element, false);
       }
@@ -67,6 +68,7 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       const burned = [
         op.burnedBonus ? `대상이 화상 상태이면 피해가 ${op.burnedBonus} ${polite("늘어나")}.` : "",
         op.perBurn ? `대상의 화상 ${Math.round(1 / op.perBurn)}마다 피해가 1 ${polite("늘어나")}.${op.perBurnMax ? ` 최대 ${op.perBurnMax}.` : ""}` : "",
+        op.perPulled ? `받아칠 기회를 쓰면 끌어온 공격 피해의 ${Math.round(op.perPulled * 100)}%만큼 피해가 ${polite("늘어나")}.${op.pulledMax ? ` 최대 ${op.pulledMax}.` : ""}` : "",
       ].filter(Boolean).join(" ");
       return [{ to: t.foe, core: `피해를 ${hits} 입히`, after: again ?? (star || burned || undefined) }];
     },
@@ -251,10 +253,16 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
   },
   draw: {
     immediate: true,
-    resolve: (ctx, op) => ctx.b.drawCards(op.ifReady !== undefined && statusN(ctx.owner, "ready") > 0 ? op.ifReady : op.value),
+    resolve(ctx, op) {
+      const { b, owner } = ctx;
+      if (op.ifReady !== undefined && statusN(owner, "ready") > 0) return b.drawCards(op.ifReady);
+      if (op.ifHeld !== undefined && b.hold.held.length + b.hand.filter((c) => c.held).length > 0) return b.drawCards(op.ifHeld);
+      b.drawCards(op.value);
+    },
     describe: (op) => [{
       to: "", core: `카드를 ${op.value}장 뽑`,
-      after: op.ifReady !== undefined ? `받아칠 기회가 있으면 ${op.ifReady}장 ${polite("뽑")}.` : undefined,
+      after: op.ifReady !== undefined ? `받아칠 기회가 있으면 ${op.ifReady}장 ${polite("뽑")}.`
+        : op.ifHeld !== undefined ? `품은 카드가 손에 있으면 ${op.ifHeld}장 ${polite("뽑")}.` : undefined,
     }],
   },
   vulnerable: {
@@ -317,10 +325,11 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
   },
   hitBonus: {
     resolve(ctx, op) {
-      for (const s of ctx.allies) ctx.b.addStatus(s, "hitBonus", op.hits, { strength: op.value });
+      for (const s of ctx.allies) ctx.b.addStatus(s, op.vsStarred ? "omen" : "hitBonus", op.hits, { strength: op.value });
     },
     describe(op, t) {
       const who = t.allyWho;
+      if (op.vsStarred) return [{ to: "", core: `${who}별이 새겨진 적을 치는 다음 타격 ${op.hits}번의 피해가 ${op.value} 늘어나` }];
       return [{ to: "", core: `${who}다음 타격 ${op.hits}번의 피해가 ${op.value} 늘어나` }];
     },
   },
@@ -331,6 +340,25 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       for (const s of ctx.allies) ctx.b.addStatus(s, "starlight", op.hits);
     },
     describe: (op, t) => [{ to: "", core: `${t.allyWho}다음 타격 ${op.hits}번이 맞힌 적에게 별을 1씩 새기` }],
+  },
+  starAim: {
+    resolve(ctx, op) {
+      for (const s of ctx.allies) ctx.b.addStatus(s, "starAim", op.value);
+    },
+    describe: (op, t) => [{ to: "", core: `${t.allyWho}다음 타격이 맞힌 적에게 별을 ${op.value} 새기` }],
+  },
+  starsToHitBonus: {
+    resolve(ctx, op) {
+      const n = starsOnAll(ctx.b);
+      for (const e of ctx.b.aliveEnemies()) {
+        if (statusN(e, "star") === 0) continue;
+        delete e.status.star;
+        ctx.b.emit({ k: "status", ref: refOf(e), text: "별 0" });
+      }
+      if (n === 0) return;
+      for (const s of ctx.allies) ctx.b.addStatus(s, "hitBonus", 1, { strength: n * op.value });
+    },
+    describe: (op, t) => [{ to: "", core: "모든 적의 별을 지우", after: `지운 별 하나마다 ${t.allyWho}다음 타격 피해가 ${op.value} ${polite("늘어나")}.` }],
   },
   star: {
     resolve(ctx, op) {
@@ -388,10 +416,6 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
     },
     describe: (op, t) => [{ to: "", core: `벽 방어도를 ${t.sc(t.main(op.value), "guard")} 얻` }],
   },
-  wallKeep: {
-    resolve: (ctx, op) => ctx.b.addStatus(ctx.owner, "wallKeep", scale(op.value, ctx.b.stat(ctx.owner, "guard"))),
-    describe: (op, t) => [{ to: "", core: `다음 턴 시작에 방어도가 ${t.sc(op.value, "guard")}까지 남` }],
-  },
   wallEcho: {
     resolve: (ctx, op) => ctx.b.addStatus(ctx.owner, "wallEcho", scale(op.value, ctx.b.stat(ctx.owner, "guard"))),
     describe: (op, t) => [{ to: "", core: `이번 턴에 이 정령의 벽이 아군을 대신 막으면 다음 턴 시작에 벽 방어도를 ${t.sc(op.value, "guard")} 얻` }],
@@ -424,6 +448,11 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
     describe: (op) => [{ to: "", core: `이번 턴에 벽이 막은 피해의 ${Math.round(op.pct * 100)}%를 공격한 적에게 되돌리` }],
   },
 
+  tempered: {
+    resolve: (ctx, op) => ctx.b.addStatus(ctx.owner, "tempered", Math.round(op.pct * 100)),
+    describe: (op) => [{ to: "", core: `이번 턴에 벽이 막은 피해의 ${Math.round(op.pct * 100)}%만큼 다음 턴에 얻는 벽이 늘어나` }],
+  },
+
   // ───────────── 진주조개 ─────────────
   hold: {
     resolve(ctx, op) {
@@ -431,6 +460,14 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       ctx.b.log(`이번 턴 끝에 ${op.value}장 품기`);
     },
     describe: (op) => [{ to: "", core: `이번 턴 끝에 손에 남은 카드를 ${op.value}장 품` }],
+  },
+  blockHeldOwners: {
+    resolve(ctx, op) {
+      const { b, owner } = ctx;
+      const v = round(scale(ctx.main(op.value), b.stat(owner, "guard")) * b.passiveMult(owner, "supportMult"));
+      for (const s of b.aliveSpirits()) if (b.holdsHeldCard(s)) b.gainBlock(s, v);
+    },
+    describe: (op, t) => [{ to: "", core: `품은 카드가 손에 있는 아군이 모두 방어도를 ${t.sc(t.main(op.value), "guard")} 얻` }],
   },
   highTide: {
     resolve: (ctx) => void (ctx.b.hold.highTide = true),
@@ -456,9 +493,13 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
   },
   staggerIfOpening: {
     resolve(ctx, op) {
-      for (const e of ctx.enemies) if (!e.dead && ctx.b.inOpening(e, ctx.b.now)) ctx.b.addStatus(e, "stagger", op.value);
+      const solo = ctx.b.aliveEnemies().length === 1 ? (op.solo ?? 0) : 0;
+      for (const e of ctx.enemies) if (!e.dead && ctx.b.inOpening(e, ctx.b.now)) ctx.b.addStatus(e, "stagger", op.value + solo);
     },
-    describe: (op, t) => [{ to: "", core: `허점 창에 닿으면 ${t.foeOf === "모든 적의" ? "허점 창에 든 적이 모두" : "대상이"} 휘청을 ${op.value} 받` }],
+    describe: (op, t) => [{
+      to: "", core: `허점 창에 닿으면 ${t.foeOf === "모든 적의" ? "허점 창에 든 적이 모두" : "대상이"} 휘청을 ${op.value} 받`,
+      after: op.solo ? `적이 하나뿐이면 휘청을 ${op.solo} 더 ${polite("받")}.` : undefined,
+    }],
   },
   staggerIfStaggered: {
     resolve(ctx, op) {
@@ -470,6 +511,14 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
     immediate: true,
     resolve: (ctx, op) => ctx.b.addStatus(ctx.owner, "footing", op.value),
     describe: (op) => [{ to: "", core: `이 정령의 다음 카드 시간이 ${op.value}ms 줄어들` }],
+  },
+  blockPerStaggered: {
+    resolve(ctx, op) {
+      const { b, owner } = ctx;
+      const n = b.aliveEnemies().filter((e) => statusN(e, "stagger") > 0).length;
+      if (n > 0) b.gainBlock(owner, round(scale(ctx.main(op.value) * n, b.stat(owner, "guard"))));
+    },
+    describe: (op, t) => [{ to: "", core: `휘청 중인 적 하나마다 방어도를 ${t.sc(t.main(op.value), "guard")} 얻` }],
   },
   breakCharging: {
     resolve(ctx) {
@@ -511,6 +560,7 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       const st = stackOf(to, "ready");
       st.n += n;
       st.until = Math.max(st.until ?? 0, from.until ?? 0);
+      st.strength = Math.max(st.strength, from.strength);
       spendStatus(ctx.owner, "ready", n);
       ctx.b.emit({ k: "status", ref: refOf(to), text: `받아칠 기회 ${st.n}` });
       ctx.b.emit({ k: "ready", id: to.id });

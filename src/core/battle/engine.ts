@@ -1,6 +1,6 @@
 import type { Rng } from "../rng";
 import type { AuraId, CardDef, Element, EnemyTargetRule, StatKey } from "../types";
-import type { BCard, BEnemy, BSpirit, BattleEvent, HoldState, StarState, StatusId } from "./state";
+import type { BCard, BEnemy, BSpirit, BattleEvent, HoldState, Planned, StarState, StatusId } from "./state";
 
 /** 피해 받기의 출처 */
 export interface HurtOptions {
@@ -86,7 +86,9 @@ export interface Engine {
   /** 낙하 고르기를 열어요 */
   offerFall(): void;
   /** 받아칠 기회를 줘요 */
-  gainReady(s: BSpirit): void;
+  gainReady(s: BSpirit, pulled?: number): void;
+  /** 지금 재생 중인 카드 */
+  readonly resolving: Planned | null;
   drawCards(n: number): void;
   /** 전투 중 생기는 카드의 uid */
   newCardUid(): number;
