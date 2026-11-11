@@ -174,3 +174,9 @@
 - N3 떠날 곳: https://claude.ai/artifact/72FhtacRUUBnhh3BAZok9S
 - N4 돌아오는 곳: https://claude.ai/artifact/4For9c73Q1tshMcagjExrU
 - 프레임: /mnt/project-files/design/batch-c-r3/N1~N4/
+
+## 묶음 C 라운드 4 (2026-11-11 오전, 메인 화면 메뉴 배치만. 배경 미정. N1·N2는 Lucy 폐기)
+- L1 왼쪽 세로 줄: https://claude.ai/artifact/2GgF3WN1krad5WNv7z61Q4
+- L2 오른쪽 아래 묶음: https://claude.ai/artifact/8uz4t8M1oCHY7gkv4jcQ4p
+- L3 아래 가로 줄: https://claude.ai/artifact/AqBM1GsKRToxSgBQwHNw2M
+- 프레임: /mnt/project-files/design/batch-c-r4/L1~L3/
