@@ -10,7 +10,7 @@ import assetsJson from "../data/assets.json";
 import growthJson from "../data/growth.json";
 import { DEFAULT_LOCALE, cardText, type Locale } from "./l10n";
 import type {
-  CardData, CardDef, EncounterDef, EnemyDef, EnemyMove, EnemyScale, EquipDef, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
+  CardData, CardDef, EncounterDef, EnemyDef, EnemyMove, EnemyScale, EquipDef, EquipRarity, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
 } from "./types";
 
 export const C = constantsJson;
@@ -119,6 +119,8 @@ export const ROLE_NAME: Record<string, string> = {
 export const RARITY_NAME: Record<string, string> = {
   basic: "기본", common: "일반", advanced: "고급", rare: "희귀",
 };
+/** 장비 희귀도 이름 (0061) */
+export const EQUIP_RARITY_NAME: Record<EquipRarity, string> = { generic: "일반", exclusive: "유니크", boss: "전설" };
 
 /** 공격 속성 → 대상 속성 배율. */
 export function affinity(atk: Element, def: Element): number {
