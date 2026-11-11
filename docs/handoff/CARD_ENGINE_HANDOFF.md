@@ -40,7 +40,7 @@
 
 ### 장비 기반 (장비 핸드오프 `docs/handoff/EQUIPMENT_HANDOFF.md`)
 - 들어간 것: `EquipDef` 스키마 · `src/data/equipment/`(비어 있음) · `validate.ts`의 `equipProblems` · 능력치 층 리졸버 `resolveStat`(출처 태그) · 전투 조건부 층 · `critStat` · `EQUIP_PASSIVES` · `RunSpirit.equipment` · `GardenSpirit.equipment` · `growth.json` 칸 수 · 공명 상한. 테스트 `src/core/stats.test.ts`.
-- 남은 것: 장비 데이터(이름 · 그림은 Lucy), 보상 · 남기기 · 분해 흐름(0049), 장비 효과 훅 항목, 문구(`locales/<lang>/equipment.json`), 화면.
+- 남은 것: 장비 데이터(이름 · 그림은 Lucy), 보상 · 남기기 · 분해 흐름(0049), 장비 효과 훅 항목, 전용 장비의 대표 카드 변형(0055, `EquipTier` 필드), 문구(`locales/<lang>/equipment.json`), 화면.
 
 ### 2단계 시도본 (참고만)
 - 리팩터링 전 방식의 시도본은 2단계가 머지된 뒤 지웠어요 (2026-11-11).
