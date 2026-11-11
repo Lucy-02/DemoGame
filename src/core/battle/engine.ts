@@ -41,7 +41,7 @@ export interface Engine {
   enemy(uid: number): BEnemy;
   stat(s: BSpirit, k: StatKey): number;
   chillThreshold(e: BEnemy): number;
-  /** 끝나는 시각 t가 적 e의 남은 행동 직전 창 안인지 (허점타) */
+  /** 끝나는 시각 t가 적 e의 남은 행동 직전 창 안인지 (허점타). 적 행동과 같은 시각은 창 밖이에요 (0059) */
   inOpening(e: BEnemy, t: number): boolean;
   /** 이 정령에게 걸린 지속 효과의 배율 훅을 모두 곱한 값 */
   passiveMult(s: BSpirit, hook: MultHook): number;
