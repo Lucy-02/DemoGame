@@ -34,13 +34,9 @@ describe("전투 보상: 정령마다 1장 (0049 1절)", () => {
     }
   });
 
-  it("전용 카드가 있는 정령은 전용 카드만, 없는 정령은 같은 속성의 주인 없는 카드", () => {
+  it("정령마다 그 정령의 전용 카드만 나와요", () => {
     const r = run(3, true);
-    for (const c of r.rollBattleReward("elite").cards) {
-      const def = cardDef(c.cardId);
-      if (c.owner === "glass_salamander") expect(def.spirit).toBe("glass_salamander");
-      else expect(def.spirit).toBeUndefined();
-    }
+    for (const c of r.rollBattleReward("elite").cards) expect(cardDef(c.cardId).spirit).toBe(c.owner);
   });
 
   it("쓰러진 정령의 카드도 나와요 (필러 3)", () => {

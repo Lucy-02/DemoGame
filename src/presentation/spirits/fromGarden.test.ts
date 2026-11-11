@@ -49,7 +49,7 @@ describe("정령 관리 화면 데이터", () => {
   it("세션 명령: 키우면 성체가 되고 성격 효과가 시작돼요. 성장 길을 보면 새 카드 배지가 사라져요", () => {
     const s = new GardenSession(GARDENS.mixed);
     s.dispatch({ kind: "seeUnlocks", id: "fire_fox" });
-    s.dispatch({ kind: "evolve", id: "fire_fox" });
+    s.dispatch({ kind: "evolve", id: "fire_fox", branch: "burst" });
     const d = spiritsVM(s.state, "fire_fox").detail;
     expect(d.stage).toBe("성체");
     expect(d.overview.personality?.note).toBeUndefined();
@@ -72,7 +72,7 @@ describe("갈래 고르기 창 (0047 S15)", () => {
     expect(vm.branches[1].stats.map((s) => s.gain > 0)).toEqual([true, true, true, false]);
     expect(vm.branches[0].cards.map((c) => c.key)).toEqual(["glass_citadel"]);
     expect(branchPickVM(g, "glass_salamander", "garden", [], "return")!.selected).toBe(0);
-    expect(branchPickVM(g, "fire_fox", "garden")).toBeUndefined();
+    expect(branchPickVM(GARDENS.mixed, "glass_salamander", "garden")).toBeUndefined();
   });
 
   it("둘 다 잠기면 고른 갈래가 없어요", () => {

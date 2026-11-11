@@ -321,3 +321,63 @@ describe("카드 수정안 (갈래 규칙과 카드 수정안 2026-11-12)", () =
     expect(d.amount).toBe(Math.round(3 * (C.ready_mult_small as number) * power));
   });
 });
+
+describe("불여우 · 안개 고양이 갈래 카드 (갈래 규칙과 카드 수정안 2026-11-12)", () => {
+  const PARTY = ["fire_fox", "mist_cat", "glass_salamander"];
+
+  it("장명등이 있으면 화상이 타도 줄지 않고, 요원지화는 적이 하나면 덜 줄여요", () => {
+    const lamp = battleWith(PARTY, []);
+    lamp.addAura(lamp.spirit("fire_fox"), "eternal_lamp", 1);
+    lamp.addStatus(lamp.enemy(1), "burn", 8);
+    lamp.endTurn();
+    expect(statusN(lamp.enemy(1), "burn")).toBe(8);
+
+    const wild = battleWith(PARTY, []);
+    wild.addAura(wild.spirit("fire_fox"), "wildfire", 2);
+    wild.addStatus(wild.enemy(1), "burn", 8);
+    wild.endTurn();
+    expect(statusN(wild.enemy(1), "burn")).toBe(6);
+  });
+
+  it("불꽃 옮기기는 적이 하나면 그 적의 화상을 이번 턴 끝에 지켜요", () => {
+    const b = battleWith(PARTY, [["flame_pass", "fire_fox"]]);
+    b.addStatus(b.enemy(1), "burn", 8);
+    b.play(100, E1);
+    b.endTurn();
+    expect(statusN(b.enemy(1), "burn")).toBe(8);
+  });
+
+  it("여우불은 화상의 두 배만큼 피해를 주고 화상을 지워요", () => {
+    const b = battleWith(PARTY, [["foxfire", "fire_fox"]]);
+    b.addStatus(b.enemy(1), "burn", 5);
+    const hp = b.enemy(1).hp;
+    b.play(100, E1);
+    b.endTurn();
+    expect(statusN(b.enemy(1), "burn")).toBe(0);
+    expect(hp - b.enemy(1).hp).toBeGreaterThanOrEqual(10);
+  });
+
+  it("살금 · 상강 · 깊은 빙결은 적의 행동을 늦추고, 깊은 빙결은 한 턴에 정한 번까지만 더 늦춰요", () => {
+    const b = battleWith(PARTY, [["creep", "mist_cat"], ["deep_freeze", "mist_cat"], ["deep_freeze", "mist_cat"]], ["moss_slime"], "glass_salamander");
+    b.play(100, E1);
+    b.play(101, E1);
+    b.play(102, E1);
+    b.endTurn();
+    // 살금 400 → 깊은 빙결 400(두 번째) → 냉기가 차서 빙결. 세 번째 늦춤이라 깊은 빙결은 더 늦추지 않아요
+    const delays = b.drain().filter((e) => e.k === "delay").map((e) => (e as { ms: number }).ms);
+    expect(delays).toEqual([400, 400, C.freeze_delay_ms]);
+  });
+
+  it("잔물결은 냉기가 있는 적 수만큼, 안개 장막은 아군을 친 적에게 냉기", () => {
+    const b = battleWith(PARTY, [["whisker_twitch", "mist_cat"]]);
+    b.draw = [card("fire_claw", "fire_fox", 10), card("fire_claw", "fire_fox", 11)];
+    b.addStatus(b.enemy(1), "chill", 1);
+    b.play(100);
+    expect(b.hand).toHaveLength(1);
+
+    const veil = battleWith(PARTY, []);
+    veil.addAura(veil.spirit("mist_cat"), "mist_veil", 2);
+    veil.endTurn();
+    expect(statusN(veil.enemy(1), "chill")).toBeGreaterThan(0);
+  });
+});

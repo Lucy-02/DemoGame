@@ -12,9 +12,14 @@ const fox = (g: Garden) => gardenSpirit(g, "fire_fox");
 /** 경험을 n까지 채워요 */
 const withExp = (g: Garden, exp: number): Garden => ({ ...g, spirits: g.spirits.map((s) => ({ ...s, exp })) });
 /** 갈래를 모두 열고 키워요. 갈래 고르기면 branch(없으면 첫 갈래)로 */
+/** 이 정령의 갈래를 모두 열어 둔 정원 */
+const opened = (g: Garden, id: string): Garden => {
+  const all = GROWTH.evolutions.filter((e) => e.spirit === id && e.branch).map((e) => e.branch!);
+  return { ...g, spirits: g.spirits.map((s) => (s.id === id ? { ...s, openBranches: all } : s)) };
+};
 const grow = (g: Garden, id: string, branch?: string): Garden => {
   const all = GROWTH.evolutions.filter((e) => e.spirit === id && e.branch).map((e) => e.branch!);
-  const open = { ...g, spirits: g.spirits.map((s) => (s.id === id ? { ...s, openBranches: all } : s)) };
+  const open = opened(g, id);
   const pick = evolveChoices(gardenSpirit(open, id)).length > 1 ? branch ?? all[0] : undefined;
   return evolve(open, id, undefined, pick);
 };
@@ -32,12 +37,14 @@ describe("정원 (0021)", () => {
     expect(grantBattle(g, PARTY, "boss").act1Boss).toBe(true);
   });
 
-  it("성체는 레벨만, 각성체는 레벨과 자람 조건이 모두 돼야 키울 수 있어요", () => {
+  it("성체는 레벨과 열린 갈래, 각성체는 레벨과 자람 조건이 모두 돼야 키울 수 있어요", () => {
     let g = newGarden(1);
     expect(canEvolve(fox(g))?.ok).toBe(false);
     g = withExp(g, GROWTH.levels[3]);
+    expect(canEvolve(fox(g))).toMatchObject({ level: true, open: false, ok: false });
+    g = opened(g, "fire_fox");
     expect(canEvolve(fox(g))).toMatchObject({ ok: true, evo: { to: "adult" } });
-    g = evolve(g, "fire_fox");
+    g = evolve(g, "fire_fox", undefined, "burst");
     expect(fox(g).stage).toBe("adult");
 
     g = withExp(g, GROWTH.levels[5]);
@@ -57,7 +64,7 @@ describe("정원 (0021)", () => {
     expect(keys.has("fire_fox_lv3")).toBe(true);
     expect(keys.has("any_lv3")).toBe(true);
     expect(keys.has("any_adult")).toBe(false);
-    g = evolve(withExp(g, GROWTH.levels[3]), "mist_cat");
+    g = grow(withExp(g, GROWTH.levels[3]), "mist_cat");
     expect([...unlockKeys(g)].filter((k) => k.endsWith("adult"))).toEqual(["mist_cat_adult", "any_adult"]);
     // 데이터의 해금 키는 모두 정원이 만들 수 있는 키예요
     let full = withExp(newGarden(1, SPIRITS.map((s) => s.id)), GROWTH.levels[3]);
@@ -70,7 +77,7 @@ describe("정원 (0021)", () => {
   });
 
   it("할 일: 키우기 · 안 본 해금 · 열린 에피소드", () => {
-    let g = withExp(newGarden(1), GROWTH.levels[3]);
+    let g = opened(withExp(newGarden(1), GROWTH.levels[3]), "fire_fox");
     expect(todos(fox(g)).map((t) => t.kind)).toEqual(["evolve", "unlock", "unlock"]);
     g = { ...g, spirits: g.spirits.map((s) => ({ ...s, seen: ["fire_fox_lv2", "fire_fox_lv3"], affinity: GROWTH.episodes[0].affinity })) };
     expect(todos(fox(g))).toEqual([{ kind: "evolve", to: "adult" }, { kind: "episode" }]);
@@ -168,52 +175,31 @@ describe("처음 세 마리 (0053)", () => {
 });
 
 describe("갈래 고르기 (0027)", () => {
-  // 데이터에 갈래가 들어오기 전이라, 불여우 성체 줄을 갈래 둘로 잠깐 바꿔서 봐요
-  const saved = [...GROWTH.evolutions];
-  const card = CARDS.find((c) => c.id === "backfire")!;
-  const withBranches = () => {
-    const i = GROWTH.evolutions.findIndex((e) => e.spirit === "fire_fox" && e.from === "baby");
-    const base = GROWTH.evolutions[i];
-    GROWTH.evolutions.splice(i, 1, { ...base, branch: "burst" }, { ...base, branch: "spread", opens: { cards: 2 } });
-    card.branch = "spread";
-  };
-  const restore = () => {
-    GROWTH.evolutions.splice(0, GROWTH.evolutions.length, ...saved);
-    delete card.branch;
-  };
-
   it("갈래 고르기는 갈래 없이 키울 수 없고, 고른 갈래가 남아요", () => {
-    withBranches();
-    try {
-      const g = withExp(newGarden(1), GROWTH.levels[3]);
-      expect(evolve(g, "fire_fox")).toBe(g);
-      const after = fox(evolve(g, "fire_fox", undefined, "burst"));
-      expect(after).toMatchObject({ stage: "adult", branch: "burst" });
-      expect(toRunSpirit(after).branch).toBe("burst");
-    } finally { restore(); }
+    const g = opened(withExp(newGarden(1), GROWTH.levels[3]), "fire_fox");
+    expect(evolve(g, "fire_fox")).toBe(g);
+    const after = fox(evolve(g, "fire_fox", undefined, "burst"));
+    expect(after).toMatchObject({ stage: "adult", branch: "burst" });
+    expect(toRunSpirit(after).branch).toBe("burst");
   });
 
   it("잠긴 갈래는 그 갈래 카드를 모아야 열리고, 모은 수와 열린 갈래는 판을 넘어 남아요", () => {
-    withBranches();
-    try {
-      let g = withExp(newGarden(1), GROWTH.levels[3]);
-      expect(canEvolve(fox(g), undefined, "spread")).toMatchObject({ level: true, open: false, ok: false });
-      expect(evolve(g, "fire_fox", undefined, "spread")).toBe(g);
-      g = openBranches(g, { fire_fox: ["backfire"] });
-      expect(fox(g).openBranches ?? []).toEqual([]);
-      expect(fox(g).branchCards).toEqual({ spread: 1 });
-      const spreadEvo = evolveChoices(fox(g))[1].evo;
-      expect(branchProgress(fox(g), spreadEvo, ["backfire"])).toEqual({ have: 2, need: 2 });
-      g = openBranches(g, { mist_cat: ["backfire"] });
-      expect(fox(g).branchCards).toEqual({ spread: 1 });
-      g = openBranches(g, { fire_fox: ["backfire"] });
-      expect(fox(g).openBranches).toEqual(["spread"]);
-      expect(fox(g).branchCards).toBeUndefined();
-      expect(gardenSpirit(g, "mist_cat").openBranches).toBeUndefined();
-      g = openBranches(g, {});
-      expect(evolveChoices(fox(g)).map((c) => c.ok)).toEqual([true, true]);
-      expect(fox(evolve(g, "fire_fox", undefined, "spread")).branch).toBe("spread");
-    } finally { restore(); }
+    let g = withExp(newGarden(1), GROWTH.levels[3]);
+    expect(canEvolve(fox(g), undefined, "spread")).toMatchObject({ level: true, open: false, ok: false });
+    expect(evolve(g, "fire_fox", undefined, "spread")).toBe(g);
+    g = openBranches(g, { fire_fox: ["sparks", "kindling", "ignite"] });
+    expect(fox(g).openBranches ?? []).toEqual([]);
+    expect(fox(g).branchCards).toEqual({ burst: 1, spread: 1 });
+    const spreadEvo = evolveChoices(fox(g))[1].evo;
+    expect(branchProgress(fox(g), spreadEvo, ["flame_pass"])).toEqual({ have: 2, need: 3 });
+    g = openBranches(g, { mist_cat: ["creep"] });
+    expect(fox(g).branchCards).toEqual({ burst: 1, spread: 1 });
+    g = openBranches(g, { fire_fox: ["flame_pass", "fire_storm"] });
+    expect(fox(g).openBranches).toEqual(["spread"]);
+    expect(fox(g).branchCards).toEqual({ burst: 1 });
+    expect(gardenSpirit(g, "mist_cat").branchCards).toEqual({ freeze: 1 });
+    expect(evolveChoices(fox(g)).map((c) => c.ok)).toEqual([false, true]);
+    expect(fox(evolve(g, "fire_fox", undefined, "spread")).branch).toBe("spread");
   });
 
   it("런은 시작 덱을 빼고 받은 카드를 정령별로 세요", () => {

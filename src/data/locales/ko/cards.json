@@ -116,5 +116,15 @@
   "mist_breath_freeze_3": {"name": "입김"},
   "mist_breath_guard_1": {"name": "입김"},
   "mist_breath_guard_2": {"name": "입김"},
-  "mist_breath_guard_3": {"name": "입김"}
+  "mist_breath_guard_3": {"name": "입김"},
+  "kindling": {"name": "장작"},
+  "foxfire": {"name": "여우불"},
+  "eternal_lamp": {"name": "장명등"},
+  "sparks": {"name": "불똥"},
+  "flame_pass": {"name": "불꽃 옮기기"},
+  "wildfire": {"name": "요원지화"},
+  "creep": {"name": "살금"},
+  "first_frost": {"name": "상강"},
+  "deep_freeze": {"name": "깊은 빙결"},
+  "mist_veil": {"name": "안개 장막"}
 }

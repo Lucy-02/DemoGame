@@ -62,6 +62,10 @@ export interface Passive {
   wallBroke?: (b: Engine, s: BSpirit, v: number) => void;
   /** 누구에게든 적의 공격 1타가 들어갈 때 줄이는 값. target이 없으면 미리보기예요 */
   enemyHitCutAny?: (b: Engine, s: BSpirit, v: number, attacker: BEnemy, target: BSpirit | null) => number;
+  /** 적의 화상이 탈 때. 덜 줄이는 양을 돌려줘요 */
+  burnTickAny?: (b: Engine, s: BSpirit, v: number, e: BEnemy, burn: number) => number;
+  /** 아군 누구든 적의 공격 1타를 맞은 직후 */
+  allyAttackedAny?: (b: Engine, s: BSpirit, v: number, target: BSpirit, attacker: BEnemy) => void;
   /** 누구든 적에게 별을 새긴 직후 */
   starMarkedAny?: (b: Engine, s: BSpirit, v: number, marker: BSpirit, target: BEnemy) => void;
   /** 낙하를 고를 때 받는 장 수에 더하는 값 */
@@ -114,6 +118,32 @@ export const AURAS: Record<AuraId, AuraDef> = {
     text: (v) => `매 턴 ${v}번째로 사용하는 카드의 비용이 0이 ${polite("되")}.`,
     costAny(b, calc, v) {
       if (b.playedThisTurn.length === v - 1) calc.cost = 0;
+    },
+  },
+
+  // 불여우
+  eternal_lamp: {
+    scope: "owner",
+    text: () => `적의 화상이 타도 ${polite("줄지 않")}.`,
+    burnTickAny: (_b, _s, _v, _e, burn) => burn,
+  },
+  wildfire: {
+    scope: "owner",
+    text: (v) => `적의 화상이 탈 때마다 다른 적 하나에게 화상을 ${v} ${polite("옮기")}. 다른 적이 없으면 그 적의 화상이 ${v} 덜 ${polite("줄어들")}.`,
+    burnTickAny(b, _s, v, e) {
+      const others = b.aliveEnemies().filter((o) => o !== e);
+      if (!others.length) return v;
+      b.addStatus(b.rng.pick(others), "burn", v);
+      return 0;
+    },
+  },
+
+  // 안개 고양이
+  mist_veil: {
+    scope: "owner",
+    text: (v, sc) => `아군을 공격한 적에게 냉기를 ${sc(v, "focus")} ${polite("부여하")}.`,
+    allyAttackedAny(b, s, v, _target, attacker) {
+      if (!attacker.dead) b.addStatus(attacker, "chill", scale(v, b.stat(s, "focus")));
     },
   },
 

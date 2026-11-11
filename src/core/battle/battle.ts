@@ -188,6 +188,12 @@ export class Battle implements Engine {
     return 0;
   }
 
+  burnTick(e: BEnemy, burn: number): number {
+    let kept = 0;
+    for (const [p, v, s] of allPassives(this)) if (!s.downed) kept += p.burnTickAny?.(this, s, v, e, burn) ?? 0;
+    return kept;
+  }
+
   holdsHeldCard(s: BSpirit): boolean {
     return this.hand.some((c) => c.held && c.owner === s.id) || this.planned.some((p) => p.card.held && p.owner === s.id);
   }
@@ -278,8 +284,12 @@ export class Battle implements Engine {
   }
 
   freezeEnemy(e: BEnemy, extraMs = 0) {
-    const d = C.freeze_delay_ms + extraMs;
     this.emit({ k: "freeze", uid: e.uid });
+    this.delayEnemy(e, C.freeze_delay_ms + extraMs, "빙결");
+  }
+
+  delayEnemy(e: BEnemy, d: number, why: string) {
+    this.addStatus(e, "delayed", 1);
     const slot = this.slots.find((x) => x.uid === e.uid && !x.done);
     if (slot) {
       const at = slot.at + d;
@@ -287,16 +297,16 @@ export class Battle implements Engine {
         slot.done = true;
         e.carryAt = at - C.axis_ms;
         this.emit({ k: "delay", uid: e.uid, ms: d, nextTurn: true });
-        this.log(`${e.def.name} 빙결: 행동이 다음 턴으로 밀림`);
+        this.log(`${e.def.name} ${why}: 행동이 다음 턴으로 밀림`);
       } else {
         slot.at = at;
         this.emit({ k: "delay", uid: e.uid, ms: d, nextTurn: false });
-        this.log(`${e.def.name} 빙결: 행동 ${d}ms 늦어짐`);
+        this.log(`${e.def.name} ${why}: 행동 ${d}ms 늦어짐`);
       }
     } else {
       e.delayNext += d;
       this.emit({ k: "delay", uid: e.uid, ms: d, nextTurn: true });
-      this.log(`${e.def.name} 빙결: 다음 턴 행동 ${d}ms 늦어짐`);
+      this.log(`${e.def.name} ${why}: 다음 턴 행동 ${d}ms 늦어짐`);
     }
   }
 
@@ -557,6 +567,7 @@ export class Battle implements Engine {
     }
     this.hurtSpirit(s, dmg, pierce, { attacker: e });
     this.runAfterAttacked(s, e);
+    for (const [p, v, h] of allPassives(this)) if (!h.downed) p.allyAttackedAny?.(this, h, v, s, e);
   }
 
   private runAfterAttacked(s: BSpirit, e: BEnemy) {

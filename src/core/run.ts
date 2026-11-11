@@ -244,17 +244,9 @@ export class Run {
     return this.rng.int(r[0], r[1]);
   }
 
-  /**
-   * 이 정령이 전투 보상으로 배우는 카드 (0040 · 0049): 그 정령의 전용 카드(`spirit`).
-   * 전용 카드가 하나도 없는 정령(불여우 · 안개 고양이)은 같은 속성의 주인 없는 카드예요.
-   * 해금되고 전투 보상에서 나오는 카드만.
-   */
+  /** 이 정령이 전투 보상으로 배우는 카드 (0040 · 0049): 해금되고 전투 보상에서 나오는 그 정령의 전용 카드(`spirit`) */
   ownRewardPool(spiritId: string, rarity: Rarity): CardDef[] {
-    const element = SPIRITS.find((d) => d.id === spiritId)!.element;
-    const hasOwn = CARDS.some((c) => c.spirit === spiritId);
-    return CARDS.filter((c) =>
-      c.rarity === rarity && (c.obtain ?? "reward") === "reward" && this.isUnlocked(c)
-      && (hasOwn ? c.spirit === spiritId : !c.spirit && c.element === element));
+    return CARDS.filter((c) => c.rarity === rarity && (c.obtain ?? "reward") === "reward" && this.isUnlocked(c) && c.spirit === spiritId);
   }
 
   /** 정령마다 1장씩 (0049 1절). 희귀도는 장마다 따로 굴리고, 그 희귀도가 비면 한 단계씩 내려요. */

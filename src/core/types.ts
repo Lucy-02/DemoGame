@@ -51,7 +51,7 @@ export type CardOp =
   | { op: "burnSpread"; value: number; decay: number }
   /** 대상이 쓰러지면 남은 화상이 다음 적에게 옮겨 가요 */
   | { op: "burnCarry" }
-  | { op: "ignite" }
+  | { op: "ignite"; /** 화상 수치 × mult만큼 피해 */ mult?: number }
   | { op: "chill"; value: number; /** 이 냉기로 빙결시키면 넘친 냉기가 남아요 */ freezeKeep?: true; /** 이 냉기로 빙결시키면 이만큼 더 늦춰요 */ freezeDelayMs?: number; /** 이 냉기로 빙결시키면 약화 턴 */ freezeWeak?: number }
   /** HP가 가장 낮은 아군에게 방어도. frost: 이번 턴 그 아군을 때린 적에게 냉기 (한 번) */
   | { op: "blockLowest"; value: number; frost?: number }
@@ -68,6 +68,22 @@ export type CardOp =
   | { op: "aura"; aura: AuraId; value: number }
   | { op: "damageFromBlock"; /** 쓴 방어도를 없애요 */ spend?: true }
   | { op: "burnMultiply"; value: number }
+  /** 화상 부여. 대상이 이미 화상이면 ifBurned만큼 더 */
+  | { op: "burnMore"; value: number; ifBurned: number }
+  /** 무작위 적에게 피해 value를 hits번, 맞힐 때마다 화상 burn */
+  | { op: "randomHits"; value: number; hits: number; burn: number }
+  /** 대상 화상의 pct만큼 다른 적 모두에게. 적이 하나뿐이면 대신 이번 턴 끝에 대상의 화상이 줄지 않아요 */
+  | { op: "burnShare"; pct: number }
+  /** 대상의 다음 행동을 ms만큼 늦춰요 */
+  | { op: "delayNext"; ms: number }
+  /** 대상의 냉기를 모두 써서 냉기 1마다 다음 행동을 perMs만큼 늦춰요 */
+  | { op: "chillToDelay"; perMs: number }
+  /** 이번 턴 이미 늦춰진 적이면 한 번 더 ms만큼 늦춰요. 한 턴에 cap번까지 */
+  | { op: "delayAgain"; ms: number; cap: number }
+  /** 냉기가 있는 적 하나마다 카드 1장 (최대 max) */
+  | { op: "drawPerChilled"; max: number }
+  /** 모든 아군: 이번 턴 그 아군을 공격한 적에게 냉기 value (한 번) */
+  | { op: "frostGuardAll"; value: number }
   | { op: "damagePerPlayed"; element: Element; value: number }
   | { op: "repeatNext"; maxCost: number }
   | { op: "combo"; n: number; then: CardOp[] }
@@ -126,6 +142,7 @@ export type CardOp =
 
 export const AURA_IDS = [
   "blaze_wing", "deep_water", "root_down", "eye_of_storm",
+  "eternal_lamp", "wildfire", "mist_veil",
   "milky_way", "astraea", "starfall",
   "bellows", "glass_citadel", "hall_of_mirrors",
   "najeon", "black_pearl", "dragon_palace",

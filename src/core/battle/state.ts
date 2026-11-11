@@ -12,6 +12,8 @@ export const STATUS_IDS = [
   "wall", "wallHeat", "wallBroken", "wallTaken", "afterglow", "tempered",
   // 산양
   "stagger", "cancelNext", "footing",
+  // 안개 고양이
+  "delayed",
   // 카멜레온
   "hidden", "ready",
 ] as const;

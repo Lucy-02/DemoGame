@@ -45,9 +45,13 @@ export const STATUSES: Record<StatusId, StatusDef> = {
     turnEnd(b, h, st) {
       if (isEnemy(h)) b.hurtEnemy(h, round(st.n * vulnMult(h)), true);
       else b.hurtSpirit(h, st.n, true, { src: "화상" });
-      if (statusN(h, "burnHold") > 0) delete h.status.burnHold;
-      else if (st.n > 1) st.n = Math.min(st.n, Math.floor(st.n / 2) + (isEnemy(h) ? b.linger() : 0));
-      else st.n = 0;
+      if (statusN(h, "burnHold") > 0) {
+        delete h.status.burnHold;
+        return;
+      }
+      const kept = isEnemy(h) ? b.burnTick(h, st.n) : 0;
+      if (st.n > 1) st.n = Math.min(st.n, Math.floor(st.n / 2) + (isEnemy(h) ? b.linger() : 0) + kept);
+      else st.n = Math.min(st.n, kept);
     },
   },
   /** 문턱에 차면 0이 되고 빙결해요 */
@@ -207,6 +211,8 @@ export const STATUSES: Record<StatusId, StatusDef> = {
   stagger: { name: "휘청", lasts: "nextTurn", gainText: (_n, total) => `휘청 ${total}` },
   /** 다음 행동이 없어져요 */
   cancelNext: { name: "행동 취소", stack: "max", gainText: () => "다음 행동 취소" },
+  /** 이번 턴 늦춰진 횟수 */
+  delayed: { name: "늦춰짐", lasts: "thisTurn", silent: true, gainText: () => "" },
   /** 이 정령의 다음 카드 시간에서 빼요 (ms) */
   footing: { name: "디딤", clearsAtTurnStart: true, gainText: (n) => `다음 카드 -${n}ms` },
 
