@@ -1,11 +1,24 @@
 // 2단계 기믹: 별·낙하, 벽, 품기, 휘청·브레이크·취소, 숨음·받아칠 기회 (CARD_ENGINE_HANDOFF 2-2)
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Battle, statusN, type BCard, type BattleEvent } from "./battle";
-import { C, cardDef } from "./data";
+import { C, cardDef, enemyDef } from "./data";
 import { Rng } from "./rng";
 import { Run } from "./run";
 
 const E1 = { side: "e", uid: 1 } as const;
+
+// 이 파일의 기본 적은 "첫 턴에 앞열을 6으로 치는 적"이어야 해요. 잡몹 값이 바뀌어도 기믹 테스트가 흔들리지 않게 행동을 고정해요.
+const dummy = enemyDef("moss_slime");
+const realPattern = dummy.pattern;
+beforeAll(() => {
+  dummy.pattern = [
+    { name: "몸통박치기", actions: [{ type: "attack", dmg: 6, target: "front" }] },
+    { name: "끈적이기", actions: [{ type: "weak", turns: 1, target: "front" }] },
+  ];
+});
+afterAll(() => {
+  dummy.pattern = realPattern;
+});
 
 /** 파티와 손을 정해 둔 전투. 마력은 넉넉하고 치명타는 나지 않아요. 카드는 턴 종료 때 시간축에서 풀려요 (0036). */
 function battleWith(party: string[], hand: [cardId: string, owner: string][], enemies = ["moss_slime"], frontId = party[0]): Battle {
