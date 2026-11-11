@@ -1,6 +1,7 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
 import { ASSETS, C, ELEMENT_COLOR, ELEMENT_NAME, ROLE_NAME, cardDef, type VisualAsset } from "../../../core/data";
+import { returnHp } from "../../../core/stats";
 import { Battle, statusN, statusStrength, type BCard, type BEnemy, type BSpirit, type BattleEvent, type Ref } from "../../../core/battle";
 import { Rng } from "../../../core/rng";
 import { getRun } from "../../../core/run";
@@ -451,7 +452,7 @@ export class BattleScene extends Phaser.Scene {
     if (b.result === "ongoing" || this.finished) return;
     this.finished = true;
     const run = getRun();
-    for (const s of b.spirits) run.spirit(s.id).hp = s.downed ? C.downed_return_hp : s.hp;
+    for (const s of b.spirits) run.spirit(s.id).hp = s.downed ? returnHp(run.spirit(s.id)) : s.hp;
     if (b.result === "defeat") {
       this.banner("모두 쓰러졌어요…", 0x5a2020);
       this.time.delayedCall(1400, () => this.scene.start("EndScene", { victory: false }));

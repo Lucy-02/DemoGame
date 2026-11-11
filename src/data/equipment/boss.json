@@ -1,0 +1,5 @@
+[
+  {"id": "moss_hammer", "owner": null, "rarity": "boss", "tiers": [{"stats": [], "effects": [{"passive": "first_card_cost", "value": 1}]}], "downside": {"stats": [{"stat": "hp", "op": "pct", "value": -0.2}]}},
+  {"id": "obsidian_scythe", "owner": null, "rarity": "boss", "tiers": [{"stats": [], "effects": [{"passive": "time_cut", "value": 150}]}], "downside": {"stats": [{"stat": "guard", "op": "add", "value": -2}]}},
+  {"id": "stone_axe", "owner": null, "rarity": "boss", "tiers": [{"stats": [], "effects": [{"passive": "carry_block", "value": 0.5}]}], "downside": {"stats": [{"stat": "power", "op": "add", "value": -2}]}}
+]

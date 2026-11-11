@@ -101,7 +101,8 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
   {
     id: "crit", order: 40,
     apply(c) {
-      const chance = critStat(c.attacker.run, "crit_chance") + c.attacker.critPity;
+      let chance = critStat(c.attacker.run, "crit_chance") + c.attacker.critPity;
+      for (const [p, v] of passivesOf(c.attacker)) chance += p.critChance?.(c.attacker, v, c.target) ?? 0;
       c.crit = c.b.rng.next() < chance;
       c.attacker.critPity = c.crit ? 0 : c.attacker.critPity + C.crit_pity;
       c.amount *= c.crit ? critStat(c.attacker.run, "crit_mult") : 1;
@@ -118,7 +119,10 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
         c.opening = true;
         spendStatus(c.target, "stagger");
       }
-      c.amount *= c.opening ? C.opening_mult : 1;
+      if (!c.opening) return;
+      let mult = C.opening_mult;
+      for (const [p, v] of passivesOf(c.attacker)) mult += p.openingBonus?.(c.attacker, v) ?? 0;
+      c.amount *= mult;
     },
   },
   { id: "round", order: 90, apply: (c) => (c.amount = round(c.amount)) },
@@ -206,6 +210,7 @@ export const CARD_TIME_STAGES: Stage<TimeCalc>[] = [
   { id: "highTide", order: 20, apply: (c) => { if (c.card.heldFast) c.ms = Math.round(c.ms / 2); } },
   { id: "held", order: 30, apply: (c) => { if (c.card.held) c.ms -= C.hold_time_cut_ms; } },
   { id: "footing", order: 40, apply: (c) => (c.ms -= statusN(c.owner, "footing")) },
+  { id: "passives", order: 45, apply: (c) => { for (const [p, v] of passivesOf(c.owner)) c.ms -= p.timeCut?.(c.b, c.owner, v, c.card) ?? 0; } },
   { id: "floor", order: 50, apply: (c) => (c.ms = Math.max(0, c.ms)) },
   {
     id: "speed", order: 90,
