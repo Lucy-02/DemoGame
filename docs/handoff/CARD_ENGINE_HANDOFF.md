@@ -45,7 +45,8 @@
 - 장비 데이터가 있어서 정예 보상이 런 난수를 한 번 더 쓰고, 시뮬의 정령이 무기를 받아요. 장비 없는 기준선과 숫자가 조금 달라요.
 - 범용 6개(`generic.json`)와 보스 3개(`boss.json`)도 들어 있어요. 효과는 `EQUIP_PASSIVES`: `start_block`, `start_block_return`, `first_hit`, `longest_card_hit`, `linger_once`, `linger_turn`, `first_card_time`, `first_card_time_opening`, `crit_vs_full`, `crit_vs_healthy`, `first_card_cost`, `time_cut`, `carry_block`. 방패는 조건부 능력치(`hpBelow`, `hurt`)만 써요. 테스트 `src/core/battle.equipment.test.ts`.
 - 활의 "덜 줄어듦"은 누가 건 상태인지 가리지 않고 적의 화상 · 약화 · 취약에 적용돼요. 쓰러졌다 돌아올 때의 HP는 `stats.ts`의 `returnHp()`가 정해요.
-- 남은 것: 장비와 기술 카드의 이름 · 그림(Lucy), 보스 보상 고르기 · 남기기 · 분해 흐름(0049), 문구(`locales/<lang>/equipment.json`), 화면.
+- 보상 흐름: 정예는 `rollBattleReward("elite")` → `giveRewardEquipment` 또는 `skipRewardEquipment`, 보스는 `rollBossEquipment()` → `giveEquipment`, 런 끝은 `garden.ts`의 `keepEquipment(g, party, keep)`. 남겼던 장비를 다시 남기면 공명이 1 오르고 단계 상한에서 멈춰요. 남기지 않은 장비는 사라져요.
+- 남은 것: 장비와 기술 카드의 이름 · 그림(Lucy), 문구(`locales/<lang>/equipment.json`), 보상 · 남기기 화면과 session 연결.
 
 ### 2단계 시도본 (참고만)
 - 리팩터링 전 방식의 시도본은 2단계가 머지된 뒤 지웠어요 (2026-11-11).

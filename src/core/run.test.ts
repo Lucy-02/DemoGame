@@ -112,6 +112,16 @@ describe("정예 장비 (0048 1절 · 0051)", () => {
     expect(() => r.giveRewardEquipment(reward, "fire_fox")).toThrow();
   });
 
+  it("정예 장비를 받지 않고 넘길 수 있어요", () => {
+    EQUIPMENT.push(ELITE_ANY);
+    const r = run(2);
+    const reward = r.rollBattleReward("elite");
+    r.skipRewardEquipment(reward);
+    expect(reward.equipDone).toBe(true);
+    expect(r.spirits.every((s) => s.equipment.length === 0)).toBe(true);
+    expect(() => r.skipRewardEquipment(reward)).toThrow();
+  });
+
   it("전용 장비는 그 정령만 받아요", () => {
     EQUIPMENT.push(ELITE_CAT);
     const r = run(4);

@@ -304,6 +304,12 @@ export class Run {
     reward.equipDone = true;
   }
 
+  /** 정예 보상의 장비를 받지 않고 넘겨요 */
+  skipRewardEquipment(reward: BattleReward) {
+    if (!reward.equipment || reward.equipDone) throw new Error("줄 장비가 없어요");
+    reward.equipDone = true;
+  }
+
   /** 이 정령이 이 장비를 받으려면 지닌 것 하나를 내려놓아야 하는지 (0056) */
   needsReplace(equipId: string, spiritId: string): boolean {
     const s = this.spirit(spiritId);
