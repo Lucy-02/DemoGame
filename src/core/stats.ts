@@ -43,6 +43,12 @@ export function activeTiers(e: RunEquip): EquipTier[] {
   return def.downside ? [tier, def.downside] : [tier];
 }
 
+/** 쓰러졌던 정령이 전투 뒤 돌아올 때의 HP */
+export function returnHp(rs: RunSpirit): number {
+  const bonus = rs.equipment.some((e) => activeTiers(e).some((t) => t.effects?.some((ef) => ef.passive === "start_block_return")));
+  return C.downed_return_hp + (bonus ? C.equip_return_hp : 0);
+}
+
 /** 지닌 장비 전부의 능력치 보정을 [장비 id, 보정] 쌍으로 */
 export function equipMods(rs: RunSpirit, stat: EquipStat): [string, StatMod][] {
   const out: [string, StatMod][] = [];
@@ -138,6 +144,7 @@ export function conditionHolds(w: StatCondition, s: { hp: number; maxHp: number;
   switch (w.k) {
     case "hpBelow": return s.hp <= s.maxHp * w.ratio;
     case "released": return s.release > 0;
+    case "hurt": return s.hp < s.maxHp;
   }
 }
 

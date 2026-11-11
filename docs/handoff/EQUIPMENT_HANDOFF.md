@@ -46,6 +46,7 @@ interface EquipDef {
 ```
 
 - **대표 카드 변형 (0055)**: `EquipDef.signature = { card, techniques: { <갈래>: [공명 단계별 기술 카드 id] } }`. `Run.battleDeck()`가 전투에 들고 갈 덱에서 대표 카드 한 장을 기술 카드로 바꿔요. `effects`는 범용·보스 장비용이에요.
+- **기술 카드**: `src/data/cards/techniques.json`. id는 `<대표 카드>_<갈래>_<공명>`, 이름은 대표 카드와 같아요. 전용 무기 3개는 `src/data/equipment/exclusive.json`에 있어요.
 - **희귀도 (0056)**: `grade` 대신 `rarity: "generic" | "exclusive" | "boss"`. 정예 풀 = 범용 + 전용 무기, 보스 풀 = 보스 장비.
 - **칸/부위**: 부위(무기·장신구 등)는 두지 않아요. 정령마다 "남길 칸 수"만 있어요(아래 2절). ★ 부위가 필요해지면 `slot` 필드 추가.
 - **착용 조건**: `owner`가 있으면 그 정령만. 단계 조건은 따로 두지 않고 "칸 수"와 "공명 상한"이 단계로 막아요.
