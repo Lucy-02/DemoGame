@@ -108,7 +108,7 @@ describe("턴 안의 시간축 (0036)", () => {
     expect(b.inOpening(slime(b), 0)).toBe(false);
   });
 
-  it("허점타: 적 행동과 같은 시각에 끝나는 공격은 허점타가 아니에요 (0058)", () => {
+  it("허점타: 적 행동과 같은 시각에 끝나는 공격은 허점타가 아니에요 (0059)", () => {
     const b = battleWith("fire_claw");
     const at = b.intent(slime(b)).at!;
     expect(b.inOpening(slime(b), at)).toBe(false);
