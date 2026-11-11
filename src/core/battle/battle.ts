@@ -221,7 +221,7 @@ export class Battle implements Engine {
   }
 
   inOpening(e: BEnemy, t: number): boolean {
-    return this.slots.some((x) => x.uid === e.uid && !x.done && x.at >= t && x.at - t <= C.opening_window_ms);
+    return this.slots.some((x) => x.uid === e.uid && !x.done && x.at > t && x.at - t <= C.opening_window_ms);
   }
 
   private moveAt(e: BEnemy): number {

@@ -215,13 +215,13 @@ exports[`전투 골든 > 보스전 한 판의 이벤트 로그가 바뀌지 않�
 
 exports[`전투 골든 > 인카운터별 요약이 바뀌지 않는다 1`] = `
 [
-  "e_moss wins=20/20 turns=59 hp=1593 release=0 cancel=0",
-  "e_rats wins=20/20 turns=55 hp=1509 release=0 cancel=0",
-  "e_wisps wins=20/20 turns=65 hp=1490 release=0 cancel=0",
-  "e_shell wins=20/20 turns=77 hp=1368 release=0 cancel=0",
-  "e_crow wins=20/20 turns=66 hp=1471 release=0 cancel=0",
-  "e_spore wins=20/20 turns=70 hp=1515 release=0 cancel=0",
-  "e_golem wins=20/20 turns=65 hp=1346 release=0 cancel=0",
+  "e_moss wins=20/20 turns=59 hp=1583 release=0 cancel=0",
+  "e_rats wins=20/20 turns=56 hp=1509 release=0 cancel=0",
+  "e_wisps wins=20/20 turns=67 hp=1476 release=0 cancel=0",
+  "e_shell wins=20/20 turns=78 hp=1331 release=0 cancel=0",
+  "e_crow wins=20/20 turns=66 hp=1447 release=0 cancel=0",
+  "e_spore wins=20/20 turns=70 hp=1493 release=0 cancel=0",
+  "e_golem wins=20/20 turns=67 hp=1340 release=0 cancel=0",
   "x_witch wins=20/20 turns=81 hp=1331 release=0 cancel=0",
   "x_frostfang wins=20/20 turns=139 hp=908 release=0 cancel=0",
   "x_imp wins=20/20 turns=77 hp=1077 release=0 cancel=0",
