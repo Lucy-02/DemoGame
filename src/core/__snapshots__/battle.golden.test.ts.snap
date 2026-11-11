@@ -240,8 +240,8 @@ exports[`전투 골든 > 인카운터별 요약이 바뀌지 않는다 1`] = `
   "x_witch wins=20/20 turns=81 hp=1331 release=0 cancel=0",
   "x_frostfang wins=20/20 turns=139 hp=908 release=0 cancel=0",
   "x_imp wins=20/20 turns=77 hp=1077 release=0 cancel=0",
-  "b_grimbark wins=12/20 turns=260 hp=195 release=0 cancel=0",
-  "b_wildfire wins=3/20 turns=223 hp=18 release=0 cancel=0",
-  "b_gale wins=11/20 turns=197 hp=253 release=0 cancel=0",
+  "b_grimbark wins=9/20 turns=263 hp=147 release=0 cancel=0",
+  "b_wildfire wins=8/20 turns=205 hp=72 release=0 cancel=0",
+  "b_gale wins=15/20 turns=253 hp=230 release=0 cancel=0",
 ]
 `;

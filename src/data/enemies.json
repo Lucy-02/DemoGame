@@ -73,17 +73,17 @@
         { "name": "대지 가르기", "charge": true, "big": true, "actions": [{ "type": "attack", "dmg": 24, "target": "front" }] }
       ]
     } },
-  { "id": "wildfire", "name": "들불", "tier": "boss", "element": "fire", "hp": 190,
+  { "id": "wildfire", "name": "들불", "tier": "boss", "element": "fire", "hp": 175,
     "desc": "억새 언덕을 태우는 묵은 불",
     "pattern": [
-      { "name": "불길", "actions": [{ "type": "burnRamp", "value": 1, "step": 1, "target": "all" }] },
       { "name": "불똥", "actions": [{ "type": "attack", "dmg": 5, "hits": 2, "target": "random" }] },
       { "name": "불길", "actions": [{ "type": "burnRamp", "value": 1, "step": 1, "target": "all" }] },
       { "name": "휘몰아치기", "actions": [{ "type": "attack", "dmg": 12, "target": "front" }] },
+      { "name": "불길", "actions": [{ "type": "burnRamp", "value": 1, "step": 1, "target": "all" }] },
       { "name": "번져 오름", "charge": true, "big": true, "onBreak": "clearBurn",
-        "actions": [{ "type": "detonateBurn", "mult": 2 }, { "type": "attack", "dmg": 8, "target": "all" }] }
+        "actions": [{ "type": "burnRamp", "value": 1, "step": 1, "target": "all" }, { "type": "detonateBurn", "mult": 2 }, { "type": "attack", "dmg": 4, "target": "all" }] }
     ] },
-  { "id": "gale", "name": "큰바람", "tier": "boss", "element": "wind", "hp": 112,
+  { "id": "gale", "name": "큰바람", "tier": "boss", "element": "wind", "hp": 145,
     "desc": "언덕을 쉬지 않고 도는 묵은 바람",
     "acts": [[700, 1500, 2300], [500, 1300, 2700], [900, 1700, 2500]],
     "pattern": [
@@ -93,6 +93,6 @@
       { "name": "흩날리기", "actions": [{ "type": "attack", "dmg": 2, "target": "all" }] },
       { "name": "훑기", "actions": [{ "type": "attack", "dmg": 3, "target": "random" }] },
       { "name": "밀어치기", "actions": [{ "type": "attack", "dmg": 5, "target": "front" }] },
-      { "name": "회오리 기둥", "charge": true, "big": true, "actions": [{ "type": "swapFront" }, { "type": "attack", "dmg": 16, "target": "front" }] }
+      { "name": "회오리 기둥", "charge": true, "big": true, "actions": [{ "type": "swapFront" }, { "type": "attack", "dmg": 13, "target": "front" }] }
     ] }
 ]

@@ -86,13 +86,14 @@ export function scaleEnemy(def: EnemyDef, k: EnemyScale): EnemyDef {
     phase2: def.phase2 && { ...def.phase2, turnStartBlock: up(def.phase2.turnStartBlock, k.hp), pattern: def.phase2.pattern.map(move) },
   };
 }
-/** 거친 특성 가운데 데이터를 바꾸는 것: 묵직한 = 차징 피해 배율 (0062) */
+/** 거친 특성 가운데 데이터를 바꾸는 것: 묵직한 = 모든 공격 +heavy_dmg, 차징 공격은 배율까지 (0062) */
 export function applyTraits(def: EnemyDef, traits: readonly string[]): EnemyDef {
   if (!traits.includes("heavy")) return def;
-  const m = C.traits.heavy_charge_mult;
-  const move = (mv: EnemyMove): EnemyMove => (mv.charge
-    ? { ...mv, actions: mv.actions.map((a) => (a.type === "attack" ? { ...a, dmg: Math.round(a.dmg * m) } : a)) }
-    : mv);
+  const { heavy_charge_mult: m, heavy_dmg: plus } = C.traits;
+  const move = (mv: EnemyMove): EnemyMove => ({
+    ...mv,
+    actions: mv.actions.map((a) => (a.type === "attack" ? { ...a, dmg: mv.charge ? Math.round(a.dmg * m) : a.dmg + plus } : a)),
+  });
   return { ...def, pattern: def.pattern.map(move), phase2: def.phase2 && { ...def.phase2, pattern: def.phase2.pattern.map(move) } };
 }
 

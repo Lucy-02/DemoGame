@@ -266,6 +266,14 @@ export class Battle implements Engine {
     this.emit({ k: "gap", uid: e.uid, turns, reason });
     this.emit({ k: "status", ref: refOf(e), text: "틈" });
     this.log(`${e.def.name}: 틈이 열림 (${turns}턴)`);
+    // 틈이 열리면 꺼지는 불: 끊으면 아군의 화상까지 걷혀요
+    if (this.patternOf(e).some((m) => m.big && m.onBreak === "clearBurn")) {
+      e.ramp = 0;
+      if (reason === "break") {
+        for (const sp of this.aliveSpirits()) delete sp.status.burn;
+        this.log("불길이 꺼짐: 아군의 화상이 사라짐");
+      }
+    }
   }
 
   private startCharge(e: BEnemy, move: EnemyMove) {
@@ -286,29 +294,36 @@ export class Battle implements Engine {
         this.skipMove(e, "cancel");
         continue;
       }
-      if (e.carryAt !== null) {
-        this.slots.push({ uid: e.uid, at: e.carryAt, done: false });
-        e.carryAt = null;
-        continue;
-      }
       const pat = this.patternOf(e);
       const times = this.moveTimes(e);
       const delay = e.delayNext;
       e.delayNext = 0;
+      // 지난 턴에서 밀려 온 행동이 먼저 일어나고, 나머지 행동은 그 뒤에 이어져요
+      const carried = e.carryAt;
+      e.carryAt = null;
+      let last = -1;
       for (let i = 0; i < times.length; i++) {
         const move = pat[(e.patternIdx + i) % pat.length];
+        const firing = i === 0 && e.charging;
         // 차징은 그 턴을 통째로 써요. 뒤 행동이 차징이면 거기서 멈추고 다음 턴에 차징을 시작해요
-        if (move.charge && !(i === 0 && e.charging)) {
+        if (move.charge && !firing) {
           if (i === 0) this.startCharge(e, move);
           break;
         }
-        const at = times[i] + delay;
-        if (at < C.axis_ms) this.slots.push({ uid: e.uid, at, done: false });
-        else if (i === 0) {
+        let at: number;
+        if (i === 0 && carried !== null) at = carried;
+        // 여러 번 움직이는 적의 차징은 그 턴의 마지막 시각에 터져요
+        else at = (firing ? times[times.length - 1] : times[i]) + delay;
+        at = Math.max(at, last + C.enemy_act_gap_ms);
+        if (at >= C.axis_ms) {
+          // 축을 넘긴 행동은 다음 턴으로 밀리고, 그 뒤 행동은 다음 턴에 이어져요
           e.carryAt = at - C.axis_ms;
-          if (e.charging && move.big) this.openGap(e, "delay");
+          if (firing && move.big) this.openGap(e, "delay");
           break;
         }
+        this.slots.push({ uid: e.uid, at, done: false });
+        last = at;
+        if (firing) break;
       }
     }
   }
@@ -323,11 +338,6 @@ export class Battle implements Engine {
     e.patternIdx++;
     this.emit({ k: "cancel", uid: e.uid, reason });
     this.log(`${e.def.name}: ${move.name} ${reason === "break" ? "끊김" : "취소"}`);
-    if (reason === "break" && move.onBreak === "clearBurn") {
-      for (const s of this.aliveSpirits()) delete s.status.burn;
-      e.ramp = 0;
-      this.log("불길이 꺼짐: 아군의 화상이 사라짐");
-    }
   }
 
   breakCharge(e: BEnemy): boolean {
@@ -353,7 +363,8 @@ export class Battle implements Engine {
       const at = slot.at + d;
       if (at >= C.axis_ms) {
         slot.done = true;
-        e.carryAt = at - C.axis_ms;
+        // 이미 밀린 행동이 있으면 더 늦은 쪽 하나만 남아요
+        e.carryAt = Math.max(e.carryAt ?? 0, at - C.axis_ms);
         if (e.charging && this.currentMove(e).big) this.openGap(e, "delay");
         this.emit({ k: "delay", uid: e.uid, ms: d, nextTurn: true });
         this.log(`${e.def.name} 빙결: 행동이 다음 턴으로 밀림`);

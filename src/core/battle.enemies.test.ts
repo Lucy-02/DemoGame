@@ -60,6 +60,14 @@ describe("틈 (보스의 큰 차징)", () => {
     expect(gaps(b.drain()).some((g) => g.reason === "delay")).toBe(true);
   });
 
+  it("틈이 열리면 들불의 세지는 화상이 처음으로 돌아가요", () => {
+    const b = battle(["wildfire"]);
+    const e = untilBigCharge(b);
+    expect(e.ramp).toBeGreaterThan(0);
+    b.hurtEnemy(e, Math.ceil(e.maxHp * C.gap.burst_pct), true);
+    expect(e.ramp).toBe(0);
+  });
+
   it("끊기면 화상을 걷어 가는 차징 (들불)", () => {
     const b = battle(["wildfire"]);
     const e = untilBigCharge(b);
@@ -75,6 +83,28 @@ describe("한 턴에 여러 번 행동", () => {
     expect(b.moveQueue(b.enemy(1)).map((m) => m.at)).toEqual(enemyDef("whirl").acts![0]);
     b.endTurn();
     expect(b.drain().filter((x) => x.k === "enemyAct")).toHaveLength(2);
+  });
+
+  it("빙결로 밀린 행동 뒤에도 나머지 행동이 이어져요", () => {
+    const b = battle(["gale"]);
+    const e = b.enemy(1);
+    for (let i = 0; i < 4; i++) b.freezeEnemy(e); // 첫 행동을 다음 턴으로
+    expect(e.carryAt).not.toBeNull();
+    b.endTurn();
+    b.drain();
+    expect(b.moveQueue(e).length).toBe(enemyDef("gale").acts![1].length);
+  });
+
+  it("여러 번 움직이는 적의 차징은 그 턴의 마지막 시각에 터져서 빙결로 밀 수 있어요", () => {
+    const b = battle(["gale"]);
+    const e = untilBigCharge(b);
+    b.endTurn();
+    b.drain();
+    const q = b.moveQueue(e);
+    expect(q).toHaveLength(1);
+    expect(q[0].at + C.freeze_delay_ms).toBeGreaterThanOrEqual(C.axis_ms);
+    b.freezeEnemy(e);
+    expect(b.inGap(e)).toBe(true);
   });
 
   it("재빠른 적은 행동이 빨라져요", () => {
@@ -96,11 +126,12 @@ describe("거친 특성 (정예)", () => {
     expect(statusN(b.spirit("fire_fox"), "burn")).toBe(C.traits.burning_burn);
   });
 
-  it("묵직한: 차징 공격이 세져요", () => {
+  it("묵직한: 모든 공격이 세지고, 차징 공격은 더 세져요", () => {
     const def = enemyDef("moss_slime");
     const heavy = applyTraits(def, ["heavy"]);
-    const dmg = (d: typeof def) => d.pattern.filter((m) => m.charge).flatMap((m) => m.actions).flatMap((a) => (a.type === "attack" ? [a.dmg] : []));
-    expect(dmg(heavy)).toEqual(dmg(def).map((v) => Math.round(v * C.traits.heavy_charge_mult)));
+    const dmg = (d: typeof def, charge: boolean) => d.pattern.filter((m) => !!m.charge === charge).flatMap((m) => m.actions).flatMap((a) => (a.type === "attack" ? [a.dmg] : []));
+    expect(dmg(heavy, true)).toEqual(dmg(def, true).map((v) => Math.round(v * C.traits.heavy_charge_mult)));
+    expect(dmg(heavy, false)).toEqual(dmg(def, false).map((v) => v + C.traits.heavy_dmg));
   });
 
   it("졸개에게는 붙지 않아요", () => {
