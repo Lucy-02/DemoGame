@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { C, CARDS, GROWTH, SPIRITS, enemyDef, partyScale, scaleEnemy } from "./data";
 import {
-  addDeed, canEvolve, endRun, episodesOpen, evolve, feed, gardenSpirit, grantBattle, isFinalStage, join, joinOffer, levelOf, newGarden,
+  addDeed, canEvolve, endRun, episodesOpen, evolve, evolveChoices, feed, openBranches, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, join, joinOffer, levelOf, newGarden,
   seeEpisode, startGarden, todos, unlockKeys, type Garden,
 } from "./garden";
 import { Run } from "./run";
@@ -151,5 +151,57 @@ describe("처음 세 마리 (0053)", () => {
     expect(weak.pattern[0].actions[0]).toMatchObject({ type: "attack", dmg: hit.type === "attack" ? hit.dmg / 2 : 0 });
     expect(weak.phase2?.turnStartBlock).toBe(boss.phase2!.turnStartBlock / 2);
     expect(enemyDef("grimbark")).toBe(boss);
+  });
+});
+
+describe("갈래 고르기 (0027)", () => {
+  // 데이터에 갈래가 들어오기 전이라, 불여우 성체 줄을 갈래 둘로 잠깐 바꿔서 봐요
+  const saved = [...GROWTH.evolutions];
+  const card = CARDS.find((c) => c.id === "backfire")!;
+  const withBranches = () => {
+    const i = GROWTH.evolutions.findIndex((e) => e.spirit === "fire_fox" && e.from === "baby");
+    const base = GROWTH.evolutions[i];
+    GROWTH.evolutions.splice(i, 1, { ...base, branch: "burst" }, { ...base, branch: "spread", opens: { cards: 2 } });
+    card.branch = "spread";
+  };
+  const restore = () => {
+    GROWTH.evolutions.splice(0, GROWTH.evolutions.length, ...saved);
+    delete card.branch;
+  };
+
+  it("갈래 고르기는 갈래 없이 키울 수 없고, 고른 갈래가 남아요", () => {
+    withBranches();
+    try {
+      const g = withExp(newGarden(1), GROWTH.levels[3]);
+      expect(evolve(g, "fire_fox")).toBe(g);
+      const after = fox(evolve(g, "fire_fox", undefined, "burst"));
+      expect(after).toMatchObject({ stage: "adult", branch: "burst" });
+      expect(toRunSpirit(after).branch).toBe("burst");
+    } finally { restore(); }
+  });
+
+  it("잠긴 갈래는 한 탐험에서 그 갈래 카드를 받아야 열리고, 열리면 판을 넘어 남아요", () => {
+    withBranches();
+    try {
+      let g = withExp(newGarden(1), GROWTH.levels[3]);
+      expect(canEvolve(fox(g), undefined, "spread")).toMatchObject({ level: true, open: false, ok: false });
+      expect(evolve(g, "fire_fox", undefined, "spread")).toBe(g);
+      g = openBranches(g, { fire_fox: ["backfire"] });
+      expect(fox(g).openBranches ?? []).toEqual([]);
+      g = openBranches(g, { fire_fox: ["backfire", "backfire"], mist_cat: ["backfire", "backfire"] });
+      expect(fox(g).openBranches).toEqual(["spread"]);
+      expect(gardenSpirit(g, "mist_cat").openBranches).toBeUndefined();
+      g = openBranches(g, {});
+      expect(evolveChoices(fox(g)).map((c) => c.ok)).toEqual([true, true]);
+      expect(fox(evolve(g, "fire_fox", undefined, "spread")).branch).toBe("spread");
+    } finally { restore(); }
+  });
+
+  it("런은 시작 덱을 빼고 받은 카드를 정령별로 세요", () => {
+    const run = new Run({ seed: 1, frontId: "fire_fox", party: PARTY, adult: false, unlockAll: false });
+    expect(run.received).toEqual([]);
+    run.addCard("backfire", "fire_fox");
+    run.removeCard(run.received[0].uid);
+    expect(run.receivedBySpirit()).toEqual({ fire_fox: ["backfire"] });
   });
 });

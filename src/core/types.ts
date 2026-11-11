@@ -133,6 +133,8 @@ export interface CardData {
   /** 얻는 곳. 없으면 reward */
   obtain?: Obtain;
   unlock: string;
+  /** 갈래 표시 (0027). 이 카드를 받으면 주인 정령의 이 갈래 쪽으로 세요. 갈래 id는 growth.json evolutions의 branch */
+  branch?: string;
 }
 
 /** 게임이 쓰는 카드 = 데이터 + 지금 언어의 문구 */
@@ -307,6 +309,10 @@ export interface EvolutionDef {
   to: Stage;
   level: number;
   deed?: DeedDef;
+  /** 분기 진화의 갈래 id (0027). 같은 정령·같은 전 단계 줄이 둘 이상이면 갈래 고르기예요 */
+  branch?: string;
+  /** 갈래가 열리는 조건. 없으면 늘 열려 있어요. cards = 한 탐험에서 이 갈래 표시 카드를 받은 수 */
+  opens?: { cards: number };
 }
 
 export interface EpisodeDef {

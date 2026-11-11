@@ -72,7 +72,10 @@ export class Run {
   /** 이번 런에서 상점 카드 빼기를 쓴 횟수 (0049 4절: 쓸 때마다 값이 올라요) */
   removals = 0;
   bossDefeated = false;
+  /** 이번 탐험에서 받은 카드 (시작 덱 빼고). 빼기로 덱에서 나가도 남아요. 갈래 조건이 세요 (0027) */
+  received: DeckCard[] = [];
   private nextUid = 1;
+  private dealt = false;
 
   constructor(public opts: RunOptions) {
     this.rng = new Rng(opts.seed);
@@ -99,11 +102,21 @@ export class Run {
       if (!owner) continue;
       for (let i = 0; i < card.start; i++) this.addCard(card.id, owner.id);
     }
+    this.dealt = true;
     this.generateMap();
   }
 
   addCard(cardId: string, owner: string) {
-    this.deck.push({ uid: this.nextUid++, cardId, owner });
+    const card = { uid: this.nextUid++, cardId, owner };
+    this.deck.push(card);
+    if (this.dealt) this.received.push(card);
+  }
+
+  /** 정령 id → 이번 탐험에서 받은 카드 id들 (garden.openBranches에 넘겨요) */
+  receivedBySpirit(): Record<string, string[]> {
+    const out: Record<string, string[]> = {};
+    for (const c of this.received) (out[c.owner] ??= []).push(c.cardId);
+    return out;
   }
 
   removeCard(uid: number) {

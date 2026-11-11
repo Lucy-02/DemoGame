@@ -14,8 +14,10 @@ export interface GardenSpirit {
   id: string;
   exp: number;
   stage: Stage;
-  /** 분기 진화로 고른 갈래. MVP는 비어 있어요 (0015) */
+  /** 성체에서 고른 갈래 (0027). 고르면 못 바꿔요 (0052) */
   branch?: string;
+  /** 열린 갈래. 한 번 열리면 판을 넘어 남아요 (0047 Lucy 2026-11-10) */
+  openBranches?: string[];
   /** 부화 때 한 번 정하고 유지해요. 유체부터 보여요 (0033) */
   personality: string;
   /** 다음 진화의 자람 조건 누적값. 진화하면 0으로 */
@@ -139,23 +141,68 @@ export interface EvolveCheck {
   level: boolean;
   /** 자람 조건이 됐나 (조건 없으면 true) */
   deed: boolean;
+  /** 갈래가 열렸나 (갈래가 아니거나 조건이 없으면 true) */
+  open: boolean;
   ok: boolean;
 }
 
-/** 배지·링·버튼이 모두 이 결과만 읽어요. 규칙과 표시가 어긋나지 않게요. */
-export function canEvolve(s: GardenSpirit, to?: Stage): EvolveCheck | null {
-  const evo = evolutionsFrom(s).find((e) => !to || e.to === to);
-  if (!evo) return null;
+const isOpen = (s: GardenSpirit, evo: EvolutionDef) =>
+  !evo.branch || !evo.opens || (s.openBranches ?? []).includes(evo.branch);
+
+function check(s: GardenSpirit, evo: EvolutionDef): EvolveCheck {
   const level = levelOf(s.exp) >= evo.level;
   const deed = !evo.deed || s.deed >= evo.deed.n;
-  return { evo, level, deed, ok: level && deed };
+  const open = isOpen(s, evo);
+  return { evo, level, deed, open, ok: level && deed && open };
 }
 
-/** 키우기. 조건이 안 되면 그대로 돌려줘요. 적용 시점(전투 중이면 다음 턴부터)은 부르는 쪽이 정해요. */
-export function evolve(g: Garden, id: string, to?: Stage): Garden {
-  const check = canEvolve(gardenSpirit(g, id), to);
-  if (!check?.ok) return g;
-  return withSpirit(g, id, (s) => ({ ...s, stage: check.evo.to, deed: 0 }));
+/** 지금 단계에서 갈 수 있는 갈래마다의 검사. 갈래 고르기 창이 이것만 읽어요. 분기가 아니면 한 줄이에요. */
+export function evolveChoices(s: GardenSpirit): EvolveCheck[] {
+  return evolutionsFrom(s).map((e) => check(s, e));
+}
+
+/** 배지·링·버튼이 모두 이 결과만 읽어요. 규칙과 표시가 어긋나지 않게요.
+ *  갈래를 안 주면 갈 수 있는 갈래가 하나라도 있는지 봐요(없으면 첫 줄). */
+export function canEvolve(s: GardenSpirit, to?: Stage, branch?: string): EvolveCheck | null {
+  const all = evolveChoices(s).filter((c) => (!to || c.evo.to === to) && (!branch || c.evo.branch === branch));
+  return all.find((c) => c.ok) ?? all[0] ?? null;
+}
+
+/** 이 진화가 갈래 고르기인가 (같은 전 단계 줄이 둘 이상) */
+export const isBranching = (s: Pick<GardenSpirit, "id" | "stage">) => evolutionsFrom(s).length > 1;
+
+/** 키우기. 조건이 안 되면 그대로 돌려줘요. 갈래 고르기면 branch가 있어야 해요.
+ *  적용 시점(전투 중이면 다음 턴부터)은 부르는 쪽이 정해요. */
+export function evolve(g: Garden, id: string, to?: Stage, branch?: string): Garden {
+  const s = gardenSpirit(g, id);
+  if (isBranching(s) && !branch) return g;
+  const c = canEvolve(s, to, branch);
+  if (!c?.ok) return g;
+  return withSpirit(g, id, (x) => ({ ...x, stage: c.evo.to, deed: 0, ...(c.evo.branch ? { branch: c.evo.branch } : {}) }));
+}
+
+/** 이번 탐험에서 받은 카드로 갈래를 열어요 (0027). received = 정령 id → 받은 카드 id들. 열린 갈래는 남아요. */
+export function openBranches(g: Garden, received: Readonly<Record<string, readonly string[]>>): Garden {
+  return {
+    ...g,
+    spirits: g.spirits.map((s) => {
+      const got = received[s.id] ?? [];
+      const opened = new Set(s.openBranches ?? []);
+      for (const evo of GROWTH.evolutions) {
+        if (evo.spirit !== s.id || !evo.branch || !evo.opens || opened.has(evo.branch)) continue;
+        const n = got.filter((id) => CARDS.find((c) => c.id === id)?.branch === evo.branch).length;
+        if (n >= evo.opens.cards) opened.add(evo.branch);
+      }
+      return opened.size === (s.openBranches ?? []).length ? s : { ...s, openBranches: [...opened] };
+    }),
+  };
+}
+
+/** 갈래 조건 진척: 이번 탐험에서 받은 그 갈래 카드 수 (잠긴 갈래 판의 막대) */
+export function branchProgress(evo: EvolutionDef, received: readonly string[]): { have: number; need: number } | null {
+  if (!evo.branch || !evo.opens) return null;
+  const have = received.filter((id) => CARDS.find((c) => c.id === id)?.branch === evo.branch).length;
+  return { have, need: evo.opens.cards };
 }
 
 export const isFinalStage = (s: Pick<GardenSpirit, "id" | "stage">) => evolutionsFrom(s).length === 0;
