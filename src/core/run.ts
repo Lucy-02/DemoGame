@@ -82,7 +82,10 @@ export class Run {
   /** 이번 런에서 상점 카드 빼기를 쓴 횟수 (0049 4절: 쓸 때마다 값이 올라요) */
   removals = 0;
   bossDefeated = false;
+  /** 이번 탐험에서 받은 카드 (시작 덱 빼고). 빼기로 덱에서 나가도 남아요. 갈래 조건이 세요 (0027) */
+  received: DeckCard[] = [];
   private nextUid = 1;
+  private dealt = false;
 
   constructor(public opts: RunOptions) {
     this.rng = new Rng(opts.seed);
@@ -109,6 +112,7 @@ export class Run {
       if (!owner) continue;
       for (let i = 0; i < card.start; i++) this.addCard(card.id, owner.id);
     }
+    this.dealt = true;
     this.generateMap();
     const drawn = this.rng.pick(C.acts[0].elements as Element[]);
     this.strongElement = opts.strongElement ?? drawn;
@@ -116,7 +120,16 @@ export class Run {
   }
 
   addCard(cardId: string, owner: string) {
-    this.deck.push({ uid: this.nextUid++, cardId, owner });
+    const card = { uid: this.nextUid++, cardId, owner };
+    this.deck.push(card);
+    if (this.dealt) this.received.push(card);
+  }
+
+  /** 정령 id → 이번 탐험에서 받은 카드 id들 (garden.openBranches에 넘겨요) */
+  receivedBySpirit(): Record<string, string[]> {
+    const out: Record<string, string[]> = {};
+    for (const c of this.received) (out[c.owner] ??= []).push(c.cardId);
+    return out;
   }
 
   removeCard(uid: number) {
@@ -268,17 +281,9 @@ export class Run {
     return this.rng.int(r[0], r[1]);
   }
 
-  /**
-   * 이 정령이 전투 보상으로 배우는 카드 (0040 · 0049): 그 정령의 전용 카드(`spirit`).
-   * 전용 카드가 하나도 없는 정령(불여우 · 안개 고양이)은 같은 속성의 주인 없는 카드예요.
-   * 해금되고 전투 보상에서 나오는 카드만.
-   */
+  /** 이 정령이 전투 보상으로 배우는 카드 (0040 · 0049): 해금되고 전투 보상에서 나오는 그 정령의 전용 카드(`spirit`) */
   ownRewardPool(spiritId: string, rarity: Rarity): CardDef[] {
-    const element = SPIRITS.find((d) => d.id === spiritId)!.element;
-    const hasOwn = CARDS.some((c) => c.spirit === spiritId);
-    return CARDS.filter((c) =>
-      c.rarity === rarity && (c.obtain ?? "reward") === "reward" && this.isUnlocked(c)
-      && (hasOwn ? c.spirit === spiritId : !c.spirit && c.element === element));
+    return CARDS.filter((c) => c.rarity === rarity && (c.obtain ?? "reward") === "reward" && this.isUnlocked(c) && c.spirit === spiritId);
   }
 
   /** 정령마다 1장씩 (0049 1절). 희귀도는 장마다 따로 굴리고, 그 희귀도가 비면 한 단계씩 내려요. */

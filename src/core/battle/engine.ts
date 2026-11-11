@@ -1,6 +1,6 @@
 import type { Rng } from "../rng";
 import type { AuraId, CardDef, Element, EnemyTargetRule, StatKey } from "../types";
-import type { BCard, BEnemy, BSpirit, BattleEvent, HoldState, StarState, StatusId } from "./state";
+import type { BCard, BEnemy, BSpirit, BattleEvent, HoldState, Planned, StarState, StatusId } from "./state";
 
 /** 피해 받기의 출처 */
 export interface HurtOptions {
@@ -51,6 +51,8 @@ export interface Engine {
   resolvingLongest(s: BSpirit): boolean;
   /** 적의 상태가 줄어들 때 장비가 덜 줄이는 양. 부르면 그 장비의 횟수를 써요 */
   linger(): number;
+  /** 적의 화상이 탈 때 지속 효과가 덜 줄이는 양 (번지는 일도 여기서) */
+  burnTick(e: BEnemy, burn: number): number;
   /** 손이나 줄에 품었다 돌아온 카드를 가진 정령인지 */
   holdsHeldCard(s: BSpirit): boolean;
 
@@ -77,6 +79,8 @@ export interface Engine {
   addStatus(h: BSpirit | BEnemy, id: StatusId, n: number, opts?: { fresh?: boolean; strength?: number; ref?: string }): void;
   /** 빙결 = 늦추기 (0039). extraMs만큼 더 늦춰요 */
   freezeEnemy(e: BEnemy, extraMs?: number): void;
+  /** 적의 이번(또는 다음) 행동을 ms만큼 늦춰요 */
+  delayEnemy(e: BEnemy, ms: number, why: string): void;
   /** 브레이크: 차징 중인 행동을 없애고 다음 패턴으로 */
   breakCharge(e: BEnemy): boolean;
   /** 이 적의 다음 행동을 없애요: 이번 턴 남은 행동, 없으면 다음 턴 행동 */
@@ -86,7 +90,9 @@ export interface Engine {
   /** 낙하 고르기를 열어요 */
   offerFall(): void;
   /** 받아칠 기회를 줘요 */
-  gainReady(s: BSpirit): void;
+  gainReady(s: BSpirit, pulled?: number): void;
+  /** 지금 재생 중인 카드 */
+  readonly resolving: Planned | null;
   drawCards(n: number): void;
   /** 전투 중 생기는 카드의 uid */
   newCardUid(): number;

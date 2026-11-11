@@ -150,6 +150,11 @@
 - E2 줄 맞춤: https://claude.ai/artifact/Ec5PKyy3XEuJ5cyFjhhyCL
 - 프레임: /mnt/project-files/design/round-e/E1~E2/ (소스 /tmp/claude-0/roundE/)
 
+## 갈래 고르기 라운드 G (2026-11-11): P1 f7 다듬기, 갈래 조건 반영
+- G1 판 둘 다듬기: https://claude.ai/artifact/LpmKWC5f9rsbPYWVCFqbpm
+- G2 모습이 주인공: https://claude.ai/artifact/LVbKAYB3dzgZDLfFsXbyMR
+- 프레임: /mnt/project-files/design/round-g/G1~G2/f1–f5.png
+
 ## 장비 라운드 Q (2026-11-12): 장비가 화면에 놓이는 자리 (Lucy 확인 대기)
 - Q1 줄 안 칸: https://claude.ai/artifact/4P8LbDasWcdEWVSDnWnCLz
 - Q2 카드와 같은 물건: https://claude.ai/artifact/7FUd1MBVVXDZabEP17fHKv

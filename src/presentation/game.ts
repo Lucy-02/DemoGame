@@ -21,6 +21,8 @@ export interface GameOptions {
   select?: string;
   tab?: string;
   closed?: boolean;
+  /** 정령 관리: 고른 정령의 갈래 고르기 창을 연 채로 (?pick) */
+  pick?: boolean;
   /** 시각 검증용: 이 key의 손패 카드에 호버한 상태로 시작 */
   hover?: string;
   /** 고정 장면 이름 (전투: battle/fixtures FIXTURES, 정령 관리: spirits/fixtures GARDENS, 전투 결과: result/fixtures RESULTS, 상점: shop/fixtures SHOPS). 없으면 기본 */
@@ -45,7 +47,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
         if (opts.screen === "spirits") {
-          const data: SpiritsSceneData = { scene: opts.scene, select: opts.select, tab: opts.tab as TabId | undefined, closed: opts.closed };
+          const data: SpiritsSceneData = { scene: opts.scene, select: opts.select, tab: opts.tab as TabId | undefined, closed: opts.closed, pick: opts.pick };
           game.scene.add(SPIRITS_SCENE, SpiritsScene, true, data);
           return;
         }

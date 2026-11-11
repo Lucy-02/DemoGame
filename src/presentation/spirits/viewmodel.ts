@@ -140,3 +140,38 @@ export interface SpiritsVM {
   selected: string;
   detail: SpiritDetailVM;
 }
+
+/** 갈래 고르기 창 (0047 S15 · 라운드 G1) */
+export interface BranchPickVM {
+  spiritId: string;
+  name: string;
+  level: string;
+  element: IconId;
+  role: IconId;
+  personality: string;
+  face?: { key: string; crop: Crop };
+  /** 부른 곳 (정원 / 런 결과) */
+  from: "garden" | "runResult";
+  /** 왼쪽 "지금" 열 능력치 */
+  now: { icon: IconId; color: string; value: number }[];
+  branches: BranchColVM[];
+  /** 고른 갈래 번호 (0부터). 열린 갈래가 없으면 undefined */
+  selected?: number;
+  /** 하나라도 잠긴 갈래가 있으면 조건 줄을 모든 열에 둬요 (줄 맞춤) */
+  condRow: boolean;
+}
+
+export interface BranchColVM {
+  id: string;
+  /** 1, 2 */
+  n: number;
+  name: string;
+  role: IconId;
+  open: boolean;
+  /** 키운 뒤 값과 ▲양 (안 바뀐 칸은 gain 0) */
+  stats: { value: number; gain: number }[];
+  /** 갈래 고유 카드 (없으면 자리 카드) */
+  cards: { key?: string; name: string }[];
+  /** 잠겼을 때 조건 */
+  cond?: { level: { need: number; ok: boolean }; cards: { have: number; need: number } };
+}

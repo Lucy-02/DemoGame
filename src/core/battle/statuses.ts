@@ -1,3 +1,4 @@
+import { C } from "../data";
 import { round } from "../stats";
 import type { Engine } from "./engine";
 import { isEnemy, statusN, statusStrength, type BEnemy, type BSpirit, type StatusId, type StatusStack } from "./state";
@@ -29,6 +30,9 @@ export interface StatusDef {
   afterAttacked?: (b: Engine, s: BSpirit, attacker: BEnemy, st: StatusStack) => void;
 }
 
+/** 받아치기 배율: 끌어온 공격 피해가 ready_big_at 이상이면 ready_mult, 아니면 ready_mult_small */
+export const readyMult = (pulled: number) => (pulled >= C.ready_big_at ? C.ready_mult : C.ready_mult_small);
+
 /** 취약 배율 */
 export const vulnMult = (h: BSpirit | BEnemy) => (statusN(h, "vuln") > 0 ? 1 + statusStrength(h, "vuln") : 1);
 
@@ -41,9 +45,13 @@ export const STATUSES: Record<StatusId, StatusDef> = {
     turnEnd(b, h, st) {
       if (isEnemy(h)) b.hurtEnemy(h, round(st.n * vulnMult(h)), true);
       else b.hurtSpirit(h, st.n, true, { src: "화상" });
-      if (statusN(h, "burnHold") > 0) delete h.status.burnHold;
-      else if (st.n > 1) st.n = Math.min(st.n, Math.floor(st.n / 2) + (isEnemy(h) ? b.linger() : 0));
-      else st.n = 0;
+      if (statusN(h, "burnHold") > 0) {
+        delete h.status.burnHold;
+        return;
+      }
+      const kept = isEnemy(h) ? b.burnTick(h, st.n) : 0;
+      if (st.n > 1) st.n = Math.min(st.n, Math.floor(st.n / 2) + (isEnemy(h) ? b.linger() : 0) + kept);
+      else st.n = Math.min(st.n, kept);
     },
   },
   /** 문턱에 차면 0이 되고 빙결해요 */
@@ -98,8 +106,6 @@ export const STATUSES: Record<StatusId, StatusDef> = {
   spreadStack: { name: "겹친 번짐", silent: true, gainText: () => "" },
   /** 쓰러지면 남은 화상이 다음 적에게 옮겨 가요 */
   burnCarry: { name: "옮겨붙음", stack: "max", gainText: () => "옮겨붙음" },
-  /** 다음 턴 시작에 방어도가 수치만큼까지 남아요 */
-  wallKeep: { name: "남는 벽", stack: "max", clearsAtTurnStart: true, clearsWhenDowned: true, gainText: (_n, total) => `남는 벽 ${total}` },
   /** 이번 턴 벽이 아군을 대신 막았으면(세기 1) 남아서, 다음 턴 시작에 수치만큼 벽을 얻어요 */
   wallEcho: {
     name: "메아리 벽",
@@ -143,6 +149,10 @@ export const STATUSES: Record<StatusId, StatusDef> = {
   star: { name: "별", gainText: (_n, total) => `별 ${total}` },
   /** 다음 타격 n번이 맞힌 적에게 별을 새겨요 */
   starlight: { name: "별빛", gainText: (n, total) => `별빛 ${total}` },
+  /** 다음 타격이 맞힌 적에게 별을 수치만큼 새겨요 */
+  starAim: { name: "별 겨눔", gainText: (_n, total) => `별 겨눔 ${total}` },
+  /** 별을 새긴 적을 치는 다음 타격 n번에 세기만큼 더해요 */
+  omen: { name: "길조", gainText: (_n, total) => `길조 ${total}` },
   /** 다음 턴 시작에 수치만큼 피해를 받아요 (혜성) */
   comet: {
     name: "혜성",
@@ -179,18 +189,39 @@ export const STATUSES: Record<StatusId, StatusDef> = {
     },
   },
 
+  /** 이번 턴 벽이 막은 피해의 수치%만큼 다음 턴에 얻는 벽이 늘어나요 */
+  tempered: {
+    name: "강화 유리",
+    stack: "max",
+    clearsWhenDowned: true,
+    gainText: () => "강화 유리",
+    turnEnd(b, h, st) {
+      const blocked = b.aliveEnemies().reduce((a, e) => a + statusN(e, "wallTaken"), 0);
+      st.strength = round((blocked * st.n) / 100);
+      if (st.strength === 0) delete h.status.tempered;
+    },
+    turnStart(b, h, st) {
+      delete h.status.tempered;
+      if (isEnemy(h)) return;
+      b.addStatus(h, "wallHeat", st.strength);
+    },
+  },
+
   /** 아군 타격 n번이 허점타로 들어가요. 다음 턴 끝까지 */
   stagger: { name: "휘청", lasts: "nextTurn", gainText: (_n, total) => `휘청 ${total}` },
   /** 틈: 받는 타격 피해가 늘고 아군 타격이 모두 허점타. 턴당 방어도와 회복이 멈춰요 (0062) */
   gap: { name: "틈", stack: "max", gainText: () => "틈" },
   /** 다음 행동이 없어져요 */
   cancelNext: { name: "행동 취소", stack: "max", gainText: () => "다음 행동 취소" },
+  /** 이번 턴 늦춰진 횟수 */
+  delayed: { name: "늦춰짐", lasts: "thisTurn", silent: true, gainText: () => "" },
   /** 이 정령의 다음 카드 시간에서 빼요 (ms) */
   footing: { name: "디딤", clearsAtTurnStart: true, gainText: (n) => `다음 카드 -${n}ms` },
 
   /** 다음 적 공격을 끌어와 절반만 받아요. 공격을 하나 받거나 턴이 끝나면 풀려요 */
   hidden: { name: "숨음", stack: "max", lasts: "thisTurn", clearsWhenDowned: true, gainText: () => "숨음" },
   /** 받아칠 기회: 다음 카드 효과 × ready_mult. 다음 턴 끝까지 */
+  /** 세기 = 끌어온 공격 피해 (가장 큰 것) */
   ready: { name: "받아칠 기회", lasts: "nextTurn", clearsWhenDowned: true, gainText: (_n, total) => `받아칠 기회 ${total}` },
 };
 
