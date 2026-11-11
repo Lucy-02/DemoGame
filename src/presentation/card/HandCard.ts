@@ -1,12 +1,12 @@
 // 손패 크기 카드 (.cd.h 92×129). 정본 frame-old.css "카드" + r5.css "카드: ▲ 성장, 꼬리표".
 // 못 내는 카드는 몸(틀·그림·이름·수치·초상)에만 회색 필터를 걸고, 비용 동전과 이유 띠는 그 위에 또렷하게 그려요(0043).
-import type * as Phaser from "phaser";
+import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { rgba } from "../style/color";
 import { box, circle } from "../style/draw";
 import { place, render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
-import { icon, loadIcon } from "../style/icons";
+import { icon, iconKey, loadIcon } from "../style/icons";
 import { adjustColor, opacityOf } from "../style/opacity";
 import { placeholderArt } from "../style/placeholder";
 import { shadowTexture } from "../style/shadow";
@@ -22,12 +22,43 @@ const T = tokens.provisional.text.battle;
 const UNPLAYABLE = tokens.provisional.effect.unplayable;
 const UP_MARK = "▲";
 
-export function preloadHandCard(scene: Phaser.Scene, c: CardVM) {
-  loadIcon(scene, c.element, C.element.size);
+export interface HandCardOptions {
+  /** 희귀도 보석을 그려요 (보상·상점). 손패에서는 꺼요 (0050) */
+  showRarity?: boolean;
+  /** 카드를 이 배율로 키워 놓아요 (보상 카드). 글자와 기호는 그 크기로 다시 그려서 흐려지지 않아요. preload에도 같은 값을 주세요 */
+  scale?: number;
+}
+
+const RARITY_TINT = P.rarity;
+
+export function preloadHandCard(scene: Phaser.Scene, c: CardVM, opts: HandCardOptions = {}) {
   const two = c.values.length > 1;
-  for (const v of c.values) loadIcon(scene, v.icon, two ? C.glyph.sizeTwo : C.glyph.size);
-  if (c.mark) loadIcon(scene, c.mark, C.mark.icon);
+  const icons: [string, number][] = [[c.element, C.element.size], ...c.values.map((v): [string, number] => [v.icon, two ? C.glyph.sizeTwo : C.glyph.size])];
+  if (opts.showRarity && c.rarity) icons.push([`rarity-${c.rarity}`, C.rarity.size], [`rarity-${c.rarity}-edge`, C.rarity.size]);
+  if (c.mark) icons.push([c.mark, C.mark.icon]);
+  for (const [id, w] of icons) {
+    loadIcon(scene, id, w);
+    if (opts.scale && opts.scale !== 1) loadIcon(scene, id, sharpSize(w, opts.scale));
+  }
   if (c.illustration) preloadCardArt(scene, c.illustration);
+}
+
+const sharpSize = (w: number, scale: number) => Math.round(w * scale);
+const ICON_KEY = /^icon:(.+)@([\d.]+)x([\d.]+)$/;
+
+/** 키운 카드에서 글자와 기호를 화면 크기에 맞는 해상도로 바꿔요 (구운 재질·그림은 그대로) */
+function sharpen(scene: Phaser.Scene, root: Phaser.GameObjects.Container, scale: number) {
+  for (const o of root.list) {
+    if (o instanceof Phaser.GameObjects.Container) sharpen(scene, o, scale);
+    else if (o instanceof Phaser.GameObjects.Text) o.setResolution(Math.ceil(scale));
+    else if (o instanceof Phaser.GameObjects.Image) {
+      const m = ICON_KEY.exec(o.texture.key);
+      if (!m) continue;
+      const w = Number(m[2]), h = Number(m[3]);
+      const key = iconKey(m[1], sharpSize(w, scale), sharpSize(h, scale));
+      if (scene.textures.exists(key)) o.setTexture(key).setDisplaySize(w, h);
+    }
+  }
 }
 
 const text = (t: string, sz: string, color: string, extra: Partial<Node> = {}): Node =>
@@ -64,7 +95,7 @@ export interface HandCardView {
 }
 
 /** (x, y) = 쉬는 자리의 카드 바깥 왼쪽 위 */
-export function createHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: number): HandCardView {
+export function createHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: number, opts: HandCardOptions = {}): HandCardView {
   const lifted: (Phaser.GameObjects.Image)[] = [];
   const root = gather(scene, x + C.w / 2, y + C.h, () => {
     const sh = shadowTexture(scene, C.w, C.h, C.radius, { ...C.liftShadow, color: P.cardLiftShadow });
@@ -72,6 +103,7 @@ export function createHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: num
     const body = gather(scene, 0, 0, () => drawBody(scene, c, -C.w / 2, -C.h, (img) => lifted.push(img)));
     if (c.off) adjustColor(body, UNPLAYABLE);
     drawSignals(scene, c, -C.w / 2, -C.h);
+    if (opts.showRarity && c.rarity) drawRarity(scene, c.rarity, -C.w / 2, -C.h);
   });
   const m = C.held.offset + C.held.width;
   const held = scene.add.image(-C.w / 2 - m, -C.h - m, heldOutlineTexture(scene)).setOrigin(0, 0).setVisible(false);
@@ -79,6 +111,10 @@ export function createHandCard(scene: Phaser.Scene, c: CardVM, x: number, y: num
   const setLifted = (on: boolean) => lifted.forEach((o) => o.setVisible(on));
   const setHeld = (on: boolean) => held.setVisible(on);
   setLifted(false);
+  if (opts.scale && opts.scale !== 1) {
+    sharpen(scene, root, opts.scale);
+    root.setScale(opts.scale);
+  }
   const fade = opacityOf(root);
   return {
     root, setLifted, setHeld,
@@ -136,7 +172,10 @@ function drawBody(
   // 초상 홈
   circle(top, x + C.notch.x + C.notch.d / 2, y + C.notch.y + C.notch.d / 2, C.notch.d, { fill: P.paper });
   const fd = C.notch.d - C.notch.inset * 2;
-  place(scene, top, { t: "image", key: faceKey(c.owner), w: fd, h: fd, round: true }, x + C.notch.x + C.notch.inset, y + C.notch.y + C.notch.inset);
+  const fx = x + C.notch.x + C.notch.inset, fy = y + C.notch.y + C.notch.inset;
+  // face를 직접 주면 이미 원으로 구운 그림이에요 (해상도는 주는 쪽이 정해요)
+  if (c.face) scene.add.image(fx, fy, c.face).setOrigin(0, 0).setDisplaySize(fd, fd);
+  else place(scene, top, { t: "image", key: faceKey(c.owner), w: fd, h: fd, round: true }, fx, fy);
 
   // 수치판 (오른쪽 맞춤)
   const pn = plate(c);
@@ -150,6 +189,13 @@ function drawBody(
     box(top, mx, y + C.mark.y, mw, C.mark.h, C.mark.radius, { fill: P.markBg });
     icon(scene, mx + C.mark.padX, y + C.mark.y + (C.mark.h - C.mark.icon) / 2, c.mark, C.mark.icon, C.mark.icon, P.markInk);
   }
+}
+
+/** 희귀도 보석: 먹색 테(-edge) 위에 희귀도 색 몸 */
+function drawRarity(scene: Phaser.Scene, rarity: NonNullable<CardVM["rarity"]>, x: number, y: number) {
+  const { x: rx, y: ry, size: s } = C.rarity;
+  icon(scene, x + rx, y + ry, `rarity-${rarity}-edge`, s, s, P.paperInk);
+  icon(scene, x + rx, y + ry, `rarity-${rarity}`, s, s, RARITY_TINT[rarity]);
 }
 
 /** 낼 수 있는지를 알리는 것: 비용 동전(마력 부족이면 테)과 못 내는 이유 띠. 못 내는 카드에서도 흐리지 않아요. */

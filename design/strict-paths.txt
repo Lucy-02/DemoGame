@@ -10,3 +10,4 @@ src/presentation/card/
 src/presentation/faces.ts
 src/presentation/tooltip/
 src/presentation/spirits/
+src/presentation/result/

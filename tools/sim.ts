@@ -1,14 +1,15 @@
 // 헤드리스 전투 시뮬레이터: 단순 AI로 인카운터별 승률과 평균 턴을 봐요.
-// 사용: npm run sim -- [반복 수]
+// 사용: npm run sim -- [반복 수] [파티 a,b,c]
 import { ENCOUNTERS } from "../src/core/data";
 import { autoBattle } from "./autoplay";
 
 const N = Number(process.argv[2] ?? 200);
+const party = process.argv[3]?.split(",");
 
 for (const enc of ENCOUNTERS) {
-  let wins = 0, turns = 0, hpLeft = 0, releases = 0, cancels = 0;
+  let wins = 0, turns = 0, hpLeft = 0, hpMax = 0, releases = 0, cancels = 0;
   for (let i = 0; i < N; i++) {
-    const { battle: b, events } = autoBattle(enc.enemies, i);
+    const { battle: b, events } = autoBattle(enc.enemies, i, party);
     for (const e of events) {
       if (e.k === "release") releases++;
       if (e.k === "cancel") cancels++;
@@ -16,11 +17,12 @@ for (const enc of ENCOUNTERS) {
     if (b.result === "victory") {
       wins++;
       hpLeft += b.spirits.reduce((a, s) => a + s.hp, 0);
+      hpMax += b.spirits.reduce((a, s) => a + s.maxHp, 0);
     }
     turns += b.turn;
   }
   console.log(
     `${enc.id.padEnd(14)} 승률 ${((wins / N) * 100).toFixed(0).padStart(3)}%  평균 턴 ${(turns / N).toFixed(1).padStart(4)}  ` +
-    `승리 시 남은 HP합 ${(wins ? hpLeft / wins : 0).toFixed(0).padStart(3)}/84  해방 ${(releases / N).toFixed(1)}  행동취소 ${(cancels / N).toFixed(1)}`,
+    `승리 시 남은 HP합 ${(wins ? hpLeft / wins : 0).toFixed(0).padStart(3)}/${(wins ? hpMax / wins : 0).toFixed(0)}  해방 ${(releases / N).toFixed(1)}  행동취소 ${(cancels / N).toFixed(1)}`,
   );
 }

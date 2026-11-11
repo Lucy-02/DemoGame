@@ -68,5 +68,12 @@
   "prop-retain",
   "prop-chain",
   "ui-ready",
-  "ui-done"
+  "ui-done",
+  "i-coin",
+  "rarity-common",
+  "rarity-common-edge",
+  "rarity-advanced",
+  "rarity-advanced-edge",
+  "rarity-rare",
+  "rarity-rare-edge"
 ]

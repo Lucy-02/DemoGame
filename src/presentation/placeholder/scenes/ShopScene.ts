@@ -18,7 +18,7 @@ export class ShopScene extends Phaser.Scene {
 
   init() {
     const run = getRun();
-    this.stock = run.rollCards(C.shop.card_count, C.reward.rarity_normal).map((card) => ({ card, sold: false }));
+    this.stock = run.rollCards(C.shop.card_count, C.reward.rarity_normal, undefined, "shop").map((card) => ({ card, sold: false }));
     this.removed = false;
     this.healed = false;
   }
@@ -58,17 +58,17 @@ export class ShopScene extends Phaser.Scene {
       });
     });
 
-    button(this, W / 2 - 230, 640, 300, 50, `카드 제거 (${C.shop.remove_price}골드)`, () => {
+    const removePrice = run.removePrice();
+    button(this, W / 2 - 230, 640, 300, 50, `카드 제거 (${removePrice}골드)`, () => {
       this.events.once("resume", () => this.create());
       this.scene.launch("DeckScene", {
         mode: "remove", from: this.scene.key, onPick: (uid: number) => {
-          run.gold -= C.shop.remove_price;
-          run.removeCard(uid);
+          run.buyRemoval(uid);
           this.removed = true;
         },
       });
       this.scene.pause();
-    }, { size: 16, disabled: this.removed || run.gold < C.shop.remove_price });
+    }, { size: 16, disabled: this.removed || run.gold < removePrice });
     button(this, W / 2 + 100, 640, 300, 50, `치료 HP ${C.shop.heal_pct * 100}% (${C.shop.heal_price}골드)`, () => {
       run.gold -= C.shop.heal_price;
       run.healAllPct(C.shop.heal_pct);

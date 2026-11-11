@@ -8,6 +8,9 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 - 색·폰트·크기·시간 값을 지어내지 않아요. 정해지지 않은 값은 `TODO_TOKEN`으로 남겨요.
 - 게임 안 문구(효과문·버튼·안내·기록 등)는 `design/canon/text/TEXT_RULES.md`를 따라요. 효과문은 `src/core/text.ts`의 문장 틀로 만들고, 조사는 `src/core/korean.ts`의 `josa()`로 붙여요.
 
+## 글쓰기 (Lucy 2026-11-11)
+- 답글과 문서는 결론과 방향만 자명하게 써요. 결정의 원인·근거·과정을 길게 풀지 않아요. 근거가 필요하면 한 줄, 나머지는 결정 기록에 둬요.
+
 ## 디자인 루프 (모든 단계 공통)
 넓게 펼치고 → 조각을 고르고 → 좁혀 가요. 한 화면, 한 변수씩 순서대로 정하지 않아요.
 - 모든 시안은 `design/concepts/LEDGER.md`(결정·고른 조각·작업 가정 장부)에서 시작해요. 새 시안은 장부의 조각을 빠짐없이 담고, 장부와 달라진 점을 시안 머리에 적어요. Lucy가 고른 조각을 말없이 빼거나 바꾸지 않아요.
@@ -18,13 +21,15 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 5. 리뷰어(`.claude/agents/`)는 Lucy가 원할 때만, 확인이 필요한 화면에만 돌려요. 미적 판단은 하지 않아요.
 - 시안에 쓰는 색·폰트는 임시 값이에요. Lucy가 고르기 전에는 토큰에 넣지 않아요.
 - 리뷰 보드: https://claude.ai/artifact/K2By7mr5uWaJYH4RNWbLJ8 (`db` 컬렉션: personas, rounds, options, cards), 지적 카드 형식: `design/review/card.schema.json`
-- 라운드가 끝나면 `docs/design-decisions/NNNN-주제.md`를 남기고 `docs/handoff/DECISIONS.md`에 한 줄 요약을 더해요.
+- 라운드가 끝나면 `docs/design-decisions/NNNN-주제.md`를 남기고 `docs/handoff/DECISIONS.md`에 한 줄 요약을 더해요. 번호는 쓰기 직전에 폴더와 열린 PR을 보고 잡고, 같은 폴더 `README.md` 색인 표에도 한 줄 더해요(`pnpm check:docs`).
 
 ## 코드 구조
+- 문서가 어디 있는지는 `docs/README.md`(길잡이)에서 찾아요. 스레드 인수인계 문서는 레포 `docs/handoff/`에 둬요.
 - 구조와 의존 방향: `docs/architecture/0001-client-architecture.md`. `pnpm lint:deps`가 강제해요.
 - `src/core`, `src/data`: 게임 로직과 데이터. UI 작업에서 건드리지 않아요. 규칙을 바꾸면 골든 테스트 스냅샷이 바뀌니 PR에 이유를 적어요.
 - `src/presentation/placeholder`: 예전 임시 UI(`?screen=legacy`). 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 레거시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 규칙으로 끝까지 플레이되는 화면은 레거시뿐이에요. 작업하면서 안 쓰게 된 코드·토큰도 같은 PR에서 정리해요.
 - 클라이언트(전투 화면) 작업은 `docs/handoff/CLIENT_HANDOFF.md`를 먼저 읽어요. 정본 옮기는 관행과 렌더링 디테일이 있어요.
+- 시안을 구현할 때 시안 HTML을 그대로 옮기지 않아요. 재사용·리팩터링할 수 있는 기존 컴포넌트를 먼저 찾아 쓰고, 실제 코드 구조에 맞게 가져와요 (Lucy 2026-11-09).
 - `src/platform`, `electron/`: 저장·창 같은 바깥 세계. 렌더러는 Electron을 직접 import하지 않아요.
 - `src/design/tokens.ts`: `design/tokens/tokens.json`에서 `pnpm tokens`로 생성. 손으로 고치지 않아요.
 - `pnpm check:design`: 리터럴 값 검사. `design/strict-paths.txt`에 적힌 경로는 위반 시 실패해요.

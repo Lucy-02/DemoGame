@@ -28,7 +28,7 @@ describe("카드 효과 문구 (0022)", () => {
 
   it("대상은 효과마다. 같은 대상이 이어지면 한 번만", () => {
     expect(text("fire_storm")).toBe("모든 적에게 피해를 5 입히고 화상을 3 부여합니다.");
-    expect(text("tempered_glass")).toBe("모든 아군이 방어도를 5 얻고 반격을 2 얻습니다.");
+    expect(text("glass_skin")).toBe("벽 방어도를 4 얻습니다. 반격을 2 얻습니다.");
     expect(text("bubble_shield")).toBe("아군 하나에게 방어도를 5 줍니다.");
     expect(text("mend")).toBe("아군 하나의 HP를 4 회복합니다.");
   });
@@ -52,6 +52,7 @@ describe("카드 효과 문구 (0022)", () => {
       // 숫자 뒤 조사 없음 (고정 문구 "비용이 0이 됩니다"는 숫자가 바뀌지 않아요)
       expect(s.replace("0이 됩니다", ""), c.id).not.toMatch(/\d(을|를|이|가)\s/);
     }
-    expect(Object.fromEntries(CARDS.map((c) => [c.name, describeCard(c, null)]))).toMatchSnapshot();
+    // 무기 기술은 대표 카드와 이름이 같아서 id로 적어요
+    expect(Object.fromEntries(CARDS.map((c) => [c.obtain === "equipment" ? c.id : c.name, describeCard(c, null)]))).toMatchSnapshot();
   });
 });

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { CARDS, GROWTH } from "./data";
+import { C, CARDS, GROWTH, SPIRITS, enemyDef, partyScale, scaleEnemy } from "./data";
 import {
-  addDeed, canEvolve, episodesOpen, evolve, feed, gardenSpirit, grantBattle, isFinalStage, levelOf, newGarden,
-  seeEpisode, todos, unlockKeys, type Garden,
+  addDeed, canEvolve, endRun, episodesOpen, evolve, feed, gardenSpirit, grantBattle, isFinalStage, join, joinOffer, levelOf, newGarden,
+  seeEpisode, startGarden, todos, unlockKeys, type Garden,
 } from "./garden";
 import { Run } from "./run";
 import { baseStat, maxHpOf } from "./stats";
@@ -53,7 +53,9 @@ describe("정원 (0021)", () => {
     g = evolve(withExp(g, GROWTH.levels[3]), "mist_cat");
     expect([...unlockKeys(g)].filter((k) => k.endsWith("adult"))).toEqual(["mist_cat_adult", "any_adult"]);
     // 데이터의 해금 키는 모두 정원이 만들 수 있는 키예요
-    const all = unlockKeys(grantBattle(evolve(evolve(evolve(withExp(g, GROWTH.levels[3]), "fire_fox"), "glass_salamander"), "mist_cat"), PARTY, "boss"));
+    let full = withExp(newGarden(1, SPIRITS.map((s) => s.id)), GROWTH.levels[3]);
+    for (const s of SPIRITS) full = evolve(full, s.id);
+    const all = unlockKeys(grantBattle(full, PARTY, "boss"));
     expect(CARDS.filter((c) => !all.has(c.unlock)).map((c) => c.id)).toEqual([]);
   });
 
@@ -92,5 +94,62 @@ describe("정원 (0021)", () => {
     expect(baseStat({ ...sal, personality: "brave" }, "guard")).toBe(15);
     expect(run.isUnlocked(CARDS.find((c) => c.unlock === "glass_salamander_lv3")!)).toBe(true);
     expect(run.isUnlocked(CARDS.find((c) => c.unlock === "fire_fox_adult")!)).toBe(false);
+  });
+});
+
+describe("처음 세 마리 (0053)", () => {
+  const POOL = C.start_pool as string[];
+
+  it("새로 하기는 시작 풀의 정령 하나로 시작하고, 같은 시드면 같은 정령이에요", () => {
+    const g = startGarden(7);
+    expect(g.spirits).toHaveLength(1);
+    expect(POOL).toContain(g.spirits[0].id);
+    expect(startGarden(7)).toEqual(g);
+    expect(new Set(Array.from({ length: 40 }, (_, i) => startGarden(i).spirits[0].id)).size).toBe(POOL.length);
+  });
+
+  it("첫 판을 끝내면(져도) 둘 중 하나를 골라 깃들여요. 둘째 판부터는 더 주지 않아요", () => {
+    let g = startGarden(7);
+    expect(joinOffer(g)).toEqual([]);
+    g = endRun(g);
+    const offer = joinOffer(g);
+    expect(offer).toHaveLength(2);
+    expect(offer).not.toContain(g.spirits[0].id);
+    expect(joinOffer(g)).toEqual(offer);
+    expect(join(g, g.spirits[0].id)).toBe(g);
+    g = join(g, offer[0]);
+    expect(g.spirits.map((s) => s.id)).toEqual([startGarden(7).spirits[0].id, offer[0]]);
+    expect(joinOffer(g)).toEqual([]);
+    expect(joinOffer(endRun(g))).toEqual([]);
+  });
+
+  it("첫 보스를 가라앉히면 셋째가 깃들고, 다시 가라앉혀도 더 주지 않아요", () => {
+    let g = endRun(startGarden(7));
+    g = join(g, joinOffer(g)[0]);
+    const party = g.spirits.map((s) => s.id);
+    g = grantBattle(g, party, "boss");
+    expect(joinOffer(g)).toHaveLength(2);
+    g = join(g, joinOffer(g)[1]);
+    expect(g.spirits).toHaveLength(3);
+    expect(joinOffer(grantBattle(g, party, "boss"))).toEqual([]);
+  });
+
+  it("출전하지 않은 정령은 경험을 받지 않아요", () => {
+    const g = grantBattle(newGarden(1), ["fire_fox"], "normal");
+    expect(g.spirits.map((s) => s.exp)).toEqual([GROWTH.exp.normal, 0, 0]);
+  });
+
+  it("정원의 정령만큼 떠나고, 인원이 적으면 적이 약해져요", () => {
+    const solo = new Run({ seed: 1, frontId: startGarden(7).spirits[0].id, garden: startGarden(7), adult: false, unlockAll: false });
+    expect(solo.spirits).toHaveLength(1);
+    expect(solo.enemyScale()).toEqual(partyScale(1));
+    expect(new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: false, unlockAll: false }).enemyScale()).toBeUndefined();
+    const boss = enemyDef("grimbark");
+    const weak = scaleEnemy(boss, { hp: 0.5, dmg: 0.5 });
+    expect(weak.hp).toBe(boss.hp / 2);
+    const hit = boss.pattern[0].actions[0];
+    expect(weak.pattern[0].actions[0]).toMatchObject({ type: "attack", dmg: hit.type === "attack" ? hit.dmg / 2 : 0 });
+    expect(weak.phase2?.turnStartBlock).toBe(boss.phase2!.turnStartBlock / 2);
+    expect(enemyDef("grimbark")).toBe(boss);
   });
 });

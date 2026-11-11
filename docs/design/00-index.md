@@ -7,8 +7,7 @@
 | `01-vision.md` | 한 문장, 코어 판타지, 주 미학, 핵심 경험 3장면, 훅·앵커, 하지 않을 것 | 추천안 (0026) |
 | `02-pillars.md` | 필러 넷: 뜻 / 그래서 하는 것 / 하지 않는 것 / 충돌 시 우선순위 | 추천안 (0026) |
 | `03-core-loop.md` | 정원↔탐험 루프 그림, 층별 표, 루프 vs 아크, 검증 방법 | 미작성 (S2 뒤) |
-| `04-usp-validation.md` | "누가 배울까" 프로토타입 계획과 기록 | 초안 (S2 계획) |
 | `05-world.md` | 세계 한 장 (배경만, 스토리 없음 0031) | 초안 (Claude 추천) |
-| `systems/` | 시스템별 원페이저 (머리에 관련 필러) | 미작성 |
+| `systems/meta-progression.md` | 메타 진행: 처음 세 마리, 정령을 얻는 길, 출전 인원, 성장 | 확정 (0053) |
 
 관련 정본: 기획서 v0.2 `docs/handoff/01_기획서_v0.2.md`(규칙 상세), 결정 한 줄 요약 `docs/handoff/DECISIONS.md`, 밸런스 `design/canon/BALANCE_BASELINE.md`, 정령 `design/canon/spirits/`, 네이밍 `design/canon/naming/`.

@@ -12,6 +12,8 @@ export const HAND_CARD = {
   band: { x: 1, y: 99, w: 90, h: 29, radius: 7, padTop: 2 },
   /** .h .cost left 2 top 2 22×22, 바깥 테 2 (.short 2.5) */
   cost: { x: 3, y: 3, d: 22, ring: 2, shortRing: 2.5 },
+  /** 희귀도 보석 (0050 G3): 비용 동전 아래 칸 하나. 테(-edge) 위에 몸을 겹쳐요. 자리·크기는 E1 시안 임시 값 */
+  rarity: { x: 7.5, y: 28.5, size: 13 },
   /** .h .eg right 7 top 15 11×11, opacity .85 */
   element: { right: 7, y: 16, size: 11, alpha: 0.85 },
   /** .h .notch left 1 top 63 32×32, img inset 3 */
