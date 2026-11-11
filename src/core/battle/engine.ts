@@ -71,8 +71,8 @@ export interface Engine {
   healSpirit(s: BSpirit, v: number): void;
   /** 상태를 쌓고 상태 이벤트를 내요. */
   addStatus(h: BSpirit | BEnemy, id: StatusId, n: number, opts?: { fresh?: boolean; strength?: number; ref?: string }): void;
-  /** 빙결 = 늦추기 (0039) */
-  freezeEnemy(e: BEnemy): void;
+  /** 빙결 = 늦추기 (0039). extraMs만큼 더 늦춰요 */
+  freezeEnemy(e: BEnemy, extraMs?: number): void;
   /** 브레이크: 차징 중인 행동을 없애고 다음 패턴으로 */
   breakCharge(e: BEnemy): boolean;
   /** 이 적의 다음 행동을 없애요: 이번 턴 남은 행동, 없으면 다음 턴 행동 */

@@ -1,8 +1,15 @@
 // 전투 보상 구조 (결정 0049): 정령마다 1장 · 넘기기 골드 · 정예 장비 · 보스 장비 3택 · 카드 빼기 누진
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { C, EQUIPMENT, cardDef } from "./data";
 import { Run } from "./run";
 import type { EquipDef } from "./types";
+
+/** 장비 규칙 시험은 실제 장비 데이터를 비우고 시험용 장비만 써요 */
+const REAL_EQUIPMENT = [...EQUIPMENT];
+const onlyTestEquipment = () => {
+  beforeEach(() => void EQUIPMENT.splice(0, EQUIPMENT.length));
+  afterEach(() => void EQUIPMENT.splice(0, EQUIPMENT.length, ...REAL_EQUIPMENT));
+};
 
 const run = (seed = 1, unlockAll = false) => new Run({ seed, frontId: "fire_fox", adult: false, unlockAll });
 
@@ -80,9 +87,7 @@ describe("고르기 적용", () => {
 });
 
 describe("정예 장비 (0048 1절 · 0051)", () => {
-  afterEach(() => {
-    for (const e of [ELITE_ANY, ELITE_CAT, ELITE_STAR, ...BOSS]) if (EQUIPMENT.includes(e)) EQUIPMENT.splice(EQUIPMENT.indexOf(e), 1);
-  });
+  onlyTestEquipment();
 
   it("장비 데이터가 없으면 정예도 장비 없이", () => {
     const reward = run(1).rollBattleReward("elite");
@@ -131,9 +136,7 @@ describe("장비 칸 · 바꿔 끼기 · 대표 카드 변형 (0055 · 0056)", (
     signature: { card: "ember_scatter", techniques: { burst: ["backfire", "ignite"], spread: ["fire_storm", "fire_storm"] } },
   };
   const OTHER: EquipDef = { id: "test_other", owner: null, rarity: "generic", tiers: [{}] };
-  afterEach(() => {
-    for (const e of [ELITE_ANY, SPEAR, OTHER, ...BOSS]) if (EQUIPMENT.includes(e)) EQUIPMENT.splice(EQUIPMENT.indexOf(e), 1);
-  });
+  onlyTestEquipment();
 
   it("칸이 꽉 차면 하나를 내려놓아야 받아요. 각성체는 둘까지 지녀요", () => {
     EQUIPMENT.push(ELITE_ANY, OTHER);

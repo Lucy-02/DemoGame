@@ -41,7 +41,8 @@ export const STATUSES: Record<StatusId, StatusDef> = {
     turnEnd(b, h, st) {
       if (isEnemy(h)) b.hurtEnemy(h, round(st.n * vulnMult(h)), true);
       else b.hurtSpirit(h, st.n, true, { src: "화상" });
-      st.n = Math.floor(st.n / 2);
+      if (statusN(h, "burnHold") > 0) delete h.status.burnHold;
+      else st.n = Math.floor(st.n / 2);
     },
   },
   /** 문턱에 차면 0이 되고 빙결해요 */
@@ -89,6 +90,46 @@ export const STATUSES: Record<StatusId, StatusDef> = {
   bonusDmg: { name: "피해", gainText: (n) => `피해 +${n}` },
   /** 다음 타격 n번에 세기만큼 더해요 */
   hitBonus: { name: "타격 보너스", gainText: (n, total) => `다음 타격 ${total}번 강화` },
+
+  /** 이번 턴 끝에 화상이 줄지 않아요 */
+  burnHold: { name: "화상 유지", stack: "max", lasts: "thisTurn", gainText: () => "화상 유지" },
+  /** 번질 곳이 없어 이 적에게 화상이 겹친 횟수 */
+  spreadStack: { name: "겹친 번짐", silent: true, gainText: () => "" },
+  /** 쓰러지면 남은 화상이 다음 적에게 옮겨 가요 */
+  burnCarry: { name: "옮겨붙음", stack: "max", gainText: () => "옮겨붙음" },
+  /** 다음 턴 시작에 방어도가 수치만큼까지 남아요 */
+  wallKeep: { name: "남는 벽", stack: "max", clearsAtTurnStart: true, clearsWhenDowned: true, gainText: (_n, total) => `남는 벽 ${total}` },
+  /** 이번 턴 벽이 아군을 대신 막았으면(세기 1) 남아서, 다음 턴 시작에 수치만큼 벽을 얻어요 */
+  wallEcho: {
+    name: "메아리 벽",
+    stack: "max",
+    clearsWhenDowned: true,
+    gainText: (_n, total) => `메아리 벽 ${total}`,
+    turnEnd(_b, h, st) {
+      if (st.strength === 0) delete h.status.wallEcho;
+    },
+    turnStart(b, h, st) {
+      delete h.status.wallEcho;
+      if (isEnemy(h)) return;
+      b.log(`${h.def.name}: 메아리 벽`);
+      b.gainWall(h, st.n);
+    },
+  },
+  /** 이번 턴 벽이 깨지면 깬 적에게 수치만큼 피해. 세기 1이면 직접 맞아 방어도가 다 떨어져도 */
+  wallBurst: { name: "깨지는 유리", stack: "max", clearsAtTurnStart: true, clearsWhenDowned: true, gainText: (_n, total) => `깨지는 유리 ${total}` },
+  /** 이번 턴 이 아군을 때린 적에게 냉기를 한 번 걸어요 */
+  frostGuard: {
+    name: "서리 장막",
+    stack: "max",
+    clearsAtTurnStart: true,
+    clearsWhenDowned: true,
+    gainText: (_n, total) => `서리 장막 ${total}`,
+    afterAttacked(b, s, e, st) {
+      const n = st.n;
+      delete s.status.frostGuard;
+      if (!e.dead) b.addStatus(e, "chill", n);
+    },
+  },
 
   /** 적에게 새긴 별. 낙하 카드가 세어요 */
   star: { name: "별", gainText: (_n, total) => `별 ${total}` },

@@ -1,6 +1,6 @@
 // 헤드리스 런 시뮬레이터: 자동 플레이로 1막 한 판을 처음부터 보스까지 돌려요.
 // 인카운터 하나만 보는 sim.ts와 달리 덱이 자라고 HP가 깎인 채 보스를 만나요.
-// 사용: pnpm runsim [반복 수] [파티 a,b,c] [--adult] [--all] [--bot basic|smart|search|ladder]
+// 사용: pnpm runsim [반복 수] [파티 a,b,c] [--adult] [--all] [--bot basic|smart|search|ladder] [--branch 정령:갈래,…]
 // 봇은 실력이 다른 셋이에요. 숫자는 절댓값이 아니라 봇 사이 · 바꾸기 전후 비교로 읽어요 (`design/canon/BALANCE_BASELINE.md` 7절).
 //   basic  공격 카드부터 내고 보상은 아무거나 (골든 테스트와 같은 봇)
 //   smart  한 장씩 값을 매겨 놓고, 보상 · 이벤트 · 빼기를 가려 골라요 (기본)
@@ -73,7 +73,7 @@ const hpPct = (run: Run) => run.spirits.reduce((a, s) => a + s.hp, 0) / run.spir
 
 /** 전투 하나. 이기면 true. HP를 런에 되돌려요 (쓰러진 정령은 복귀 HP). */
 function fight(run: Run, enc: EncounterDef, rng: Rng, bot: Bot): { won: boolean; turns: number } {
-  const b = new Battle(run.spirits, run.deck, enc.enemies, run.frontId, rng, run.enemyScale());
+  const b = new Battle(run.spirits, run.battleDeck(), enc.enemies, run.frontId, rng, run.enemyScale());
   while (b.result === "ongoing" && b.turn < MAX_TURNS) {
     bot(b, rng);
     b.drain();
@@ -100,7 +100,8 @@ function removeOne(run: Run, policy: Policy) {
   if (uid !== undefined && run.deck.length > 5) run.removeCard(uid);
 }
 
-export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false): RunSimResult {
+/** branches: 정령 id → 갈래. 갈래 고르기가 들어오기 전까지 무기 기술을 재는 데 써요 (0056) */
+export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false, branches: Record<string, string> = {}): RunSimResult {
   const ids = party ?? (C.default_party as string[]);
   // 앞열은 가장 튼튼한 정령(HP + 방어)에게 맡겨요. 앞열을 잘못 세우면 같은 파티도 보스를 못 넘어요.
   const sturdy = (id: string) => { const st = spiritDef(id).stats; return st.hp + st.guard * 2; };
@@ -109,6 +110,7 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
   const base = newGarden(seed, ids);
   const garden = adult ? { ...base, spirits: base.spirits.map((s) => ({ ...s, exp: ADULT_EXP, stage: "adult" as const })) } : undefined;
   const run = new Run({ seed: 5000 + seed, frontId, party, garden, adult, unlockAll: false });
+  for (const s of run.spirits) s.branch ??= branches[s.id];
   // 전투와 판 단위 판단의 난수를 나눠요. 봇이 달라도 같은 시드면 같은 지도 · 같은 길 고르기 난수를 써요.
   const battleRng = new Rng(seed * 13 + 5);
   const rng = new Rng(seed * 31 + 7);
@@ -130,7 +132,12 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
         if (id) run.takeRewardCard(reward, id);
         else run.skipRewardCards(reward);
       }
-      if (reward.equipment && !reward.equipDone) run.giveRewardEquipment(reward, rng.pick(run.equipTakers(reward.equipment.equipId)).id);
+      if (reward.equipment && !reward.equipDone) {
+        // 받을 수 있는 정령 중 하나에게. 칸이 꽉 찼으면 먼저 지닌 것을 내려놓아요
+        const equipId = reward.equipment.equipId;
+        const taker = rng.pick(run.equipTakers(equipId));
+        run.giveRewardEquipment(reward, taker.id, run.needsReplace(equipId, taker.id) ? taker.equipment[0].id : undefined);
+      }
     } else if (node.type === "rest") {
       run.healAllPct(C.rest_heal_pct as number);
     } else if (node.type === "shop") {
@@ -169,8 +176,8 @@ export function wilson(k: number, n: number): [number, number] {
   return [(c - h) / d, (c + h) / d];
 }
 
-function report(label: string, n: number, kind: BotKind, party?: string[], adult = false) {
-  const rs = Array.from({ length: n }, (_, i) => simulateRun(i, kind, party, adult));
+function report(label: string, n: number, kind: BotKind, party?: string[], adult = false, branches: Record<string, string> = {}) {
+  const rs = Array.from({ length: n }, (_, i) => simulateRun(i, kind, party, adult, branches));
   const boss = rs.filter((r) => r.reachedBoss);
   const wins = rs.filter((r) => r.won);
   const avg = (xs: number[]) => (xs.length ? xs.reduce((a, x) => a + x, 0) / xs.length : 0);
@@ -189,6 +196,8 @@ if (process.argv[1]?.endsWith("runsim.ts")) {
   const args = process.argv.slice(2);
   const botAt = args.indexOf("--bot");
   const botArg = botAt >= 0 ? args.splice(botAt, 2)[1] : "smart";
+  const branchAt = args.indexOf("--branch");
+  const branches = Object.fromEntries((branchAt >= 0 ? args.splice(branchAt, 2)[1] : "").split(",").filter(Boolean).map((x) => x.split(":")));
   const flags = new Set(args.filter((a) => a.startsWith("--")));
   const rest = args.filter((a) => !a.startsWith("--"));
   const n = Number(rest[0] ?? 2000);
@@ -199,9 +208,9 @@ if (process.argv[1]?.endsWith("runsim.ts")) {
   const runs = (k: BotKind) => (k === "search" ? Math.min(n, 300) : n);
   if (flags.has("--all")) {
     const { SPIRITS } = await import("../src/core/data");
-    for (const s of SPIRITS) for (const k of kinds) report(`혼자 ${s.id}${adult ? " (성체)" : ""}`, runs(k), k, [s.id], adult);
+    for (const s of SPIRITS) for (const k of kinds) report(`혼자 ${s.id}${adult ? " (성체)" : ""}`, runs(k), k, [s.id], adult, branches);
   } else {
     const party = rest[1]?.split(",");
-    for (const k of kinds) report(`${party?.join(",") ?? "기본 파티"}${adult ? " (성체)" : ""}`, runs(k), k, party, adult);
+    for (const k of kinds) report(`${party?.join(",") ?? "기본 파티"}${adult ? " (성체)" : ""}`, runs(k), k, party, adult, branches);
   }
 }

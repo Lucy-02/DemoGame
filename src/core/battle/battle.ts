@@ -1,6 +1,6 @@
 import { C, cardDef, enemyDef, scaleEnemy, spiritDef } from "../data";
 import { Rng } from "../rng";
-import { activePersonality, maxHpOf } from "../stats";
+import { activePersonality, maxHpOf, round } from "../stats";
 import type {
   AuraId, CardDef, CardOp, DeckCard, Element, EnemyMove, EnemyScale, EnemyTargetRule, RunSpirit, StatKey,
 } from "../types";
@@ -12,11 +12,11 @@ import {
   ALLY_HIT_STAGES, CARD_TIME_STAGES, ENEMY_HIT_STAGES, ENEMY_TARGET_STAGES, INCOMING_STAGES, STAT_STAGES, byOrder, runStages, type Incoming,
 } from "./pipelines";
 import {
-  STATUS_IDS, refOf, spendStatus, stackOf, statusN,
+  STATUS_IDS, refOf, spendStatus, stackOf, statusN, statusStrength,
   type BCard, type BEnemy, type BSpirit, type BattleEvent, type BattleResult, type EnemySlot, type HoldState, type Intent,
   type Planned, type Ref, type StarState, type StatusId,
 } from "./state";
-import { STATUSES, clearStatuses, tickStatuses } from "./statuses";
+import { STATUSES, clearStatuses, tickStatuses, vulnMult } from "./statuses";
 
 /** 턴 흐름의 한 단계. order가 작은 것부터 차례로 돌아요. */
 interface Step {
@@ -258,8 +258,8 @@ export class Battle implements Engine {
     else this.addStatus(e, "cancelNext", 1);
   }
 
-  freezeEnemy(e: BEnemy) {
-    const d = C.freeze_delay_ms;
+  freezeEnemy(e: BEnemy, extraMs = 0) {
+    const d = C.freeze_delay_ms + extraMs;
     this.emit({ k: "freeze", uid: e.uid });
     const slot = this.slots.find((x) => x.uid === e.uid && !x.done);
     if (slot) {
@@ -300,7 +300,7 @@ export class Battle implements Engine {
       run: () => {
         for (const s of this.aliveSpirits()) {
           const keep = passivesOf(s).some(([p, v]) => p.keepsBlock?.(s, v));
-          if (!keep) s.block = passivesOf(s).reduce((m, [p, v]) => Math.max(m, p.carryBlock?.(s, s.block, v) ?? 0), 0);
+          if (!keep) s.block = passivesOf(s).reduce((m, [p, v]) => Math.max(m, p.carryBlock?.(s, s.block, v) ?? 0), Math.min(s.block, statusN(s, "wallKeep")));
           clearStatuses(s, "clearsAtTurnStart");
           this.runStatusHook(s, "turnStart");
           s.playedThisTurn = 0;
@@ -819,6 +819,7 @@ export class Battle implements Engine {
       this.emit({ k: "enemyDead", uid: e.uid });
       this.log(`${e.def.name} 쓰러짐`);
       for (const [p, v, s] of allPassives(this)) p.enemyDiedAny?.(this, s, v, e);
+      this.carryBurn(e);
       return;
     }
     const p2 = e.def.phase2;
@@ -841,10 +842,34 @@ export class Battle implements Engine {
       this.log(`${keeper.def.name}의 벽이 ${r.wall} 막음`);
       this.addStatus(opts.attacker, "wallTaken", r.wall);
       for (const [p, v] of passivesOf(keeper)) p.wallBlocked?.(this, keeper, v, opts.attacker, r.wall);
+      const echo = keeper.status.wallEcho;
+      if (echo) echo.strength = 1;
+      if (keeper.block === 0 && statusN(keeper, "wallBroken") > 0) this.burstWall(keeper, opts.attacker);
       this.runAfterAttacked(keeper, opts.attacker);
     }
+    if (opts.attacker && r.blocked > 0 && s.block === 0 && statusStrength(s, "wallBurst") > 0) this.burstWall(s, opts.attacker);
     if (opts.src) this.log(`${s.def.name} ${opts.src} 피해 ${r.real}`);
     if (s.hp <= 0) this.downSpirit(s);
+  }
+
+  /** 깨지는 유리: 벽을 깬 적에게 피해를 주고 사라져요 */
+  private burstWall(s: BSpirit, attacker: BEnemy) {
+    const n = statusN(s, "wallBurst");
+    if (n === 0) return;
+    delete s.status.wallBurst;
+    if (attacker.dead) return;
+    this.log(`${s.def.name}: 깨지는 유리 ${n}`);
+    this.hurtEnemy(attacker, round(n * vulnMult(attacker)), false);
+  }
+
+  /** 옮겨붙음: 쓰러진 적의 남은 화상이 다음 적에게 옮겨 가요 */
+  private carryBurn(e: BEnemy) {
+    const burn = statusN(e, "burn");
+    if (statusN(e, "burnCarry") === 0 || burn === 0) return;
+    const next = this.aliveEnemies()[0];
+    if (!next) return;
+    this.log(`${e.def.name}의 화상 ${burn}이 ${next.def.name}에게 옮겨붙음`);
+    this.addStatus(next, "burn", burn);
   }
 
   private downSpirit(s: BSpirit) {
