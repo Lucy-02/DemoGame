@@ -1,5 +1,5 @@
 [
-  {"id": "starlight", "element": "light", "role": "support", "rarity": "basic", "cost": 1, "ms": 400, "target": "ally", "effects": [{"op": "starlight", "hits": 3}], "start": 2, "startOwner": "star_spirit", "spirit": "star_spirit", "unlock": "start"},
+  {"id": "starlight", "element": "light", "role": "support", "rarity": "basic", "cost": 1, "ms": 400, "target": "ally", "effects": [{"op": "starlight", "hits": 3}, {"op": "hitBonus", "value": 4, "hits": 3}], "start": 2, "startOwner": "star_spirit", "spirit": "star_spirit", "unlock": "start"},
   {"id": "stardust", "element": "light", "role": "attack", "rarity": "common", "cost": 0, "ms": 300, "target": "enemy", "effects": [{"op": "damage", "value": 1}, {"op": "star", "value": 1}], "spirit": "star_spirit", "unlock": "start"},
   {"id": "constellation", "element": "light", "role": "support", "rarity": "common", "cost": 1, "ms": 500, "target": "allAllies", "effects": [{"op": "starlight", "hits": 1}], "spirit": "star_spirit", "unlock": "start"},
   {"id": "star_mantle", "element": "light", "role": "guard", "rarity": "common", "cost": 1, "ms": 900, "target": "ally", "effects": [{"op": "block", "value": 4}, {"op": "starlight", "hits": 1}], "spirit": "star_spirit", "unlock": "start"},
@@ -17,7 +17,7 @@
   {"id": "comet", "element": "light", "role": "attack", "rarity": "common", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 8}, {"op": "delayedHit", "value": 8}], "exhaust": true, "spirit": "star_spirit", "obtain": "generated", "unlock": "start"},
   {"id": "star_veil", "element": "light", "role": "guard", "rarity": "common", "cost": 1, "ms": 600, "target": "allAllies", "effects": [{"op": "block", "value": 4, "perStar": 1}, {"op": "hitBonus", "value": 2, "hits": 3}, {"op": "clearStars"}], "exhaust": true, "spirit": "star_spirit", "obtain": "generated", "unlock": "start"},
 
-  {"id": "embrace", "element": "light", "role": "support", "rarity": "basic", "cost": 1, "ms": 600, "target": "self", "effects": [{"op": "block", "value": 3}, {"op": "hold", "value": 1}], "start": 2, "startOwner": "pearl_oyster", "spirit": "pearl_oyster", "unlock": "start"},
+  {"id": "embrace", "element": "light", "role": "support", "rarity": "basic", "cost": 1, "ms": 600, "target": "enemy", "effects": [{"op": "damage", "value": 6}, {"op": "block", "value": 3}, {"op": "hold", "value": 1}], "start": 2, "startOwner": "pearl_oyster", "spirit": "pearl_oyster", "unlock": "start"},
   {"id": "current", "element": "light", "role": "attack", "rarity": "common", "cost": 1, "ms": 900, "target": "enemy", "effects": [{"op": "damage", "value": 6}], "spirit": "pearl_oyster", "unlock": "start"},
   {"id": "glare", "element": "light", "role": "disrupt", "rarity": "common", "cost": 0, "ms": 300, "target": "enemy", "effects": [{"op": "weak", "turns": 1}], "spirit": "pearl_oyster", "unlock": "start"},
   {"id": "nacre_glow", "element": "light", "role": "guard", "rarity": "common", "cost": 1, "ms": 1000, "target": "ally", "effects": [{"op": "block", "value": 5}], "spirit": "pearl_oyster", "unlock": "start"},

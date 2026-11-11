@@ -1,5 +1,5 @@
 [
-  {"id": "mist_breath", "element": "water", "role": "disrupt", "rarity": "basic", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "chill", "value": 3}], "start": 2, "unlock": "start"},
+  {"id": "mist_breath", "element": "water", "role": "disrupt", "rarity": "basic", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 6}, {"op": "chill", "value": 3}], "start": 2, "unlock": "start"},
   {"id": "paw_splash", "element": "water", "role": "attack", "rarity": "basic", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 4}, {"op": "chill", "value": 1}], "unlock": "start"},
   {"id": "bubble_shield", "element": "water", "role": "guard", "rarity": "basic", "cost": 1, "ms": 900, "target": "ally", "effects": [{"op": "block", "value": 5}], "unlock": "start"},
   {"id": "frost_breath", "element": "water", "role": "disrupt", "rarity": "common", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 3}, {"op": "chill", "value": 2}], "unlock": "start"},
