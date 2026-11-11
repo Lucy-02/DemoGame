@@ -10,7 +10,7 @@ import assetsJson from "../data/assets.json";
 import growthJson from "../data/growth.json";
 import { DEFAULT_LOCALE, cardText, type Locale } from "./l10n";
 import type {
-  CardData, CardDef, EncounterDef, EnemyDef, EquipDef, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
+  CardData, CardDef, EncounterDef, EnemyDef, EnemyMove, EnemyScale, EquipDef, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
 } from "./types";
 
 export const C = constantsJson;
@@ -62,6 +62,30 @@ function must<T>(m: Map<string, T>, id: string, what: string): T {
 export const spiritDef = (id: string) => must(spiritMap, id, "spirit");
 export const cardDef = (id: string) => must(cardMap, id, "card");
 export const enemyDef = (id: string) => must(enemyMap, id, "enemy");
+
+/** 출전 인원에 맞춘 적 세기 (0053). 셋이면 그대로(undefined) */
+export function partyScale(size: number): EnemyScale | undefined {
+  return (C.party_scale as Record<string, EnemyScale>)[String(size)];
+}
+
+/** 세기를 곱한 적 데이터. HP · 방어도 · 회복은 hp, 피해 · 화상 · 새끼 피해는 dmg */
+export function scaleEnemy(def: EnemyDef, k: EnemyScale): EnemyDef {
+  const up = (v: number, m: number) => Math.max(1, Math.round(v * m));
+  const move = (m: EnemyMove): EnemyMove => ({
+    ...m,
+    actions: m.actions.map((a) =>
+      a.type === "attack" ? { ...a, dmg: up(a.dmg, k.dmg) }
+      : a.type === "burn" || a.type === "buffMinions" ? { ...a, value: up(a.value, k.dmg) }
+      : a.type === "block" || a.type === "sapHeal" ? { ...a, value: up(a.value, k.hp) }
+      : a),
+  });
+  return {
+    ...def,
+    hp: up(def.hp, k.hp),
+    pattern: def.pattern.map(move),
+    phase2: def.phase2 && { ...def.phase2, turnStartBlock: up(def.phase2.turnStartBlock, k.hp), pattern: def.phase2.pattern.map(move) },
+  };
+}
 export function equipDef(id: string): EquipDef {
   const d = EQUIPMENT.find((e) => e.id === id);
   if (!d) throw new Error(`unknown equipment: ${id}`);

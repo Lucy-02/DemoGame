@@ -1,37 +1,36 @@
 [
   { "id": "moss_slime", "name": "모스 슬라임", "tier": "normal", "element": "forest", "hp": 18,
     "pattern": [
-      { "name": "몸통박치기", "actions": [{ "type": "attack", "dmg": 6, "target": "front" }] },
-      { "name": "끈적이기", "actions": [{ "type": "weak", "turns": 1, "target": "front" }] }
+      { "name": "끈적이기", "actions": [{ "type": "weak", "turns": 1, "target": "front" }] },
+      { "name": "몸통박치기", "charge": true, "actions": [{ "type": "attack", "dmg": 10, "target": "front" }] }
     ] },
   { "id": "bramble_rat", "name": "브램블 랫", "tier": "normal", "element": "forest", "hp": 14,
     "pattern": [
-      { "name": "물어뜯기", "actions": [{ "type": "attack", "dmg": 4, "hits": 2, "target": "random" }] },
+      { "name": "물어뜯기", "actions": [{ "type": "attack", "dmg": 3, "hits": 2, "target": "random" }] },
       { "name": "숨기", "actions": [{ "type": "block", "value": 6 }] }
     ] },
   { "id": "wisp", "name": "위스프", "tier": "normal", "element": "fire", "hp": 9,
     "pattern": [
-      { "name": "찌르기", "actions": [{ "type": "attack", "dmg": 3, "target": "random", "pierce": true }] }
+      { "name": "찌르기", "actions": [{ "type": "attack", "dmg": 2, "target": "random", "pierce": true }] }
     ] },
   { "id": "rubble_shell", "name": "러블 셸", "tier": "normal", "element": "forest", "hp": 30,
     "pattern": [
       { "name": "웅크리기", "actions": [{ "type": "block", "value": 10 }] },
-      { "name": "짓누르기", "actions": [{ "type": "attack", "dmg": 10, "target": "front" }] }
+      { "name": "짓누르기", "charge": true, "actions": [{ "type": "attack", "dmg": 13, "target": "front" }] }
     ] },
   { "id": "tempest_crow", "name": "템페스트 크로우", "tier": "normal", "element": "wind", "hp": 18,
     "pattern": [
       { "name": "낚아채기", "actions": [{ "type": "attack", "dmg": 4, "hits": 2, "target": "lowest" }] },
-      { "name": "깃털 날리기", "actions": [{ "type": "attack", "dmg": 3, "target": "all" }] }
+      { "name": "깃털 날리기", "actions": [{ "type": "attack", "dmg": 2, "target": "all" }] }
     ] },
   { "id": "sporecap", "name": "스포어캡", "tier": "normal", "element": "forest", "hp": 22,
     "pattern": [
       { "name": "포자 뿌리기", "actions": [{ "type": "weak", "turns": 2, "target": "all" }] },
-      { "name": "박치기", "actions": [{ "type": "attack", "dmg": 6, "target": "front" }] },
-      { "name": "박치기", "actions": [{ "type": "attack", "dmg": 6, "target": "front" }] }
+      { "name": "박치기", "charge": true, "actions": [{ "type": "attack", "dmg": 11, "target": "front" }] }
     ] },
   { "id": "rust_golem", "name": "러스트 골렘", "tier": "normal", "element": "fire", "hp": 26,
     "pattern": [
-      { "name": "강타", "charge": true, "actions": [{ "type": "attack", "dmg": 18, "target": "front" }] },
+      { "name": "강타", "charge": true, "actions": [{ "type": "attack", "dmg": 14, "target": "front" }] },
       { "name": "잿불 뿜기", "actions": [{ "type": "burn", "value": 2, "target": "all" }] }
     ] },
   { "id": "bog_witch", "name": "보그 위치", "tier": "elite", "element": "forest", "hp": 55,
@@ -55,7 +54,7 @@
       { "name": "방망이", "charge": true, "actions": [{ "type": "attack", "dmg": 20, "target": "front" }] },
       { "name": "장난", "actions": [{ "type": "costUp", "value": 1 }, { "type": "attack", "dmg": 6, "target": "random" }] }
     ] },
-  { "id": "grimbark", "name": "그림바크", "tier": "boss", "element": "forest", "hp": 160,
+  { "id": "grimbark", "name": "그림바크", "tier": "boss", "element": "forest", "hp": 180,
     "desc": "시든 정원을 지키던 고목 정령",
     "pattern": [
       { "name": "가지 내리치기", "actions": [{ "type": "attack", "dmg": 14, "target": "front" }] },
@@ -63,11 +62,11 @@
       { "name": "뿌리 휘감기", "actions": [{ "type": "sealCards", "count": 2 }] }
     ],
     "phase2": {
-      "hpBelow": 0.5, "turnStartBlock": 12,
+      "hpBelow": 0.5, "turnStartBlock": 4,
       "pattern": [
         { "name": "낙엽 폭풍", "actions": [{ "type": "attack", "dmg": 8, "target": "all" }] },
         { "name": "뿌리 꿰뚫기", "actions": [{ "type": "attack", "dmg": 10, "target": "front", "pierce": true }] },
-        { "name": "수액 흡수", "actions": [{ "type": "sapHeal", "value": 15 }] },
+        { "name": "수액 흡수", "actions": [{ "type": "sapHeal", "value": 10 }] },
         { "name": "대지 가르기", "charge": true, "actions": [{ "type": "attack", "dmg": 24, "target": "front" }] }
       ]
     } }

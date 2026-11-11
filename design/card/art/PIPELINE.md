@@ -65,12 +65,12 @@
 
 | 단계 | 누가 | 무엇 | 만드는 것 |
 |---|---|---|---|
-| ① 브리프 | Claude | 카드마다 Focus 한두 단어(MTG 의뢰서 방식), 구도 문법(B/C), 결정적 형태, 피할 것. 이름은 작업명 기준이라 이름이 바뀌어도 그대로 | `design/card/art/briefs.yaml` |
+| ① 브리프 | Claude | 카드마다 Focus 한두 단어(MTG 의뢰서 방식), 구도 문법(B/C), 결정적 형태, 피할 것. 이름은 작업명 기준이라 이름이 바뀌어도 그대로 | `design/card/art/rounds/<라운드>/briefs.json` |
 | ② 시트 | Claude | 브리프 + 고정 화풍 블록 + 구도 틀 → jjal 러너 형식 시트. 카드마다 시드 4개 | `design/card/art/sheets/<라운드>.json` (jjal 형식은 맥 연결 후 맞춤) |
 | ③ 생성 | Lucy | jjal 러너나 NAI 웹. 웹이면 **Download 버튼**으로 받아 메타데이터를 남겨요 | 원본 PNG |
-| ④ 고르기 | Lucy | Claude가 만든 비교 시트에서 고름: 각 후보를 84×90 실제 크기로 카드 틀을 덮어서, 회색조로, 같은 정령 12장 나란히 | `tools/art/card-contact-sheet.py` → 시트 이미지 |
-| ⑤ 후처리 | Claude | 주제 중심점 기준으로 손패용(84:90)·확대용 두 번 자르기, 크기별 webp, 안전 영역 검사(주제가 모서리 UI 밑에 들어가면 경고) | `tools/art/import-cards.py` → `public/assets/cards/<owner>/<card>.webp` + 자르기 값 `cardArtFit.json` |
-| ⑥ 기록 | Claude | PNG 메타데이터(Comment JSON·알파 채널 숨은 기록)에서 프롬프트·UC·시드·설정을 뽑아 `provenance.jsonl`에 자동으로 한 줄씩 | `import-cards.py`가 함께 씀, `pnpm check:assets` 통과 |
+| ④ 고르기 | Lucy | Claude가 만든 비교 시트에서 고름: 각 후보를 84×90 실제 크기로 카드 틀을 덮어서, 회색조로, 같은 정령 12장 나란히 | `tools/art/card-preview.mjs` → 시트 이미지 |
+| ⑤ 후처리 | Claude | 주제 중심점 기준으로 손패용(84:90)·확대용 두 번 자르기, 크기별 webp, 안전 영역 검사(주제가 모서리 UI 밑에 들어가면 경고) | `tools/art/import_card_art.py` → `public/assets/cards/<owner>/<card>.webp` + 자르기 값 `cardArtFit.json` |
+| ⑥ 기록 | Claude | PNG 메타데이터(Comment JSON·알파 채널 숨은 기록)에서 프롬프트·UC·시드·설정을 뽑아 `provenance.jsonl`에 자동으로 한 줄씩 | `import_card_art.py`가 함께 씀, `pnpm check:assets` 통과 |
 | ⑦ 연결 | Claude | 손패 카드의 자리표시 사각형(`placeholderArt`)을 그림으로 바꿈. UI 작업이라 컨펌 뒤 | 별도 PR |
 
 - 자르기 값은 정령 그림의 `spiritFit.json`처럼 사람이 고친 값을 따로 둬서, 다시 들여와도 지워지지 않게 해요(0023과 같은 방식).

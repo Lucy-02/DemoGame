@@ -66,6 +66,14 @@ export interface Passive {
   readyStacks?: (v: number) => boolean;
   /** 누구든 받아칠 기회를 얻은 직후 */
   readyGainedAny?: (b: Engine, s: BSpirit, v: number, gainer: BSpirit) => void;
+  /** 이 정령 카드의 시간에서 빼는 값 (ms) */
+  timeCut?: (b: Engine, s: BSpirit, v: number, card: BCard) => number;
+  /** 이 정령 타격의 치명 확률에 더하는 값 */
+  critChance?: (s: BSpirit, v: number, target: BEnemy) => number;
+  /** 이 정령 허점타의 배율에 더하는 값 */
+  openingBonus?: (s: BSpirit, v: number) => number;
+  /** 적의 상태가 줄어들 때 덜 줄이는 양. 0보다 크면 횟수를 쓴 것으로 표시해요 */
+  linger?: (b: Engine, s: BSpirit, v: number) => number;
   /** 누구든 쓰러뜨린 적 */
   enemyDiedAny?: (b: Engine, s: BSpirit, v: number, e: BEnemy) => void;
 }
@@ -253,7 +261,41 @@ export const PERSONALITY_PASSIVES: Record<string, Passive> = {
 
 /** 이 정령에게 지금 붙어 있는 것들과 값. 순서: 지속 효과 → 해방 → 성격 */
 /** 장비가 정령의 동사를 바꾸는 효과. 장비 데이터의 `effects[].passive`가 여기 키예요 */
-export const EQUIP_PASSIVES: Record<string, Passive> = {};
+const lingerWith = (mark: "lingerUsed" | "lingerTurnUsed") => (b: Engine, s: BSpirit, v: number) => {
+  if (statusN(s, mark) > 0) return 0;
+  b.addStatus(s, mark, 1);
+  return v;
+};
+const firstCardTime = (_b: Engine, s: BSpirit, v: number) => (s.playedThisTurn === 0 ? v : 0);
+
+export const EQUIP_PASSIVES: Record<string, Passive> = {
+  /** 전투 시작에 방어도 */
+  start_block: { firstHand: (b, s, v) => b.gainBlock(s, v) },
+  /** 전투 시작에 방어도 + 쓰러졌다 돌아올 때 HP를 더 받아요 (`returnHp`) */
+  start_block_return: { firstHand: (b, s, v) => b.gainBlock(s, v) },
+  /** 턴 첫 타격의 기본값에 더해요 */
+  first_hit: { hitBonusAny: (_b, s, v, attacker) => (attacker === s && statusN(s, "struck") === 0 ? v : 0) },
+  /** 이번 턴 가장 긴 카드의 타격마다 기본값에 더해요 */
+  longest_card_hit: { hitBonusAny: (b, s, v, attacker) => (attacker === s && b.resolvingLongest(s) ? v : 0) },
+  /** 적의 화상 · 약화 · 취약이 줄어들 때 덜 줄어요. 전투마다 한 번 */
+  linger_once: { linger: lingerWith("lingerUsed") },
+  /** 턴마다 한 번 */
+  linger_turn: { linger: lingerWith("lingerTurnUsed") },
+  /** 턴 첫 카드의 시간을 줄여요 (ms) */
+  first_card_time: { timeCut: firstCardTime },
+  /** 턴 첫 카드의 시간 + 허점타 배율 */
+  first_card_time_opening: { timeCut: firstCardTime, openingBonus: () => C.equip_opening_bonus },
+  /** HP가 가득인 적에게 치명 확률 */
+  crit_vs_full: { critChance: (_s, v, e) => (e.hp >= e.maxHp ? v : 0) },
+  /** HP가 절반보다 많은 적에게 치명 확률 */
+  crit_vs_healthy: { critChance: (_s, v, e) => (e.hp > e.maxHp / 2 ? v : 0) },
+  /** 턴 첫 카드의 비용 */
+  first_card_cost: { cost: (_b, calc, v) => { if (calc.owner.playedThisTurn === 0) calc.cost -= v; } },
+  /** 모든 카드의 시간을 줄여요 (ms) */
+  time_cut: { timeCut: (_b, _s, v) => v },
+  /** 턴 시작에 방어도를 비율만큼 남겨요 */
+  carry_block: { carryBlock: (_s, block, v) => Math.floor(block * v) },
+};
 
 /** 정령에 붙은 것들: 지속 효과 → 해방 → 성격 → 장비 */
 export function passivesOf(s: BSpirit): [Passive, number][] {

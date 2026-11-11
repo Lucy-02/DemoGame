@@ -14,15 +14,19 @@ export const text = (t: string, size: string, color: string, extra: Partial<Node
   ({ t: "text", text: t, size, color, ...extra }) as Node;
 
 /** 둥근 배지 (.q-badge: 상아 바탕 + 먹 기호). outer면 바깥 3px 테 (.corner, .onbtn) */
-export function badge(icon: string, d = BADGE.d, iconSize = BADGE.icon, outer = false, extra: Partial<BoxNode> = {}): BoxNode {
+export function badge(
+  icon: string, d = BADGE.d, iconSize = BADGE.icon, outer = false, extra: Partial<BoxNode> = {},
+  /** 색을 바꿀 때만 (기본: 상아 바탕 + 먹 기호, 바깥 테 ringOuter) */
+  look: { fill?: string; ink?: string; outer?: string } = {},
+): BoxNode {
   const inset = (d - iconSize) / 2;
   const core: BoxNode = {
-    t: "col", round: true, w: d, h: d, pad: [inset, inset, inset, inset], style: { fill: P.ink },
-    children: [{ t: "icon", id: icon, w: iconSize, h: iconSize, tint: P.floor }],
+    t: "col", round: true, w: d, h: d, pad: [inset, inset, inset, inset], style: { fill: look.fill ?? P.ink },
+    children: [{ t: "icon", id: icon, w: iconSize, h: iconSize, tint: look.ink ?? P.floor }],
   };
   if (!outer) return { ...core, ...extra };
   const o = STRIP.badge.outer;
-  return { t: "col", round: true, w: d + o * 2, h: d + o * 2, pad: [o, o, o, o], style: { fill: P.ringOuter }, children: [core], ...extra };
+  return { t: "col", round: true, w: d + o * 2, h: d + o * 2, pad: [o, o, o, o], style: { fill: look.outer ?? P.ringOuter }, children: [core], ...extra };
 }
 
 /** 가로 막대 (.q-bar / .q-prog): 바탕 + 채움. value 0~1 */

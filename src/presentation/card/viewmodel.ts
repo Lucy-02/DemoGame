@@ -2,6 +2,9 @@
 import type { FaceId, IconId } from "../faces";
 import type { CardArtId } from "./art";
 
+/** 희귀도 보석 (0050). 기본 카드는 보석이 없어요 */
+export type CardRarity = "common" | "advanced" | "rare";
+
 export type Material = "none" | "fire" | "water" | "wind";
 
 export interface CardValueVM {
@@ -38,6 +41,10 @@ export interface CardVM {
   costShort?: boolean;
   /** 주인 정령: 초상 홈 얼굴, 그림 창 윗선 모양 */
   owner: FaceId;
+  /** 초상 홈에 넣을 얼굴 텍스처 키 (원으로 구운 그림). 없으면 owner의 얼굴 그림 (정본 얼굴이 없는 정령용) */
+  face?: string;
+  /** 희귀도. 보석은 createHandCard에 showRarity를 준 자리(보상·상점)에서만 그려요. 손패는 안 그려요 (0050) */
+  rarity?: CardRarity;
   /** 속성 재질(이름 띠) */
   material: Material;
   /** 속성 기호 (e-*) */
