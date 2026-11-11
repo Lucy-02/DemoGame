@@ -123,7 +123,7 @@ very aesthetic, masterpiece, no text
 3. `python3 tools/art/import_card_art.py <폴더>` → `public/assets/cards/<id>.webp`(512px), `assets/provenance.jsonl` 갱신.
 4. 같은 명령이 `src/presentation/card/artIds.json`(그림이 있는 카드 id 목록)도 다시 써요. 카드 VM은 `cardArtOf(카드 id)`로 그림을 찾아요. `?scene=art`에서 확인해요.
 
-## 8. 브리프 쓰기 (0044)
+## 8. 브리프 쓰기 (0063)
 - 카드 이름을 그리지 않아요. 카드가 누구에게 무엇을 하는지(효과)와 분위기를 장면 한 문장, 비유한 상징 한 문장으로 써요.
 - 장면엔 적(dark rock creature)·동료(small round ally creature)·정령을 효과대로 넣고, 얼굴·사람 손이 나오지 않게 해요.
 

@@ -115,6 +115,15 @@ src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/can
   layout.ts, copy.ts           정본 수치(선택자 주석), 문구
   fixtures.ts                  고정 정원 GARDENS (mixed 기본, fresh)
   views/                       backdrop·topbar·idCard·strip·panel·rail(접힘 레일+요약 카드)·parts(유리·배지·막대·버튼)
+src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오른쪽 정령 세 줄, 0050 격자). 전투 결과·상점이 함께 씀
+  layout.ts                    FRAME GRID BG GOLD CARD_FOCUS LANE RING INFO SOCKET (E1·P1 시안에서 잰 임시 값)
+  lanes.ts                     drawLane(scene, LaneVM, i, LaneState): 링·얼굴·이름·HP·능력치·카드 칸. 상태(hot·stat·card·open·deckTo·heal·on)는 화면이 줌
+  gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경
+  cards.ts                     cardWithFace(초상 홈 얼굴 굽기), drawCardTip(카드 위 말풍선)
+  fromCore.ts                  cardVM(cardId, owner?), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 임시 표)
+src/presentation/result/       전투 결과 (?screen=result, 0044·0051). 고정 장면 RESULTS. 런 연결 전
+src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, P1 f3). 씨앗 런 + ShopSession. 빼기는 덱 고르기 화면이 생기면
+src/session/shop.ts            상점 세션: buy·heal 명령 → Run, onChange. 진열·값·치료량은 constants.json shop
 src/session/garden.ts          정원 세션: 명령 → core/garden → onChange. snapshot/restore (platform 저장 연결 전)
 src/core/garden.ts             판 밖 정령 상태와 성장 규칙 (0021), 수치는 src/data/growth.json
 src/presentation/style/        CSS 재현 도우미 (6절). flex 노드에 onClick(클릭 영역)·wrap(줄바꿈 글자)
@@ -202,6 +211,8 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 - Lucy에게 보여 줄 스크린샷은 정본과 나란히(side) 붙여요.
 
 ---
+
+런 밖 여정 화면(타이틀·정원 허브·출전 준비·설정·도감 등)을 맡는 스레드는 `SCREEN_HANDOFF.md`를 먼저 읽어요.
 
 ## 9. 다음 할 일 (순서는 Lucy에게 확인)
 

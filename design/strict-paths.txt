@@ -11,3 +11,5 @@ src/presentation/faces.ts
 src/presentation/tooltip/
 src/presentation/spirits/
 src/presentation/result/
+src/presentation/run/
+src/presentation/shop/

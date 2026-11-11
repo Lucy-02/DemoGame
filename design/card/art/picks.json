@@ -1,5 +1,5 @@
 {
- "$description": "게임에 들어가는 카드 일러스트 목록 (0042, 0044). id = 에셋 이름(public/assets/cards/<id>.webp). composition: object·symbol은 fit_size로 크기를 맞추고, scene·backdrop은 창을 채워요(fit_size null). tools/art/import_card_art.py가 읽어요.",
+ "$description": "게임에 들어가는 카드 일러스트 목록 (0042, 0063). id = 에셋 이름(public/assets/cards/<id>.webp). composition: object·symbol은 fit_size로 크기를 맞추고, scene·backdrop은 창을 채워요(fit_size null). tools/art/import_card_art.py가 읽어요.",
  "cards": [
   {
    "id": "starlight",
@@ -80,7 +80,7 @@
    "composition": "scene",
    "case_id": "stardust-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "star_mantle",
@@ -89,7 +89,7 @@
    "composition": "symbol",
    "case_id": "star_mantle-M-o-s3701",
    "fit_size": 0.52,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "star_link",
@@ -98,7 +98,7 @@
    "composition": "scene",
    "case_id": "star_link-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "astrolabe",
@@ -107,7 +107,7 @@
    "composition": "scene",
    "case_id": "astrolabe-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "good_omen",
@@ -116,7 +116,7 @@
    "composition": "backdrop",
    "case_id": "good_omen-P-o-s3701",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "milky_way",
@@ -125,7 +125,7 @@
    "composition": "scene",
    "case_id": "milky_way-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "morning_star",
@@ -134,7 +134,7 @@
    "composition": "scene",
    "case_id": "morning_star-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "astraea",
@@ -143,7 +143,7 @@
    "composition": "scene",
    "case_id": "astraea-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "starfall",
@@ -152,7 +152,7 @@
    "composition": "scene",
    "case_id": "starfall-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "wish_star",
@@ -161,7 +161,7 @@
    "composition": "scene",
    "case_id": "wish_star-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "glass_scale",
@@ -170,7 +170,7 @@
    "composition": "object",
    "case_id": "glass_scale-B-c-s3802",
    "fit_size": 0.34,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "glass_skin",
@@ -179,7 +179,7 @@
    "composition": "object",
    "case_id": "glass_skin-B-c-s3701",
    "fit_size": 0.44,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "heated_glass",
@@ -188,7 +188,7 @@
    "composition": "object",
    "case_id": "heated_glass-B-c-s3701",
    "fit_size": 0.48,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "tempered_glass",
@@ -197,7 +197,7 @@
    "composition": "scene",
    "case_id": "tempered_glass-S-c-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "afterglow",
@@ -206,7 +206,7 @@
    "composition": "symbol",
    "case_id": "afterglow-M-c-s3902",
    "fit_size": 0.4,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "ricochet",
@@ -215,7 +215,7 @@
    "composition": "scene",
    "case_id": "ricochet-S-c-s3801",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "bellows",
@@ -224,7 +224,7 @@
    "composition": "scene",
    "case_id": "bellows-S-c-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "glass_citadel",
@@ -233,7 +233,7 @@
    "composition": "scene",
    "case_id": "glass_citadel-S-c-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "hall_of_mirrors",
@@ -242,7 +242,7 @@
    "composition": "symbol",
    "case_id": "hall_of_mirrors-M-c-s3901",
    "fit_size": 0.5,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "embrace",
@@ -251,7 +251,7 @@
    "composition": "scene",
    "case_id": "embrace-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "current",
@@ -260,7 +260,7 @@
    "composition": "symbol",
    "case_id": "current-M-o-s3902",
    "fit_size": 0.54,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "glare",
@@ -269,7 +269,7 @@
    "composition": "scene",
    "case_id": "glare-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "nacre_glow",
@@ -278,7 +278,7 @@
    "composition": "scene",
    "case_id": "nacre_glow-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "sand_grain",
@@ -287,7 +287,7 @@
    "composition": "scene",
    "case_id": "sand_grain-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "twin_pearl",
@@ -296,7 +296,7 @@
    "composition": "scene",
    "case_id": "twin_pearl-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "nest",
@@ -305,7 +305,7 @@
    "composition": "backdrop",
    "case_id": "nest-P-o-s3701",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "high_tide",
@@ -314,7 +314,7 @@
    "composition": "scene",
    "case_id": "high_tide-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "baroque_pearl",
@@ -323,7 +323,7 @@
    "composition": "scene",
    "case_id": "baroque_pearl-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "najeon",
@@ -332,7 +332,7 @@
    "composition": "symbol",
    "case_id": "najeon-M-o-s3901",
    "fit_size": 0.5,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "black_pearl",
@@ -341,7 +341,7 @@
    "composition": "scene",
    "case_id": "black_pearl-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "dragon_palace",
@@ -350,7 +350,7 @@
    "composition": "scene",
    "case_id": "dragon_palace-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "horn_strike",
@@ -359,7 +359,7 @@
    "composition": "scene",
    "case_id": "horn_strike-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "foothold",
@@ -368,7 +368,7 @@
    "composition": "scene",
    "case_id": "foothold-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "brace",
@@ -377,7 +377,7 @@
    "composition": "scene",
    "case_id": "brace-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "climb",
@@ -386,7 +386,7 @@
    "composition": "scene",
    "case_id": "climb-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "stampede",
@@ -395,7 +395,7 @@
    "composition": "scene",
    "case_id": "stampede-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "locked_horns",
@@ -404,7 +404,7 @@
    "composition": "symbol",
    "case_id": "locked_horns-M-o-s3902",
    "fit_size": 0.52,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "fault_line",
@@ -413,7 +413,7 @@
    "composition": "scene",
    "case_id": "fault_line-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "caldera",
@@ -422,7 +422,7 @@
    "composition": "backdrop",
    "case_id": "caldera-P-o-s3701",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "rockfall",
@@ -431,7 +431,7 @@
    "composition": "scene",
    "case_id": "rockfall-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "camouflage",
@@ -440,7 +440,7 @@
    "composition": "scene",
    "case_id": "camouflage-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "flick",
@@ -449,7 +449,7 @@
    "composition": "scene",
    "case_id": "flick-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "snap",
@@ -458,7 +458,7 @@
    "composition": "scene",
    "case_id": "snap-S-o-s3803",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "eye_roll",
@@ -467,7 +467,7 @@
    "composition": "scene",
    "case_id": "eye_roll-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "blend_in",
@@ -476,7 +476,7 @@
    "composition": "scene",
    "case_id": "blend_in-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "pounce",
@@ -485,7 +485,7 @@
    "composition": "scene",
    "case_id": "pounce-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "vine_tail",
@@ -494,7 +494,7 @@
    "composition": "scene",
    "case_id": "vine_tail-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "ambush",
@@ -503,7 +503,7 @@
    "composition": "scene",
    "case_id": "ambush-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "disguise_veil",
@@ -512,7 +512,7 @@
    "composition": "symbol",
    "case_id": "disguise_veil-M-o-s3901",
    "fit_size": 0.54,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "prism",
@@ -521,7 +521,7 @@
    "composition": "scene",
    "case_id": "prism-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "thousand_eyes",
@@ -530,7 +530,7 @@
    "composition": "scene",
    "case_id": "thousand_eyes-S-o-s3902",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   },
   {
    "id": "rainbow",
@@ -539,7 +539,7 @@
    "composition": "scene",
    "case_id": "rainbow-S-o-s3901",
    "fit_size": null,
-   "decision": "0044"
+   "decision": "0063"
   }
  ]
 }

@@ -169,15 +169,29 @@ export type EnemyAction =
   | { type: "buffMinions"; value: number }
   | { type: "costUp"; value: number }
   | { type: "sealCards"; count: number }
-  | { type: "sapHeal"; value: number };
+  | { type: "sapHeal"; value: number }
+  /** 쓸 때마다 step씩 세지는 화상 (0062) */
+  | { type: "burnRamp"; value: number; step: number; target: EnemyTargetRule }
+  /** 아군마다 쌓인 화상 × mult만큼 피해 */
+  | { type: "detonateBurn"; mult: number }
+  /** 앞열을 HP가 가장 낮은 다른 정령으로 바꿔요 */
+  | { type: "swapFront" };
 
 export interface EnemyMove {
   name: string;
   /** 턴 안에서 이 행동이 일어나는 시각(ms). 없으면 등급 기본값 C.enemy_at (0036) */
   at?: number;
   charge?: boolean;
+  /** 큰 차징: 끊거나 늦추거나 차징 중에 몰아 때리면 틈이 열려요 (0062) */
+  big?: boolean;
+  /** 끊겼을 때: clearBurn = 아군의 화상이 꺼지고 화상 세기가 처음으로 돌아가요 */
+  onBreak?: "clearBurn";
   actions: EnemyAction[];
 }
+
+/** 정예에 붙는 거친 특성 (0062) */
+export const ENEMY_TRAITS = ["burning", "sturdy", "swift", "heavy"] as const;
+export type EnemyTrait = (typeof ENEMY_TRAITS)[number];
 
 export type EnemyTier = "normal" | "elite" | "boss" | "minion";
 
@@ -188,6 +202,8 @@ export interface EnemyDef {
   element: Element;
   hp: number;
   desc?: string;
+  /** 한 턴에 여러 번 움직이는 적: 턴마다 돌아가며 쓰는 행동 시각 목록(ms). 없으면 한 번 (0062) */
+  acts?: number[][];
   pattern: EnemyMove[];
   phase2?: { hpBelow: number; turnStartBlock: number; pattern: EnemyMove[] };
 }
@@ -195,7 +211,10 @@ export interface EnemyDef {
 export interface EncounterDef {
   id: string;
   tier: "normal" | "elite" | "boss";
-  floors: [number, number];
+  /** 일반 편성: 처음 몇 전투는 weak, 그 뒤는 strong (0062) */
+  pool?: "weak" | "strong";
+  /** 이 편성의 기운. 오늘 센 기운과 같으면 더 자주 나오고, 보스는 센 기운의 보스가 나와요 */
+  element: Element;
   enemies: string[];
 }
 
