@@ -45,6 +45,8 @@ export class Battle implements Engine {
   nextTurnMana = 0;
   repeatNext: { maxCost: number } | null = null;
   replaying = false;
+  /** 지금 재생 중인 계획 카드 */
+  private resolving: Planned | null = null;
   /** 이번 턴 계획한 아군 카드 (놓은 순서) */
   planned: Planned[] = [];
   /** 이번 턴 적 행동 칸 */
@@ -167,6 +169,21 @@ export class Battle implements Engine {
   burnAmount(owner: BSpirit, v: number): number {
     for (const [p, pv] of passivesOf(owner)) v += p.burnBonus?.(owner, pv) ?? 0;
     return v * this.passiveMult(owner, "burnMult");
+  }
+
+  resolvingLongest(s: BSpirit): boolean {
+    const mine = this.planned.filter((p) => p.owner === s.id);
+    if (!this.resolving || !mine.length) return false;
+    const longest = mine.reduce((a, p) => (p.end - p.start > a.end - a.start ? p : a));
+    return this.resolving === longest;
+  }
+
+  linger(): number {
+    for (const [p, v, s] of allPassives(this)) {
+      const n = s.downed ? 0 : (p.linger?.(this, s, v) ?? 0);
+      if (n > 0) return n;
+    }
+    return 0;
   }
 
   holdsHeldCard(s: BSpirit): boolean {
@@ -447,7 +464,7 @@ export class Battle implements Engine {
         }
       },
     },
-    { id: "enemies", order: 20, run: () => { for (const e of this.enemies) tickStatuses(e, this.turn); } },
+    { id: "enemies", order: 20, run: () => { for (const e of this.enemies) if (!e.dead) tickStatuses(e, this.turn, () => this.linger()); else tickStatuses(e, this.turn); } },
   ]);
 
   private runSteps(steps: readonly Step[]) {
@@ -614,6 +631,7 @@ export class Battle implements Engine {
       this.sealed.push(c);
       return;
     }
+    this.resolving = p;
     this.emit({ k: "spiritAct", id: owner.id, card: def.name });
     this.log(`${owner.def.name}: ${def.name}`);
     let mult = c.held ? C.hold_mult : 1;
@@ -627,6 +645,7 @@ export class Battle implements Engine {
       this.log(`제피로스: ${def.name} 한 번 더`);
       this.resolve(def, c, owner, this.cardTargets(def, p.target, owner), p.comboCount, mult);
     }
+    this.resolving = null;
     for (const [ps, v, s] of allPassives(this)) ps.resolvedAny?.(this, s, v, owner, c, def);
     c.held = false;
     c.heldFast = false;
@@ -788,6 +807,7 @@ export class Battle implements Engine {
       b: this, attacker: owner, target: e, element, base, noPower,
       amount: 0, crit: false, weakHit: false, resist: false, opening: false,
     });
+    stackOf(owner, "struck").n = 1;
     this.hurtEnemy(e, r.amount, false, { crit: r.crit, weakHit: r.weakHit, resist: r.resist, ...(r.opening ? { opening: true } : {}) });
     if (statusN(owner, "starlight") > 0) {
       spendStatus(owner, "starlight");

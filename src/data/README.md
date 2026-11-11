@@ -4,7 +4,7 @@
 |---|---|
 | `cards/<묶음>.json` | 카드 정의 (수치·효과·해금). 묶음은 파일을 나누는 단위일 뿐이고, 게임은 `cards/index.ts`의 순서대로 이어 붙인 한 목록으로 써요. 새 묶음 파일은 `cards/index.ts`에 더해요. |
 | `locales/<언어>/cards.json` | 카드 문구 (id → `{ name }`). `ko`가 기본 언어라 모든 카드를 채우고, 다른 언어에서 빠진 카드는 `ko`로 보여요. 새 언어는 폴더를 만들고 `locales/index.ts`에 더해요. |
-| `equipment/<묶음>.json` | 장비 정의 (0048 · 0049). 형식은 `types.ts`의 `EquipDef`: 전용 정령 · 희귀도(`generic` 범용 · `exclusive` 전용 무기 · `boss` 보스 장비, 0056) · 공명 단계별 `tiers`(능력치 보정 ≤ 2 + 효과 ≤ 1) · 보스 대가 `downside` · 전용 무기의 대표 카드 변형 `signature`(갈래 → 공명 단계별 기술 카드 id, 0055). 새 파일은 `equipment/index.ts`에 더해요. 지금은 전용 무기 3개(`exclusive.json`)가 있고 숫자는 시험 값이에요. |
+| `equipment/<묶음>.json` | 장비 정의 (0048 · 0049). 형식은 `types.ts`의 `EquipDef`: 전용 정령 · 희귀도(`generic` 범용 · `exclusive` 전용 무기 · `boss` 보스 장비, 0056) · 공명 단계별 `tiers`(능력치 보정 ≤ 2 + 효과 ≤ 1) · 보스 대가 `downside` · 전용 무기의 대표 카드 변형 `signature`(갈래 → 공명 단계별 기술 카드 id, 0055). 새 파일은 `equipment/index.ts`에 더해요. 지금은 범용 6개(`generic.json`), 전용 무기 3개(`exclusive.json`), 보스 장비 3개(`boss.json`)가 있고 숫자는 시험 값이에요. 보스 장비는 공명 단계가 하나예요. |
 | 그 밖의 `*.json` | 정령·적·인카운터·성장·상수 등 |
 
 - 카드 형식은 `src/core/types.ts`의 `CardData`, 검사는 `src/core/validate.ts`예요. 새 필드는 두 곳에 함께 더해요.

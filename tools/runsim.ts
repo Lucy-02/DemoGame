@@ -10,7 +10,7 @@ import { C, cardDef, spiritDef } from "../src/core/data";
 import { newGarden } from "../src/core/garden";
 import { Rng } from "../src/core/rng";
 import { Run, type MapNode, type RewardCard } from "../src/core/run";
-import { maxHpOf } from "../src/core/stats";
+import { maxHpOf, returnHp } from "../src/core/stats";
 import type { EncounterDef, EventDef } from "../src/core/types";
 import { autoPlayTurn } from "./autoplay";
 import { smartPlayTurn } from "./bot";
@@ -80,7 +80,7 @@ function fight(run: Run, enc: EncounterDef, rng: Rng, bot: Bot): { won: boolean;
     if (b.result === "ongoing") b.endTurn();
     b.drain();
   }
-  for (const s of b.spirits) run.spirit(s.id).hp = s.downed ? (C.downed_return_hp as number) : s.hp;
+  for (const s of b.spirits) run.spirit(s.id).hp = s.downed ? returnHp(run.spirit(s.id)) : s.hp;
   return { won: b.result === "victory", turns: b.turn };
 }
 

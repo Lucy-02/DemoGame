@@ -255,8 +255,9 @@ export const STAT_MOD_OPS = ["add", "pct"] as const;
 export type StatModOp = (typeof STAT_MOD_OPS)[number];
 
 /** 전투 중에만 보는 조건. 있으면 전투 조건부 층에서 적용돼요 */
-export type StatCondition = { k: "hpBelow"; ratio: number } | { k: "released" };
-export const STAT_CONDITION_KINDS = ["hpBelow", "released"] as const;
+/** hurt: HP가 가득이 아닐 때 */
+export type StatCondition = { k: "hpBelow"; ratio: number } | { k: "released" } | { k: "hurt" };
+export const STAT_CONDITION_KINDS = ["hpBelow", "released", "hurt"] as const;
 
 export interface StatMod {
   stat: EquipStat;

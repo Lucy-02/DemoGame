@@ -42,7 +42,8 @@ export const STATUSES: Record<StatusId, StatusDef> = {
       if (isEnemy(h)) b.hurtEnemy(h, round(st.n * vulnMult(h)), true);
       else b.hurtSpirit(h, st.n, true, { src: "화상" });
       if (statusN(h, "burnHold") > 0) delete h.status.burnHold;
-      else st.n = Math.floor(st.n / 2);
+      else if (st.n > 1) st.n = Math.min(st.n, Math.floor(st.n / 2) + (isEnemy(h) ? b.linger() : 0));
+      else st.n = 0;
     },
   },
   /** 문턱에 차면 0이 되고 빙결해요 */
@@ -131,6 +132,13 @@ export const STATUSES: Record<StatusId, StatusDef> = {
     },
   },
 
+  /** 이번 턴에 이미 타격했어요 (장비: 턴 첫 타격) */
+  struck: { name: "타격함", stack: "max", clearsAtTurnStart: true, silent: true, gainText: () => "" },
+  /** 장비의 "덜 줄어듦"을 이번 전투에 썼어요 */
+  lingerUsed: { name: "여운 씀", stack: "max", silent: true, gainText: () => "" },
+  /** 장비의 "덜 줄어듦"을 이번 턴에 썼어요 */
+  lingerTurnUsed: { name: "여운 씀", stack: "max", clearsAtTurnStart: true, silent: true, gainText: () => "" },
+
   /** 적에게 새긴 별. 낙하 카드가 세어요 */
   star: { name: "별", gainText: (_n, total) => `별 ${total}` },
   /** 다음 타격 n번이 맞힌 적에게 별을 새겨요 */
@@ -185,7 +193,7 @@ export const STATUSES: Record<StatusId, StatusDef> = {
 };
 
 /** 라운드 끝: 턴을 세는 상태가 줄고, 기한이 찬 상태가 사라져요 */
-export function tickStatuses(h: BSpirit | BEnemy, turn: number) {
+export function tickStatuses(h: BSpirit | BEnemy, turn: number, linger?: () => number) {
   for (const id of Object.keys(h.status) as StatusId[]) {
     const st = h.status[id]!;
     if (st.until !== undefined && turn >= st.until) {
@@ -193,7 +201,7 @@ export function tickStatuses(h: BSpirit | BEnemy, turn: number) {
       continue;
     }
     if (!STATUSES[id].countsTurns) continue;
-    if (st.n > 0 && !st.fresh) st.n--;
+    if (st.n > 0 && !st.fresh && !(linger && linger() > 0)) st.n--;
     if (st.n === 0) st.strength = 0;
     st.fresh = false;
   }

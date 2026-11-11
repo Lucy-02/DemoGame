@@ -47,6 +47,10 @@ export interface Engine {
   passiveMult(s: BSpirit, hook: MultHook): number;
   /** 화상 부여량: 지속 효과의 더하기와 배율을 적용한 값 */
   burnAmount(owner: BSpirit, v: number): number;
+  /** 이 정령이 이번 턴 줄에 놓은 카드 중 가장 긴 카드를 지금 재생하는 중인지 */
+  resolvingLongest(s: BSpirit): boolean;
+  /** 적의 상태가 줄어들 때 장비가 덜 줄이는 양. 부르면 그 장비의 횟수를 써요 */
+  linger(): number;
   /** 손이나 줄에 품었다 돌아온 카드를 가진 정령인지 */
   holdsHeldCard(s: BSpirit): boolean;
 

@@ -5,7 +5,7 @@ export const STATUS_IDS = [
   // 공통
   "burn", "chill", "regen", "vuln", "weak", "thorns", "taunt", "empower", "bonusDmg", "hitBonus",
   // 전용 무기의 기술 (0055)
-  "burnHold", "spreadStack", "burnCarry", "wallKeep", "wallEcho", "wallBurst", "frostGuard",
+  "burnHold", "spreadStack", "burnCarry", "wallKeep", "wallEcho", "wallBurst", "frostGuard", "struck", "lingerUsed", "lingerTurnUsed",
   // 별 정령
   "star", "starlight", "comet",
   // 유리 도롱뇽
