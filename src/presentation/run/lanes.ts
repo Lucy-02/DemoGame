@@ -1,23 +1,23 @@
 // 오른쪽 정령 세 줄 (0044 D2 + 0050): 얼굴 링, 이름 · Lv, HP, 능력치 셋, 카드가 들어갈 칸.
 // 문턱을 넘었을 때만 표식이 붙고, 쓰러졌다 돌아온 정령은 회색 얼굴과 끊긴 붉은 점선 링으로 보여요.
 import type * as Phaser from "phaser";
-import { tokens } from "../../../design/tokens";
-import { createHandCard } from "../../card/HandCard";
-import type { CardVM } from "../../card/viewmodel";
-import { faceTexture } from "../../spiritArt";
-import { P, badge, bar, text } from "../../spirits/views/parts";
-import { withAlpha } from "../../style/color";
-import { box, circle } from "../../style/draw";
-import { render, size, type Node } from "../../style/flex";
-import { gather } from "../../style/gather";
-import { canvasTexture, linear } from "../../style/gradient";
-import { adjustColor } from "../../style/opacity";
-import { placeholderArt } from "../../style/placeholder";
-import { ringTexture } from "../../style/ring";
-import { shadowTexture } from "../../style/shadow";
-import { COPY, STAT_ICON } from "../copy";
-import { INFO, LANE, RING, SOCKET } from "../layout";
-import { STAT_IDS, type LaneVM, type StatId } from "../viewmodel";
+import { tokens } from "../../design/tokens";
+import { createHandCard } from "../card/HandCard";
+import type { CardVM } from "../card/viewmodel";
+import { faceTexture } from "../spiritArt";
+import { P, badge, bar, text } from "../spirits/views/parts";
+import { withAlpha } from "../style/color";
+import { box, circle } from "../style/draw";
+import { hitArea, render, size, type Node } from "../style/flex";
+import { gather } from "../style/gather";
+import { canvasTexture, linear } from "../style/gradient";
+import { adjustColor } from "../style/opacity";
+import { placeholderArt } from "../style/placeholder";
+import { ringTexture } from "../style/ring";
+import { shadowTexture } from "../style/shadow";
+import { COPY, STAT_ICON } from "./copy";
+import { INFO, LANE, RING, SOCKET } from "./layout";
+import { STAT_IDS, type LaneVM, type StatId } from "./viewmodel";
 
 const T = tokens.provisional.text.result;
 const STAT_COLOR = P.stat;
@@ -25,6 +25,7 @@ const STAT_COLOR = P.stat;
 export const LANE_ICONS = [
   ...STAT_IDS.flatMap((k) => [[STAT_ICON[k], INFO.stats.icon], [STAT_ICON[k], INFO.stats.iconOn]] as const),
   ["g-up", INFO.levelUp.icon], ["g-up", RING.badge.icon], ["g-cardnew", RING.badge.icon], ["g-seed", RING.badge.icon], ["g-cardnew", INFO.chip.icon],
+  ["i-deck", SOCKET.deck.icon],
 ] as const;
 
 export interface LaneState {
@@ -34,6 +35,14 @@ export interface LaneState {
   stat?: StatId;
   /** 칸에 놓인 카드. hot = 아직 집고만 있음(밝은 테), 아니면 받음 */
   card?: { vm: CardVM; hot: boolean };
+  /** 빈 칸이 "받을 수 있음"으로 밝아져요 (상점: 집은 카드를 배울 수 있는 줄) */
+  open?: boolean;
+  /** 덱 장수가 a→b로 바뀔 예정 (칸 아래) */
+  deckTo?: number;
+  /** HP가 이만큼 찰 예정 (치료 미리보기): 막대에 연두 구간 */
+  heal?: number;
+  /** 줄을 누르면 / 올리면 / 벗어나면 */
+  on?: { click?: () => void; over?: () => void; out?: () => void };
 }
 
 export const laneY = (i: number) => LANE.y + i * (LANE.h + LANE.gap);
@@ -80,7 +89,7 @@ function drawFace(scene: Phaser.Scene, l: LaneVM, x: number, y: number) {
   });
 }
 
-function info(l: LaneVM, lit?: StatId): Node {
+function info(l: LaneVM, lit?: StatId, heal = 0): Node {
   const U = INFO.levelUp, S = INFO.stats, C = INFO.chip;
   const level: Node = l.levelUp
     ? {
@@ -112,7 +121,7 @@ function info(l: LaneVM, lit?: StatId): Node {
             t: "row", gap: INFO.hp.numGap, align: "baseline",
             children: [text(String(l.hp), T.hp, low ? P.danger : P.ink, { lh: 1 }), text(`/${l.maxHp}`, T.hpMax, P.ink3Spirit)],
           },
-          { t: "row", children: [bar(INFO.hp.bar.h, Math.max(INFO.hp.minFill, l.hp / l.maxHp), P.wallLo, low ? P.danger : P.ink2, { w: INFO.hp.bar.w, grow: false })] },
+          { t: "row", children: [hpBar(l, heal)] },
         ],
       },
       { t: "row", gap: S.gap, align: "center", children: STAT_IDS.map(stat) },
@@ -127,11 +136,30 @@ function info(l: LaneVM, lit?: StatId): Node {
   };
 }
 
-function drawSocket(scene: Phaser.Scene, x: number, y: number, card?: LaneState["card"]) {
+/** HP 막대. heal이 있으면 지금 HP 뒤에 찰 만큼을 연두로 깔아요 (.hpbar3 i.gain) */
+function hpBar(l: LaneVM, heal: number): Node {
+  const B = INFO.hp.bar;
+  const now = Math.max(INFO.hp.minFill, l.hp / l.maxHp);
+  const base = bar(B.h, now, P.wallLo, l.down ? P.danger : P.ink2, { w: B.w, grow: false });
+  if (heal <= 0) return base;
+  const after = Math.min(1, (l.hp + heal) / l.maxHp);
+  return {
+    ...base,
+    draw: (g, x, y, w, h) => {
+      box(g, x, y, w, h, h / 2, { fill: P.wallLo });
+      box(g, x, y, Math.max(h, w * after), h, h / 2, { fill: P.ok });
+      box(g, x, y, Math.max(h, w * now), h, h / 2, { fill: P.ink2 });
+    },
+  };
+}
+
+function drawSocket(scene: Phaser.Scene, x: number, y: number, card?: LaneState["card"], open = false) {
   const K = SOCKET;
   const g = scene.add.graphics();
   if (!card) {
-    box(g, x, y, K.w, K.h, K.radius, { ring: { width: K.ring, color: withAlpha(P.ink, K.lineAlpha), dash: K.dash } });
+    box(g, x, y, K.w, K.h, K.radius, open
+      ? { fill: withAlpha(P.accHi, K.okFill), ring: { width: K.ring, color: P.accHi, dash: K.dash } }
+      : { ring: { width: K.ring, color: withAlpha(P.ink, K.lineAlpha), dash: K.dash } });
     return;
   }
   if (card.hot) {
@@ -159,7 +187,24 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
   box(scene.add.graphics(), x, y, w, h, radius, { ring: { width: LANE.ring, color: line } });
 
   drawFace(scene, l, x + RING.x, y + RING.y);
-  const node = info(l, st.stat);
+  const node = info(l, st.stat, st.heal);
   render(scene, node, x + INFO.x, y + (h - size(node).h) / 2);
-  drawSocket(scene, x + SOCKET.x, y + SOCKET.y, st.card);
+  drawSocket(scene, x + SOCKET.x, y + SOCKET.y, st.card, st.open);
+  if (st.deckTo !== undefined && l.deck !== undefined) {
+    const D = SOCKET.deck;
+    const deck: Node = {
+      t: "row", h: D.h, gap: D.gap, align: "center",
+      children: [
+        { t: "icon", id: "i-deck", w: D.icon, h: D.icon, tint: P.ink3Spirit },
+        text(`${l.deck}${COPY.arrow}`, T.was, P.ink3Spirit),
+        text(String(st.deckTo), T.deck, P.accHi),
+      ],
+    };
+    render(scene, deck, x + SOCKET.x + (SOCKET.w - size(deck).w) / 2, y + D.y);
+  }
+  if (st.on) {
+    const zone = hitArea(scene, x, y, w, h, st.on.click ?? (() => {}));
+    if (st.on.over) zone.on("pointerover", st.on.over);
+    if (st.on.out) zone.on("pointerout", st.on.out);
+  }
 }

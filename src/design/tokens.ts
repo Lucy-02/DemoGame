@@ -314,7 +314,12 @@ export const tokens = {
         "stat": "20px",
         "statOn": "24px",
         "button": "16px",
-        "buttonGold": "17px"
+        "buttonGold": "17px",
+        "was": "15px",
+        "deck": "22px",
+        "price": "17px",
+        "service": "24px",
+        "servicePrice": "22px"
       }
     },
     "pattern": {
