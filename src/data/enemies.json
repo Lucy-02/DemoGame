@@ -55,7 +55,7 @@
       { "name": "방망이", "charge": true, "actions": [{ "type": "attack", "dmg": 20, "target": "front" }] },
       { "name": "장난", "actions": [{ "type": "costUp", "value": 1 }, { "type": "attack", "dmg": 6, "target": "random" }] }
     ] },
-  { "id": "grimbark", "name": "그림바크", "tier": "boss", "element": "forest", "hp": 200,
+  { "id": "grimbark", "name": "그림바크", "tier": "boss", "element": "forest", "hp": 180,
     "desc": "시든 정원을 지키던 고목 정령",
     "pattern": [
       { "name": "가지 내리치기", "actions": [{ "type": "attack", "dmg": 14, "target": "front" }] },
@@ -63,11 +63,11 @@
       { "name": "뿌리 휘감기", "actions": [{ "type": "sealCards", "count": 2 }] }
     ],
     "phase2": {
-      "hpBelow": 0.5, "turnStartBlock": 6,
+      "hpBelow": 0.5, "turnStartBlock": 4,
       "pattern": [
         { "name": "낙엽 폭풍", "actions": [{ "type": "attack", "dmg": 8, "target": "all" }] },
         { "name": "뿌리 꿰뚫기", "actions": [{ "type": "attack", "dmg": 10, "target": "front", "pierce": true }] },
-        { "name": "수액 흡수", "actions": [{ "type": "sapHeal", "value": 15 }] },
+        { "name": "수액 흡수", "actions": [{ "type": "sapHeal", "value": 10 }] },
         { "name": "대지 가르기", "charge": true, "actions": [{ "type": "attack", "dmg": 24, "target": "front" }] }
       ]
     } }
