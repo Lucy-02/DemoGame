@@ -162,3 +162,9 @@
 - Q4 달라지는 것 먼저: https://claude.ai/artifact/Tc1DbnM7M8BcSbRjnjntAP
 - 프레임: /mnt/project-files/design/round-q/Q1~Q4/
 - 장비 이름 후보: /mnt/project-files/equipment-design/NAMES.md
+
+## 장비 라운드 Q2 (2026-11-12): Q1 뼈대 + Q4 조각 (Lucy 확인 대기)
+- Q2-A 호버에만: https://claude.ai/artifact/CophNbjzbadNUacV8ZM4Td
+- Q2-B 장비 줄 안에: https://claude.ai/artifact/7Kpawa2LB6MaKgcZKL5ctq
+- Q2-C 받는 정령 줄에: https://claude.ai/artifact/KMVowSLLj4QWM7CUEYKxGh
+- 프레임: /mnt/project-files/design/round-q2/A~C/ (f1 일반 장비, f1b 유니크 무기)
