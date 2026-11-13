@@ -48,12 +48,12 @@ export const ENEMY = {
 /** .ground 104×14, 발 y에 가운데. radial-gradient(closest-side, shade, transparent) */
 export const GROUND = { w: 104, h: 14 };
 
-/** 정보판 (.col .plate). 접힌 판은 두 줄, 가리키면 펼쳐요(.more) */
+/** 정보판 (.col .plate). 두 줄이고 늘어나지 않아요. 자세한 것은 가리키면 판 아래 설명판에 (0067 추기) */
 export const INFO = {
   /** .col top = 발 + 10 */
   mt: 10,
-  /** 접힌 판 폭 --pw 112 / 116, 펼친 판 --pwx 184 / 200 */
-  allyW: 112, enemyW: 116, allyOpenW: 184, enemyOpenW: 200,
+  /** 판 폭 --pw 112 / 116 */
+  allyW: 112, enemyW: 116,
   /** .plate padding 5 6 4, radius 8, gap 3 */
   pad: [5, 6, 4, 6] as [number, number, number, number], radius: 8, gap: 3,
   /** .r1 height 16 gap 5 · .r2 height 20 gap 4 */
@@ -72,19 +72,19 @@ export const INFO = {
   lethalRing: 1.5, litRing: 1.5,
   /** 약점 표지 .weak 18, ::before inset 2 rotate(45deg) 테 1.5 radius 2, .ic 11 */
   weak: { size: 18, inset: 2, ring: 1.5, radius: 2, icon: 11 },
-  /** .more padding-top 4 margin-top 2 border-top 1 gap 5 · .mrow gap 5 min-height 18 */
-  more: { padTop: 4, mt: 2, line: 1, gap: 5, rowGap: 5, rowMinH: 18 },
-  /** .elc 18 원, .ic 12 */
+  /** 설명판 머리의 기호 줄 (.mrow gap 5 min-height 18) */
+  tipRow: { gap: 5, minH: 18 },
+  /** 설명판 머리 속성 원 (.elc 18, .ic 12) */
   element: { d: 18, icon: 12 },
-  /** .chipS height 20 padding 0 6 0 4 radius 10 gap 2, .ic 12 */
+  /** 설명판 상태 칩 (.chipS height 20 padding 0 6 0 4 radius 10 gap 2, .ic 12) */
   chip: { h: 20, pad: [0, 6, 0, 4] as [number, number, number, number], radius: 10, gap: 2, icon: 12 },
   /** .flag .ic 12 (앞열 깃발) */
   flag: { icon: 12 },
   /** .tag padding 1 6 radius 9, inset 1 */
   tag: { pad: [1, 6, 1, 6] as [number, number, number, number], radius: 9, ring: 1 },
-  /** 장비 칸 묶음 (0066): 펼친 판 상태 줄 오른쪽 끝, gap 5 */
+  /** 장비 칸 줄 (0066): 아군 설명판 머리 끝, 칸 사이 5 */
   equipGap: 5,
-  /** .col gap 6: 정보판과 적 설명판 사이 */
+  /** .col gap 6: 정보판과 설명판 사이 */
   tipGap: 6,
 };
 
@@ -148,8 +148,6 @@ export const HOVER = {
  *  overTarget = 대상 위에서 불투명도(흐림과 같은 값), depth = 맨 위 */
 export const TARGETING = { dim: HOVER.dim };
 export const DRAG = { threshold: 6, scale: 0.6, overTarget: HOVER.dim, depth: 1000 };
-/** 펼친 정보판: 필드 위, 설명판·끄는 카드 아래 */
-export const OPEN_PLATE_DEPTH = DRAG.depth - 1;
 
 /** 든 카드 크기·밀림. 말풍선은 들린 카드 위에서 정본과 같은 거리에 따라 올라가요. */
 export interface LiftStyle {

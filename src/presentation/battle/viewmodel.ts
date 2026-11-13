@@ -3,7 +3,7 @@
 import type { CardVM } from "../card/viewmodel";
 import type { RichText } from "../tooltip/content";
 import type { FaceId, IconId } from "../faces";
-import type { EquipTipVM, EquipVM } from "../run/viewmodel";
+import type { EquipVM } from "../run/viewmodel";
 
 export type { FaceId, IconId };
 
@@ -40,8 +40,8 @@ export interface AllyVM {
   statuses: StatusVM[];
   /** 앞열 (펼친 정보판에 깃발 기호) */
   front?: boolean;
-  /** 지닌 장비 (0066: 펼친 정보판 상태 줄 끝 작은 칸, 올리면 말풍선). 빈 칸은 그리지 않아요 */
-  equip?: { item: EquipVM; tip: EquipTipVM }[];
+  /** 지닌 장비 (0066 · 0067 추기: 가리키면 설명판에 작은 칸 기호만). 빈 칸은 그리지 않아요 */
+  equip?: EquipVM[];
 }
 
 export type IntentVM =

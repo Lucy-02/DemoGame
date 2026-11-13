@@ -1,6 +1,6 @@
 // 아군·적: 필드 그림, 발밑 그림자, 정보판, 적 머리 위 의도. 정보판은 전투 정보판 C안 (0067):
-// 접힌 판은 두 줄(HP 막대·방어도·대표 상태 / HP 숫자·받을 피해 또는 약점 표지). 가리키면 설명판 머리(unitTipHead)만 띄우고,
-// 우클릭 집중 보기에서 펼친 판(속성·상태 전부·앞열·장비)을 그려요.
+// 접힌 판은 두 줄(HP 막대·방어도·대표 상태 / HP 숫자·받을 피해 또는 약점 표지). 판은 늘어나지 않고,
+// 가리키면 설명판 머리(unitTipHead: 이름 줄·상태 전부·장비 칸)를 판 아래 설명판에 띄워요.
 // 대상 고르기 미리보기(.fld-pv, 결정 0013)도 여기서 그려요: 대상의 결과와 빛, 아군 받을 피해 a→b. 발밑 고리(타원)는 없어요.
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
@@ -8,13 +8,12 @@ import { transparentOf } from "../../style/color";
 import { box } from "../../style/draw";
 import { cubicBezier, ms } from "../../style/ease";
 import { render, size, type Node } from "../../style/flex";
-import { gather } from "../../style/gather";
 import { linear } from "../../style/gradient";
 import { icon, loadIcon } from "../../style/icons";
 import { placeholderArt } from "../../style/placeholder";
 import { shadowTexture } from "../../style/shadow";
 import { faceKey, preloadFaces } from "../../faces";
-import { miniSlotNode, preloadEquipArt, type Rect } from "../../run/equip";
+import { miniSlotNode, preloadEquipArt } from "../../run/equip";
 import { EQUIP_MINI } from "../../run/layout";
 import { STATUSES } from "../../../core/battle/statuses";
 import { COPY } from "../copy";
@@ -40,7 +39,7 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
     statuses(a.statuses);
     if (a.element) loadIcon(scene, a.element, I.element.icon);
   }
-  preloadEquipArt(scene, vm.allies.flatMap((a) => (a.equip ?? []).map((e) => e.item.id)));
+  preloadEquipArt(scene, vm.allies.flatMap((a) => (a.equip ?? []).map((e) => e.id)));
   loadIcon(scene, "fx-block", I.block.icon);
   loadIcon(scene, "fx-damage", I.incoming.icon);
   loadIcon(scene, "g-flag", I.flag.icon);
@@ -246,39 +245,29 @@ const elementChip = (el: string): Node => ({
 });
 
 /** 줄 바꿈이 있는 기호 줄 (.mrow flex-wrap): 폭을 넘으면 다음 줄로 */
-function wrapRows(items: Node[], width: number, tail: Node[] = []): Node[] {
+function wrapRows(items: Node[], width: number): Node[] {
   const rows: Node[][] = [[]];
   let used = 0;
-  for (const n of [...items, ...tail]) {
+  for (const n of items) {
     const w = size(n).w;
     const line = rows[rows.length - 1];
-    if (line.length && used + I.more.rowGap + w > width) {
+    if (line.length && used + I.tipRow.gap + w > width) {
       rows.push([n]);
       used = w;
     } else {
-      used += (line.length ? I.more.rowGap : 0) + w;
+      used += (line.length ? I.tipRow.gap : 0) + w;
       line.push(n);
     }
   }
-  return rows.filter((r) => r.length).map((children) => ({ t: "row", gap: I.more.rowGap, minH: I.more.rowMinH, align: "center", children }));
+  return rows.filter((r) => r.length).map((children) => ({ t: "row", gap: I.tipRow.gap, minH: I.tipRow.minH, align: "center", children }));
 }
 
-/** 펼친 부분 (.more): 위 선 1, 위 여백 4, 줄 사이 5 */
-function moreSection(rows: Node[]): Node {
-  return {
-    t: "col", mt: I.more.mt, align: "stretch",
-    children: [
-      { t: "block", w: 0, h: I.more.line, draw: (g, x, y, w, h) => box(g, x, y, w, h, 0, { fill: P.glassLine }) },
-      { t: "col", pad: [I.more.padTop, 0, 0, 0], gap: I.more.gap, align: "stretch", children: rows },
-    ],
-  };
-}
 
 /** 이름 줄 (.mrow: 속성 · 약점 · 이름 … 오른쪽 끝 깃발·등급) */
 function nameRow(lead: Node[], name: string | undefined, tail: Node[]): Node {
   const right = tail.map((n, k) => (k === 0 ? { ...n, ml: "auto" as const } : n));
   return {
-    t: "row", gap: I.more.rowGap, minH: I.more.rowMinH, align: "center",
+    t: "row", gap: I.tipRow.gap, minH: I.tipRow.minH, align: "center",
     children: [...lead, ...(name ? [text(name, T.plateName, P.ink)] : []), ...right],
   };
 }
@@ -299,16 +288,18 @@ function enemyNameRow(scene: Phaser.Scene, e: EnemyVM): Node {
   return nameRow([elementChip(e.element), ...(e.weakTo ? [weakMark(scene, e.weakTo)] : [])], e.tip?.name, rank);
 }
 
-/** 가리킨 유닛 설명판의 머리 (0067 추기): 이름 줄과 상태(기호 + 이름 + 수). width = 설명판 안쪽 폭 */
+/** 가리킨 유닛 설명판의 머리 (0067 추기): 이름 줄, 상태(기호 + 이름 + 수), 아군 장비 칸(기호만). width = 설명판 안쪽 폭 */
 export function unitTipHead(scene: Phaser.Scene, u: { side: "ally"; vm: AllyVM } | { side: "enemy"; vm: EnemyVM }, width: number): Node[] {
   const head = u.side === "ally" ? allyNameRow(u.vm) : enemyNameRow(scene, u.vm);
-  return [head, ...wrapRows(u.vm.statuses.map((x) => statusChip(x, true)), width)];
+  const equip: Node[] = u.side === "ally" && u.vm.equip?.length
+    ? [{ t: "row", gap: I.equipGap, align: "center", children: u.vm.equip.map((e) => miniSlotNode(scene, e, EQUIP_MINI.s24)) }]
+    : [];
+  return [head, ...wrapRows(u.vm.statuses.map((x) => statusChip(x, true)), width), ...equip];
 }
 
 interface PlateState {
   lit?: boolean;
   lethal?: boolean;
-  open?: boolean;
 }
 
 function plate(width: number, rows: Node[], st: PlateState): Node {
@@ -317,12 +308,12 @@ function plate(width: number, rows: Node[], st: PlateState): Node {
     : { width: 1, color: P.plateLine };
   return {
     t: "col", w: width, gap: I.gap, pad: I.pad, radius: I.radius, align: "stretch",
-    style: { fill: st.open ? P.glassD : P.plate, ring },
+    style: { fill: P.plate, ring },
     children: rows,
   };
 }
 
-function allyPlate(scene: Phaser.Scene, a: AllyVM, pv: Change | undefined, st: PlateState, onEquip?: (k: number, r: Rect) => void): Node {
+function allyPlate(scene: Phaser.Scene, a: AllyVM, pv: Change | undefined, st: PlateState): Node {
   const incoming = pv ? pv.to : (a.incoming ?? 0);
   const loss = Math.max(0, incoming - (a.block ?? 0));
   const after = Math.max(0, a.hp - loss);
@@ -341,21 +332,7 @@ function allyPlate(scene: Phaser.Scene, a: AllyVM, pv: Change | undefined, st: P
     children: [hpNumber(a.hp, a.maxHp), ...(showInc ? [incomingNode(scene, a.incoming ?? 0, pv, lethal)] : [])],
   };
   const rows: Node[] = [row1, row2];
-  if (st.open) {
-    const inner = I.allyOpenW - I.pad[1] - I.pad[3];
-    const equip: Node[] = a.equip?.length ? [{
-      t: "row", gap: I.equipGap, align: "center", ml: "auto",
-      children: a.equip.map((e, k): Node => {
-        const slot = miniSlotNode(scene, e.item, EQUIP_MINI.s24);
-        if (slot.t !== "block" || !onEquip) return slot;
-        const draw = slot.draw;
-        return { ...slot, draw: (g, x, y, w, h) => { draw?.(g, x, y, w, h); onEquip(k, { x, y, w, h }); } };
-      }),
-    }] : [];
-    // 받을 피해 출처(행동 순서별)는 뷰모델에 아직 없어서 그리지 않아요
-    rows.push(moreSection([allyNameRow(a), ...wrapRows(a.statuses.map((x) => statusChip(x)), inner, equip)]));
-  }
-  return plate(st.open ? I.allyOpenW : I.allyW, rows, { ...st, lethal });
+  return plate(I.allyW, rows, { ...st, lethal });
 }
 
 function enemyPlate(scene: Phaser.Scene, e: EnemyVM, pv: EnemyOutcomeVM | undefined, st: PlateState): Node {
@@ -373,11 +350,7 @@ function enemyPlate(scene: Phaser.Scene, e: EnemyVM, pv: EnemyOutcomeVM | undefi
     children: [hp, ...(e.weakTo ? [weakMark(scene, e.weakTo)] : [])],
   };
   const rows: Node[] = [row1, row2];
-  if (st.open) {
-    const inner = I.enemyOpenW - I.pad[1] - I.pad[3];
-    rows.push(moreSection([enemyNameRow(scene, e), ...wrapRows(e.statuses.map((x) => statusChip(x)), inner)]));
-  }
-  return plate(st.open ? I.enemyOpenW : I.enemyW, rows, st);
+  return plate(I.enemyW, rows, st);
 }
 
 function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false): Node {
@@ -478,17 +451,11 @@ export interface UnitPreview<R> {
   lit?: boolean;
 }
 
-export interface UnitView {
-  bounds: UnitBounds;
-  /** 접힌 정보판 (펼친 판을 덮을 때 숨겨요) */
-  plate: Phaser.GameObjects.Container;
-}
-
 const allyPlateAt = (i: number, w: number) => ({ x: ALLY.xs[i] - w / 2, y: ALLY.feet + I.mt });
 const enemyPlateAt = (i: number, w: number) => ({ x: ENEMY.xs[i] - w / 2, y: ENEMY.feet + I.mt });
 
 /** pv.outcome: 이 아군의 받을 피해 a→b */
-export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<Change> = {}): UnitView {
+export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<Change> = {}): UnitBounds {
   const cx = ALLY.xs[i];
   const bodyX = cx - ALLY.body.w / 2, bodyTop = ALLY.feet - ALLY.body.h;
   const lit = !!pv.lit;
@@ -501,11 +468,11 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPrev
   }
   placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
   ground(scene, cx, ALLY.feet);
-  const plateC = gather(scene, 0, 0, () => render(scene, info, at.x, at.y));
-  return { bounds: { x: at.x, y: bodyTop, w: I.allyW, h: at.y + plateH - bodyTop }, plate: plateC };
+  render(scene, info, at.x, at.y);
+  return { x: at.x, y: bodyTop, w: I.allyW, h: at.y + plateH - bodyTop };
 }
 
-export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPreview<EnemyOutcomeVM> = {}): UnitView {
+export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPreview<EnemyOutcomeVM> = {}): UnitBounds {
   const cx = ENEMY.xs[i];
   const intentN = intentNode(scene, e.intent, !!pv.outcome?.cut);
   const intent = size(intentN);
@@ -523,22 +490,6 @@ export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPr
   placeholderArt(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, P.ink3);
   ground(scene, cx, ENEMY.feet);
   if (pv.outcome) drawHits(scene, pv.outcome.hits, cx - ENEMY.body.w / 2, bodyTop);
-  const plateC = gather(scene, 0, 0, () => render(scene, info, at.x, at.y));
-  return { bounds: { x: at.x, y: ENEMY.top, w: I.enemyW, h: at.y + plateH - ENEMY.top }, plate: plateC };
-}
-
-/** 집중 보기 아군의 펼친 정보판. onEquip: 장비 칸이 놓인 자리 (칸 번호, 자리). 판 자리를 돌려줘요 */
-export function drawOpenAlly(scene: Phaser.Scene, a: AllyVM, i: number, onEquip?: (k: number, r: Rect) => void): Rect {
-  const info = allyPlate(scene, a, undefined, { open: true }, onEquip);
-  const at = allyPlateAt(i, I.allyOpenW);
   render(scene, info, at.x, at.y);
-  return { ...at, w: I.allyOpenW, h: size(info).h };
-}
-
-/** 집중 보기 적의 펼친 정보판. 판 자리를 돌려줘요 */
-export function drawOpenEnemy(scene: Phaser.Scene, e: EnemyVM, i: number): Rect {
-  const info = enemyPlate(scene, e, undefined, { open: true });
-  const at = enemyPlateAt(i, I.enemyOpenW);
-  render(scene, info, at.x, at.y);
-  return { ...at, w: I.enemyOpenW, h: size(info).h };
+  return { x: at.x, y: ENEMY.top, w: I.enemyW, h: at.y + plateH - ENEMY.top };
 }

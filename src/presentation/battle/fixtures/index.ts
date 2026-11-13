@@ -21,7 +21,7 @@ export const FIXTURES: Record<string, BattleVM> = {
   "drag-random": exampleDragRandom,
   /** 예시: 손패에 카드 일러스트 (물방울 휘갈기기·물결 장막은 그림 없음) */
   art: exampleCardArt,
-  /** 예시: 장비를 지닌 아군 (0066). ?hover=equip:1:0 으로 말풍선 */
+  /** 예시: 장비를 지닌 아군 (0066). ?hover=unit:ally:1 로 설명판의 장비 칸 */
   equip: exampleEquip,
   /** 예시: 꽉 찬 정보판 (상태 다섯, 치명 받을 피해) */
   crowded: exampleCrowded,

@@ -98,8 +98,8 @@ src/presentation/battle/
   fixtures/canonRest.ts        정본 고정 장면
   views/backdrop.ts            배경 방사 그라데이션 + 바닥
   views/topbar.ts, order.ts    위치·시스템 버튼, 행동 순서 띠
-  views/units.ts               아군·적(그림 자리, 그림자, 정보판 C안, 의도 알약). drawAlly/drawEnemy → { bounds, plate }, 우클릭 집중 보기에서 drawOpenAlly/drawOpenEnemy(펼친 판)
-  views/unitTip.ts             가리킨 유닛 설명판 내용 (이름 줄·상태·적 행동 문장). 접힌 판(집중 보기면 펼친 판) 바로 아래
+  views/units.ts               아군·적(그림 자리, 그림자, 정보판 C안, 의도 알약). drawAlly/drawEnemy → 판정 영역, unitTipHead(설명판 머리: 이름 줄·상태·장비 칸)
+  views/unitTip.ts             가리킨 유닛 설명판 내용 (이름 줄·상태·장비 칸·적 행동 문장). 정보판 바로 아래
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
   HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }. 몸(drawBody)과 비용 동전·자물쇠 꼬리표(drawSignals, CardVM.need)를 나눠 그림
@@ -180,7 +180,7 @@ scripts/                       build-tokens, check-literals, check-assets
 
 ```
 pnpm install
-pnpm dev:web                    # http://localhost:5173 (개발용 창 틀 포함). ?hover=claw 처럼 호버 상태로 시작 가능 (유닛: ?hover=unit:enemy:2, 집중 보기: ?hover=focus:ally:1)
+pnpm dev:web                    # http://localhost:5173 (개발용 창 틀 포함). ?hover=claw 처럼 호버 상태로 시작 가능 (유닛: ?hover=unit:enemy:2)
 pnpm dev                        # Electron
 pnpm check                      # 타입 + 의존 규칙 + 단위 테스트 + 리터럴 (CI와 같음)
 pnpm test:e2e                   # Electron 스모크 (리눅스 무화면 환경은 xvfb-run -a)
