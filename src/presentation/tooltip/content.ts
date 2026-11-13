@@ -7,10 +7,7 @@ export type RichText = { text: string; strong?: boolean; term?: boolean }[];
 /** 문단 역할. 스킨이 역할마다 글자 크기·색·줄 높이를 정해요. */
 export type TipRole = "body" | "calc" | "why" | "meta";
 
-export type TipBlock =
-  /** 머리: 이름 + 옆 꼬리표 (정예 등) */
-  | { kind: "title"; text: string; tag?: string }
-  /** 문단: 판 폭에 맞춰 줄바꿈 */
-  | { kind: "text"; role: TipRole; text: RichText };
+/** 문단: 판 폭에 맞춰 줄바꿈 */
+export type TipBlock = { kind: "text"; role: TipRole; text: RichText };
 
 export type TipContent = TipBlock[];

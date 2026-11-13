@@ -1,27 +1,10 @@
-// 왼쪽 위 지역·턴 줄과 오른쪽 위 기록·설정 버튼. 정본 .top .where, .sys
+// 오른쪽 위 기록·설정 버튼. 정본 .sys (왼쪽 위 지역·턴 줄은 뺐어요, Lucy 2026-11-13)
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { icon } from "../../style/icons";
-import { inlineLine } from "../../style/text";
-import { COPY } from "../copy";
-import { FRAME, SYS, WHERE } from "../layout";
-import type { BattleVM } from "../viewmodel";
+import { FRAME, SYS } from "../layout";
 
 const P = tokens.provisional.palette;
-const T = tokens.provisional.text.battle;
-
-export function drawWhere(scene: Phaser.Scene, vm: BattleVM["where"]) {
-  const quiet = { size: T.where, color: P.ink3 };
-  const num = { size: T.whereNum, color: P.ink };
-  return inlineLine(scene, WHERE.x, WHERE.y, WHERE.strut, [
-    { text: `${vm.area} `, ...quiet },
-    { text: String(vm.floor), ...num },
-    { text: `${COPY.floorUnit} `, ...quiet },
-    { text: COPY.dot, ...quiet, ml: WHERE.dotMargin, mr: WHERE.dotMargin },
-    { text: ` ${COPY.turn} `, ...quiet },
-    { text: String(vm.turn), ...num },
-  ]);
-}
 
 export const SYS_ICONS = ["i-log", "i-gear"] as const;
 

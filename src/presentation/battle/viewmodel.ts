@@ -3,7 +3,7 @@
 import type { CardVM } from "../card/viewmodel";
 import type { RichText } from "../tooltip/content";
 import type { FaceId, IconId } from "../faces";
-import type { EquipTipVM, EquipVM } from "../run/viewmodel";
+import type { EquipVM } from "../run/viewmodel";
 
 export type { FaceId, IconId };
 
@@ -26,22 +26,27 @@ export interface StatusVM {
 
 export interface AllyVM {
   face: FaceId;
+  /** 이름 (펼친 정보판) */
+  name?: string;
+  /** 속성 기호 el-* (펼친 정보판) */
+  element?: IconId;
   /** 필드 그림 (지금은 정본의 임시 실루엣 sil-*) */
   art: IconId;
   hp: number;
   maxHp: number;
   block?: number;
-  /** 이번 적 차례에 받을 피해 합계 */
+  /** 이번 적 차례에 받을 피해 합계. 정보판 HP 막대를 (방어도를 뺀 만큼) 미리 깎아 보여요 */
   incoming?: number;
   statuses: StatusVM[];
+  /** 앞열 (펼친 정보판에 깃발 기호) */
   front?: boolean;
-  /** 지닌 장비 (0066: 정령 옆 작은 칸, 올리면 말풍선). 빈 칸은 그리지 않아요 */
-  equip?: { item: EquipVM; tip: EquipTipVM }[];
+  /** 지닌 장비 (0066 · 0067 추기: 가리키면 설명판에 작은 칸 기호만). 빈 칸은 그리지 않아요 */
+  equip?: EquipVM[];
 }
 
 export type IntentVM =
   | { kind: "attack" | "charge"; order: number; icon: IconId; amount: string; target: FaceId | "all" }
-  | { kind: "debuff"; order: number; icon: IconId; label: string; amount: string; target: FaceId | "all" };
+  | { kind: "debuff"; order: number; icon: IconId; amount: string; target: FaceId | "all" };
 
 export interface EnemyVM {
   art: IconId;
@@ -49,11 +54,12 @@ export interface EnemyVM {
   maxHp: number;
   block?: number;
   element: IconId;
-  weakTo: IconId;
+  /** 약점 속성. 바람·무속성처럼 약점이 없으면 비움 (0028). 있으면 접힌 정보판에도 약점 표지를 늘 그려요 */
+  weakTo?: IconId;
   statuses: StatusVM[];
   intent: IntentVM;
   hovered?: boolean;
-  /** 호버 중일 때 뜨는 설명 (정본 .etip) */
+  /** 호버 중일 때 뜨는 설명 (정본 .etip). 이름·등급은 펼친 정보판에 써요 */
   tip?: EnemyTipVM;
 }
 
@@ -68,7 +74,6 @@ export interface EnemyTipVM {
 }
 
 export interface BattleVM {
-  where: { area: string; floor: number; turn: number };
   order: { slots: OrderSlotVM[]; nextTurn: number };
   allies: AllyVM[];
   enemies: EnemyVM[];
