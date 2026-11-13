@@ -217,8 +217,6 @@ export const tokens = {
     },
     "text": {
       "battle": {
-        "where": "14px",
-        "whereNum": "15px",
         "orderLabel": "13px",
         "orderNum": "12px",
         "hp": "16px",

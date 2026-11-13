@@ -69,7 +69,6 @@ export interface EnemyTipVM {
 }
 
 export interface BattleVM {
-  where: { area: string; floor: number; turn: number };
   order: { slots: OrderSlotVM[]; nextTurn: number };
   allies: AllyVM[];
   enemies: EnemyVM[];

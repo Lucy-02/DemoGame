@@ -13,12 +13,12 @@ import { GLASS } from "../tooltip/skins";
 import { drawTooltip } from "../tooltip/Tooltip";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
-import { ALLY, BAND, DRAG, ENEMY, ETIP, INFO, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { ALLY, BAND, DRAG, ENEMY, FRAME, INFO, LIFT_STYLES, SYS, TARGETING } from "./layout";
 import { preloadHandCard } from "../card/HandCard";
 import { drawMiniSlotHot, type Rect } from "../run/equip";
 import { EQUIP_TIP_ICONS, drawEquipTip } from "../run/equipTip";
 import { EQUIP_MINI, EQUIP_TIP } from "../run/layout";
-import { SYS_ICONS, drawSys, drawWhere } from "./views/topbar";
+import { SYS_ICONS, drawSys } from "./views/topbar";
 import { drawAlly, drawEnemy, preloadUnits, type UnitBounds } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 
@@ -71,7 +71,6 @@ export class BattleScene extends Phaser.Scene {
 
   create() {
     drawBackdrop(this);
-    drawWhere(this, this.vm.where);
     drawSys(this);
     this.fieldLayer = this.add.container(0, 0);
     this.rest = this.drawField(null);
@@ -80,8 +79,8 @@ export class BattleScene extends Phaser.Scene {
     drawMana(this, this.vm.mana);
     drawEnd(this, this.vm);
     // 적 호버 표시(고리·설명판)는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
-    const tip = this.vm.enemies.find((e) => e.hovered)?.tip;
-    if (tip) this.enemyHover.push(drawTooltip(this, { skin: GLASS, content: enemyTipContent(tip), at: { left: ETIP.x, top: ETIP.y } }));
+    const hov = this.vm.enemies.findIndex((e) => e.hovered);
+    this.showEnemyTip(hov < 0 ? null : hov);
     this.hand = createHand(this, this.vm.hand, {
       lift: this.lift ? LIFT_STYLES[this.lift] : undefined,
       onPress: (key, p) => {
@@ -144,6 +143,32 @@ export class BattleScene extends Phaser.Scene {
     }
     this.refresh(p);
     this.hoverEquip(p.x, p.y);
+    this.hoverEnemy(p.x, p.y);
+  }
+
+  // ── 적 설명판: 가리킨 적의 정보판 바로 아래에 떠요. 카드를 집거나 끄는 동안에는 뜨지 않아요 ──
+
+  private enemyTipOn: number | null = null;
+
+  private hoverEnemy(x: number, y: number) {
+    if (this.dragging || this.held || this.press) return;
+    const hit = this.bounds.find(({ ref, box: b }) => ref.side === "enemy" && x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+    this.showEnemyTip(hit ? hit.ref.i : null);
+  }
+
+  private showEnemyTip(i: number | null) {
+    if (i === this.enemyTipOn) return;
+    this.enemyTipOn = i;
+    for (const o of this.enemyHover) o.destroy();
+    this.enemyHover = [];
+    const tip = i === null ? undefined : this.vm.enemies[i].tip;
+    const box = i === null ? undefined : this.bounds.find((b) => b.ref.side === "enemy" && b.ref.i === i)?.box;
+    if (!tip || !box) return;
+    // 정보판 왼쪽 끝에 맞추고, 화면 오른쪽 여백(시스템 버튼과 같은 값) 안으로 들여요
+    const left = Math.min(box.x, FRAME.w - SYS.right - GLASS.w);
+    const c = drawTooltip(this, { skin: GLASS, content: enemyTipContent(tip), at: { left, top: box.y + box.h + EQUIP_TIP.gapToLane } });
+    c.setDepth(DRAG.depth);
+    this.enemyHover.push(c);
   }
 
   // ── 장비 칸 (0066): 올리면 밝은 테와 말풍선. 카드를 집거나 끄는 동안에는 뜨지 않아요 ──

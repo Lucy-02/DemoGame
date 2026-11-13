@@ -9,7 +9,6 @@ const fire = (c: Omit<CardVM, "owner">): CardVM => ({ ...c, owner: "fire" });
 const jelly = (c: Omit<CardVM, "owner">): CardVM => ({ ...c, owner: "jelly" });
 
 export const canonRest: BattleVM = {
-  where: { area: "이슬 숲", floor: 5, turn: 3 },
   order: {
     slots: [
       { n: 1, art: "en-1", action: "i-claw" },
@@ -27,11 +26,19 @@ export const canonRest: BattleVM = {
     {
       art: "en-1", hp: 18, maxHp: 30, block: 4, element: "el-none", statuses: [{ icon: "kw-burn", n: 3 }],
       intent: { kind: "attack", order: 1, icon: "i-claw", amount: "6×2", target: "jelly" },
+      tip: {
+        name: "이끼 두꺼비",
+        lines: [[{ text: "할퀴기 · 해파리 정령에게 피해를 " }, { text: "6", strong: true }, { text: "씩 " }, { text: "2", strong: true }, { text: "번 입힙니다." }]],
+      },
     },
     {
       art: "en-2", hp: 12, maxHp: 22, element: "el-wind",
       statuses: [{ icon: "kw-chill", n: 1 }, { icon: "kw-vuln", n: 1 }],
       intent: { kind: "debuff", order: 2, icon: "kw-weak", amount: "2", target: "fire" },
+      tip: {
+        name: "서리 박쥐",
+        lines: [[{ text: "약화 · 불 정령에게 약화를 " }, { text: "2", strong: true }, { text: " 부여합니다." }]],
+      },
     },
     {
       art: "en-3", hp: 41, maxHp: 48, block: 4, element: "el-water", weakTo: "el-ice", statuses: [],

@@ -93,7 +93,7 @@ src/presentation/game.ts       Phaser.Game (WEBGL, 1280×800, Scale.NONE). 글�
 src/presentation/faces.ts      IconId, FaceId, FACES, faceKey, preloadFaces (battle↔card 순환을 끊으려고 여기 둠)
 src/presentation/battle/
   BattleScene.ts               init({vm?, hover?}) → create()에서 views를 순서대로 그림
-  layout.ts                    FRAME BG FLOOR WHERE SYS ORDER ALLY ENEMY GROUND HOVER_RING INFO INTENT BAND MANA HAND END ETIP HOVER
+  layout.ts                    FRAME BG FLOOR SYS ORDER ALLY ENEMY GROUND HOVER_RING INFO INTENT BAND MANA HAND END HOVER
   viewmodel.ts, copy.ts        BattleVM 타입, 화면 문구
   fixtures/canonRest.ts        정본 고정 장면
   views/backdrop.ts            배경 방사 그라데이션 + 바닥

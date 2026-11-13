@@ -8,8 +8,6 @@ export const BG = { rx: 0.6, ry: 0.7, cx: 0.5, cy: 0.34, mid: 0.5 };
 /** .floor top:330px, linear-gradient(rgba(35,33,32,0), .55 30%, .9) */
 export const FLOOR = { top: 330, stops: [[0, 0], [0.3, 0.55], [1, 0.9]] as const };
 
-/** .top left:20px top:14px; .where i margin 0 4px. 부모 글자 크기는 body 기본 16px */
-export const WHERE = { x: 20, y: 14, strut: "16px", dotMargin: 4 };
 
 /** .sys right:16px top:10px gap:6px; .ib 34px; .ic 16px */
 export const SYS = { right: 16, top: 10, gap: 6, button: 34, icon: 16 };
@@ -104,8 +102,6 @@ export const END = {
   piles: { pad: [2, 4, 0, 4] as [number, number, number, number], gap: 3, icon: 13 },
 };
 
-/** .etip left 872 top 478 (모양은 툴팁 공용 스킨 GLASS, src/presentation/tooltip/skins.ts) */
-export const ETIP = { x: 872, y: 478 };
 
 /** 집음·조준 미리보기 (.fld-pv, page.html·r5.css) */
 export const PREVIEW = {

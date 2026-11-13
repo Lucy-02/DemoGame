@@ -130,22 +130,30 @@ export function wrapSpans(spans: Span[], maxW: number, keepAll = false): Span[][
       units.push({ ...s, text: piece });
     }
   }
+  // keepAll이면 조각 경계를 넘어 붙어 있는 글자(예: 강조 숫자 + "번")도 한 낱말로 묶어요
+  const groups: Span[][] = [];
+  for (const u of units) {
+    const prev = groups[groups.length - 1];
+    const glue = keepAll && prev && u.text.trim() !== "" && prev[prev.length - 1].text.trim() !== "";
+    if (glue) prev.push(u);
+    else groups.push([u]);
+  }
   const lines: Span[][] = [[]];
   let w = 0;
-  for (const u of units) {
-    const uw = measure(u.text, u.size);
+  for (const g of groups) {
+    const gw = g.reduce((a, u) => a + measure(u.text, u.size), 0);
     const line = lines[lines.length - 1];
-    if (u.text.trim() === "") {
-      if (line.length) { line.push(u); w += uw; }
+    if (g[0].text.trim() === "") {
+      if (line.length) { line.push(...g); w += gw; }
       continue;
     }
-    if (w + uw > maxW && line.length) {
+    if (w + gw > maxW && line.length) {
       while (line.length && line[line.length - 1].text.trim() === "") line.pop();
-      lines.push([u]);
-      w = uw;
+      lines.push([...g]);
+      w = gw;
     } else {
-      line.push(u);
-      w += uw;
+      line.push(...g);
+      w += gw;
     }
   }
   // 같은 모양의 이웃 조각은 다시 합쳐요 (글자 사이 간격이 브라우저와 같아지게)
