@@ -33,8 +33,8 @@ export const EQUIP_TIP = {
   head: { gap: 8, thumb: 28, tag: { padX: 7, padY: 1, radius: 8, gap: 5, mark: { d: 6, outline: 0, step: 9 } }, pip: { d: 7, gap: 4, ring: 1, offLine: 0.4 } },
   /** .chg margin-top 10 gap 14 · .ab2 gap 7 기호 15 */
   stat: { mt: 10, gap: 14, iconGap: 7, icon: 15 },
-  /** .swc margin-top 10 gap 12 · 지난 카드 .6 */
-  swap: { mt: 10, gap: 12, was: 0.6 },
+  /** .swc margin-top 10 gap 12 · 이전 카드는 작고(0.8배) 흐리게(.6) (Lucy 2026-11-13) */
+  swap: { mt: 10, gap: 12, was: 0.6, wasScale: 0.8 },
   /** .tip p margin-top 7 line-height 1.6 */
   line: { mt: 7, lh: 1.6 },
   /** .gl margin-top 10 두 칸 · 칸 사이 선 + 양쪽 14 · .gcol gap 4 · .sg 높이 24 · .lth 24 (.75) */

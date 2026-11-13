@@ -67,15 +67,18 @@ export function drawEquipStrip(scene: Phaser.Scene, offer: EquipOfferVM, on: boo
   if (handlers.out) zone.on("pointerout", handlers.out);
 }
 
-/** 수치 한 줄: 기호 + a→b (받을 정령이 없으면 증감) */
+/** 수치 한 줄: 기호 + a→b (받을 정령이 없으면 증감). 이전 값은 작고 흐리게, 이후 값이 주인공이에요 (Lucy 2026-11-13) */
 function statRow(c: StatChangeVM): Node {
   const neg = c.delta < 0;
-  const label = c.from === undefined || c.to === undefined ? RUN_COPY.delta(c.delta) : `${c.from}${RUN_COPY.arrow}${c.to}`;
+  const after = neg ? P.danger : P.ink;
+  const value: Node[] = c.from === undefined || c.to === undefined
+    ? [text(RUN_COPY.delta(c.delta), T.tipStat, after)]
+    : [text(`${c.from}${RUN_COPY.arrow}`, T.was, P.ink3Spirit), text(String(c.to), T.tipStat, after)];
   return {
     t: "row", gap: TIP.stat.iconGap, align: "center",
     children: [
       { t: "icon", id: ICON[c.stat], w: TIP.stat.icon, h: TIP.stat.icon, tint: neg ? P.danger : COLOR[c.stat] },
-      text(label, T.tipStat, neg ? P.danger : P.ink),
+      { t: "row", align: "baseline", children: value },
     ],
   };
 }
@@ -159,10 +162,14 @@ function body(scene: Phaser.Scene, tip: EquipTipVM, inner: number, owner?: LaneV
     out.push({
       mt: TIP.swap.mt, h: HAND_CARD.h,
       draw: (x, y) => {
-        const was = createHandCard(scene, cardWithFace(scene, from, owner), x, y, { showRarity: true });
+        // 이전 카드는 작고 흐리게, 아래를 맞춰요
+        const k = TIP.swap.wasScale;
+        // 키운(줄인) 카드는 원래 상자의 아래 가운데를 기준으로 놓여요
+        const was = createHandCard(scene, cardWithFace(scene, from, owner, k), x - (HAND_CARD.w * (1 - k)) / 2, y, { showRarity: true, scale: k });
         was.opacity = TIP.swap.was;
-        render(scene, arrow, x + HAND_CARD.w + TIP.swap.gap, y + (HAND_CARD.h - as.h) / 2);
-        createHandCard(scene, cardWithFace(scene, to, owner), x + HAND_CARD.w + TIP.swap.gap * 2 + as.w, y, { showRarity: true });
+        const ax = x + HAND_CARD.w * k + TIP.swap.gap;
+        render(scene, arrow, ax, y + (HAND_CARD.h - as.h) / 2);
+        createHandCard(scene, cardWithFace(scene, to, owner), ax + as.w + TIP.swap.gap, y, { showRarity: true });
       },
     });
   }

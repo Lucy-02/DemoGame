@@ -148,9 +148,13 @@ function info(l: LaneVM, lit?: StatId, heal = 0, equip?: LaneEquipState): Node {
             t: "row", gap: INFO.hp.numGap, align: "baseline",
             children: [
               text(String(l.hp), T.hp, low ? P.danger : P.ink, { lh: 1 }),
-              equip?.maxHpTo === undefined
-                ? text(`/${l.maxHp}`, T.hpMax, P.ink3Spirit)
-                : text(`/${l.maxHp}${COPY.arrow}${equip.maxHpTo}`, T.hpMax, equip.maxHpTo < l.maxHp ? P.danger : P.accHi),
+              // 바뀌기 전 값은 작고 흐리게, 바뀐 값이 주인공이에요
+              ...(equip?.maxHpTo === undefined
+                ? [text(`/${l.maxHp}`, T.hpMax, P.ink3Spirit)]
+                : [
+                  text(`/${l.maxHp}${COPY.arrow}`, T.level, P.ink3Spirit),
+                  text(String(equip.maxHpTo), T.hpMax, equip.maxHpTo < l.maxHp ? P.danger : P.accHi),
+                ]),
             ],
           },
           { t: "row", children: [hpBar(l, heal)] },
