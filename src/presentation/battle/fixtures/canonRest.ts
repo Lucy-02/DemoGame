@@ -41,7 +41,7 @@ export const canonRest: BattleVM = {
         name: "껍질 거북", rank: "정예",
         lines: [
           [{ text: "해일 · 이번 적 차례에 아군 전체에게 " }, { text: "18", strong: true }],
-          [{ text: "브레이크", term: true }, { text: "로 끊을 수 있어요" }],
+          [{ text: "브레이크", term: true }, { text: " 가능" }],
           [{ text: "속성 물 · 약점 바람" }],
         ],
       },
