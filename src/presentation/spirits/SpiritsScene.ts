@@ -34,6 +34,8 @@ export interface SpiritsSceneData {
   closed?: boolean;
   /** 고른 정령의 갈래 고르기 창을 연 채로 시작 (시각 검증용) */
   pick?: boolean;
+  /** 위 띠의 돌아가기 (메인 화면에서 들어왔을 때) */
+  onBack?: () => void;
 }
 
 export class SpiritsScene extends Phaser.Scene {
@@ -48,6 +50,7 @@ export class SpiritsScene extends Phaser.Scene {
   private stripFrom = 0;
   /** 입력 처리 중에 지우면 안 돼서, 다시 그리기는 다음 update에서 해요 */
   private dirty = false;
+  private onBack?: () => void;
   /** 퍼핏 움직임 상태 (정령별). 화면을 다시 그려도 움직임이 처음부터 시작하지 않게 남겨 둬요 */
   private puppetCores = new Map<string, PuppetCore>();
   /** 마지막으로 그린 정령 (다른 정령을 고르면 여기서 전환해요, 0035) */
@@ -68,6 +71,7 @@ export class SpiritsScene extends Phaser.Scene {
     this.selected = data.select ?? this.session.state.spirits[0].id;
     this.tab = data.tab ?? "overview";
     this.open = !data.closed;
+    this.onBack = data.onBack;
     if (data.pick) this.picking = { id: this.selected };
   }
 
@@ -131,7 +135,7 @@ export class SpiritsScene extends Phaser.Scene {
       this.artMotion = { alpha: 1, dx: 0 };
     }
     drawScrim(this);
-    drawTopbar(this, vm.material);
+    drawTopbar(this, vm.material, this.onBack);
     drawIdCard(this, d);
     if (this.open) {
       drawPanel(this, d, this.tab, {
