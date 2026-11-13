@@ -82,8 +82,9 @@ function statRows(s: GardenSpirit): StatRowVM[] {
   return STAT_ORDER.map((k) => {
     const base = k === "hp" ? def.stats.hp + levelHp(rs.level) : def.stats[k];
     const stage = stageBonus(rs, k);
-    const total = k === "hp" ? maxHpOf(rs) : round(baseStat(rs, k));
-    return { label: STAT_LABEL[k], base, stage, personality: total - base - stage, total };
+    const valueOf = (x: typeof rs) => (k === "hp" ? maxHpOf(x) : round(baseStat(x, k)));
+    const total = valueOf(rs), bare = valueOf({ ...rs, equipment: [] });
+    return { label: STAT_LABEL[k], base, stage, personality: bare - base - stage, equip: total - bare, total };
   });
 }
 
