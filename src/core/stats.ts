@@ -16,9 +16,15 @@ export function activePersonality(rs: RunSpirit): PersonalityDef | null {
 }
 
 /** 단계로 오른 값 (0021 3절): 주 성장 능력치에 단계마다 +2, HP가 주 성장이면 단계마다 +6. 레벨은 카드 숫자를 바꾸지 않아요. */
-export function stageBonus(rs: Pick<RunSpirit, "id" | "stage">, k: StatKey): number {
-  if (!spiritDef(rs.id).adultMain.includes(k)) return 0;
+export function stageBonus(rs: Pick<RunSpirit, "id" | "stage" | "branch">, k: StatKey): number {
+  if (!mainStats(rs).includes(k)) return 0;
   return stageRank(rs.stage) * (k === "hp" ? GROWTH.stage_hp_main_bonus : GROWTH.stage_main_bonus);
+}
+
+/** 주 성장 능력치: 갈래가 있으면 그 갈래 줄의 main, 없으면 정령의 adultMain (0027) */
+export function mainStats(rs: Pick<RunSpirit, "id" | "branch">): readonly StatKey[] {
+  const row = rs.branch ? GROWTH.evolutions.find((e) => e.spirit === rs.id && e.branch === rs.branch) : undefined;
+  return row?.main ?? spiritDef(rs.id).adultMain;
 }
 
 /** 레벨로 오른 최대 HP (레벨당 +2, Lv1은 0) */
@@ -26,16 +32,27 @@ export const levelHp = (level: number) => (level - 1) * GROWTH.level_hp;
 
 // ───────────────────────── 장비 ─────────────────────────
 
-/** 런 끝에 남길 장비 칸 수 (단계별) */
-export const equipKeepSlots = (stage: Stage) => GROWTH.equip_keep_slots[stageRank(stage)];
+/** 장비 칸 수 (단계별). 지니는 수 = 런 끝에 남기는 수 (0056) */
+export const equipSlots = (stage: Stage) => GROWTH.equip_slots[stageRank(stage)];
 /** 공명 상한 (단계별) */
 export const resonanceCap = (stage: Stage) => GROWTH.equip_resonance_cap[stageRank(stage)];
+
+/** 지금 공명: 남긴 공명 + 이번 런에 오른 공명. 장비의 단계 수를 넘지 않아요 */
+export function resonanceOf(e: RunEquip): number {
+  return Math.min(Math.max(1, e.resonance + (e.runBonus ?? 0)), equipDef(e.id).tiers.length);
+}
 
 /** 지닌 장비 하나에서 지금 켜진 층: 공명 단계 하나 + 대가 */
 export function activeTiers(e: RunEquip): EquipTier[] {
   const def = equipDef(e.id);
-  const tier = def.tiers[Math.min(Math.max(1, e.resonance), def.tiers.length) - 1];
+  const tier = def.tiers[resonanceOf(e) - 1];
   return def.downside ? [tier, def.downside] : [tier];
+}
+
+/** 쓰러졌던 정령이 전투 뒤 돌아올 때의 HP */
+export function returnHp(rs: RunSpirit): number {
+  const bonus = rs.equipment.some((e) => activeTiers(e).some((t) => t.effects?.some((ef) => ef.passive === "start_block_return")));
+  return C.downed_return_hp + (bonus ? C.equip_return_hp : 0);
 }
 
 /** 지닌 장비 전부의 능력치 보정을 [장비 id, 보정] 쌍으로 */
@@ -133,6 +150,7 @@ export function conditionHolds(w: StatCondition, s: { hp: number; maxHp: number;
   switch (w.k) {
     case "hpBelow": return s.hp <= s.maxHp * w.ratio;
     case "released": return s.release > 0;
+    case "hurt": return s.hp < s.maxHp;
   }
 }
 

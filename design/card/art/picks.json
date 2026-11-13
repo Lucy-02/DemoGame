@@ -1,13 +1,545 @@
 {
-  "$description": "게임에 들어가는 카드 일러스트 목록 (0042). id = 에셋 이름(public/assets/cards/<id>.webp). composition: object·symbol은 fit_size로 크기를 맞추고, scene·backdrop은 창을 채워요(fit_size null). tools/art/import_card_art.py가 읽어요.",
-  "cards": [
-    { "id": "starlight", "name": "별빛", "owner": "star_spirit", "composition": "object", "case_id": "star_01-B-o-s3101", "fit_size": 0.36 },
-    { "id": "constellation", "name": "별자리", "owner": "star_spirit", "composition": "backdrop", "case_id": "star_03-P-o-s3602", "fit_size": null },
-    { "id": "glass_wall", "name": "유리 벽", "owner": "glass_salamander", "composition": "object", "case_id": "sal_01d-B-c-s3504", "fit_size": 0.56 },
-    { "id": "tail_sweep", "name": "꼬리 쓸기", "owner": "glass_salamander", "composition": "object", "case_id": "sal_03-B-o-s3101", "fit_size": 0.42 },
-    { "id": "glass_shatter", "name": "유리 파편", "owner": "glass_salamander", "composition": "symbol", "case_id": "sal_08-M-c-s3601", "fit_size": 0.38 },
-    { "id": "ram", "name": "들이받기", "owner": "magma_ibex", "composition": "scene", "case_id": "ibex_01-S-o-s3601", "fit_size": null },
-    { "id": "obsidian_horn", "name": "흑요석 뿔", "owner": "magma_ibex", "composition": "symbol", "case_id": "ibex_08-M-o-s3602", "fit_size": 0.54 },
-    { "id": "landslide", "name": "산사태", "owner": "magma_ibex", "composition": "scene", "case_id": "ibex_10-S-o-s3601", "fit_size": null }
-  ]
+ "$description": "게임에 들어가는 카드 일러스트 목록 (0042, 0063). id = 에셋 이름(public/assets/cards/<id>.webp). composition: object·symbol은 fit_size로 크기를 맞추고, scene·backdrop은 창을 채워요(fit_size null). tools/art/import_card_art.py가 읽어요.",
+ "cards": [
+  {
+   "id": "starlight",
+   "name": "별빛",
+   "owner": "star_spirit",
+   "composition": "object",
+   "case_id": "star_01-B-o-s3101",
+   "fit_size": 0.36,
+   "decision": "0042"
+  },
+  {
+   "id": "constellation",
+   "name": "별자리",
+   "owner": "star_spirit",
+   "composition": "backdrop",
+   "case_id": "star_03-P-o-s3602",
+   "fit_size": null,
+   "decision": "0042"
+  },
+  {
+   "id": "glass_wall",
+   "name": "유리 벽",
+   "owner": "glass_salamander",
+   "composition": "object",
+   "case_id": "sal_01d-B-c-s3504",
+   "fit_size": 0.56,
+   "decision": "0042"
+  },
+  {
+   "id": "tail_sweep",
+   "name": "꼬리 쓸기",
+   "owner": "glass_salamander",
+   "composition": "object",
+   "case_id": "sal_03-B-o-s3101",
+   "fit_size": 0.42,
+   "decision": "0042"
+  },
+  {
+   "id": "glass_shatter",
+   "name": "유리 파편",
+   "owner": "glass_salamander",
+   "composition": "symbol",
+   "case_id": "sal_08-M-c-s3601",
+   "fit_size": 0.38,
+   "decision": "0042"
+  },
+  {
+   "id": "ram",
+   "name": "들이받기",
+   "owner": "magma_ibex",
+   "composition": "scene",
+   "case_id": "ibex_01-S-o-s3601",
+   "fit_size": null,
+   "decision": "0042"
+  },
+  {
+   "id": "obsidian_horn",
+   "name": "흑요석 뿔",
+   "owner": "magma_ibex",
+   "composition": "symbol",
+   "case_id": "ibex_08-M-o-s3602",
+   "fit_size": 0.54,
+   "decision": "0042"
+  },
+  {
+   "id": "landslide",
+   "name": "산사태",
+   "owner": "magma_ibex",
+   "composition": "scene",
+   "case_id": "ibex_10-S-o-s3601",
+   "fit_size": null,
+   "decision": "0042"
+  },
+  {
+   "id": "stardust",
+   "name": "스타더스트",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "stardust-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "star_mantle",
+   "name": "별 망토",
+   "owner": "star_spirit",
+   "composition": "symbol",
+   "case_id": "star_mantle-M-o-s3701",
+   "fit_size": 0.52,
+   "decision": "0063"
+  },
+  {
+   "id": "star_link",
+   "name": "스타 링크",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "star_link-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "astrolabe",
+   "name": "아스트롤라베",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "astrolabe-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "good_omen",
+   "name": "길조",
+   "owner": "star_spirit",
+   "composition": "backdrop",
+   "case_id": "good_omen-P-o-s3701",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "milky_way",
+   "name": "은하수",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "milky_way-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "morning_star",
+   "name": "샛별",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "morning_star-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "astraea",
+   "name": "아스트레아",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "astraea-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "starfall",
+   "name": "스타폴",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "starfall-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "wish_star",
+   "name": "위시 스타",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "wish_star-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "glass_scale",
+   "name": "유리 비늘",
+   "owner": "glass_salamander",
+   "composition": "object",
+   "case_id": "glass_scale-B-c-s3802",
+   "fit_size": 0.34,
+   "decision": "0063"
+  },
+  {
+   "id": "glass_skin",
+   "name": "잉걸 비늘",
+   "owner": "glass_salamander",
+   "composition": "object",
+   "case_id": "glass_skin-B-c-s3701",
+   "fit_size": 0.44,
+   "decision": "0063"
+  },
+  {
+   "id": "heated_glass",
+   "name": "달군 유리",
+   "owner": "glass_salamander",
+   "composition": "object",
+   "case_id": "heated_glass-B-c-s3701",
+   "fit_size": 0.48,
+   "decision": "0063"
+  },
+  {
+   "id": "tempered_glass",
+   "name": "템퍼드 글래스",
+   "owner": "glass_salamander",
+   "composition": "scene",
+   "case_id": "tempered_glass-S-c-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "afterglow",
+   "name": "잔열",
+   "owner": "glass_salamander",
+   "composition": "symbol",
+   "case_id": "afterglow-M-c-s3902",
+   "fit_size": 0.4,
+   "decision": "0063"
+  },
+  {
+   "id": "ricochet",
+   "name": "리코셰",
+   "owner": "glass_salamander",
+   "composition": "scene",
+   "case_id": "ricochet-S-c-s3801",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "bellows",
+   "name": "풀무",
+   "owner": "glass_salamander",
+   "composition": "scene",
+   "case_id": "bellows-S-c-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "glass_citadel",
+   "name": "유리 성채",
+   "owner": "glass_salamander",
+   "composition": "scene",
+   "case_id": "glass_citadel-S-c-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "hall_of_mirrors",
+   "name": "거울의 방",
+   "owner": "glass_salamander",
+   "composition": "symbol",
+   "case_id": "hall_of_mirrors-M-c-s3901",
+   "fit_size": 0.5,
+   "decision": "0063"
+  },
+  {
+   "id": "embrace",
+   "name": "품기",
+   "owner": "pearl_oyster",
+   "composition": "scene",
+   "case_id": "embrace-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "current",
+   "name": "물살",
+   "owner": "pearl_oyster",
+   "composition": "symbol",
+   "case_id": "current-M-o-s3902",
+   "fit_size": 0.54,
+   "decision": "0063"
+  },
+  {
+   "id": "glare",
+   "name": "눈부심",
+   "owner": "pearl_oyster",
+   "composition": "scene",
+   "case_id": "glare-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "nacre_glow",
+   "name": "자개빛",
+   "owner": "pearl_oyster",
+   "composition": "scene",
+   "case_id": "nacre_glow-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "sand_grain",
+   "name": "모래알",
+   "owner": "pearl_oyster",
+   "composition": "scene",
+   "case_id": "sand_grain-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "twin_pearl",
+   "name": "쌍진주",
+   "owner": "pearl_oyster",
+   "composition": "scene",
+   "case_id": "twin_pearl-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "nest",
+   "name": "보금자리",
+   "owner": "pearl_oyster",
+   "composition": "backdrop",
+   "case_id": "nest-P-o-s3701",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "high_tide",
+   "name": "밀물",
+   "owner": "pearl_oyster",
+   "composition": "scene",
+   "case_id": "high_tide-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "baroque_pearl",
+   "name": "바로크 펄",
+   "owner": "pearl_oyster",
+   "composition": "scene",
+   "case_id": "baroque_pearl-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "najeon",
+   "name": "나전",
+   "owner": "pearl_oyster",
+   "composition": "symbol",
+   "case_id": "najeon-M-o-s3901",
+   "fit_size": 0.5,
+   "decision": "0063"
+  },
+  {
+   "id": "black_pearl",
+   "name": "흑진주",
+   "owner": "pearl_oyster",
+   "composition": "scene",
+   "case_id": "black_pearl-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "dragon_palace",
+   "name": "용궁",
+   "owner": "pearl_oyster",
+   "composition": "scene",
+   "case_id": "dragon_palace-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "horn_strike",
+   "name": "뿔 찍기",
+   "owner": "magma_ibex",
+   "composition": "scene",
+   "case_id": "horn_strike-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "foothold",
+   "name": "디딤",
+   "owner": "magma_ibex",
+   "composition": "scene",
+   "case_id": "foothold-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "brace",
+   "name": "버팀목",
+   "owner": "magma_ibex",
+   "composition": "scene",
+   "case_id": "brace-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "climb",
+   "name": "비탈 오르기",
+   "owner": "magma_ibex",
+   "composition": "scene",
+   "case_id": "climb-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "stampede",
+   "name": "스탬피드",
+   "owner": "magma_ibex",
+   "composition": "scene",
+   "case_id": "stampede-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "locked_horns",
+   "name": "맞뿔",
+   "owner": "magma_ibex",
+   "composition": "symbol",
+   "case_id": "locked_horns-M-o-s3902",
+   "fit_size": 0.52,
+   "decision": "0063"
+  },
+  {
+   "id": "fault_line",
+   "name": "단층",
+   "owner": "magma_ibex",
+   "composition": "scene",
+   "case_id": "fault_line-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "caldera",
+   "name": "칼데라",
+   "owner": "magma_ibex",
+   "composition": "backdrop",
+   "case_id": "caldera-P-o-s3701",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "rockfall",
+   "name": "붕락",
+   "owner": "magma_ibex",
+   "composition": "scene",
+   "case_id": "rockfall-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "camouflage",
+   "name": "보호색",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "camouflage-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "flick",
+   "name": "날름",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "flick-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "snap",
+   "name": "스냅",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "snap-S-o-s3803",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "eye_roll",
+   "name": "굴리는 눈",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "eye_roll-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "blend_in",
+   "name": "풍경에 녹기",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "blend_in-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "pounce",
+   "name": "급습",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "pounce-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "vine_tail",
+   "name": "덩굴 꼬리",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "vine_tail-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "ambush",
+   "name": "매복",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "ambush-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "disguise_veil",
+   "name": "위장막",
+   "owner": "prism_chameleon",
+   "composition": "symbol",
+   "case_id": "disguise_veil-M-o-s3901",
+   "fit_size": 0.54,
+   "decision": "0063"
+  },
+  {
+   "id": "prism",
+   "name": "프리즘",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "prism-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "thousand_eyes",
+   "name": "천 개의 눈",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "thousand_eyes-S-o-s3902",
+   "fit_size": null,
+   "decision": "0063"
+  },
+  {
+   "id": "rainbow",
+   "name": "레인보우",
+   "owner": "prism_chameleon",
+   "composition": "scene",
+   "case_id": "rainbow-S-o-s3901",
+   "fit_size": null,
+   "decision": "0063"
+  }
+ ]
 }

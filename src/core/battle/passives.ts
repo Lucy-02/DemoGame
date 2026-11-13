@@ -58,6 +58,14 @@ export interface Passive {
   wallGained?: (b: Engine, s: BSpirit, v: number, amount: number) => void;
   /** 이 정령의 벽이 다른 아군을 대신 막은 직후 */
   wallBlocked?: (b: Engine, s: BSpirit, v: number, attacker: BEnemy, blocked: number) => void;
+  /** 이 정령의 벽이 다른 아군을 막다가 깨진 직후 */
+  wallBroke?: (b: Engine, s: BSpirit, v: number) => void;
+  /** 누구에게든 적의 공격 1타가 들어갈 때 줄이는 값. target이 없으면 미리보기예요 */
+  enemyHitCutAny?: (b: Engine, s: BSpirit, v: number, attacker: BEnemy, target: BSpirit | null) => number;
+  /** 적의 화상이 탈 때. 덜 줄이는 양을 돌려줘요 */
+  burnTickAny?: (b: Engine, s: BSpirit, v: number, e: BEnemy, burn: number) => number;
+  /** 아군 누구든 적의 공격 1타를 맞은 직후 */
+  allyAttackedAny?: (b: Engine, s: BSpirit, v: number, target: BSpirit, attacker: BEnemy) => void;
   /** 누구든 적에게 별을 새긴 직후 */
   starMarkedAny?: (b: Engine, s: BSpirit, v: number, marker: BSpirit, target: BEnemy) => void;
   /** 낙하를 고를 때 받는 장 수에 더하는 값 */
@@ -66,6 +74,14 @@ export interface Passive {
   readyStacks?: (v: number) => boolean;
   /** 누구든 받아칠 기회를 얻은 직후 */
   readyGainedAny?: (b: Engine, s: BSpirit, v: number, gainer: BSpirit) => void;
+  /** 이 정령 카드의 시간에서 빼는 값 (ms) */
+  timeCut?: (b: Engine, s: BSpirit, v: number, card: BCard) => number;
+  /** 이 정령 타격의 치명 확률에 더하는 값 */
+  critChance?: (s: BSpirit, v: number, target: BEnemy) => number;
+  /** 이 정령 허점타의 배율에 더하는 값 */
+  openingBonus?: (s: BSpirit, v: number) => number;
+  /** 적의 상태가 줄어들 때 덜 줄이는 양. 0보다 크면 횟수를 쓴 것으로 표시해요 */
+  linger?: (b: Engine, s: BSpirit, v: number) => number;
   /** 누구든 쓰러뜨린 적 */
   enemyDiedAny?: (b: Engine, s: BSpirit, v: number, e: BEnemy) => void;
 }
@@ -105,6 +121,32 @@ export const AURAS: Record<AuraId, AuraDef> = {
     },
   },
 
+  // 불여우
+  eternal_lamp: {
+    scope: "owner",
+    text: () => `적의 화상이 타도 ${polite("줄지 않")}.`,
+    burnTickAny: (_b, _s, _v, _e, burn) => burn,
+  },
+  wildfire: {
+    scope: "owner",
+    text: (v) => `적의 화상이 탈 때마다 다른 적 하나에게 화상을 ${v} ${polite("옮기")}. 다른 적이 없으면 그 적의 화상이 ${v} 덜 ${polite("줄어들")}.`,
+    burnTickAny(b, _s, v, e) {
+      const others = b.aliveEnemies().filter((o) => o !== e);
+      if (!others.length) return v;
+      b.addStatus(b.rng.pick(others), "burn", v);
+      return 0;
+    },
+  },
+
+  // 안개 고양이
+  mist_veil: {
+    scope: "owner",
+    text: (v, sc) => `아군을 공격한 적에게 냉기를 ${sc(v, "focus")} ${polite("부여하")}.`,
+    allyAttackedAny(b, s, v, _target, attacker) {
+      if (!attacker.dead) b.addStatus(attacker, "chill", scale(v, b.stat(s, "focus")));
+    },
+  },
+
   // 별 정령
   milky_way: {
     scope: "owner",
@@ -113,8 +155,8 @@ export const AURAS: Record<AuraId, AuraDef> = {
   },
   astraea: {
     scope: "owner",
-    text: (v) => `별을 새긴 적은 약화를 ${v}턴 ${polite("받")}.`,
-    starMarkedAny: (b, _s, v, _marker, target) => b.addStatus(target, "weak", v),
+    text: (v) => `별이 새겨진 적이 아군을 공격하면 피해가 ${v} ${polite("줄어들")}.`,
+    enemyHitCutAny: (_b, _s, v, attacker) => (statusN(attacker, "star") > 0 ? v : 0),
   },
   starfall: {
     scope: "owner",
@@ -135,12 +177,11 @@ export const AURAS: Record<AuraId, AuraDef> = {
   },
   hall_of_mirrors: {
     scope: "owner",
-    text: () => `이 정령의 벽이 막은 피해의 절반을 공격한 적에게 ${polite("되돌리")}.`,
-    wallBlocked(b, s, _v, attacker, blocked) {
-      const back = Math.floor(blocked / 2);
-      if (attacker.dead || back <= 0) return;
-      b.log(`${s.def.name}: 거울의 방 ${back}`);
-      b.hurtEnemy(attacker, back, false);
+    text: (v, sc) => `이 정령의 벽이 깨지면 모든 적에게 피해를 ${sc(v, "guard")} ${polite("입히")}.`,
+    wallBroke(b, s, v) {
+      const dmg = round(scale(v, b.stat(s, "guard")));
+      b.log(`${s.def.name}: 거울의 방 ${dmg}`);
+      for (const e of b.aliveEnemies()) b.hurtEnemy(e, dmg, false);
     },
   },
 
@@ -159,8 +200,8 @@ export const AURAS: Record<AuraId, AuraDef> = {
   },
   dragon_palace: {
     scope: "owner",
-    text: (v) => `턴 끝 손에 남은 카드 1장당 다음 턴에 카드를 1장 더 ${polite("뽑")}. 최대 ${v}장.`,
-    beforeDiscard: (b, _s, v) => void (b.hold.nextTurnDraw += Math.min(v, b.hand.length)),
+    text: (v) => `품은 카드의 주인은 그 카드를 쓰기 전까지 받는 피해가 ${v} ${polite("줄어들")}.`,
+    enemyHitCutAny: (b, _s, v, _attacker, target) => (target && b.holdsHeldCard(target) ? v : 0),
   },
 
   // 산양
@@ -181,10 +222,8 @@ export const AURAS: Record<AuraId, AuraDef> = {
   // 카멜레온
   disguise_veil: {
     scope: "owner",
-    text: (v) => `받아칠 기회가 생길 때마다 모든 아군의 다음 타격 피해가 ${v} ${polite("늘어나")}.`,
-    readyGainedAny(b, _s, v) {
-      for (const a of b.aliveSpirits()) b.addStatus(a, "hitBonus", 1, { strength: v });
-    },
+    text: (v) => `받아칠 기회를 가진 다른 아군은 받는 피해가 ${v} ${polite("줄어들")}.`,
+    enemyHitCutAny: (_b, s, v, _attacker, target) => (target && target !== s && statusN(target, "ready") > 0 ? v : 0),
   },
   thousand_eyes: {
     scope: "owner",
@@ -195,7 +234,7 @@ export const AURAS: Record<AuraId, AuraDef> = {
     scope: "target",
     text: () => `다른 아군이 받아칠 기회를 얻으면 이 아군도 같은 기회를 ${polite("얻")}.`,
     readyGainedAny(b, s, _v, gainer) {
-      if (gainer !== s && !s.downed) b.gainReady(s);
+      if (gainer !== s && !s.downed) b.gainReady(s, gainer.status.ready?.strength ?? 0);
     },
   },
 };
@@ -253,7 +292,41 @@ export const PERSONALITY_PASSIVES: Record<string, Passive> = {
 
 /** 이 정령에게 지금 붙어 있는 것들과 값. 순서: 지속 효과 → 해방 → 성격 */
 /** 장비가 정령의 동사를 바꾸는 효과. 장비 데이터의 `effects[].passive`가 여기 키예요 */
-export const EQUIP_PASSIVES: Record<string, Passive> = {};
+const lingerWith = (mark: "lingerUsed" | "lingerTurnUsed") => (b: Engine, s: BSpirit, v: number) => {
+  if (statusN(s, mark) > 0) return 0;
+  b.addStatus(s, mark, 1);
+  return v;
+};
+const firstCardTime = (_b: Engine, s: BSpirit, v: number) => (s.playedThisTurn === 0 ? v : 0);
+
+export const EQUIP_PASSIVES: Record<string, Passive> = {
+  /** 전투 시작에 방어도 */
+  start_block: { firstHand: (b, s, v) => b.gainBlock(s, v) },
+  /** 전투 시작에 방어도 + 쓰러졌다 돌아올 때 HP를 더 받아요 (`returnHp`) */
+  start_block_return: { firstHand: (b, s, v) => b.gainBlock(s, v) },
+  /** 턴 첫 타격의 기본값에 더해요 */
+  first_hit: { hitBonusAny: (_b, s, v, attacker) => (attacker === s && statusN(s, "struck") === 0 ? v : 0) },
+  /** 이번 턴 가장 긴 카드의 타격마다 기본값에 더해요 */
+  longest_card_hit: { hitBonusAny: (b, s, v, attacker) => (attacker === s && b.resolvingLongest(s) ? v : 0) },
+  /** 적의 화상 · 약화 · 취약이 줄어들 때 덜 줄어요. 전투마다 한 번 */
+  linger_once: { linger: lingerWith("lingerUsed") },
+  /** 턴마다 한 번 */
+  linger_turn: { linger: lingerWith("lingerTurnUsed") },
+  /** 턴 첫 카드의 시간을 줄여요 (ms) */
+  first_card_time: { timeCut: firstCardTime },
+  /** 턴 첫 카드의 시간 + 허점타 배율 */
+  first_card_time_opening: { timeCut: firstCardTime, openingBonus: () => C.equip_opening_bonus },
+  /** HP가 가득인 적에게 치명 확률 */
+  crit_vs_full: { critChance: (_s, v, e) => (e.hp >= e.maxHp ? v : 0) },
+  /** HP가 절반보다 많은 적에게 치명 확률 */
+  crit_vs_healthy: { critChance: (_s, v, e) => (e.hp > e.maxHp / 2 ? v : 0) },
+  /** 턴 첫 카드의 비용 */
+  first_card_cost: { cost: (_b, calc, v) => { if (calc.owner.playedThisTurn === 0) calc.cost -= v; } },
+  /** 모든 카드의 시간을 줄여요 (ms) */
+  time_cut: { timeCut: (_b, _s, v) => v },
+  /** 턴 시작에 방어도를 비율만큼 남겨요 */
+  carry_block: { carryBlock: (_s, block, v) => Math.floor(block * v) },
+};
 
 /** 정령에 붙은 것들: 지속 효과 → 해방 → 성격 → 장비 */
 export function passivesOf(s: BSpirit): [Passive, number][] {

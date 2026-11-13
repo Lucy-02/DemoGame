@@ -71,6 +71,10 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
   {
     id: "hitBonus", order: 15,
     apply(c) {
+      if (statusN(c.attacker, "omen") > 0 && statusN(c.target, "star") > 0) {
+        c.amount += statusStrength(c.attacker, "omen");
+        spendStatus(c.attacker, "omen");
+      }
       if (statusN(c.attacker, "hitBonus") === 0) return;
       c.amount += statusStrength(c.attacker, "hitBonus");
       spendStatus(c.attacker, "hitBonus");
@@ -101,7 +105,8 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
   {
     id: "crit", order: 40,
     apply(c) {
-      const chance = critStat(c.attacker.run, "crit_chance") + c.attacker.critPity;
+      let chance = critStat(c.attacker.run, "crit_chance") + c.attacker.critPity;
+      for (const [p, v] of passivesOf(c.attacker)) chance += p.critChance?.(c.attacker, v, c.target) ?? 0;
       c.crit = c.b.rng.next() < chance;
       c.attacker.critPity = c.crit ? 0 : c.attacker.critPity + C.crit_pity;
       c.amount *= c.crit ? critStat(c.attacker.run, "crit_mult") : 1;
@@ -114,19 +119,25 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
     id: "opening", order: 80,
     apply(c) {
       c.opening = c.b.replaying && c.b.inOpening(c.target, c.b.now);
+      if (!c.opening && statusN(c.target, "gap") > 0) c.opening = true;
       if (!c.opening && statusN(c.target, "stagger") > 0) {
         c.opening = true;
         spendStatus(c.target, "stagger");
       }
-      c.amount *= c.opening ? C.opening_mult : 1;
+      if (!c.opening) return;
+      let mult = C.opening_mult;
+      for (const [p, v] of passivesOf(c.attacker)) mult += p.openingBonus?.(c.attacker, v) ?? 0;
+      c.amount *= mult;
     },
   },
+  { id: "gap", order: 85, apply: (c) => { if (statusN(c.target, "gap") > 0) c.amount *= C.gap.dmg_mult; } },
   { id: "round", order: 90, apply: (c) => (c.amount = round(c.amount)) },
 ];
 
 // ───────────────────────── 적 공격 피해 ─────────────────────────
 
 export interface EnemyHitCalc {
+  b: Engine;
   attacker: BEnemy;
   /** 없으면 미리보기 (대상 상태를 빼고 계산) */
   target: BSpirit | null;
@@ -134,12 +145,20 @@ export interface EnemyHitCalc {
   amount: number;
 }
 
-/** 기본값 → 피해 보너스 → 약화 → 대상 취약 → 대상 숨음(절반) → 반올림 */
+/** 기본값 → 피해 보너스 → 약화 → 대상 취약 → 대상 숨음(절반) → 지속 효과가 줄이는 값 → 반올림 */
 export const ENEMY_HIT_STAGES: Stage<EnemyHitCalc>[] = [
   { id: "bonus", order: 10, apply: (c) => (c.amount = c.base + statusN(c.attacker, "bonusDmg")) },
   { id: "weak", order: 20, apply: (c) => (c.amount *= statusN(c.attacker, "weak") > 0 ? C.weak_mult : 1) },
   { id: "vuln", order: 30, apply: (c) => (c.amount *= c.target ? vulnMult(c.target) : 1) },
   { id: "hidden", order: 40, apply: (c) => (c.amount *= c.target && statusN(c.target, "hidden") > 0 ? C.hidden_mult : 1) },
+  {
+    id: "guard", order: 50,
+    apply(c) {
+      let cut = 0;
+      for (const [p, v, s] of allPassives(c.b)) cut += p.enemyHitCutAny?.(c.b, s, v, c.attacker, c.target) ?? 0;
+      c.amount = Math.max(0, c.amount - cut);
+    },
+  },
   { id: "round", order: 90, apply: (c) => (c.amount = round(c.amount)) },
 ];
 
@@ -206,6 +225,7 @@ export const CARD_TIME_STAGES: Stage<TimeCalc>[] = [
   { id: "highTide", order: 20, apply: (c) => { if (c.card.heldFast) c.ms = Math.round(c.ms / 2); } },
   { id: "held", order: 30, apply: (c) => { if (c.card.held) c.ms -= C.hold_time_cut_ms; } },
   { id: "footing", order: 40, apply: (c) => (c.ms -= statusN(c.owner, "footing")) },
+  { id: "passives", order: 45, apply: (c) => { for (const [p, v] of passivesOf(c.owner)) c.ms -= p.timeCut?.(c.b, c.owner, v, c.card) ?? 0; } },
   { id: "floor", order: 50, apply: (c) => (c.ms = Math.max(0, c.ms)) },
   {
     id: "speed", order: 90,

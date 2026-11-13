@@ -1,7 +1,7 @@
 // 정원 상태 → 정령 관리 화면 데이터. 규칙 판단(키울 수 있나, 할 일)은 모두 core/garden 함수에 맡겨요.
 import { C, CARDS, ELEMENT_NAME, GROWTH, ROLE_NAME, personalityDef, spiritDef } from "../../core/data";
 import {
-  canEvolve, canFeed, episodesOpen, feedGain, gardenSpirit, isFinalStage, levelOf, levelProgress,
+  canEvolve, canFeed, episodesOpen, evolveChoices, branchProgress, isBranchAdultCard, feedGain, gardenSpirit, isFinalStage, levelOf, levelProgress,
   spiritUnlocks, todos, toRunSpirit, type Garden, type GardenSpirit, type Todo,
 } from "../../core/garden";
 import { baseStat, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
@@ -11,8 +11,9 @@ import { spiritArt } from "../spiritArt";
 import { STAGES, type CardDef, type Stage, type StatKey } from "../../core/types";
 import { COPY, DEED_LABEL, STAGE_LABEL, TAB_LABEL } from "./copy";
 import { MOCK_ELEMENT_ICON, type Mockup } from "./mockups";
+import { tokens } from "../../design/tokens";
 import type {
-  EpisodeVM, FactVM, GateVM, GrowthRowVM, RingVM, SpiritDetailVM, SpiritsVM, StatRowVM, TabVM, TileVM,
+  BranchPickVM, EpisodeVM, FactVM, GateVM, GrowthRowVM, RingVM, SpiritDetailVM, SpiritsVM, StatRowVM, TabVM, TileVM,
 } from "./viewmodel";
 
 /** 할 일 종류별 배지 기호 (정본: 새 카드 = g-cardnew) */
@@ -20,7 +21,9 @@ export const TODO_ICON: Record<Todo["kind"], string> = { evolve: "g-up", unlock:
 
 const STAT_ORDER: StatKey[] = ["hp", "power", "guard", "focus", "speed"];
 const STAT_LABEL: Record<StatKey, string> = { hp: "HP", power: "파워", guard: "가드", focus: "포커스", speed: "스피드" };
-export const ELEMENT_ICON: Record<string, string> = { fire: "el-fire", water: "el-water", forest: "el-forest", wind: "el-wind", none: "el-none" };
+export const ELEMENT_ICON: Record<string, string> = {
+  fire: "el-fire", water: "el-water", forest: "el-forest", wind: "el-wind", light: "el-light", earth: "el-earth", none: "el-none",
+};
 const ROLE_ICON: Record<string, string> = { attack: "role-attack", guard: "role-guard", support: "role-support", disrupt: "role-disrupt" };
 
 /** 이 정령의 전용 카드 (해금 키 순서: lv2, lv3, adult) */
@@ -264,5 +267,47 @@ export function spiritsVM(g: Garden, selected: string, mocks?: MockView): Spirit
     partySize,
     selected: sel,
     detail: mock ? mockDetail(mock, mocks!.stage(mock.id)) : detail(g, gardenSpirit(g, sel)),
+  };
+}
+
+// ───────────────────────── 갈래 고르기 (0047 S15 · 라운드 G1) ─────────────────────────
+
+/** 갈래 창 능력치 줄: HP · 파워 · 가드 · 포커스 (P1 f7). 색은 능력치 뜻 색(0050), HP는 치료 연두 */
+const BRANCH_STATS: { k: StatKey; icon: string; color: string }[] = [
+  { k: "hp", icon: "fx-heal", color: tokens.provisional.palette.ok },
+  { k: "power", icon: "fx-damage", color: tokens.provisional.palette.stat.power },
+  { k: "guard", icon: "fx-block", color: tokens.provisional.palette.stat.guard },
+  { k: "focus", icon: "i-spark", color: tokens.provisional.palette.stat.focus },
+];
+
+/** 갈래 고르기 창 데이터. received = 이번 탐험에서 이 정령이 받은 카드 id (런 결과에서 부를 때, 아직 정원에 더하기 전). 갈래 고르기가 아니면 undefined */
+export function branchPickVM(g: Garden, id: string, from: BranchPickVM["from"], received: readonly string[] = [], selected?: string): BranchPickVM | undefined {
+  const s = gardenSpirit(g, id);
+  const choices = evolveChoices(s);
+  if (choices.length < 2) return undefined;
+  const def = spiritDef(id);
+  const now = toRunSpirit(s);
+  const valueOf = (rs: typeof now, k: StatKey) => (k === "hp" ? maxHpOf(rs) : round(baseStat(rs, k)));
+  const branches = choices.map((c, i) => {
+    const after = { ...now, stage: c.evo.to, branch: c.evo.branch };
+    const prog = branchProgress(s, c.evo, received);
+    return {
+      id: c.evo.branch!, n: i + 1, name: COPY.branchName, role: ROLE_ICON[def.role], open: c.open,
+      stats: BRANCH_STATS.map(({ k }) => {
+        const value = valueOf(after, k);
+        return { value, gain: value - valueOf(now, k) };
+      }),
+      cards: CARDS.filter((card) => card.spirit === id && card.branch === c.evo.branch && isBranchAdultCard(card)).map((card) => ({ key: card.id, name: card.name })),
+      cond: c.open ? undefined : { level: { need: c.evo.level, ok: c.level }, cards: prog ?? { have: 0, need: 0 } },
+    };
+  });
+  const firstOpen = branches.findIndex((b) => b.open);
+  const pick = selected ? branches.findIndex((b) => b.id === selected && b.open) : -1;
+  return {
+    spiritId: id, name: def.name, level: COPY.lv(levelOf(s.exp)), element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, role: ROLE_ICON[def.role],
+    personality: personalityDef(s.personality).name, face: face(id, s.stage), from,
+    now: BRANCH_STATS.map(({ k, icon, color }) => ({ icon, color, value: valueOf(now, k) })),
+    branches, selected: pick >= 0 ? pick : firstOpen >= 0 ? firstOpen : undefined,
+    condRow: branches.some((b) => !b.open),
   };
 }

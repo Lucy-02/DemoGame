@@ -1,12 +1,17 @@
 [
-  {"id": "mist_breath", "element": "water", "role": "disrupt", "rarity": "basic", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "chill", "value": 3}], "start": 2, "unlock": "start"},
+  {"id": "mist_breath", "element": "water", "role": "disrupt", "rarity": "basic", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "chill", "value": 3}], "start": 2, "spirit": "mist_cat", "unlock": "start"},
   {"id": "paw_splash", "element": "water", "role": "attack", "rarity": "basic", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 4}, {"op": "chill", "value": 1}], "unlock": "start"},
   {"id": "bubble_shield", "element": "water", "role": "guard", "rarity": "basic", "cost": 1, "ms": 900, "target": "ally", "effects": [{"op": "block", "value": 5}], "unlock": "start"},
-  {"id": "frost_breath", "element": "water", "role": "disrupt", "rarity": "common", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 3}, {"op": "chill", "value": 2}], "unlock": "start"},
-  {"id": "fog", "element": "water", "role": "disrupt", "rarity": "common", "cost": 1, "ms": 1000, "target": "allEnemies", "effects": [{"op": "weak", "turns": 1}], "unlock": "start"},
-  {"id": "whisker_twitch", "element": "water", "role": "support", "rarity": "common", "cost": 0, "ms": 400, "target": "self", "effects": [{"op": "draw", "value": 1}], "unlock": "start"},
-  {"id": "ice_wall", "element": "water", "role": "guard", "rarity": "advanced", "cost": 2, "ms": 1500, "target": "allAllies", "effects": [{"op": "block", "value": 6}], "unlock": "start"},
-  {"id": "chill_wave", "element": "water", "role": "disrupt", "rarity": "advanced", "cost": 2, "ms": 1500, "target": "allEnemies", "effects": [{"op": "chill", "value": 3}, {"op": "weak", "turns": 1}], "unlock": "mist_cat_lv2"},
-  {"id": "frost_bite", "element": "water", "role": "disrupt", "rarity": "advanced", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 2}, {"op": "vulnerable", "turns": 2}, {"op": "chill", "value": 1}], "unlock": "mist_cat_lv3"},
-  {"id": "eternal_ice", "element": "water", "role": "disrupt", "rarity": "rare", "cost": 2, "ms": 1500, "target": "enemy", "effects": [{"op": "freeze", "bossChill": 5}], "exhaust": true, "unlock": "mist_cat_adult"}
+  {"id": "frost_breath", "element": "water", "role": "disrupt", "rarity": "common", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 3}, {"op": "chill", "value": 2}], "spirit": "mist_cat", "unlock": "start"},
+  {"id": "fog", "element": "water", "role": "disrupt", "rarity": "common", "cost": 1, "ms": 1000, "target": "allEnemies", "effects": [{"op": "weak", "turns": 1}], "spirit": "mist_cat", "unlock": "start", "branch": "guard"},
+  {"id": "whisker_twitch", "element": "water", "role": "support", "rarity": "common", "cost": 0, "ms": 400, "target": "self", "effects": [{"op": "drawPerChilled", "max": 3}], "spirit": "mist_cat", "unlock": "start", "branch": "guard"},
+  {"id": "ice_wall", "element": "water", "role": "guard", "rarity": "advanced", "cost": 1, "ms": 1500, "target": "allAllies", "effects": [{"op": "frostGuardAll", "value": 3}], "spirit": "mist_cat", "unlock": "start", "branch": "guard"},
+  {"id": "chill_wave", "element": "water", "role": "disrupt", "rarity": "advanced", "cost": 2, "ms": 1500, "target": "allEnemies", "effects": [{"op": "chill", "value": 3}, {"op": "weak", "turns": 1}], "spirit": "mist_cat", "unlock": "mist_cat_lv2"},
+  {"id": "frost_bite", "element": "water", "role": "disrupt", "rarity": "advanced", "cost": 1, "ms": 1000, "target": "enemy", "effects": [{"op": "damage", "value": 2}, {"op": "vulnerable", "turns": 2}, {"op": "chill", "value": 1}], "spirit": "mist_cat", "unlock": "mist_cat_lv3"},
+  {"id": "eternal_ice", "element": "water", "role": "disrupt", "rarity": "rare", "cost": 2, "ms": 1500, "target": "enemy", "effects": [{"op": "freeze", "bossChill": 5}], "exhaust": true, "spirit": "mist_cat", "unlock": "mist_cat_adult", "branch": "freeze"},
+
+  {"id": "creep", "element": "water", "role": "disrupt", "rarity": "common", "cost": 1, "ms": 600, "target": "enemy", "effects": [{"op": "delayNext", "ms": 400}, {"op": "chill", "value": 1}], "spirit": "mist_cat", "unlock": "start", "branch": "freeze"},
+  {"id": "first_frost", "element": "water", "role": "disrupt", "rarity": "advanced", "cost": 2, "ms": 1200, "target": "enemy", "effects": [{"op": "chillToDelay", "perMs": 100}], "spirit": "mist_cat", "unlock": "start", "branch": "freeze"},
+  {"id": "deep_freeze", "element": "water", "role": "disrupt", "rarity": "advanced", "cost": 2, "ms": 1000, "target": "enemy", "effects": [{"op": "chill", "value": 2}, {"op": "delayAgain", "ms": 400, "cap": 2}], "spirit": "mist_cat", "unlock": "start", "branch": "freeze"},
+  {"id": "mist_veil", "element": "water", "role": "support", "rarity": "rare", "cost": 2, "ms": 1200, "target": "self", "effects": [{"op": "aura", "aura": "mist_veil", "value": 2}], "exhaust": true, "spirit": "mist_cat", "unlock": "mist_cat_adult", "branch": "guard"}
 ]

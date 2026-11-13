@@ -55,6 +55,14 @@ export const COPY = {
   undecided: "아직 정하지 않았어요",
   mock: "목업",
   pickStage: "눌러서 보기",
+  /** 갈래 고르기 (0047 S15). 갈래 이름은 TODO_NAME */
+  branchName: "TODO_NAME",
+  growInto: (n: number) => `갈래 ${josa(String(n), "으로/로")} 키우기`,
+  growLocked: "키우기",
+  later: "나중에 고르기",
+  esc: "Esc",
+  opened: "열림",
+  ofCardsShort: (need: number) => `/${need}장`,
 };
 
 export const TAB_LABEL: Record<TabId, string> = {

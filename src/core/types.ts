@@ -36,16 +36,29 @@ export interface PersonalityDef {
 
 export type CardOp =
   // 공통
-  | { op: "damage"; value: number; hits?: number; againIf?: "burned"; /** 대상의 별 하나마다 더해요 */ perStar?: number; /** 타격 수 = 대상의 별 수 */ hitsPerStar?: true }
+  | {
+      op: "damage"; value: number; hits?: number; againIf?: "burned"; /** 대상의 별 하나마다 더해요 */ perStar?: number; /** 타격 수 = 대상의 별 수 */ hitsPerStar?: true;
+      /** 대상이 화상 상태이면 더해요 */ burnedBonus?: number;
+      /** 대상의 화상 1마다 더해요 (내림, perBurnMax까지) */ perBurn?: number; perBurnMax?: number;
+      /** 받아칠 기회를 쓰면 끌어온 공격 피해의 이 비율만큼 더해요 (내림, pulledMax까지) */ perPulled?: number; pulledMax?: number;
+    }
   | { op: "block"; value: number; /** 아군 대상: 모든 적의 별 하나마다 더해요 */ perStar?: number; /** 대상이 품었던 카드의 주인이면 이 값 */ heldOwner?: number }
   | { op: "heal"; value: number }
   | { op: "burn"; value: number }
-  | { op: "ignite" }
-  | { op: "chill"; value: number }
+  /** 대상의 화상이 atLeast 이상이면 이번 턴 끝에 화상이 줄지 않아요 */
+  | { op: "burnHold"; atLeast: number }
+  /** 다른 적 하나에게 화상. 다른 적이 없으면 대상에게 겹치고, 겹칠 때마다 decay배로 줄어요 */
+  | { op: "burnSpread"; value: number; decay: number }
+  /** 대상이 쓰러지면 남은 화상이 다음 적에게 옮겨 가요 */
+  | { op: "burnCarry" }
+  | { op: "ignite"; /** 화상 수치 × mult만큼 피해 */ mult?: number }
+  | { op: "chill"; value: number; /** 이 냉기로 빙결시키면 넘친 냉기가 남아요 */ freezeKeep?: true; /** 이 냉기로 빙결시키면 이만큼 더 늦춰요 */ freezeDelayMs?: number; /** 이 냉기로 빙결시키면 약화 턴 */ freezeWeak?: number }
+  /** HP가 가장 낮은 아군에게 방어도. frost: 이번 턴 그 아군을 때린 적에게 냉기 (한 번) */
+  | { op: "blockLowest"; value: number; frost?: number }
   | { op: "freeze"; bossChill: number }
   | { op: "thorns"; value: number }
   | { op: "grow"; value: number }
-  | { op: "draw"; value: number; /** 받아칠 기회가 있으면 이만큼 */ ifReady?: number }
+  | { op: "draw"; value: number; /** 받아칠 기회가 있으면 이만큼 */ ifReady?: number; /** 품은 카드가 있으면 이만큼 */ ifHeld?: number }
   | { op: "vulnerable"; turns: number }
   | { op: "weak"; turns: number }
   | { op: "empower"; value: number }
@@ -55,14 +68,34 @@ export type CardOp =
   | { op: "aura"; aura: AuraId; value: number }
   | { op: "damageFromBlock"; /** 쓴 방어도를 없애요 */ spend?: true }
   | { op: "burnMultiply"; value: number }
+  /** 화상 부여. 대상이 이미 화상이면 ifBurned만큼 더 */
+  | { op: "burnMore"; value: number; ifBurned: number }
+  /** 무작위 적에게 피해 value를 hits번, 맞힐 때마다 화상 burn */
+  | { op: "randomHits"; value: number; hits: number; burn: number }
+  /** 대상 화상의 pct만큼 다른 적 모두에게. 적이 하나뿐이면 대신 이번 턴 끝에 대상의 화상이 줄지 않아요 */
+  | { op: "burnShare"; pct: number }
+  /** 대상의 다음 행동을 ms만큼 늦춰요 */
+  | { op: "delayNext"; ms: number }
+  /** 대상의 냉기를 모두 써서 냉기 1마다 다음 행동을 perMs만큼 늦춰요 */
+  | { op: "chillToDelay"; perMs: number }
+  /** 이번 턴 이미 늦춰진 적이면 한 번 더 ms만큼 늦춰요. 한 턴에 cap번까지 */
+  | { op: "delayAgain"; ms: number; cap: number }
+  /** 냉기가 있는 적 하나마다 카드 1장 (최대 max) */
+  | { op: "drawPerChilled"; max: number }
+  /** 모든 아군: 이번 턴 그 아군을 공격한 적에게 냉기 value (한 번) */
+  | { op: "frostGuardAll"; value: number }
   | { op: "damagePerPlayed"; element: Element; value: number }
   | { op: "repeatNext"; maxCost: number }
   | { op: "combo"; n: number; then: CardOp[] }
   /** 다음 타격 hits번에 value를 더해요 */
-  | { op: "hitBonus"; value: number; hits: number }
+  | { op: "hitBonus"; value: number; hits: number; /** 별을 새긴 적을 칠 때만 */ vsStarred?: true }
   // 별 정령
   /** 대상 아군의 다음 타격 hits번이 맞힌 적에게 별을 새겨요 */
   | { op: "starlight"; hits: number }
+  /** 대상 아군의 다음 타격이 맞힌 적에게 별을 value 새겨요 */
+  | { op: "starAim"; value: number }
+  /** 모든 적의 별을 지우고, 지운 별 하나마다 대상 아군의 다음 타격 피해 +value */
+  | { op: "starsToHitBonus"; value: number }
   /** 대상 적에게 별을 새겨요. ifStarred: 별이 있는 적에게만 */
   | { op: "star"; value: number; ifStarred?: true }
   | { op: "clearStars" }
@@ -73,19 +106,29 @@ export type CardOp =
   | { op: "delayedHit"; value: number }
   // 유리 도롱뇽
   | { op: "wall"; value: number }
+  /** 이번 턴 이 정령의 벽이 아군을 대신 막으면 다음 턴 시작에 벽을 얻어요 */
+  | { op: "wallEcho"; value: number }
+  /** 이번 턴 벽이 깨지면 깬 적에게 피해. direct: 직접 맞아 방어도가 다 떨어져도 */
+  | { op: "wallBurst"; value: number; direct?: true }
   | { op: "wallHeat"; value: number }
   | { op: "afterglow"; value: number }
   /** 이번 턴 벽이 막은 피해의 pct만큼 그 적에게 */
   | { op: "ricochet"; pct: number }
+  /** 이번 턴 벽이 막은 피해의 pct만큼 다음 턴에 얻는 벽이 늘어나요 */
+  | { op: "tempered"; pct: number }
   // 진주조개
   | { op: "hold"; value: number }
   | { op: "highTide" }
   /** 이 카드를 품을 때마다 수치가 value 늘어나요 */
   | { op: "growOnHold"; value: number }
+  /** 품은 카드의 주인에게 방어도 */
+  | { op: "blockHeldOwners"; value: number }
   // 산양
   /** 차징 중인 적이면 브레이크 + 휘청 onBreak, 아니고 허점 창이면 휘청 value */
   | { op: "ram"; value: number; onBreak: number }
-  | { op: "staggerIfOpening"; value: number }
+  | { op: "staggerIfOpening"; value: number; /** 살아 있는 적이 하나면 휘청 이만큼 더 */ solo?: number }
+  /** 휘청 중인 적 하나마다 방어도 */
+  | { op: "blockPerStaggered"; value: number }
   | { op: "staggerIfStaggered"; value: number }
   | { op: "timeCutNext"; value: number }
   | { op: "breakCharging" }
@@ -99,6 +142,7 @@ export type CardOp =
 
 export const AURA_IDS = [
   "blaze_wing", "deep_water", "root_down", "eye_of_storm",
+  "eternal_lamp", "wildfire", "mist_veil",
   "milky_way", "astraea", "starfall",
   "bellows", "glass_citadel", "hall_of_mirrors",
   "najeon", "black_pearl", "dragon_palace",
@@ -107,8 +151,8 @@ export const AURA_IDS = [
 ] as const;
 export type AuraId = (typeof AURA_IDS)[number];
 
-/** 카드를 얻는 곳 (0040). reward: 전투 보상(기본). shop: 상점 · 이벤트만. start: 시작 덱만. generated: 전투 중 생기는 카드 */
-export const OBTAINS = ["reward", "shop", "start", "generated"] as const;
+/** 카드를 얻는 곳 (0040). reward: 전투 보상(기본). shop: 상점 · 이벤트만. start: 시작 덱만. generated: 전투 중 생기는 카드. equipment: 전용 무기가 대표 카드를 바꾼 기술 (0055) */
+export const OBTAINS = ["reward", "shop", "start", "generated", "equipment"] as const;
 export type Obtain = (typeof OBTAINS)[number];
 
 /** 카드 데이터 파일(src/data/cards/*.json)의 한 줄. 이름 같은 문구는 언어별 표(src/data/locales)에 있어요. */
@@ -133,6 +177,8 @@ export interface CardData {
   /** 얻는 곳. 없으면 reward */
   obtain?: Obtain;
   unlock: string;
+  /** 갈래 표시 (0027). 이 카드를 받으면 주인 정령의 이 갈래 쪽으로 세요. 갈래 id는 growth.json evolutions의 branch */
+  branch?: string;
 }
 
 /** 게임이 쓰는 카드 = 데이터 + 지금 언어의 문구 */
@@ -151,15 +197,29 @@ export type EnemyAction =
   | { type: "buffMinions"; value: number }
   | { type: "costUp"; value: number }
   | { type: "sealCards"; count: number }
-  | { type: "sapHeal"; value: number };
+  | { type: "sapHeal"; value: number }
+  /** 쓸 때마다 step씩 세지는 화상 (0062) */
+  | { type: "burnRamp"; value: number; step: number; target: EnemyTargetRule }
+  /** 아군마다 쌓인 화상 × mult만큼 피해 */
+  | { type: "detonateBurn"; mult: number }
+  /** 앞열을 HP가 가장 낮은 다른 정령으로 바꿔요 */
+  | { type: "swapFront" };
 
 export interface EnemyMove {
   name: string;
   /** 턴 안에서 이 행동이 일어나는 시각(ms). 없으면 등급 기본값 C.enemy_at (0036) */
   at?: number;
   charge?: boolean;
+  /** 큰 차징: 끊거나 늦추거나 차징 중에 몰아 때리면 틈이 열려요 (0062) */
+  big?: boolean;
+  /** 끊겼을 때: clearBurn = 아군의 화상이 꺼지고 화상 세기가 처음으로 돌아가요 */
+  onBreak?: "clearBurn";
   actions: EnemyAction[];
 }
+
+/** 정예에 붙는 거친 특성 (0062) */
+export const ENEMY_TRAITS = ["burning", "sturdy", "swift", "heavy"] as const;
+export type EnemyTrait = (typeof ENEMY_TRAITS)[number];
 
 export type EnemyTier = "normal" | "elite" | "boss" | "minion";
 
@@ -170,6 +230,8 @@ export interface EnemyDef {
   element: Element;
   hp: number;
   desc?: string;
+  /** 한 턴에 여러 번 움직이는 적: 턴마다 돌아가며 쓰는 행동 시각 목록(ms). 없으면 한 번 (0062) */
+  acts?: number[][];
   pattern: EnemyMove[];
   phase2?: { hpBelow: number; turnStartBlock: number; pattern: EnemyMove[] };
 }
@@ -177,8 +239,17 @@ export interface EnemyDef {
 export interface EncounterDef {
   id: string;
   tier: "normal" | "elite" | "boss";
-  floors: [number, number];
+  /** 일반 편성: 처음 몇 전투는 weak, 그 뒤는 strong (0062) */
+  pool?: "weak" | "strong";
+  /** 이 편성의 기운. 오늘 센 기운과 같으면 더 자주 나오고, 보스는 센 기운의 보스가 나와요 */
+  element: Element;
   enemies: string[];
+}
+
+/** 출전 인원에 맞춘 적 세기 (0053). HP · 방어 · 회복에 hp, 피해에 dmg를 곱해요 */
+export interface EnemyScale {
+  hp: number;
+  dmg: number;
 }
 
 export type EventOutcome =
@@ -216,11 +287,13 @@ export interface RunSpirit {
   stage: Stage;
   level: number;
   personality: string;
-  /** 이번 런에 지닌 장비 (0048 · 0049) */
+  /** 성체에서 고른 갈래 (0027). 유체이거나 아직 갈래가 없으면 비어요 */
+  branch?: string;
+  /** 이번 런에 지닌 장비 (0048 · 0049 · 0056). 길이 ≤ 단계별 칸 수 */
   equipment: RunEquip[];
 }
 
-// ───────────────────────── 장비 (0048 · 0049) ─────────────────────────
+// ───────────────────────── 장비 (0048 · 0049 · 0055 · 0056) ─────────────────────────
 
 /** 장비가 보정하는 수치. 치명 확률 · 치명 피해는 파생 수치예요 */
 export const EQUIP_STATS = [...STAT_KEYS, "crit_chance", "crit_mult"] as const;
@@ -229,8 +302,9 @@ export const STAT_MOD_OPS = ["add", "pct"] as const;
 export type StatModOp = (typeof STAT_MOD_OPS)[number];
 
 /** 전투 중에만 보는 조건. 있으면 전투 조건부 층에서 적용돼요 */
-export type StatCondition = { k: "hpBelow"; ratio: number } | { k: "released" };
-export const STAT_CONDITION_KINDS = ["hpBelow", "released"] as const;
+/** hurt: HP가 가득이 아닐 때 */
+export type StatCondition = { k: "hpBelow"; ratio: number } | { k: "released" } | { k: "hurt" };
+export const STAT_CONDITION_KINDS = ["hpBelow", "released", "hurt"] as const;
 
 export interface StatMod {
   stat: EquipStat;
@@ -252,18 +326,29 @@ export interface EquipTier {
   effects?: EquipEffect[];
 }
 
-export const EQUIP_GRADES = ["elite", "boss"] as const;
-export type EquipGrade = (typeof EQUIP_GRADES)[number];
+/** 희귀도 (0056). generic: 누구나, 능력치 위주(정예). exclusive: 정령 전용 무기, 대표 카드를 바꿈(정예). boss: 규칙을 건드리고 대가가 붙음(보스) */
+export const EQUIP_RARITIES = ["generic", "exclusive", "boss"] as const;
+export type EquipRarity = (typeof EQUIP_RARITIES)[number];
+
+/** 전용 무기가 대표 카드 한 장을 무기의 기술로 바꿔요 (0055). 기술은 정령의 갈래를 따라요 (0056) */
+export interface SignatureSwap {
+  /** 바뀌는 대표 카드 id */
+  card: string;
+  /** 갈래 → 공명 단계별 기술 카드 id. 길이는 tiers와 같아요 */
+  techniques: Record<string, string[]>;
+}
 
 export interface EquipDef {
   id: string;
   /** 전용 정령 id. null이면 누구나 */
   owner: string | null;
-  grade: EquipGrade;
+  rarity: EquipRarity;
   /** 공명 n이면 tiers[n-1]. 길이 = 공명 상한 */
   tiers: EquipTier[];
   /** 보스 장비의 대가. 공명과 무관하게 늘 적용 */
   downside?: EquipTier;
+  /** 전용 무기만: 대표 카드 변형 */
+  signature?: SignatureSwap;
   opensBranch?: { spirit: string; branch: string };
 }
 
@@ -271,6 +356,8 @@ export interface RunEquip {
   id: string;
   resonance: number;
   from: "kept" | "run";
+  /** 이번 런에 같은 장비를 또 얻어 오른 공명. 런이 끝나면 사라져요 (0056) */
+  runBonus?: number;
 }
 
 /** 자람 조건: 전투 이벤트로 세는 행동 누적 (0021 2절) */
@@ -286,6 +373,12 @@ export interface EvolutionDef {
   to: Stage;
   level: number;
   deed?: DeedDef;
+  /** 분기 진화의 갈래 id (0027). 같은 정령·같은 전 단계 줄이 둘 이상이면 갈래 고르기예요 */
+  branch?: string;
+  /** 갈래가 열리는 조건. 없으면 늘 열려 있어요. cards = 한 탐험에서 이 갈래 표시 카드를 받은 수 */
+  opens?: { cards: number };
+  /** 이 갈래의 주 성장 능력치 (0027: 갈래 차이는 능력치 배분). 없으면 정령의 adultMain */
+  main?: StatKey[];
 }
 
 export interface EpisodeDef {
@@ -300,8 +393,8 @@ export interface GrowthDef {
   material: Record<"normal" | "elite" | "boss", number>;
   stage_main_bonus: number;
   stage_hp_main_bonus: number;
-  /** 단계별(유체 · 성체 · 각성체) 런 끝에 남길 장비 칸 수 */
-  equip_keep_slots: number[];
+  /** 단계별(유체 · 성체 · 각성체) 장비 칸 수. 지니는 수와 런 끝에 남기는 수가 같아요 (0056) */
+  equip_slots: number[];
   /** 단계별 공명 상한 */
   equip_resonance_cap: number[];
   evolutions: EvolutionDef[];

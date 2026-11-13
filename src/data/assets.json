@@ -15,12 +15,14 @@
     "wisp":         { "type": "shape", "shape": "orb", "color": "#ffb347", "size": 45 },
     "rubble_shell": { "type": "shape", "shape": "turtle", "color": "#5b8fb9", "size": 100 },
     "tempest_crow": { "type": "shape", "shape": "bird", "color": "#a0b8c8", "size": 80 },
-    "sporecap":     { "type": "shape", "shape": "mushroom", "color": "#c06aa0", "size": 85 },
+    "whirl":        { "type": "shape", "shape": "orb", "color": "#bcd8e4", "size": 65 },
     "rust_golem":   { "type": "shape", "shape": "block", "color": "#b5562f", "size": 110 },
     "bog_witch":    { "type": "shape", "shape": "witch", "color": "#3f8f8a", "size": 120 },
     "frostfang":    { "type": "shape", "shape": "wolf", "color": "#9fd8ff", "size": 120 },
     "frost_pup":    { "type": "shape", "shape": "wolf", "color": "#c6ecff", "size": 60 },
     "cinder_imp":   { "type": "shape", "shape": "imp", "color": "#e0452b", "size": 100 },
-    "grimbark":     { "type": "shape", "shape": "tree", "color": "#6b4f2a", "size": 200 }
+    "grimbark":     { "type": "shape", "shape": "tree", "color": "#6b4f2a", "size": 200 },
+    "wildfire":     { "type": "shape", "shape": "orb", "color": "#e8643a", "size": 190 },
+    "gale":         { "type": "shape", "shape": "bird", "color": "#8fb8c8", "size": 190 }
   }
 }

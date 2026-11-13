@@ -150,6 +150,24 @@
 - E2 줄 맞춤: https://claude.ai/artifact/Ec5PKyy3XEuJ5cyFjhhyCL
 - 프레임: /mnt/project-files/design/round-e/E1~E2/ (소스 /tmp/claude-0/roundE/)
 
+## 갈래 고르기 라운드 G (2026-11-11): P1 f7 다듬기, 갈래 조건 반영
+- G1 판 둘 다듬기: https://claude.ai/artifact/LpmKWC5f9rsbPYWVCFqbpm
+- G2 모습이 주인공: https://claude.ai/artifact/LVbKAYB3dzgZDLfFsXbyMR
+- 프레임: /mnt/project-files/design/round-g/G1~G2/f1–f5.png
+
+## 장비 라운드 Q (2026-11-12): 장비가 화면에 놓이는 자리 (Lucy 확인 대기)
+- Q1 줄 안 칸: https://claude.ai/artifact/4P8LbDasWcdEWVSDnWnCLz
+- Q2 카드와 같은 물건: https://claude.ai/artifact/7FUd1MBVVXDZabEP17fHKv
+- Q3 무기를 든 정령: https://claude.ai/artifact/FfKpBZzqZ7cjgP8go1Dv3M
+- Q4 달라지는 것 먼저: https://claude.ai/artifact/Tc1DbnM7M8BcSbRjnjntAP
+- 프레임: /mnt/project-files/design/round-q/Q1~Q4/
+- 장비 이름 후보: /mnt/project-files/equipment-design/NAMES.md
+
+## 장비 라운드 Q2 (2026-11-12): Q1 뼈대 + Q4 조각 (Lucy 확인 대기)
+- Q2-A 호버에만: https://claude.ai/artifact/CophNbjzbadNUacV8ZM4Td
+- Q2-B 장비 줄 안에: https://claude.ai/artifact/7Kpawa2LB6MaKgcZKL5ctq
+- Q2-C 받는 정령 줄에: https://claude.ai/artifact/KMVowSLLj4QWM7CUEYKxGh
+- 프레임: /mnt/project-files/design/round-q2/A~C/ (f1 일반 장비, f1b 유니크 무기)
 ## 묶음 C (2026-11-11): 런 밖 여정 — 만남·해금·출전 준비가 어디서 일어나나
 - 연구 노트: `design/concepts/out-of-run-research.md`, 결정 `0052`
 - C1 정원이 무대: https://claude.ai/artifact/FakW367Fg1xHQvSqHBMcWA

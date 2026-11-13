@@ -34,21 +34,27 @@
 ### 2단계 (2-2 · 2-3 · 2-4) — #60 위에 쌓인 커밋
 - 다섯 기믹 전부 엔진에 들어갔고(`src/core/battle/`), 정령 4 · 카드 48 · 시작 덱 · 상수 · 로케일이 데이터에 들어갔어요.
 - 단위 테스트 `src/core/battle.stage2.test.ts`(기믹별 14개). 레거시 화면은 `?screen=legacy&party=a,b,c`로 파티를 골라요. 낙하 고르기 버튼 · 품기(카드 오른쪽 클릭)는 임시 연결이에요.
-- `pnpm sim [반복] [파티]`로 정령 조합별 승률을 봐요.
+- `pnpm sim [반복] [파티]`로 정령 조합별 승률을 봐요. 판 전체는 `pnpm runsim`(봇 셋, `design/canon/BALANCE_BASELINE.md` 7절).
 - 시작 덱이 0040대로 바뀌어 골든 스냅샷이 바뀌었어요. 기본 파티의 보스 승률(자동 플레이)이 83% → 14%로 떨어졌어요. 균형은 ★ Lucy와 정할 일이에요.
 - ★ 가정(확인 필요): 아래 2-2 · 2-3의 ★ 항목 그대로 구현했고, 추가로: 불여우 시작 = 잉걸 흩뿌리기 2, 고양이 시작 = 입김 2 · 기본 카드 id `basic_claw` · `basic_block` · 스타폴 낙하는 서로 다른 둘 · 혜성 2타는 방어도 무시 아님(일반 피해) · 벽 깨짐 = 벽이 다 떨어지고 피해가 남을 때 · 숨음은 적의 공격 행동 하나가 끝난 뒤 받아낸 것으로 쳐요 · 빛 · 땅은 상성 고리에 안 넣었어요 · 정원 기본 정령은 `default_party` 셋.
 
-### 장비 기반 (장비 핸드오프 `/mnt/project-files/handoff/EQUIPMENT_HANDOFF.md`)
+### 장비 기반 (장비 핸드오프 `docs/handoff/EQUIPMENT_HANDOFF.md`)
 - 들어간 것: `EquipDef` 스키마 · `src/data/equipment/`(비어 있음) · `validate.ts`의 `equipProblems` · 능력치 층 리졸버 `resolveStat`(출처 태그) · 전투 조건부 층 · `critStat` · `EQUIP_PASSIVES` · `RunSpirit.equipment` · `GardenSpirit.equipment` · `growth.json` 칸 수 · 공명 상한. 테스트 `src/core/stats.test.ts`.
-- 남은 것: 장비 데이터(이름 · 그림은 Lucy), 보상 · 남기기 · 분해 흐름(0049), 장비 효과 훅 항목, 문구(`locales/<lang>/equipment.json`), 화면.
+- 규칙(0055 · 0056): 희귀도 `rarity`(범용 · 전용 무기 · 보스 장비), 칸 수 `equip_slots` 1 · 1 · 2, 꽉 차면 바꿔 끼기(`Run.giveEquipment(…, replaceId)`), 같은 장비를 또 얻으면 이번 런 공명 +1(`RunEquip.runBonus`), 전용 무기의 대표 카드 변형(`EquipDef.signature`, `Run.battleDeck()`). 갈래는 `RunSpirit.branch`를 읽어요. 갈래 고르기가 아직 없어서 실제 판에서는 기술이 켜지지 않아요.
+- 전용 무기 3개(`src/data/equipment/exclusive.json`)와 기술 카드 18장(`src/data/cards/techniques.json`, 정령 3 × 갈래 2 × 공명 3)이 들어 있어요. 숫자는 시험 값이에요. 기술용 효과: `damage`의 `burnedBonus` · `perBurn`, `burnHold`, `burnSpread`, `burnCarry`, `chill`의 `freezeKeep` · `freezeDelayMs` · `freezeWeak`, `blockLowest`, `wallEcho`, `wallBurst`. 테스트 `src/core/battle.techniques.test.ts`. 시뮬은 `pnpm runsim --branch 정령:갈래,…`로 갈래를 줘요.
+- 장비 데이터가 있어서 정예 보상이 런 난수를 한 번 더 쓰고, 시뮬의 정령이 무기를 받아요. 장비 없는 기준선과 숫자가 조금 달라요.
+- 범용 6개(`generic.json`)와 보스 3개(`boss.json`)도 들어 있어요. 효과는 `EQUIP_PASSIVES`: `start_block`, `start_block_return`, `first_hit`, `longest_card_hit`, `linger_once`, `linger_turn`, `first_card_time`, `first_card_time_opening`, `crit_vs_full`, `crit_vs_healthy`, `first_card_cost`, `time_cut`, `carry_block`. 방패는 조건부 능력치(`hpBelow`, `hurt`)만 써요. 테스트 `src/core/battle.equipment.test.ts`.
+- 활의 "덜 줄어듦"은 누가 건 상태인지 가리지 않고 적의 화상 · 약화 · 취약에 적용돼요. 쓰러졌다 돌아올 때의 HP는 `stats.ts`의 `returnHp()`가 정해요.
+- 보상 흐름: 정예는 `rollBattleReward("elite")` → `giveRewardEquipment`(꼭 받아요. 받을 정령이 모두 칸이 꽉 찼을 때만 `skipRewardEquipment`), 보스는 `rollBossEquipment()` → `giveEquipment`, 런 끝은 `garden.ts`의 `keepEquipment(g, party, keep)`. 남겼던 장비를 다시 남기면 공명이 1 오르고 단계 상한에서 멈춰요. 남기지 않은 장비는 사라져요.
+- 남은 것: 장비와 기술 카드의 이름 · 그림(Lucy), 문구(`locales/<lang>/equipment.json`), 보상 · 남기기 화면과 session 연결.
 
 ### 2단계 시도본 (참고만)
-- `/mnt/project-files/handoff/stage2-wip-reference.diff` (리팩터링 전 방식, 규칙 해석 참고용)
+- 리팩터링 전 방식의 시도본은 2단계가 머지된 뒤 지웠어요 (2026-11-11).
 
 ## 2. 남은 일
 
-### 2-1. 토대 리팩터링 (먼저, 규칙은 그대로)
-지금 `src/core/battle.ts`(약 1,000줄)는 효과가 `resolveOp`의 큰 `switch`, 상태가 `Status`의 고정 필드, 지속 효과가 `AuraId`별 `if`로 흩어져 있어요. 새 기믹을 넣기 전에 구조부터 세우는 PR을 하나 따로 내는 걸 권해요. 골든 스냅샷이 **바뀌지 않는 것**이 이 PR의 합격선이에요.
+### 2-1. 토대 리팩터링 (끝남, PR #60)
+리팩터링 전의 전투 규칙 파일(지금 `src/core/battle/`)은 효과가 `resolveOp`의 큰 `switch`, 상태가 `Status`의 고정 필드, 지속 효과가 `AuraId`별 `if`로 흩어져 있어요. 새 기믹을 넣기 전에 구조부터 세우는 PR을 하나 따로 내는 걸 권해요. 골든 스냅샷이 **바뀌지 않는 것**이 이 PR의 합격선이었어요. 지금 구조는 `docs/architecture/0003-battle-engine.md`에 있어요.
 
 손볼 자리(구조는 새 스레드가 설계해서 Lucy에게 보여 주고 정해요):
 - 효과(op): 효과마다 핸들러 하나(계산 · 처리 · 놓는 즉시인지 · 효과문). 지금은 처리(`battle.ts`), 문구(`text.ts`), 검사(`validate.ts`), 타입(`types.ts`)이 따로 놀아요.
@@ -67,7 +73,7 @@
 
 - **별 · 낙하 (별 정령)**
   - 별빛: 고른 아군의 다음 타격 N번이 맞힌 적에게 별을 1씩 새겨요. 쓰러진 적에는 안 새겨요.
-  - 새긴 별 수가 문턱(`star_threshold` 3, 샛별로 -1씩, 최소 1)에 차면 턴 끝에 세고, **다음 턴 시작에** 낙하 넷 중 하나를 골라 손에 받아요(스타폴이면 둘). 세는 수는 문턱만큼 줄고, 적에 새긴 별은 남아요.
+  - 새긴 별 수가 문턱(`star_threshold` 4, 샛별로 -1씩, 최소 1)에 차면 턴 끝에 세고, **다음 턴 시작에** 낙하 넷 중 하나를 골라 손에 받아요(스타폴이면 둘). 세는 수는 문턱만큼 줄고, 적에 새긴 별은 남아요.
   - 낙하 넷(생성 카드, 보상에 없음, 소멸, 주인은 별 정령, 1비용). 시험판 값:
     - 유성 1200ms: 피해 6 + 이 적의 별 × 3, 이 적의 별을 지움.
     - 유성우 900ms: 별 하나마다 그 적에게 피해 3, 별을 모두 지움.
@@ -95,7 +101,7 @@
   - 숨음: 다음 적 공격 하나를 카멜레온에게 끌어와 **절반** 받아요(Lucy 0041). 받아내면 받아칠 기회 1.
   - ★ 전체 공격이면 끌어오지 않고 카멜레온 몫만 절반, 그래도 받아낸 것으로 쳐요.
   - ★ 숨음은 공격을 하나 받거나 턴이 끝나면 풀려요. 도발보다 먼저예요.
-  - 받아칠 기회: 그 정령의 다음 카드 효과 × `ready_mult` 2. 다음 턴 끝까지 남아요. 숨기 · 덩굴 꼬리 · 프리즘 · 굴리는 눈은 기회를 쓰지 않아요.
+  - 받아칠 기회: 그 정령의 다음 카드 효과 × `ready_mult` 2(끌어온 공격 피해가 `ready_big_at` 8보다 작으면 `ready_mult_small` 1.5). 다음 턴 끝까지 남아요. 숨기 · 덩굴 꼬리 · 프리즘 · 굴리는 눈은 기회를 쓰지 않아요.
   - 매복(기회가 고른 아군에게), 프리즘(기회를 넘김), 위장막(기회가 생길 때마다 아군 전체 다음 타격 +2), 천 개의 눈(기회가 쌓임), 레인보우(고른 아군에게도 같은 기회).
 - **공통 수치 가정**: 위 숫자는 모두 능력치 10 기준 시험판 값(`TODO_TOKEN`)이에요. 새 상수는 `constants.json`에 두어요.
 

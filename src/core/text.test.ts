@@ -9,6 +9,7 @@ describe("한국어 도우미", () => {
       .toEqual(["불여우가", "유리 도롱뇽이", "성체로", "물로"]);
     expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 100].map((n) => hasBatchim(String(n))))
       .toEqual([true, false, true, false, false, true, true, true, false, true, true, true]);
+    expect([1, 2, 3, 6, 7, 8].map((n) => josa(String(n), "으로/로"))).toEqual(["1로", "2로", "3으로", "6으로", "7로", "8로"]);
   });
 
   it("동사 줄기를 합니다체·연결형으로", () => {
@@ -52,6 +53,7 @@ describe("카드 효과 문구 (0022)", () => {
       // 숫자 뒤 조사 없음 (고정 문구 "비용이 0이 됩니다"는 숫자가 바뀌지 않아요)
       expect(s.replace("0이 됩니다", ""), c.id).not.toMatch(/\d(을|를|이|가)\s/);
     }
-    expect(Object.fromEntries(CARDS.map((c) => [c.name, describeCard(c, null)]))).toMatchSnapshot();
+    // 무기 기술은 대표 카드와 이름이 같아서 id로 적어요
+    expect(Object.fromEntries(CARDS.map((c) => [c.obtain === "equipment" ? c.id : c.name, describeCard(c, null)]))).toMatchSnapshot();
   });
 });

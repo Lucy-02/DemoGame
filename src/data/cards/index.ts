@@ -7,5 +7,6 @@ import light from "./light.json";
 import earth from "./earth.json";
 import forest from "./forest.json";
 import none from "./none.json";
+import techniques from "./techniques.json";
 
-export const CARD_FILES: Record<string, unknown[]> = { fire, water, wind, light, earth, forest, none };
+export const CARD_FILES: Record<string, unknown[]> = { fire, water, wind, light, earth, forest, none, techniques };

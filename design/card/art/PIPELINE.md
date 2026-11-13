@@ -65,12 +65,12 @@
 
 | 단계 | 누가 | 무엇 | 만드는 것 |
 |---|---|---|---|
-| ① 브리프 | Claude | 카드마다 Focus 한두 단어(MTG 의뢰서 방식), 구도 문법(B/C), 결정적 형태, 피할 것. 이름은 작업명 기준이라 이름이 바뀌어도 그대로 | `design/card/art/briefs.yaml` |
+| ① 브리프 | Claude | 카드마다 Focus 한두 단어(MTG 의뢰서 방식), 구도 문법(B/C), 결정적 형태, 피할 것. 이름은 작업명 기준이라 이름이 바뀌어도 그대로 | `design/card/art/rounds/<라운드>/briefs.json` |
 | ② 시트 | Claude | 브리프 + 고정 화풍 블록 + 구도 틀 → jjal 러너 형식 시트. 카드마다 시드 4개 | `design/card/art/sheets/<라운드>.json` (jjal 형식은 맥 연결 후 맞춤) |
 | ③ 생성 | Lucy | jjal 러너나 NAI 웹. 웹이면 **Download 버튼**으로 받아 메타데이터를 남겨요 | 원본 PNG |
-| ④ 고르기 | Lucy | Claude가 만든 비교 시트에서 고름: 각 후보를 84×90 실제 크기로 카드 틀을 덮어서, 회색조로, 같은 정령 12장 나란히 | `tools/art/card-contact-sheet.py` → 시트 이미지 |
-| ⑤ 후처리 | Claude | 주제 중심점 기준으로 손패용(84:90)·확대용 두 번 자르기, 크기별 webp, 안전 영역 검사(주제가 모서리 UI 밑에 들어가면 경고) | `tools/art/import-cards.py` → `public/assets/cards/<owner>/<card>.webp` + 자르기 값 `cardArtFit.json` |
-| ⑥ 기록 | Claude | PNG 메타데이터(Comment JSON·알파 채널 숨은 기록)에서 프롬프트·UC·시드·설정을 뽑아 `provenance.jsonl`에 자동으로 한 줄씩 | `import-cards.py`가 함께 씀, `pnpm check:assets` 통과 |
+| ④ 고르기 | Lucy | Claude가 만든 비교 시트에서 고름: 각 후보를 84×90 실제 크기로 카드 틀을 덮어서, 회색조로, 같은 정령 12장 나란히 | `tools/art/card-preview.mjs` → 시트 이미지 |
+| ⑤ 후처리 | Claude | 주제 중심점 기준으로 손패용(84:90)·확대용 두 번 자르기, 크기별 webp, 안전 영역 검사(주제가 모서리 UI 밑에 들어가면 경고) | `tools/art/import_card_art.py` → `public/assets/cards/<owner>/<card>.webp` + 자르기 값 `cardArtFit.json` |
+| ⑥ 기록 | Claude | PNG 메타데이터(Comment JSON·알파 채널 숨은 기록)에서 프롬프트·UC·시드·설정을 뽑아 `provenance.jsonl`에 자동으로 한 줄씩 | `import_card_art.py`가 함께 씀, `pnpm check:assets` 통과 |
 | ⑦ 연결 | Claude | 손패 카드의 자리표시 사각형(`placeholderArt`)을 그림으로 바꿈. UI 작업이라 컨펌 뒤 | 별도 PR |
 
 - 자르기 값은 정령 그림의 `spiritFit.json`처럼 사람이 고친 값을 따로 둬서, 다시 들여와도 지워지지 않게 해요(0023과 같은 방식).
@@ -121,5 +121,9 @@ very aesthetic, masterpiece, no text
 1. `design/card/art/picks.json`에 카드 한 줄: `id`(에셋 이름), `case_id`(고른 생성 결과), `composition`(object·symbol·scene·backdrop), `fit_size`(object·symbol만, 실물 크기 순서로 기존 카드 사이에 끼워 정함. scene·backdrop은 null).
 2. 고른 원본 PNG와 `meta.json`(run_id·prompt·uc·seed·설정·image_sha256)을 한 폴더에 받아요. PNG는 바이트 그대로(메타데이터 보존).
 3. `python3 tools/art/import_card_art.py <폴더>` → `public/assets/cards/<id>.webp`(512px), `assets/provenance.jsonl` 갱신.
-4. `src/presentation/card/art.ts`의 `CARD_ART_IDS`에 id를 더하고, 카드 VM의 `illustration`으로 가리켜요. `?scene=art`에서 확인해요.
+4. 같은 명령이 `src/presentation/card/artIds.json`(그림이 있는 카드 id 목록)도 다시 써요. 카드 VM은 `cardArtOf(카드 id)`로 그림을 찾아요. `?scene=art`에서 확인해요.
+
+## 8. 브리프 쓰기 (0063)
+- 카드 이름을 그리지 않아요. 카드가 누구에게 무엇을 하는지(효과)와 분위기를 장면 한 문장, 비유한 상징 한 문장으로 써요.
+- 장면엔 적(dark rock creature)·동료(small round ally creature)·정령을 효과대로 넣고, 얼굴·사람 손이 나오지 않게 해요.
 

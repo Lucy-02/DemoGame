@@ -6,11 +6,13 @@
   "opening_window_ms": 300,
   "opening_mult": 1.25,
   "freeze_delay_ms": 800,
-  "star_threshold": 3,
+  "star_threshold": 4,
   "star_falls": ["meteor", "meteor_shower", "comet", "star_veil"],
   "hold_mult": 1.5,
   "hold_time_cut_ms": 300,
   "ready_mult": 2,
+  "ready_mult_small": 1.5,
+  "ready_big_at": 8,
   "hidden_mult": 0.5,
   "stagger_on_break": 3,
   "enemy_at": {
@@ -20,7 +22,12 @@
     "boss": 2400
   },
   "party_size": 3,
+  "party_scale": {
+    "1": { "hp": 0.6, "dmg": 0.6 },
+    "2": { "hp": 0.85, "dmg": 0.85 }
+  },
   "default_party": ["fire_fox", "glass_salamander", "mist_cat"],
+  "start_pool": ["fire_fox", "glass_salamander", "magma_ibex", "prism_chameleon"],
   "stat_base": 10,
   "release_duration": 2,
   "vuln_base": 0.25,
@@ -33,6 +40,8 @@
     "boss": 10
   },
   "downed_return_hp": 1,
+  "equip_return_hp": 4,
+  "equip_opening_bonus": 0.1,
   "affinity_weak": 1.5,
   "affinity_resist": 0.75,
   "affinity_beats": {
@@ -94,5 +103,10 @@
   "release_cost_down": {},
   "release_chill_mult": {
     "mist_cat": 2
-  }
+  },
+  "enemy_act_gap_ms": 100,
+  "gap": { "dmg_mult": 1.25, "turns_break": 2, "turns_delay": 1, "turns_burst": 1, "burst_pct": 0.15 },
+  "traits": { "burning_burn": 1, "sturdy_block": 4, "swift_ms": 250, "heavy_charge_mult": 1.3, "heavy_stagger": 2, "heavy_dmg": 1 },
+  "run_pool": { "weak_battles": 2, "strong_weight": 3, "no_repeat": 2 },
+  "acts": [{ "elements": ["fire", "forest", "wind"] }]
 }

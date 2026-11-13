@@ -1,7 +1,7 @@
 // 정령 관리 화면 (정본: 정령 관리 R4 v5, 탭 내용은 결정 0021). 정원 세션 상태 → 화면 데이터 → 그리기.
 // 상태가 바뀌거나 탭·정령을 고르면 화면을 통째로 다시 그려요(정지 화면이라 충분히 가벼워요).
 import * as Phaser from "phaser";
-import type { Garden } from "../../core/garden";
+import { gardenSpirit, isBranching, type Garden } from "../../core/garden";
 import { GardenSession } from "../../session/garden";
 import { createPuppet, ensurePuppet } from "../puppet/loadPuppet";
 import type { PuppetCore } from "../puppet/puppetCore";
@@ -9,15 +9,16 @@ import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
 import type { Stage } from "../../core/types";
 import { DEFAULT_GARDEN, GARDENS } from "./fixtures";
-import { spiritsVM, type MockView } from "./fromGarden";
+import { branchPickVM, spiritsVM, type MockView } from "./fromGarden";
 import { MOCKUPS, MOCK_FIRST_STAGE } from "./mockups";
 import type { SpiritDetailVM, StatRowVM, TabId } from "./viewmodel";
 import { playArtSwap, type ArtMotion } from "./views/artSwap";
 import { drawArt, drawArtGlow, drawBackdrop, drawScrim, type LiveArt } from "./views/backdrop";
+import { BRANCH_ICONS, drawBranchPick, preloadBranchCards } from "./views/branchPick";
 import { ID_ICONS, drawIdCard } from "./views/idCard";
 import { PANEL_ICONS, drawPanel } from "./views/panel";
 import { RAIL_ICONS, drawFacts, drawRail } from "./views/rail";
-import { FRAME, STRIP } from "./layout";
+import { BRANCH, FRAME, STRIP } from "./layout";
 import { STRIP_ICONS, clampFrom, drawStrip, stripFit } from "./views/strip";
 import { TOP_ICONS, drawTopbar } from "./views/topbar";
 
@@ -31,6 +32,8 @@ export interface SpiritsSceneData {
   select?: string;
   tab?: TabId;
   closed?: boolean;
+  /** 고른 정령의 갈래 고르기 창을 연 채로 시작 (시각 검증용) */
+  pick?: boolean;
 }
 
 export class SpiritsScene extends Phaser.Scene {
@@ -52,6 +55,8 @@ export class SpiritsScene extends Phaser.Scene {
   /** 다음 그리기에서 전환할지 */
   private swapPending = false;
   private artMotion: ArtMotion = { alpha: 1, dx: 0 };
+  /** 갈래 고르기 창 (0047 S15): 열린 정령과 고른 갈래 */
+  private picking?: { id: string; branch?: string };
 
   constructor() {
     super(SPIRITS_SCENE);
@@ -63,10 +68,15 @@ export class SpiritsScene extends Phaser.Scene {
     this.selected = data.select ?? this.session.state.spirits[0].id;
     this.tab = data.tab ?? "overview";
     this.open = !data.closed;
+    if (data.pick) this.picking = { id: this.selected };
   }
 
   preload() {
-    for (const [id, w] of [...TOP_ICONS, ...ID_ICONS, ...STRIP_ICONS, ...PANEL_ICONS, ...RAIL_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...TOP_ICONS, ...ID_ICONS, ...STRIP_ICONS, ...PANEL_ICONS, ...RAIL_ICONS, ...BRANCH_ICONS]) loadIcon(this, id, w);
+    for (const s of this.session.state.spirits) {
+      const vm = branchPickVM(this.session.state, s.id, "garden");
+      if (vm) preloadBranchCards(this, vm);
+    }
     preloadSpiritArt(this, [...this.session.state.spirits.map((s) => s.id), ...MOCKUPS.map((m) => m.id)]);
   }
 
@@ -127,7 +137,7 @@ export class SpiritsScene extends Phaser.Scene {
       drawPanel(this, d, this.tab, {
         tab: (t) => this.show(this.selected, t, true),
         close: () => this.show(this.selected, this.tab, false),
-        evolve: () => this.session.dispatch({ kind: "evolve", id: this.selected }),
+        evolve: () => this.grow(this.selected),
         feed: () => this.session.dispatch({ kind: "feed", id: this.selected }),
         seeEpisode: () => this.session.dispatch({ kind: "seeEpisode", id: this.selected }),
         pickStage: (stage) => {
@@ -143,6 +153,58 @@ export class SpiritsScene extends Phaser.Scene {
     this.stripFrom = clampFrom(this.stripFrom, vm.roster.length);
     drawStrip(this, vm, this.stripFrom, (id) => this.show(id, this.tab, this.open));
     this.shown = { id: vm.selected, art: d.art, rows: this.open && this.tab === "overview" ? d.overview.rows : undefined };
+    this.paintPick();
+  }
+
+  /** 키우기: 갈래 고르기면 창을 열고, 아니면 바로 키워요 */
+  private grow(id: string) {
+    if (!isBranching(gardenSpirit(this.session.state, id))) return this.session.dispatch({ kind: "evolve", id });
+    this.picking = { id };
+    this.redraw();
+  }
+
+  /** 갈래 창이 있을 때만 쓰는 위 카메라 (아래 화면만 흐리게) */
+  private pickCam?: Phaser.Cameras.Scene2D.Camera;
+
+  private paintPick() {
+    const main = this.cameras.main;
+    main.filters.internal.clear();
+    if (this.pickCam) {
+      this.cameras.remove(this.pickCam);
+      this.pickCam = undefined;
+    }
+    const p = this.picking;
+    if (!p) return;
+    const under = [...this.children.list];
+    const vm = branchPickVM(this.session.state, p.id, "garden", [], p.branch);
+    if (!vm) {
+      this.picking = undefined;
+      return;
+    }
+    drawBranchPick(this, vm, {
+      select: (i) => {
+        this.picking = { id: p.id, branch: vm.branches[i].id };
+        this.redraw();
+      },
+      confirm: () => {
+        const b = vm.selected !== undefined ? vm.branches[vm.selected] : undefined;
+        if (!b) return;
+        this.picking = undefined;
+        // 갈래 선택 → 진화 컷신(0037, 아직 연결 전) → 결과. 지금은 바로 키워요
+        this.session.dispatch({ kind: "evolve", id: p.id, branch: b.id });
+        this.redraw();
+      },
+      later: () => {
+        this.picking = undefined;
+        this.redraw();
+      },
+    });
+    // 아래 화면은 흐린 본 카메라, 창은 위 카메라 (.bw-bg blur)
+    const over = this.children.list.filter((o) => !under.includes(o));
+    main.ignore(over);
+    main.filters.internal.addBlur(BRANCH.blur.quality, BRANCH.blur.x, BRANCH.blur.y, BRANCH.blur.strength);
+    this.pickCam = this.cameras.add(0, 0, FRAME.w, FRAME.h);
+    this.pickCam.ignore(under);
   }
 
   /** 각성체 퍼핏(라투디). 처음 볼 때 불러오고, 다 올라올 때까지는 일러스트를 그려요 */

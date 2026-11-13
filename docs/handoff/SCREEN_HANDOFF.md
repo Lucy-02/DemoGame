@@ -27,7 +27,7 @@
 4. `docs/handoff/01_기획서_v0.2.md`, `03_화면별_정보·행동_목록_미검토.md`, `04_Lucy_결정_대기.md`
 5. `docs/design/01-vision.md`, `02-pillars.md`, `05-world.md`, `design/BRAND_BRIEF.md`, `design/DESIGN_SYSTEM.md`
 6. `design/canon/`(정본: spirit-r4v5, battle-r5, text/TEXT_RULES.md, naming), `design/concepts/BRIEF.md`(브리프 형식과 "# 묶음 B"), `design/concepts/LINKS.md`(시안 링크 전부)
-7. 연구 문서: `docs/archive/research/core-design/R1~R6`(워크플로·서사·장르 훅과 경쟁작·네이밍·효과문·UI 글), `design/archive/card-research/R1~R3`, 공유 폴더 `/mnt/project-files/research/`
+7. 연구 문서: `docs/archive/research/core-design/`(R1~R6: 워크플로·서사·장르 훅과 경쟁작·네이밍·효과문·UI 글), `design/archive/card-research/`(R1~R3), 공유 폴더 `/mnt/project-files/research/`
 8. 코드: `docs/architecture/0001-client-architecture.md`, `docs/handoff/CLIENT_HANDOFF.md`, 이 문서 4절
 
 ### 2-2. 레퍼런스 게임 연구
