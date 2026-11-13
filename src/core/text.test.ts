@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { CARDS, cardDef } from "./data";
+import { EQUIP_PASSIVES } from "./battle/passives";
+import { CARDS, EQUIPMENT, cardDef, equipDef } from "./data";
 import { andThen, hasBatchim, josa, polite } from "./korean";
-import { describeCard } from "./text";
+import { EQUIP_PASSIVE_TEXT, describeCard, describeEquipTier } from "./text";
 
 describe("한국어 도우미", () => {
   it("받침으로 조사를 골라요. 숫자는 읽는 소리로", () => {
@@ -55,5 +56,25 @@ describe("카드 효과 문구 (0022)", () => {
     }
     // 무기 기술은 대표 카드와 이름이 같아서 id로 적어요
     expect(Object.fromEntries(CARDS.map((c) => [c.obtain === "equipment" ? c.id : c.name, describeCard(c, null)]))).toMatchSnapshot();
+  });
+});
+
+describe("장비 효과문", () => {
+  it("장비 효과마다 문장이 있고, 모든 장비의 모든 층이 합니다체 문장으로 나와요", () => {
+    expect(Object.keys(EQUIP_PASSIVE_TEXT).sort()).toEqual(Object.keys(EQUIP_PASSIVES).sort());
+    for (const e of EQUIPMENT) {
+      for (const tier of [...e.tiers, ...(e.downside ? [e.downside] : [])]) {
+        for (const line of describeEquipTier(tier)) expect(line).toMatch(/니다\.$/);
+      }
+    }
+  });
+
+  it("조건 없는 기본 능력치는 숫자로 보여서 문장에서 빠지고, 조건부와 치명은 문장으로 써요", () => {
+    expect(describeEquipTier(equipDef("bone_sword").tiers[0])).toEqual(["내 턴의 첫 타격은 피해를 추가로 1 입힙니다."]);
+    expect(describeEquipTier(equipDef("round_shield").tiers[0])).toEqual(["HP가 절반 아래이면 가드가 2 더 높습니다."]);
+    expect(describeEquipTier(equipDef("crystal_dagger").tiers[1])).toEqual([
+      "치명 확률이 3% 높습니다.", "치명 피해가 10% 높습니다.", "대상의 HP가 가득이면 치명 확률이 10% 높습니다.",
+    ]);
+    expect(describeEquipTier(equipDef("moss_hammer").downside!)).toEqual([]);
   });
 });
