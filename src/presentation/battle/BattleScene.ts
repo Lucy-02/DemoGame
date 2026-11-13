@@ -183,9 +183,11 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** 설명판: 정보판(under) 가운데 아래, 화면 양쪽 여백(시스템 버튼과 같은 값) 안으로 */
-  private unitTip(ref: UnitRef, under: Rect) {
+  private unitTip(ref: UnitRef, under: Rect, headless = false) {
+    const content = unitTipContent(this, this.vm, ref, headless);
+    if (!content.length) return null;
     const left = Math.max(SYS.right, Math.min(under.x + under.w / 2 - GLASS.w / 2, FRAME.w - SYS.right - GLASS.w));
-    const c = drawTooltip(this, { skin: GLASS, content: unitTipContent(this, this.vm, ref), at: { left, top: under.y + under.h + INFO.tipGap } });
+    const c = drawTooltip(this, { skin: GLASS, content, at: { left, top: under.y + under.h + INFO.tipGap } });
     return c.setDepth(DRAG.depth);
   }
 
@@ -232,8 +234,8 @@ export class BattleScene extends Phaser.Scene {
     this.focusObjs.push(plate);
     const r = this.focusRect as Rect | null;
     if (r) {
-      this.focusTip = this.unitTip(ref, r);
-      this.focusObjs.push(this.focusTip);
+      this.focusTip = this.unitTip(ref, r, true);
+      if (this.focusTip) this.focusObjs.push(this.focusTip);
     }
   }
 

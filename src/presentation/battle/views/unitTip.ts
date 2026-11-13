@@ -6,10 +6,11 @@ import { GLASS } from "../../tooltip/skins";
 import type { BattleVM, UnitRef } from "../viewmodel";
 import { unitTipHead } from "./units";
 
-export function unitTipContent(scene: Phaser.Scene, vm: BattleVM, ref: UnitRef): TipContent {
+/** headless: 집중 보기용. 펼친 판에 이름·속성·상태가 이미 있으니 행동 문장만 (아군은 빈 내용) */
+export function unitTipContent(scene: Phaser.Scene, vm: BattleVM, ref: UnitRef, headless = false): TipContent {
   const inner = GLASS.w - GLASS.pad[1] - GLASS.pad[3];
   const u = ref.side === "ally" ? { side: "ally" as const, vm: vm.allies[ref.i] } : { side: "enemy" as const, vm: vm.enemies[ref.i] };
-  const head = unitTipHead(scene, u, inner).map((node) => ({ kind: "node", node } as const));
+  const head = headless ? [] : unitTipHead(scene, u, inner).map((node) => ({ kind: "node", node } as const));
   const lines = u.side === "enemy" ? (u.vm.tip?.lines ?? []).map((l) => ({ kind: "text", role: "body", text: l } as const)) : [];
   return [...head, ...lines];
 }
