@@ -340,7 +340,8 @@ export const tokens = {
         "logo": "44px",
         "item": "16px",
         "badge": "12px",
-        "floor": "17px"
+        "floor": "17px",
+        "primary": "24px"
       }
     },
     "pattern": {

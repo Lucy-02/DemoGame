@@ -9,7 +9,7 @@ export const COPY = {
   codex: "도감",
   settings: "설정",
   quit: "종료",
-  new: "새",
+  new: "N",
   floor: (n: number) => `${n}층`,
   grow: (n: number) => `키우기 ${n}`,
   branch: (n: number) => `갈래 고르기 ${n}`,

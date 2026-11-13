@@ -16,7 +16,7 @@ export interface HomeItemVM {
   tip?: { title: string; lines: string[] };
 }
 
-/** 오른쪽 아래 강조 버튼: 새 판을 떠나거나, 진행 중인 판을 이어요 */
+/** 메뉴 맨 위 강조 줄: 새 판을 떠나거나, 진행 중인 판을 이어요 */
 export type HomePrimaryVM =
   | { kind: "depart"; label: string }
   | { kind: "continue"; label: string; floor: string; faces: ({ key: string; crop: Crop } | undefined)[]; ids: string[] };
