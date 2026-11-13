@@ -44,6 +44,8 @@ export interface LaneState {
   heal?: number;
   /** 장비를 받는 미리보기 (0064) */
   equip?: LaneEquipState;
+  /** 빈 카드 칸을 그리지 않아요 (카드를 고르는 때가 아니면 빈 칸은 뜻이 없어요). 받은 카드는 그대로 보여요 */
+  noSocket?: boolean;
   /** 지금 고를 수 없는 줄: 내용이 흐려져요 (전용 무기의 주인이 아닌 정령) */
   dim?: boolean;
   /** 줄을 누르면 / 올리면 / 벗어나면 */
@@ -234,7 +236,9 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
         : { item, state: st.equip?.slots[k] ? "cand" : undefined };
       drawEquipSlot(scene, at.x, at.y, slot);
     });
-    drawSocket(scene, x + SOCKET.x, y + SOCKET.y, st.card, st.open);
+    // 덱 장수를 칸 아래에 보이는 줄(상점)은 칸이 위로 붙고, 아니면 줄 가운데에 놓여요 (장비 칸과 같은 가운데 줄)
+    const socketY = l.deck === undefined ? (h - SOCKET.h) / 2 : SOCKET.y;
+    if (!st.noSocket || st.card) drawSocket(scene, x + SOCKET.x, y + socketY, st.card, st.open);
   });
   if (st.dim) body.setAlpha(LANE_PREVIEW.dim);
   if (st.deckTo !== undefined && l.deck !== undefined) {

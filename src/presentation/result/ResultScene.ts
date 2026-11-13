@@ -194,7 +194,8 @@ export class ResultScene extends Phaser.Scene {
     const got = taken !== undefined && taken !== "skip" ? taken : undefined;
 
     vm.lanes.forEach((l, i) => {
-      const st: LaneState = {};
+      // 빈 카드 칸은 카드를 고르는 동안에만 보여요
+      const st: LaneState = { noSocket: done };
       if (got?.spirit === l.id) {
         st.card = { vm: cardWithFace(this, vm.cards[got.card].card, l), hot: false };
       } else if (focus && focusI !== undefined && focus.owners.includes(l.id)) {
