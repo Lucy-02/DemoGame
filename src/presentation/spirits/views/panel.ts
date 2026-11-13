@@ -74,13 +74,22 @@ const numPair = (have: number, need: number): Node => ({
 // ───────────────────────── 개요 ─────────────────────────
 
 /** 능력치 막대. 다른 정령에서 넘어왔으면 그 정령의 값에서 새 값으로 움직여요 (0035) */
+const VARIANT = new URLSearchParams(location.search).get("equipBar") ?? "a";
+
 function statBar(g: Phaser.GameObjects.Graphics, r: StatRowVM, was: StatRowVM | undefined, x: number, y: number, w: number, h: number) {
   const k = w / PANEL.statMax;
   const paint = (to: Phaser.GameObjects.Graphics, total: number, stage: number) => {
-    const base = Math.min(w, (total - stage) * k);
+    // 장비 몫은 막대 끝에: 더한 만큼은 막대 뒤에 잇고, 깎은 만큼은 막대 뒤 빈 자리에 표시해요
+    const gain = Math.max(0, r.equip), loss = Math.max(0, -r.equip);
+    const base = Math.min(w, (total - stage - gain) * k);
     box(to, x, y, w, h, h / 2, { fill: P.veil["12"] });
     box(to, x, y, base, h, h / 2, { fill: P.ink2 });
-    if (stage > 0) box(to, x + base, y, Math.min(w - base, stage * k), h, h / 2, { fill: P.ok });
+    const sw = stage > 0 ? Math.min(w - base, stage * k) : 0;
+    if (sw > 0) box(to, x + base, y, sw, h, h / 2, { fill: P.ok });
+    const ex = x + base + sw, ew = Math.min(w - base - sw, (gain || loss) * k);
+    if (ew <= 0 || VARIANT === "c") return;
+    if (VARIANT === "a") box(to, ex, y, ew, h, h / 2, gain ? { fill: P.accHi } : { ring: { width: 1, color: P.danger, dash: 2 } });
+    else box(to, ex, y, ew, h, h / 2, { ring: { width: 1, color: gain ? P.ink : P.ink3Spirit, dash: gain ? undefined : 2 } });
   };
   if (!was) {
     paint(g, r.total, r.stage);
@@ -105,6 +114,10 @@ function overview(d: SpiritDetailVM, statsFrom?: StatRowVM[]): Node[] {
       text(COPY.legendBase, T.legend, P.ink2),
       { t: "block", w: G.legend.w, h: G.legend.h, ml: G.legend.ml, draw: (g, x, y, w, h) => box(g, x, y, w, h, h / 2, { fill: P.ok }) },
       text(COPY.legendStage, T.legend, P.ink2),
+      ...(d.overview.rows.some((r) => r.equip !== 0) && VARIANT !== "c" ? [
+        { t: "block", w: G.legend.w, h: G.legend.h, ml: G.legend.ml, draw: (g, x, y, w, h) => box(g, x, y, w, h, h / 2, VARIANT === "a" ? { fill: P.accHi } : { ring: { width: 1, color: P.ink } }) } as Node,
+        text(COPY.legendEquip, T.legend, P.ink2),
+      ] : []),
     ],
   };
   const rows: Node[] = d.overview.rows.map((r) => ({
@@ -115,7 +128,14 @@ function overview(d: SpiritDetailVM, statsFrom?: StatRowVM[]): Node[] {
         t: "block", w: 0, h: G.bar, grow: true,
         draw: (g, x, y, w, h) => statBar(g, r, statsFrom?.find((f) => f.label === r.label), x, y, w, h),
       },
-      { t: "row", w: G.valueW, children: r.stage > 0 ? [text(`+${r.stage}`, T.sbValue, P.ok, { ml: "auto" })] : [] },
+      {
+        t: "row", w: G.valueW, gap: 4,
+        children: [
+          { t: "block", w: 0, h: 0, grow: true },
+          ...(r.stage > 0 ? [text(`+${r.stage}`, T.sbValue, P.ok)] : []),
+          ...(VARIANT === "c" && r.equip !== 0 ? [text(r.equip > 0 ? `+${r.equip}` : String(r.equip), T.sbValue, r.equip > 0 ? P.accHi : P.danger)] : []),
+        ],
+      },
     ],
   }));
   const per = d.overview.personality;
