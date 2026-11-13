@@ -26,27 +26,31 @@ export interface ResultVM {
 /** 말풍선과 장비 줄에 찍는 수치: HP와 능력치 셋 */
 export type EquipStatId = StatId | "hp";
 
-/** a→b. from이 없으면(받을 정령이 정해지기 전) 증감만 보여요 */
-export interface StatChangeVM {
+/** 장비가 주는 수치 하나: 기호 + 증감 (+1, -20%) */
+export interface EquipChipVM {
   stat: EquipStatId;
-  delta: number;
-  from?: number;
-  to?: number;
+  label: string;
+  neg: boolean;
 }
 
-/** 장비 말풍선 (0064 Q2-A): 머리(그림 · 이름 · 희귀도 · 공명 점) + 달라지는 것 */
-export interface EquipTipVM {
+/** 장비 하나의 설명: 머리(그림 · 이름 · 희귀도 · 공명 점) + 주는 수치 + 효과문 */
+export interface EquipSheetVM {
   item: EquipVM;
-  /** 얻는 쪽 수치와 효과문 */
-  stats: StatChangeVM[];
+  chips: EquipChipVM[];
   lines: string[];
-  /** 전용 무기: 대표 카드가 기술로 바뀌어요 */
-  swap?: { from: CardVM; to: CardVM };
+  /** 전용 무기의 기술 카드와 그 효과문 (효과문의 "…로 바뀝니다"가 가리키는 카드) */
+  card?: { vm: CardVM; text: string };
   /** 효과문 아래 안내 한 줄 (해요체) */
   note?: string;
-  /** 내려놓는 장비와 함께 잃는 것 */
-  /** back: 내려놓는 전용 무기의 기술이 대표 카드로 돌아가요 (기술 이름→대표 카드 이름) */
-  lose?: { item: EquipVM; stats: StatChangeVM[]; lines: string[]; back?: string };
+}
+
+/**
+ * 장비 말풍선 (0064). 말풍선은 장비가 무엇인지만 말해요. 정령에게 일어나는 일(능력치 a +n, 최대 HP, 비친 칸)은 정령 줄이 말해요.
+ * drop = 내려놓아 사라지는 장비. 같은 틀을 흐리게 한 번 더 써요.
+ */
+export interface EquipTipVM {
+  sheet: EquipSheetVM;
+  drop?: EquipSheetVM;
 }
 
 /** 정령 하나가 장비를 받는 한 가지 방법 (칸 하나) */
@@ -62,8 +66,8 @@ export interface EquipOptionVM {
 
 export interface EquipOfferVM {
   item: EquipVM;
-  /** 장비 줄 오른쪽: 얻는 수치 */
-  gain: StatChangeVM[];
+  /** 장비 줄 오른쪽: 주는 수치 */
+  gain: EquipChipVM[];
   /** 장비 줄에 올렸을 때의 말풍선 (받을 정령이 정해지기 전) */
   tip: EquipTipVM;
   /** 받을 수 있는 정령 id → 방법들. 꽉 찬 정령은 칸마다 하나씩 */

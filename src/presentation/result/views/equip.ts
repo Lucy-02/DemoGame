@@ -1,5 +1,6 @@
 // 정예 장비 줄(왼쪽 열, 카드 아래)과 장비 말풍선 (0051 자리 · 0064 Q2-A 모양).
-// 화면에 늘 보이는 것은 그림 · 이름 · 희귀도 · 얻는 수치뿐이고, 달라지는 것은 말풍선 하나에만 나와요.
+// 말풍선은 장비가 무엇인지만 말해요(주는 수치 · 효과문 · 기술 카드). 정령에게 일어나는 일은 정령 줄이 말해요.
+// 내려놓는 장비는 같은 틀을 흐리게 한 번 더 써요.
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { createHandCard } from "../../card/HandCard";
@@ -16,7 +17,7 @@ import { render, size, type Node } from "../../style/flex";
 import { shadowTexture } from "../../style/shadow";
 import { COPY } from "../copy";
 import { EQUIP_TIP, STRIP } from "../layout";
-import type { EquipOfferVM, EquipStatId, EquipTipVM, StatChangeVM } from "../viewmodel";
+import type { EquipChipVM, EquipOfferVM, EquipSheetVM, EquipStatId, EquipTipVM } from "../viewmodel";
 
 const T = tokens.provisional.text.result;
 const TIP = EQUIP_TIP;
@@ -52,13 +53,7 @@ export function drawEquipStrip(scene: Phaser.Scene, offer: EquipOfferVM, on: boo
   render(scene, label, tx + S.tile.size + S.gap, S.y + (S.h - size(label).h) / 2);
   const gain: Node = {
     t: "row", gap: S.gain.between, align: "center",
-    children: offer.gain.map((c): Node => ({
-      t: "row", gap: S.gain.gap, align: "center",
-      children: [
-        { t: "icon", id: ICON[c.stat], w: S.gain.icon, h: S.gain.icon, tint: COLOR[c.stat] },
-        text(RUN_COPY.delta(c.delta), T.stat, c.delta < 0 ? P.danger : P.ink3),
-      ],
-    })),
+    children: offer.gain.map((c) => chip(c, T.stat, S.gain.icon, S.gain.gap)),
   };
   const gs = size(gain);
   render(scene, gain, S.x + S.w - S.padR - gs.w, S.y + (S.h - gs.h) / 2);
@@ -67,18 +62,14 @@ export function drawEquipStrip(scene: Phaser.Scene, offer: EquipOfferVM, on: boo
   if (handlers.out) zone.on("pointerout", handlers.out);
 }
 
-/** 수치 한 줄: 기호 + a→b (받을 정령이 없으면 증감). 이전 값은 작고 흐리게, 이후 값이 주인공이에요 (Lucy 2026-11-13) */
-function statRow(c: StatChangeVM): Node {
-  const neg = c.delta < 0;
-  const after = neg ? P.danger : P.ink;
-  const value: Node[] = c.from === undefined || c.to === undefined
-    ? [text(RUN_COPY.delta(c.delta), T.tipStat, after)]
-    : [text(`${c.from}${RUN_COPY.arrow}`, T.was, P.ink3Spirit), text(String(c.to), T.tipStat, after)];
+/** 장비가 주는 수치 하나: 기호 + 증감 */
+function chip(c: EquipChipVM, size: string, icon: number, gap: number, dim?: number): Node {
+  const fade = (color: string) => (dim === undefined ? color : withAlpha(color, dim));
   return {
-    t: "row", gap: TIP.stat.iconGap, align: "center",
+    t: "row", gap, align: "center",
     children: [
-      { t: "icon", id: ICON[c.stat], w: TIP.stat.icon, h: TIP.stat.icon, tint: neg ? P.danger : COLOR[c.stat] },
-      { t: "row", align: "baseline", children: value },
+      { t: "icon", id: ICON[c.stat], w: icon, h: icon, tint: fade(c.neg ? P.danger : COLOR[c.stat]) },
+      { ...text(c.label, size, dim === undefined ? (c.neg ? P.danger : P.ink) : P.ink3Spirit), ...(dim === undefined ? {} : { strike: {} }) } as Node,
     ],
   };
 }
@@ -86,90 +77,67 @@ function statRow(c: StatChangeVM): Node {
 const para = (s: string, w: number, color: string, extra: Partial<Node> = {}): Node =>
   ({ ...text(s, T.tipBody, color, { lh: TIP.line.lh, wrap: w, keepAll: true }), ...extra } as Node);
 
-function head(scene: Phaser.Scene, item: EquipVM, x: number, y: number, w: number): number {
+/** 머리: 그림 · 이름 · 꼬리표 · (공명 점). 내려놓는 장비는 그림이 작고 이름이 흐리며 꼬리표가 "사라짐"이에요 */
+function head(scene: Phaser.Scene, item: EquipVM, w: number, dropped: boolean): Piece {
   const H = TIP.head;
-  const mark = RARITY_MARK[item.rarity];
+  const thumb = dropped ? TIP.drop.thumb : H.thumb;
+  const mark = dropped ? undefined : RARITY_MARK[item.rarity];
   const markW = mark ? H.tag.mark.d + (mark.n - 1) * H.tag.mark.step : 0;
   const tag: Node = {
     t: "row", pad: [H.tag.padY, H.tag.padX, H.tag.padY, H.tag.padX], radius: H.tag.radius, gap: H.tag.gap, align: "center",
-    style: { ring: { width: 1, color: P.veil["20"] } },
+    style: { ring: { width: 1, color: dropped ? P.danger : P.veil["20"] } },
     children: [
       ...(mark ? [{ t: "block", w: markW, h: H.tag.mark.d, draw: (g, bx, by) => drawRarityMark(g, item.rarity, bx, by, H.tag.mark) } as Node] : []),
-      text(item.rarityName, T.tipTag, P.ink2),
+      text(dropped ? COPY.dropped : item.rarityName, T.tipTag, dropped ? P.danger : P.ink2),
     ],
   };
   const row: Node = {
     t: "row", w, gap: H.gap, align: "center",
     children: [
-      { t: "block", w: H.thumb, h: H.thumb },
-      ...(item.name ? [text(item.name, T.tipTitle, P.ink)] : []),
+      { t: "block", w: thumb, h: thumb },
+      ...(item.name ? [text(item.name, T.tipTitle, dropped ? P.ink3Spirit : P.ink)] : []),
       tag,
-      { t: "block", ml: "auto", w: pipsSize(item.cap, H.pip), h: H.pip.d, draw: (g, bx, by) => drawPips(g, item, bx, by, H.pip, false) },
+      ...(dropped ? [] : [{ t: "block", ml: "auto", w: pipsSize(item.cap, H.pip), h: H.pip.d, draw: (g, bx, by) => drawPips(g, item, bx, by, H.pip, false) } as Node]),
     ],
   };
   const s = size(row);
-  render(scene, row, x, y);
-  drawEquipArt(scene, item.id, x, y + (s.h - H.thumb) / 2, H.thumb, H.thumb);
-  return s.h;
+  return {
+    mt: 0, h: s.h,
+    draw: (x, y) => {
+      render(scene, row, x, y);
+      drawEquipArt(scene, item.id, x, y + (s.h - thumb) / 2, thumb, thumb, dropped ? TIP.drop.thumbAlpha : 1);
+    },
+  };
 }
 
-/** 말풍선 몸: 위에서 아래로 쌓을 조각. draw는 (x, y)에 그리고 높이를 돌려줘요 */
+/** 말풍선 조각: 위에서 아래로 쌓아요. mt = 위 조각과의 틈 */
 type Piece = { mt: number; h: number; draw: (x: number, y: number) => void };
 
 const piece = (scene: Phaser.Scene, node: Node, mt: number): Piece => ({ mt, h: size(node).h, draw: (x, y) => { render(scene, node, x, y); } });
 
-function body(scene: Phaser.Scene, tip: EquipTipVM, inner: number, owner?: LaneVM): Piece[] {
-  const out: Piece[] = [];
-  if (tip.lose) {
-    const W = TIP.two;
-    const colW = (inner - 1) / 2 - W.colPad;
-    const sign = (label: string, color: string, thumb?: EquipVM): Node => ({
-      t: "row", h: W.sign, gap: W.signGap, align: "center",
-      children: [...(thumb ? [{ t: "block", w: W.thumb, h: W.thumb } as Node] : []), text(label, T.tipTitle, color)],
-    });
-    const get: Node = {
-      t: "col", w: colW, gap: W.gap,
-      children: [sign(COPY.gain, P.ok), ...tip.stats.map(statRow), ...tip.lines.map((l) => para(l, colW, P.ink2))],
-    };
-    const lose: Node = {
-      t: "col", w: colW, gap: W.gap,
-      children: [
-        sign(COPY.lose, P.danger, tip.lose.item), ...tip.lose.stats.map(statRow),
-        ...(tip.lose.back ? [para(tip.lose.back, colW, P.ink2)] : []),
-        ...tip.lose.lines.map((l) => para(l, colW, P.ink3Spirit, { strike: {} })),
-      ],
-    };
-    const h = Math.max(size(get).h, size(lose).h);
-    const lost = tip.lose.item;
-    out.push({
-      mt: W.mt, h,
-      draw: (x, y) => {
-        render(scene, get, x, y);
-        const lx = x + colW + W.colPad;
-        box(scene.add.graphics(), lx, y, 1, h, 0, { fill: P.glassLine });
-        render(scene, lose, lx + 1 + W.colPad, y);
-        drawEquipArt(scene, lost.id, lx + 1 + W.colPad, y, W.thumb, W.thumb, W.thumbAlpha);
-      },
-    });
-    out.push(piece(scene, para(COPY.dropWarn, inner, P.danger), TIP.line.mt));
-    return out;
+/** 장비 하나의 설명. dropped = 내려놓아 사라지는 장비 (흐리게, 취소선) */
+function sheetPieces(scene: Phaser.Scene, sheet: EquipSheetVM, inner: number, dropped: boolean, owner?: LaneVM): Piece[] {
+  const out: Piece[] = [head(scene, sheet.item, inner, dropped)];
+  if (sheet.chips.length) {
+    const row: Node = { t: "row", gap: TIP.stat.gap, align: "center", children: sheet.chips.map((c) => chip(c, T.tipStat, TIP.stat.icon, TIP.stat.iconGap, dropped ? TIP.drop.dim : undefined)) };
+    out.push(piece(scene, row, TIP.stat.mt));
   }
-  if (tip.stats.length) out.push(piece(scene, { t: "row", gap: TIP.stat.gap, align: "center", children: tip.stats.map(statRow) }, TIP.stat.mt));
-  if (tip.swap) {
-    // 이전 카드는 이름만 작고 흐리게, 새 카드 한 장이 주인공이에요 (Lucy 2026-11-13)
-    const { from, to } = tip.swap;
-    const was = text(`${from.name}${RUN_COPY.arrow}`, T.tipBody, P.ink3Spirit);
-    const ws = size(was);
+  const line = (l: string, w: number) => (dropped ? para(l, w, P.ink3Spirit, { strike: {} }) : para(l, w, P.ink2));
+  for (const l of sheet.lines) out.push(piece(scene, line(l, inner), TIP.line.mt));
+  if (sheet.card && !dropped) {
+    // 효과문이 가리키는 기술 카드와, 그 오른쪽에 카드의 효과문
+    const { vm, text: cardText } = sheet.card;
+    const textW = inner - HAND_CARD.w - TIP.card.gap;
+    const body = para(cardText, textW, P.ink2);
     out.push({
-      mt: TIP.swap.mt, h: HAND_CARD.h,
+      mt: TIP.card.mt, h: Math.max(HAND_CARD.h, size(body).h),
       draw: (x, y) => {
-        render(scene, was, x, y + (HAND_CARD.h - ws.h) / 2);
-        createHandCard(scene, cardWithFace(scene, to, owner), x + ws.w + TIP.swap.gap, y, { showRarity: true });
+        createHandCard(scene, cardWithFace(scene, vm, owner), x, y, { showRarity: true });
+        render(scene, body, x + HAND_CARD.w + TIP.card.gap, y);
       },
     });
   }
-  for (const l of tip.lines) out.push(piece(scene, para(l, inner, P.ink2), TIP.line.mt));
-  if (tip.note) out.push(piece(scene, para(tip.note, inner, P.ink3Spirit), TIP.line.mt));
+  if (sheet.note && !dropped) out.push(piece(scene, para(sheet.note, inner, P.ink3Spirit), TIP.line.mt));
   return out;
 }
 
@@ -178,11 +146,21 @@ export type EquipTipAt = { kind: "lane"; right: number; pointY: number } | { kin
 
 export function drawEquipTip(scene: Phaser.Scene, tip: EquipTipVM, at: EquipTipAt, owner?: LaneVM) {
   const [pt, pr, pb, pl] = TIP.pad;
-  const w = tip.lose ? TIP.w.two : TIP.w.plain;
+  const w = tip.sheet.card ? TIP.w.card : TIP.w.plain;
   const inner = w - pl - pr;
-  const pieces = body(scene, tip, inner, owner);
-  const headH = size({ t: "row", align: "center", children: [{ t: "block", w: TIP.head.thumb, h: TIP.head.thumb }, text(tip.item.rarityName, T.tipTitle, P.ink)] }).h;
-  const h = pt + headH + pieces.reduce((a, p) => a + p.mt + p.h, 0) + pb;
+  const pieces = sheetPieces(scene, tip.sheet, inner, false, owner);
+  if (tip.drop) {
+    const [first, ...rest] = sheetPieces(scene, tip.drop, inner, true);
+    // 두 설명 사이에 선 하나
+    pieces.push({
+      mt: TIP.drop.mt, h: TIP.drop.pt + first.h,
+      draw: (x, y) => {
+        box(scene.add.graphics(), x, y, inner, 1, 0, { fill: P.glassLine });
+        first.draw(x, y + TIP.drop.pt);
+      },
+    }, ...rest);
+  }
+  const h = pt + pieces.reduce((a, p) => a + p.mt + p.h, 0) + pb;
   const left = at.right - w;
   const top = at.kind === "lane"
     ? Math.max(TIP.edge, Math.min(FRAME.h - TIP.edge - h, at.pointY - h / 2))
@@ -191,24 +169,18 @@ export function drawEquipTip(scene: Phaser.Scene, tip: EquipTipVM, at: EquipTipA
   const sh = shadowTexture(scene, w, h, TIP.radius, { y: TIP.shadow.y, blur: TIP.shadow.blur, color: P.tipShadow });
   scene.add.image(left - sh.margin, top - sh.margin, sh.key).setOrigin(0, 0);
   const g = scene.add.graphics();
+  const half = (TIP.tail * Math.SQRT2) / 2;
+  const cy = at.kind === "lane" ? Math.max(top + TIP.radius + half, Math.min(top + h - TIP.radius - half, at.pointY)) : 0;
+  const f = rgba(fill), l = rgba(P.veil["20"]);
   if (at.kind === "lane") {
     // 오른쪽 꼬리: 45° 돌린 정사각형의 오른쪽 절반 + 두 변의 선
-    const half = (TIP.tail * Math.SQRT2) / 2;
-    const cy = Math.max(top + TIP.radius + half, Math.min(top + h - TIP.radius - half, at.pointY));
-    const f = rgba(fill), l = rgba(P.veil["20"]);
     g.fillStyle(f.color, f.alpha).fillTriangle(left + w - 1, cy - half, left + w - 1 + half, cy, left + w - 1, cy + half);
     g.lineStyle(TIP.ring, l.color, l.alpha).lineBetween(left + w - 1, cy - half, left + w - 1 + half, cy).lineBetween(left + w - 1 + half, cy, left + w - 1, cy + half);
   }
   box(g, left, top, w, h, TIP.radius, { fill, ring: { width: TIP.ring, color: P.veil["20"] } });
-  if (at.kind === "lane") {
-    // 꼬리가 붙는 자리의 테를 덮어요
-    const half = (TIP.tail * Math.SQRT2) / 2;
-    const cy = Math.max(top + TIP.radius + half, Math.min(top + h - TIP.radius - half, at.pointY));
-    const f = rgba(fill);
-    g.fillStyle(f.color, f.alpha).fillRect(left + w - TIP.ring - 1, cy - half + 1, TIP.ring + 1, half * 2 - 2);
-  }
+  // 꼬리가 붙는 자리의 테를 덮어요
+  if (at.kind === "lane") g.fillStyle(f.color, f.alpha).fillRect(left + w - TIP.ring - 1, cy - half + 1, TIP.ring + 1, half * 2 - 2);
   let y = top + pt;
-  y += head(scene, tip.item, left + pl, y, inner);
   for (const p of pieces) {
     y += p.mt;
     p.draw(left + pl, y);

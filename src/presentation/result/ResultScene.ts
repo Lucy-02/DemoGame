@@ -90,9 +90,9 @@ export class ResultScene extends Phaser.Scene {
   preload() {
     for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...REWARD_ICONS, ...EQUIP_ICONS]) loadIcon(this, id, w);
     for (const c of this.vm.cards) preloadHandCard(this, c.card, { showRarity: true, scale: REWARD.scale });
-    const options = Object.values(this.vm.equip?.takers ?? {}).flat();
+    const options = [...Object.values(this.vm.equip?.takers ?? {}).flat(), ...(this.vm.equip ? [{ tip: this.vm.equip.tip }] : [])];
     for (const o of options) {
-      if (o.tip.swap) preloadHandCard(this, o.tip.swap.to, { showRarity: true });
+      if (o.tip.sheet.card) preloadHandCard(this, o.tip.sheet.card.vm, { showRarity: true });
     }
     preloadEquipArt(this, [
       ...(this.vm.equip ? [this.vm.equip.item.id] : []),
@@ -235,7 +235,7 @@ export class ResultScene extends Phaser.Scene {
           };
           if (over) {
             st.hot = true;
-            st.equip.ghost = { slot: over.slot, item: over.tip.item, drop: over.tip.lose?.item, hot: true };
+            st.equip.ghost = { slot: over.slot, item: over.tip.sheet.item, drop: over.tip.drop?.item, hot: true };
             st.equip.delta = Object.fromEntries(STAT_IDS.map((k) => [k, over.after.stats[k] - l.stats[k]]).filter(([, d]) => d !== 0));
             if (over.after.maxHp !== l.maxHp) st.equip.maxHpTo = over.after.maxHp;
             const at = slotAt(i, l.slots.length, over.slot);
@@ -252,7 +252,7 @@ export class ResultScene extends Phaser.Scene {
         over: () => this.setHover({ kind: "strip" }),
         out: () => this.leaveHover({ kind: "strip" }),
       });
-      if (hover?.kind === "strip") tip = () => drawEquipTip(this, offer.tip, { kind: "below", right: STRIP.x + STRIP.w, top: STRIP.y + STRIP.h + EQUIP_TIP.aboveStrip });
+      if (hover?.kind === "strip") tip = () => drawEquipTip(this, offer.tip, { kind: "below", right: STRIP.x + STRIP.w, top: STRIP.y + STRIP.h + EQUIP_TIP.belowStrip });
     }
 
     // 보상 카드: 왼→오 = 줄 위→아래

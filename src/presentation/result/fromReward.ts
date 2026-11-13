@@ -1,66 +1,53 @@
 // 보상 세션 → 화면 값.
 import { cardDef, equipDef } from "../../core/data";
 import type { Run } from "../../core/run";
-import { baseStat, maxHpOf, round } from "../../core/stats";
-import { cardName, describeCard, describeEquipTier } from "../../core/text";
-import type { EquipDef, RunEquip, RunSpirit } from "../../core/types";
+import { baseStat } from "../../core/stats";
+import { describeCard, describeEquipTier, describeSignatureSwap } from "../../core/text";
+import type { EquipTier, RunEquip, RunSpirit } from "../../core/types";
 import type { RewardSession } from "../../session/reward";
 import { cardVM, equipVM, lane, laneWith, statOf } from "../run/fromCore";
-import { COPY as RUN_COPY } from "../run/copy";
 import type { LaneVM } from "../run/viewmodel";
 import { COPY } from "./copy";
-import type { EquipOfferVM, EquipOptionVM, EquipStatId, EquipTipVM, ResultVM, StatChangeVM } from "./viewmodel";
+import type { EquipChipVM, EquipOfferVM, EquipOptionVM, EquipSheetVM, EquipStatId, ResultVM } from "./viewmodel";
 
-const EQUIP_STATS: readonly EquipStatId[] = ["hp", "power", "guard", "focus"];
-const statValue = (rs: RunSpirit, k: EquipStatId) => (k === "hp" ? maxHpOf(rs) : round(baseStat(rs, k)));
+const EQUIP_STATS: readonly string[] = ["hp", "power", "guard", "focus"] satisfies EquipStatId[];
+const pct = (v: number) => `${Math.round(Math.abs(v) * 100)}%`;
 
-/** 받기 전과 뒤의 수치 차이 */
-function changes(before: RunSpirit, after: RunSpirit): StatChangeVM[] {
-  return EQUIP_STATS.flatMap((stat) => {
-    const from = statValue(before, stat), to = statValue(after, stat);
-    return from === to ? [] : [{ stat, delta: to - from, from, to }];
-  });
+/** 이 층이 조건 없이 주는 수치 (조건부 · 치명 · 스피드는 효과문으로 나와요) */
+const chips = (tier: EquipTier): EquipChipVM[] => (tier.stats ?? [])
+  .filter((m) => !m.when && EQUIP_STATS.includes(m.stat))
+  .map((m) => ({ stat: m.stat as EquipStatId, neg: m.value < 0, label: `${m.value < 0 ? "-" : "+"}${m.op === "pct" ? pct(m.value) : Math.abs(m.value)}` }));
+
+/**
+ * 장비 하나의 설명. holder를 주면 그 정령이 지녔을 때의 모습이에요: 공명 점 상한, 갈래의 기술 카드, 그 정령 능력치로 계산한 카드 숫자.
+ */
+function sheet(run: Run, e: RunEquip, holder?: RunSpirit): EquipSheetVM {
+  const def = equipDef(e.id);
+  const item = equipVM(e, holder?.stage ?? "awakened");
+  const tiers: EquipTier[] = [def.tiers[item.resonance - 1], ...(def.downside ? [def.downside] : [])];
+  const out: EquipSheetVM = { item, chips: tiers.flatMap(chips), lines: tiers.flatMap(describeEquipTier) };
+  if (def.signature && holder) {
+    const swap = run.signatureSwap(holder, e);
+    const inDeck = run.deck.some((c) => c.owner === holder.id && c.cardId === def.signature!.card);
+    if (swap && inDeck) {
+      out.lines.push(describeSignatureSwap(swap.from, swap.to));
+      const st = { power: baseStat(holder, "power"), guard: baseStat(holder, "guard"), focus: baseStat(holder, "focus") };
+      out.card = { vm: cardVM(swap.to, holder.id), text: describeCard(cardDef(swap.to), st) };
+    } else if (!swap) {
+      out.note = COPY.noBranch;
+    }
+  }
+  return out;
 }
-
-/** 장비의 한 공명 단계가 보여 주는 효과문 (대가는 따로) */
-const tierLines = (def: EquipDef, resonance: number) => describeEquipTier(def.tiers[resonance - 1]);
 
 /** 이 정령이 이 장비를 받는 방법 하나의 미리보기 */
 function option(run: Run, equipId: string, before: RunSpirit, laneBefore: LaneVM, replace?: RunEquip): EquipOptionVM {
   const after = run.withEquipment(equipId, before.id, replace?.id);
-  const def = equipDef(equipId);
   const got = after.equipment.find((e) => e.id === equipId)!;
-  const item = equipVM(got, after.stage);
-  const all = changes(before, after);
-  const tip: EquipTipVM = {
-    item,
-    stats: replace ? all.filter((c) => c.delta > 0) : all,
-    lines: [...tierLines(def, item.resonance), ...(def.downside ? describeEquipTier(def.downside) : [])],
+  return {
+    slot: after.equipment.indexOf(got), replace: replace?.id, after: laneWith(laneBefore, after),
+    tip: { sheet: sheet(run, got, after), drop: replace && sheet(run, replace, before) },
   };
-  if (def.signature) {
-    const held = before.equipment.find((e) => e.id === equipId);
-    const was = held ? run.signatureSwap(before, held)?.to ?? def.signature.card : def.signature.card;
-    const now = run.signatureSwap(after, got);
-    const inDeck = run.deck.some((c) => c.owner === before.id && c.cardId === def.signature!.card);
-    if (now && inDeck) {
-      tip.swap = { from: cardVM(was, before.id), to: cardVM(now.to, before.id) };
-      // 바뀐 카드의 효과문 (받는 정령의 능력치를 반영한 숫자)
-      tip.lines.push(describeCard(cardDef(now.to), { power: baseStat(after, "power"), guard: baseStat(after, "guard"), focus: baseStat(after, "focus") }));
-    }
-    else if (!now) tip.note = COPY.noBranch;
-  }
-  if (replace) {
-    const old = equipDef(replace.id);
-    const oldItem = equipVM(replace, before.stage);
-    const back = run.signatureSwap(before, replace);
-    tip.lose = {
-      item: oldItem,
-      back: back && `${cardName(back.to)}${RUN_COPY.arrow}${cardName(back.from)}`,
-      stats: all.filter((c) => c.delta < 0),
-      lines: [...tierLines(old, oldItem.resonance), ...(old.downside ? describeEquipTier(old.downside) : [])],
-    };
-  }
-  return { slot: after.equipment.indexOf(got), replace: replace?.id, after: laneWith(laneBefore, after), tip };
 }
 
 /** 정예 장비 하나를 파티가 받는 방법들 */
@@ -75,14 +62,11 @@ export function equipOffer(run: Run, equipId: string, lanes: LaneVM[]): EquipOff
       ? s.equipment.map((old) => option(run, equipId, s, l, old))
       : [option(run, equipId, s, l)];
   }
-  // 받을 정령이 정해지기 전: 공명 1의 고정 보정만 증감으로 보여요
-  const gain: StatChangeVM[] = (def.tiers[0].stats ?? [])
-    .filter((m) => !m.when && m.op === "add" && (EQUIP_STATS as readonly string[]).includes(m.stat))
-    .map((m) => ({ stat: m.stat as EquipStatId, delta: m.value }));
-  const item = equipVM(fresh, "awakened");
+  // 받을 정령이 정해지기 전의 설명. 전용 무기는 주인이 정해져 있어서 주인이 받았을 때의 모습을 보여요
+  const owner = def.owner ? run.equipTakers(equipId)[0] : undefined;
+  const plain = owner ? sheet(run, run.withEquipment(equipId, owner.id, owner.equipment[0]?.id).equipment.find((e) => e.id === equipId)!, owner) : sheet(run, fresh);
   return {
-    item, gain, takers,
-    tip: { item, stats: gain, lines: [...tierLines(def, 1), ...(def.downside ? describeEquipTier(def.downside) : [])] },
+    item: plain.item, gain: plain.chips, takers, tip: { sheet: plain },
     canSkip: Object.keys(takers).length > 0 && run.equipTakers(equipId).every((s) => run.needsReplace(equipId, s.id)),
   };
 }
