@@ -5,7 +5,7 @@ import { BootScene } from "./scenes/BootScene";
 import { TitleScene } from "./scenes/TitleScene";
 import { MapScene } from "./scenes/MapScene";
 import { BattleScene } from "./scenes/BattleScene";
-import { ShopScene } from "./scenes/ShopScene";
+import { ShopScene } from "../shop/ShopScene";
 import { EventScene } from "./scenes/EventScene";
 import { RestScene } from "./scenes/RestScene";
 import { DeckScene } from "./scenes/DeckScene";

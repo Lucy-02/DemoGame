@@ -3,4 +3,5 @@ export const COPY = {
   remove: "빼기",
   heal: "치료",
   leave: "떠나기",
+  cancel: "취소",
 };

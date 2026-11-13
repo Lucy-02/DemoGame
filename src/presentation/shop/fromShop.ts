@@ -15,9 +15,11 @@ export function shopVM(s: ShopSession): ShopVM {
         price: o.price, affordable: s.canBuy(slot), learners, stat: statOf(o.card),
       };
     }),
-    // 빼기는 덱 고르기 화면이 생기면 켜요
-    remove: { price: s.removePrice, enabled: false },
+    remove: { price: s.removePrice, enabled: s.canRemove() },
     heal: { price: s.healPrice, enabled: s.canHeal(), gain: s.healPreview() },
+    deck: Object.fromEntries(run.spirits.map((rs) => [
+      rs.id, run.deck.filter((c) => c.owner === rs.id).map((c) => ({ uid: c.uid, card: cardVM(c.cardId, rs.id) })),
+    ])),
     lanes: run.spirits.map((rs) => lane(rs, { exp: { before: 0, after: 0 }, deck: run.deck.filter((c) => c.owner === rs.id).length })),
   };
 }
