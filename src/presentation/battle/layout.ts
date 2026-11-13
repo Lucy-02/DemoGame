@@ -62,6 +62,8 @@ export const INFO = {
   hpGap: 2,
   /** .st height 20 padding 0 6 0 4 radius 10 gap 2, .sti 12 */
   status: { h: 20, pad: [0, 6, 0, 4] as [number, number, number, number], radius: 10, gap: 2, icon: 12 },
+  /** 장비 칸 묶음 (Q2-A f5 .beq): 오른쪽 끝, gap 5 */
+  equipGap: 5,
   /** .front padding 1 7 radius 9 */
   front: { pad: [1, 7, 1, 7] as [number, number, number, number], radius: 9 },
   /** .el 20 원 */

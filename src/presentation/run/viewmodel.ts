@@ -1,4 +1,5 @@
 // 런 화면 공용 뼈대가 그리는 값: 오른쪽 정령 줄 (0044 · 0046).
+import type { CardVM } from "../card/viewmodel";
 import type { IconId } from "../faces";
 import type { Crop } from "../spirits/artFit";
 
@@ -44,4 +45,34 @@ export interface LaneVM {
   slots: (EquipVM | null)[];
   /** 이 정령의 덱 장수 (상점: 카드를 살 때 a→b로 보여요) */
   deck?: number;
+}
+
+/** 말풍선과 장비 줄에 찍는 수치: HP와 능력치 셋 */
+export type EquipStatId = StatId | "hp";
+
+/** 장비가 주는 수치 하나: 기호 + 증감 (+1, -20%) */
+export interface EquipChipVM {
+  stat: EquipStatId;
+  label: string;
+  neg: boolean;
+}
+
+/** 장비 하나의 설명: 머리(그림 · 이름 · 희귀도 · 공명 점) + 주는 수치 + 효과문 */
+export interface EquipSheetVM {
+  item: EquipVM;
+  chips: EquipChipVM[];
+  lines: string[];
+  /** 전용 무기의 기술 카드와 그 효과문 (효과문의 "…로 바뀝니다"가 가리키는 카드) */
+  card?: { vm: CardVM; text: string };
+  /** 효과문 아래 안내 한 줄 (해요체) */
+  note?: string;
+}
+
+/**
+ * 장비 말풍선 (0064). 말풍선은 장비가 무엇인지만 말해요. 정령에게 일어나는 일(능력치 a +n, 최대 HP, 비친 칸)은 정령 줄이 말해요.
+ * drop = 내려놓아 사라지는 장비. 같은 틀을 흐리게 한 번 더 써요.
+ */
+export interface EquipTipVM {
+  sheet: EquipSheetVM;
+  drop?: EquipSheetVM;
 }

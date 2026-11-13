@@ -401,14 +401,9 @@ export class Run {
     return after;
   }
 
-  /**
-   * 이 정령이 지닌 전용 무기가 바꾸는 카드 (0055 · 0056): 대표 카드 → 갈래의 기술.
-   * 갈래가 없거나(유체) 그 갈래의 기술이 없으면 undefined예요.
-   */
-  signatureSwap(s: Pick<RunSpirit, "branch">, e: RunEquip): { from: string; to: string } | undefined {
-    const sig = equipDef(e.id).signature;
-    const to = sig && s.branch ? sig.techniques[s.branch]?.[resonanceOf(e) - 1] : undefined;
-    return sig && to ? { from: sig.card, to } : undefined;
+  /** 이 정령이 지닌 전용 무기가 바꾸는 카드. `signatureSwapOf`와 같아요 */
+  signatureSwap(s: Pick<RunSpirit, "branch">, e: RunEquip) {
+    return signatureSwapOf(s, e);
   }
 
   /**
@@ -463,3 +458,13 @@ export const getRun = () => {
   return current;
 };
 export const setRun = (r: Run) => (current = r);
+
+/**
+ * 이 정령이 지닌 전용 무기가 바꾸는 카드 (0055 · 0056): 대표 카드 → 갈래의 기술.
+ * 갈래가 없거나(유체) 그 갈래의 기술이 없으면 undefined예요.
+ */
+export function signatureSwapOf(s: Pick<RunSpirit, "branch">, e: RunEquip): { from: string; to: string } | undefined {
+  const sig = equipDef(e.id).signature;
+  const to = sig && s.branch ? sig.techniques[s.branch]?.[resonanceOf(e) - 1] : undefined;
+  return sig && to ? { from: sig.card, to } : undefined;
+}

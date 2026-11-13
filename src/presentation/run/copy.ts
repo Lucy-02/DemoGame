@@ -10,6 +10,10 @@ export const COPY = {
   delta: (n: number) => (n > 0 ? `+${n}` : String(n)),
   /** 주인이 정해지지 않은 카드의 말풍선 주인 줄 (P1 f3) */
   shared: "공용",
+  /** 내려놓는 장비의 꼬리표 (TEXT_RULES 5절 명사형) */
+  dropped: "사라짐",
+  /** 안내 (TEXT_RULES 8절 해요체) */
+  noBranch: "갈래를 고르면 대표 카드가 기술로 바뀌어요",
 };
 
 /** 능력치 기호 (0050 임시: 정본 기호 가운데 뜻이 가까운 것) */

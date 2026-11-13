@@ -1,5 +1,7 @@
 // 이름 카드: 단계 칩, 이름, 속성·역할, 성격, 능력치 한 줄. 정본 .q-id (장부 §3-2 G)
 import type * as Phaser from "phaser";
+import { EQUIP_MINI } from "../../run/layout";
+import { miniSlotNode, type Rect } from "../../run/equip";
 import { render, type Node } from "../../style/flex";
 import { COPY } from "../copy";
 import { ID } from "../layout";
@@ -34,7 +36,8 @@ export function personalityPill(name?: string): Node {
   };
 }
 
-export function drawIdCard(scene: Phaser.Scene, d: SpiritDetailVM) {
+/** on = 장비 칸에 포인터가 오갈 때 (칸 번호, 칸 자리) */
+export function drawIdCard(scene: Phaser.Scene, d: SpiritDetailVM, on?: { over: (i: number, r: Rect) => void; out: () => void }) {
   const S = ID.stats;
   render(scene, {
     t: "col", w: ID.w, pad: ID.pad, gap: ID.gap, radius: ID.radius, style: glass(),
@@ -77,6 +80,16 @@ export function drawIdCard(scene: Phaser.Scene, d: SpiritDetailVM) {
           },
         ],
       },
+      ...(d.equip.length ? [{
+        t: "col", mt: ID.equip.mt,
+        children: [
+          rule(S.line),
+          {
+            t: "row", gap: ID.equip.gap, mt: ID.equip.pt,
+            children: d.equip.map((slot, i) => miniSlotNode(scene, slot?.item ?? null, EQUIP_MINI.s32, { pips: true, over: on && ((r) => on.over(i, r)), out: on?.out })),
+          },
+        ],
+      } as Node] : []),
     ],
   }, ID.x, ID.y);
 }

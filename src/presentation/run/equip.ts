@@ -5,7 +5,8 @@ import { tokens } from "../../design/tokens";
 import { rgba, withAlpha } from "../style/color";
 import { box, circle } from "../style/draw";
 import { canvasTexture } from "../style/gradient";
-import { EQUIP_SLOT } from "./layout";
+import type { Node } from "../style/flex";
+import { EQUIP_MINI, EQUIP_SLOT } from "./layout";
 import type { EquipRarityId, EquipVM } from "./viewmodel";
 
 const P = tokens.provisional.palette;
@@ -111,4 +112,53 @@ export function drawEquipSlot(scene: Phaser.Scene, x: number, y: number, s: Slot
     const c = rgba(P.danger), k = (O.d / 2) * Math.SQRT1_2;
     top.lineStyle(O.line, c.color, c.alpha).lineBetween(ox + O.d / 2 - k, oy + O.d / 2 + k, ox + O.d / 2 + k, oy + O.d / 2 - k);
   }
+}
+
+export type MiniSlot = typeof EQUIP_MINI.s32;
+export interface Rect { x: number; y: number; w: number; h: number }
+
+/** 평소 자리의 작은 칸 (왼쪽 위 x, y). 빈 칸은 점선이에요 */
+export function drawMiniSlot(scene: Phaser.Scene, x: number, y: number, item: EquipVM | null, K: MiniSlot) {
+  const g = scene.add.graphics();
+  box(g, x, y, K.size, K.size, K.radius, item
+    ? { fill: P.veil["05"], ring: { width: K.ring, color: P.veil["20"] } }
+    : { ring: { width: K.ring, color: withAlpha(P.ink, K.emptyLine), dash: K.dash } });
+  if (!item) return;
+  const art = K.size - K.inset * 2;
+  drawEquipArt(scene, item.id, x + K.inset, y + K.inset, art, art);
+  drawRarityMark(scene.add.graphics(), item.rarity, x + K.mark.x, y + K.mark.y, K.mark);
+}
+
+/** 포인터가 올라온 작은 칸의 테 */
+export function drawMiniSlotHot(scene: Phaser.Scene, r: Rect, K: MiniSlot) {
+  const g = scene.add.graphics(), o = K.hot.outer;
+  box(g, r.x - o, r.y - o, r.w + o * 2, r.h + o * 2, K.radius + o, { ring: { width: o, color: withAlpha(P.accHi, K.hot.alpha) } });
+  box(g, r.x, r.y, r.w, r.h, K.radius, { ring: { width: K.ring, color: P.accHi } });
+}
+
+/**
+ * 작은 칸을 배치 노드로. pips = 칸 아래 공명 점. 든 칸에 포인터가 오가면 over(칸 자리) · out을 불러요.
+ */
+export function miniSlotNode(
+  scene: Phaser.Scene, item: EquipVM | null, K: MiniSlot,
+  opts: { pips?: boolean; over?: (r: Rect) => void; out?: () => void } = {},
+): Node {
+  const slot: Node = {
+    t: "block", w: K.size, h: K.size,
+    draw: (_g, x, y) => {
+      drawMiniSlot(scene, x, y, item, K);
+      if (!item || !opts.over) return;
+      const zone = scene.add.zone(x, y, K.size, K.size).setOrigin(0, 0).setInteractive();
+      zone.on("pointerover", () => opts.over!({ x, y, w: K.size, h: K.size }));
+      if (opts.out) zone.on("pointerout", opts.out);
+    },
+  };
+  if (!opts.pips) return slot;
+  const p = EQUIP_MINI.pip;
+  return {
+    t: "col", gap: p.mt, align: "center",
+    children: [slot, item
+      ? { t: "block", w: pipsSize(item.cap, p), h: p.d, draw: (g, x, y) => drawPips(g, item, x, y, p, false) }
+      : { t: "block", w: 0, h: p.d }],
+  };
 }

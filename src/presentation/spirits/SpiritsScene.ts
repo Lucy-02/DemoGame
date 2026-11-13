@@ -6,16 +6,21 @@ import { GardenSession } from "../../session/garden";
 import { createPuppet, ensurePuppet } from "../puppet/loadPuppet";
 import type { PuppetCore } from "../puppet/puppetCore";
 import { preloadSpiritArt } from "../spiritArt";
+import { preloadHandCard } from "../card/HandCard";
 import { loadIcon } from "../style/icons";
 import type { Stage } from "../../core/types";
 import { DEFAULT_GARDEN, GARDENS } from "./fixtures";
 import { branchPickVM, spiritsVM, type MockView } from "./fromGarden";
 import { MOCKUPS, MOCK_FIRST_STAGE } from "./mockups";
-import type { SpiritDetailVM, StatRowVM, TabId } from "./viewmodel";
+import type { SpiritDetailVM, SpiritsVM, StatRowVM, TabId } from "./viewmodel";
 import { playArtSwap, type ArtMotion } from "./views/artSwap";
 import { drawArt, drawArtGlow, drawBackdrop, drawScrim, type LiveArt } from "./views/backdrop";
 import { BRANCH_ICONS, drawBranchPick, preloadBranchCards } from "./views/branchPick";
 import { ID_ICONS, drawIdCard } from "./views/idCard";
+import { drawMiniSlotHot, preloadEquipArt, type Rect } from "../run/equip";
+import { EQUIP_TIP_ICONS, drawEquipTip } from "../run/equipTip";
+import { EQUIP_MINI, EQUIP_TIP } from "../run/layout";
+import { EQUIPMENT } from "../../core/data";
 import { PANEL_ICONS, drawPanel } from "./views/panel";
 import { RAIL_ICONS, drawFacts, drawRail } from "./views/rail";
 import { BRANCH, FRAME, STRIP } from "./layout";
@@ -72,10 +77,15 @@ export class SpiritsScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const [id, w] of [...TOP_ICONS, ...ID_ICONS, ...STRIP_ICONS, ...PANEL_ICONS, ...RAIL_ICONS, ...BRANCH_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...TOP_ICONS, ...ID_ICONS, ...STRIP_ICONS, ...PANEL_ICONS, ...RAIL_ICONS, ...BRANCH_ICONS, ...EQUIP_TIP_ICONS]) loadIcon(this, id, w);
+    preloadEquipArt(this, EQUIPMENT.map((e) => e.id));
     for (const s of this.session.state.spirits) {
       const vm = branchPickVM(this.session.state, s.id, "garden");
       if (vm) preloadBranchCards(this, vm);
+      // 전용 무기 말풍선의 기술 카드
+      for (const slot of spiritsVM(this.session.state, s.id).detail.equip) {
+        if (slot?.tip.sheet.card) preloadHandCard(this, slot.tip.sheet.card.vm, { showRarity: true });
+      }
     }
     preloadSpiritArt(this, [...this.session.state.spirits.map((s) => s.id), ...MOCKUPS.map((m) => m.id)]);
   }
@@ -132,7 +142,11 @@ export class SpiritsScene extends Phaser.Scene {
     }
     drawScrim(this);
     drawTopbar(this, vm.material);
-    drawIdCard(this, d);
+    this.equipTip = [];
+    drawIdCard(this, d, {
+      over: (i, r) => this.showEquipTip(vm, i, r),
+      out: () => this.hideEquipTip(),
+    });
     if (this.open) {
       drawPanel(this, d, this.tab, {
         tab: (t) => this.show(this.selected, t, true),
@@ -154,6 +168,25 @@ export class SpiritsScene extends Phaser.Scene {
     drawStrip(this, vm, this.stripFrom, (id) => this.show(id, this.tab, this.open));
     this.shown = { id: vm.selected, art: d.art, rows: this.open && this.tab === "overview" ? d.overview.rows : undefined };
     this.paintPick();
+  }
+
+  /** 장비 칸에 올리면 뜨는 것(밝은 테 · 말풍선). 화면을 다시 그리지 않고 얹었다 지워요 */
+  private equipTip: Phaser.GameObjects.GameObject[] = [];
+
+  private showEquipTip(vm: SpiritsVM, i: number, r: Rect) {
+    this.hideEquipTip();
+    const slot = vm.detail.equip[i];
+    if (!slot) return;
+    const before = new Set(this.children.list);
+    drawMiniSlotHot(this, r, EQUIP_MINI.s32);
+    const top = r.y + r.h + EQUIP_MINI.pip.mt + EQUIP_MINI.pip.d + EQUIP_TIP.gapToLane;
+    drawEquipTip(this, slot.tip, { kind: "under", left: r.x, top }, vm.roster.find((t) => t.id === vm.selected));
+    this.equipTip = this.children.list.filter((o) => !before.has(o));
+  }
+
+  private hideEquipTip() {
+    for (const o of this.equipTip) o.destroy();
+    this.equipTip = [];
   }
 
   /** 키우기: 갈래 고르기면 창을 열고, 아니면 바로 키워요 */
