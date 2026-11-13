@@ -1,5 +1,5 @@
 // 규칙 데이터(정령·카드) → 런 화면 값 (카드, 정령 줄). 고정 장면과, 런에 연결할 때 함께 써요.
-import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, cardDef, equipDef, spiritDef } from "../../core/data";
+import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, cardDef, equipDef, equipName, spiritDef } from "../../core/data";
 import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round } from "../../core/stats";
 import { describeCard } from "../../core/text";
 import type { CardDef, CardOp, RunEquip, RunSpirit, Stage } from "../../core/types";
@@ -68,7 +68,7 @@ export function cardVM(cardId: string, ownerId?: string): CardVM {
 export function equipVM(e: RunEquip, stage: Stage): EquipVM {
   const def = equipDef(e.id);
   return {
-    id: e.id, rarity: def.rarity, rarityName: EQUIP_RARITY_NAME[def.rarity],
+    id: e.id, name: equipName(e.id), rarity: def.rarity, rarityName: EQUIP_RARITY_NAME[def.rarity],
     resonance: resonanceOf(e), cap: Math.min(resonanceCap(stage), def.tiers.length),
   };
 }
