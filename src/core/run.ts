@@ -3,7 +3,7 @@ import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
 import { Rng } from "./rng";
 import { equipSlots, maxHpOf, resonanceOf } from "./stats";
 import { ENEMY_TRAITS } from "./types";
-import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, Obtain, Rarity, RunSpirit } from "./types";
+import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, Obtain, Rarity, RunEquip, RunSpirit } from "./types";
 
 export type NodeType = "battle" | "elite" | "event" | "shop" | "rest" | "boss";
 
@@ -369,19 +369,46 @@ export class Run {
    * 같은 장비를 이미 지녔으면 이번 런 동안 공명이 1 올라요. 칸이 꽉 찼으면 replaceId를 내려놓고 받아요(내려놓은 장비는 사라져요).
    */
   giveEquipment(equipId: string, spiritId: string, replaceId?: string) {
+    const s = this.spirit(spiritId);
+    const after = this.withEquipment(equipId, spiritId, replaceId);
+    s.equipment = after.equipment;
+    s.hp = after.hp;
+  }
+
+  /**
+   * 이 장비를 받은 뒤의 정령 (런은 바꾸지 않아요). 화면의 미리보기와 `giveEquipment`가 같이 써요.
+   * 최대 HP가 줄면 지금 HP도 그 안으로 맞춰요.
+   */
+  withEquipment(equipId: string, spiritId: string, replaceId?: string): RunSpirit {
     if (!this.equipTakers(equipId).some((s) => s.id === spiritId)) throw new Error(`${spiritId}는 ${equipId}를 받을 수 없어요`);
     const s = this.spirit(spiritId);
-    const held = s.equipment.find((e) => e.id === equipId);
+    let equipment: RunEquip[] = s.equipment.map((e) => ({ ...e }));
+    const held = equipment.find((e) => e.id === equipId);
     if (held) {
       held.runBonus = (held.runBonus ?? 0) + 1;
-      return;
+    } else {
+      const fresh: RunEquip = { id: equipId, resonance: 1, from: "run" };
+      if (this.needsReplace(equipId, spiritId)) {
+        // 내려놓은 장비의 칸에 그대로 들어가요
+        if (!equipment.some((e) => e.id === replaceId)) throw new Error(`${spiritId}의 장비 칸이 꽉 찼어요`);
+        equipment = equipment.map((e) => (e.id === replaceId ? fresh : e));
+      } else {
+        equipment.push(fresh);
+      }
     }
-    if (this.needsReplace(equipId, spiritId)) {
-      const i = s.equipment.findIndex((e) => e.id === replaceId);
-      if (i < 0) throw new Error(`${spiritId}의 장비 칸이 꽉 찼어요`);
-      s.equipment.splice(i, 1);
-    }
-    s.equipment.push({ id: equipId, resonance: 1, from: "run" });
+    const after: RunSpirit = { ...s, equipment };
+    after.hp = Math.min(s.hp, maxHpOf(after));
+    return after;
+  }
+
+  /**
+   * 이 정령이 지닌 전용 무기가 바꾸는 카드 (0055 · 0056): 대표 카드 → 갈래의 기술.
+   * 갈래가 없거나(유체) 그 갈래의 기술이 없으면 undefined예요.
+   */
+  signatureSwap(s: Pick<RunSpirit, "branch">, e: RunEquip): { from: string; to: string } | undefined {
+    const sig = equipDef(e.id).signature;
+    const to = sig && s.branch ? sig.techniques[s.branch]?.[resonanceOf(e) - 1] : undefined;
+    return sig && to ? { from: sig.card, to } : undefined;
   }
 
   /**
@@ -392,11 +419,10 @@ export class Run {
     const swap = new Map<number, string>();
     for (const s of this.spirits) {
       for (const e of s.equipment) {
-        const sig = equipDef(e.id).signature;
-        const technique = sig && s.branch ? sig.techniques[s.branch]?.[resonanceOf(e) - 1] : undefined;
-        if (!sig || !technique) continue;
-        const card = this.deck.find((c) => c.owner === s.id && c.cardId === sig.card && !swap.has(c.uid));
-        if (card) swap.set(card.uid, technique);
+        const sw = this.signatureSwap(s, e);
+        if (!sw) continue;
+        const card = this.deck.find((c) => c.owner === s.id && c.cardId === sw.from && !swap.has(c.uid));
+        if (card) swap.set(card.uid, sw.to);
       }
     }
     return this.deck.map((c) => (swap.has(c.uid) ? { ...c, cardId: swap.get(c.uid)! } : c));

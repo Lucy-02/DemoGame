@@ -8,7 +8,7 @@ import encountersJson from "../data/encounters.json";
 import eventsJson from "../data/events.json";
 import assetsJson from "../data/assets.json";
 import growthJson from "../data/growth.json";
-import { DEFAULT_LOCALE, cardText, type Locale } from "./l10n";
+import { DEFAULT_LOCALE, cardText, equipText, type Locale } from "./l10n";
 import type {
   CardData, CardDef, EncounterDef, EnemyDef, EnemyMove, EnemyScale, EquipDef, EquipRarity, EventDef, GrowthDef, PersonalityDef, SpiritDef, Element,
 } from "./types";
@@ -120,6 +120,9 @@ export const RARITY_NAME: Record<string, string> = {
   basic: "기본", common: "일반", advanced: "고급", rare: "희귀",
 };
 /** 장비 희귀도 이름 (0061) */
+/** 장비 이름 (지금 언어) */
+export const equipName = (id: string) => equipText(equipDef(id).id, currentLocale()).name;
+
 export const EQUIP_RARITY_NAME: Record<EquipRarity, string> = { generic: "일반", exclusive: "유니크", boss: "전설" };
 
 /** 공격 속성 → 대상 속성 배율. */

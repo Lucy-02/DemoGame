@@ -36,25 +36,42 @@ export const RING = {
   badge: { d: 30, icon: 16, outer: 3, at: [[102, 10], [112, 44]] as [number, number][] },
 };
 
-/** .info left 172(+1) width 250, 세로 가운데(top 18 ~ 줄 아래) gap 10 */
+/** .info left 172(+1) width 204 (장비 칸 자리를 낸 폭, 0064 Q2-A), 세로 가운데(top 18 ~ 줄 아래) gap 10 */
 export const INFO = {
-  x: 173, top: 18, w: 250, gap: 10,
+  x: 173, top: 18, w: 204, gap: 10,
   /** .nm gap 10, 줄 높이 1.35 · .lv.up padding 0 9 0 6 높이 22 radius 11 gap 4 기호 13 */
   name: { gap: 10, lh: 1.35 }, levelUp: { h: 22, radius: 11, pad: [0, 9, 0, 6] as [number, number, number, number], gap: 4, icon: 13, alpha: 0.34 },
-  /** .hp3 gap 7 · .hpv baseline gap 4 · .hpbar3 236×10 */
-  hp: { gap: 7, numGap: 4, bar: { w: 236, h: 10 }, minFill: 0.022 },
+  /** .hp3 gap 7 · .hpv baseline gap 4 · .bar 190×10 (0064 Q2-A 폭) */
+  hp: { gap: 7, numGap: 4, bar: { w: 190, h: 10 }, minFill: 0.022 },
   /** .stats3 gap 16 · .st3 padding 1 8 1 6 margin-left -6 gap 6 기호 15 (.on 17) · 밝히지 않은 능력치 .4 */
   stats: { gap: 16, pad: [1, 8, 1, 6] as [number, number, number, number], ml: -6, iconGap: 6, icon: 15, iconOn: 17, dim: 0.4 },
   /** .chip3.new 높이 24 radius 11 padding 0 9 gap 5 기호 14 · 바탕 acc .28 */
   chip: { h: 24, radius: 11, padX: 9, gap: 5, icon: 14, alpha: 0.28, rowGap: 8 },
 };
 
-/** .sock right 28 top 18 96×134 radius 8 점선 · .pick.hot 바깥 3px accHi + 빛 22 (.35) · 작은 카드 left 2 top 2.5 */
+/** .cslot left 456(+1) (0064 Q2-A) top 18 96×134 radius 8 점선 · .pick.hot 바깥 3px accHi + 빛 22 (.35) · 작은 카드 left 2 top 2.5 */
 export const SOCKET = {
-  x: 443, y: 19, w: 96, h: 134, radius: 8, ring: 1, dash: 4, lineAlpha: 0.15,
+  x: 457, y: 19, w: 96, h: 134, radius: 8, ring: 1, dash: 4, lineAlpha: 0.15,
   card: { x: 2, y: 2.5 }, hot: { ring: 3, glow: 22, glowAlpha: 0.35 },
   /** .sock.ok 이 줄이 받을 수 있음: 점선 accHi + 바탕 accHi .07 */
   okFill: 0.07,
   /** .dk3 덱 장수 a→b: 칸 아래 가운데 (줄 y + 161, 높이 30), 기호 18 gap 6 */
   deck: { y: 161, h: 30, icon: 18, gap: 6 },
 };
+
+/** 장비 칸 (0064 Q2-A): .slots left 384(+1) 세로 가운데 gap 10 · .slot 60×60 radius 10 (바탕 veil .05, 테 veil .2)
+ *  그림 inset 4 8 4 2 · 빈 칸은 점선 veil .24 · .cand 점선 accHi · .ghost 점선 accHi + pvFill, 그림 .8 · .hov 바깥 3px accHi .16 */
+export const EQUIP_SLOT = {
+  x: 385, size: 60, gap: 10, radius: 10, ring: 1, dash: 4,
+  art: { x: 2, y: 4, w: 50, h: 52 }, emptyLine: 0.24, ghostArt: 0.8,
+  hot: { outer: 3, alpha: 0.16 },
+  /** .pips 오른쪽 4, 세로 가운데, 아래에서 위로 gap 3 · .p 5×5 테 1 veil .4 · .on ink2 */
+  pip: { d: 5, gap: 3, right: 4, ring: 1, offLine: 0.4 },
+  /** .rar left -5 top -5 · 마름모 9×9 (45°) radius 1.5, 바깥 테 2 · 둘째는 12 옆 (전설) */
+  mark: { x: -5, y: -5, d: 9, outline: 2, step: 12 },
+  /** .old 내려놓을 장비: right -13 bottom -13 지름 32, 테 1 danger, 그림 inset 3 (.7), 빗금 1.5 */
+  old: { d: 32, out: 13, inset: 3, alpha: 0.7, line: 1.5 },
+};
+
+/** .row.dim 받을 수 없는 줄의 내용 .38 (0064 Q2-A) */
+export const LANE_PREVIEW = { dim: 0.38 };

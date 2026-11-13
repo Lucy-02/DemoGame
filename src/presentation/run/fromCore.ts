@@ -1,15 +1,15 @@
 // 규칙 데이터(정령·카드) → 런 화면 값 (카드, 정령 줄). 고정 장면과, 런에 연결할 때 함께 써요.
-import { C, ELEMENT_NAME, cardDef, spiritDef } from "../../core/data";
-import { baseStat, maxHpOf, round } from "../../core/stats";
+import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, cardDef, equipDef, equipName, spiritDef } from "../../core/data";
+import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round } from "../../core/stats";
 import { describeCard } from "../../core/text";
-import type { CardDef, CardOp, RunSpirit } from "../../core/types";
+import type { CardDef, CardOp, RunEquip, RunSpirit, Stage } from "../../core/types";
 import { isCardArtId } from "../card/art";
 import type { CardRarity, CardVM, CardValueVM, Material, RichText } from "../card/viewmodel";
 import type { FaceId } from "../faces";
 import { spiritArt } from "../spiritArt";
 import { ELEMENT_ICON } from "../spirits/fromGarden";
 import { COPY, MATERIAL_NAME } from "./copy";
-import { STAT_IDS, type LaneVM, type StatId } from "./viewmodel";
+import { STAT_IDS, type EquipVM, type LaneVM, type StatId } from "./viewmodel";
 
 /** 카드 그림 창 윗선은 정본 세 정령 모양뿐이에요. 다른 정령은 속성이 같은 모양을 임시로 빌려요 (0044 열린 질문) */
 const WINDOW_OF: Record<string, FaceId> = { fire: "fire", water: "jelly" };
@@ -64,6 +64,25 @@ export function cardVM(cardId: string, ownerId?: string): CardVM {
   };
 }
 
+/** 장비 하나. 공명 점 수는 이 단계의 상한과 장비의 단계 수 중 작은 쪽이에요 */
+export function equipVM(e: RunEquip, stage: Stage): EquipVM {
+  const def = equipDef(e.id);
+  return {
+    id: e.id, name: equipName(e.id), rarity: def.rarity, rarityName: EQUIP_RARITY_NAME[def.rarity],
+    resonance: resonanceOf(e), cap: Math.min(resonanceCap(stage), def.tiers.length),
+  };
+}
+
+/** 정령 줄에서 장비에 따라 바뀌는 값: HP · 능력치 · 칸 */
+function equipPart(rs: RunSpirit): Pick<LaneVM, "hp" | "maxHp" | "stats" | "slots"> {
+  const stats = Object.fromEntries(STAT_IDS.map((k) => [k, round(baseStat(rs, k))])) as Record<StatId, number>;
+  const slots = Array.from({ length: equipSlots(rs.stage) }, (_, i) => (rs.equipment[i] ? equipVM(rs.equipment[i], rs.stage) : null));
+  return { hp: rs.hp, maxHp: maxHpOf(rs), stats, slots };
+}
+
+/** 같은 줄을 정령의 새 상태(장비를 받은 뒤)로 다시 그릴 값 */
+export const laneWith = (l: LaneVM, rs: RunSpirit): LaneVM => ({ ...l, ...equipPart(rs) });
+
 export interface LaneExtras {
   exp: LaneVM["exp"];
   levelUp?: boolean;
@@ -76,11 +95,10 @@ export interface LaneExtras {
 /** 정령 줄. 능력치는 단계·성격 보정을 넣은 값이에요 (0044) */
 export function lane(rs: RunSpirit, extras: LaneExtras = { exp: { before: 0, after: 0 } }): LaneVM {
   const art = spiritArt(rs.id, rs.stage);
-  const stats = Object.fromEntries(STAT_IDS.map((k) => [k, round(baseStat(rs, k))])) as Record<StatId, number>;
   return {
     id: rs.id, name: spiritDef(rs.id).name, level: rs.level, levelUp: extras.levelUp,
-    hp: rs.hp, maxHp: maxHpOf(rs), down: extras.down, exp: extras.exp,
+    ...equipPart(rs), down: extras.down, exp: extras.exp,
     face: art?.crop && { key: art.body, crop: art.crop },
-    stats, badges: extras.badges ?? [], unlocked: extras.unlocked ?? [], deck: extras.deck,
+    badges: extras.badges ?? [], unlocked: extras.unlocked ?? [], deck: extras.deck,
   };
 }

@@ -21,3 +21,14 @@ export function cardText(id: string, locale: Locale = DEFAULT_LOCALE): CardText 
 
 /** 표에 있는 카드 id (검사용) */
 export const cardTextIds = (locale: Locale) => Object.keys(cardTable(locale));
+
+/** 장비 이름 (0065). 다른 언어에 없으면 기본 언어로 보여요 */
+const equipTable = (locale: Locale): Table<CardText> => LOCALES[locale].equipment;
+
+export function equipText(id: string, locale: Locale = DEFAULT_LOCALE): CardText {
+  const text = equipTable(locale)[id] ?? equipTable(DEFAULT_LOCALE)[id];
+  if (!text) throw new Error(`no equipment text: ${id}`);
+  return text;
+}
+
+export const equipTextIds = (locale: Locale) => Object.keys(equipTable(locale));

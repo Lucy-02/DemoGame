@@ -6,6 +6,21 @@ import type { Crop } from "../spirits/artFit";
 export type StatId = "power" | "guard" | "focus";
 export const STAT_IDS: readonly StatId[] = ["power", "guard", "focus"];
 
+/** 장비 희귀도 (0056 · 0061): 일반 · 유니크 · 전설 */
+export type EquipRarityId = "generic" | "exclusive" | "boss";
+
+/** 칸에 놓이는 장비 하나 (0064) */
+export interface EquipVM {
+  id: string;
+  /** 이름이 아직 없으면(TODO_NAME) 비워요. 화면은 이름 자리를 그리지 않아요 */
+  name?: string;
+  rarity: EquipRarityId;
+  rarityName: string;
+  /** 지금 공명과, 이 정령이 올릴 수 있는 상한 (공명 점 수) */
+  resonance: number;
+  cap: number;
+}
+
 export interface LaneVM {
   id: string;
   name: string;
@@ -25,6 +40,8 @@ export interface LaneVM {
   badges: IconId[];
   /** 새로 열린 카드 이름 */
   unlocked: string[];
+  /** 장비 칸. 길이 = 지닐 수 있는 수, 빈 칸은 null (0064) */
+  slots: (EquipVM | null)[];
   /** 이 정령의 덱 장수 (상점: 카드를 살 때 a→b로 보여요) */
   deck?: number;
 }

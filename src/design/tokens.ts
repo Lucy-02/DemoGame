@@ -319,7 +319,14 @@ export const tokens = {
         "deck": "22px",
         "price": "17px",
         "service": "24px",
-        "servicePrice": "22px"
+        "servicePrice": "22px",
+        "equipName": "18px",
+        "equipMeta": "12px",
+        "statDelta": "16px",
+        "tipTitle": "15px",
+        "tipTag": "11px",
+        "tipBody": "12.5px",
+        "tipStat": "18px"
       },
       "branch": {
         "name": "26px",

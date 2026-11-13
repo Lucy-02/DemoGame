@@ -119,13 +119,14 @@ export function measure(text: string, size: string, letterSpacing = 0): number {
 
 /**
  * 글자 조각들을 maxW 폭에 맞춰 줄로 나눠요 (브라우저 기본 줄바꿈: 공백과 한글 음절 사이에서 끊김).
- * 줄 끝 공백은 버려요.
+ * 줄 끝 공백은 버려요. keepAll이면 낱말 안에서 끊지 않아요 (CSS word-break: keep-all).
  */
-export function wrapSpans(spans: Span[], maxW: number): Span[][] {
+export function wrapSpans(spans: Span[], maxW: number, keepAll = false): Span[][] {
   // 끊을 수 있는 단위로 쪼개기: 한글 한 음절, 공백 하나, 나머지 글자 묶음
   const units: Span[] = [];
+  const unit = keepAll ? /\s|\S+/g : /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]|\s|[^\s\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+/g;
   for (const s of spans) {
-    for (const piece of s.text.match(/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]|\s|[^\s\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+/g) ?? []) {
+    for (const piece of s.text.match(unit) ?? []) {
       units.push({ ...s, text: piece });
     }
   }

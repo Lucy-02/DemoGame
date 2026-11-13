@@ -6,6 +6,8 @@ export const COPY = {
   sep: " · ",
   /** a→b (골드, 덱 장수) */
   arrow: "→",
+  /** 능력치 증감 칩 (TEXT_RULES 숫자·기호: 부호는 수에 붙여요) */
+  delta: (n: number) => (n > 0 ? `+${n}` : String(n)),
   /** 주인이 정해지지 않은 카드의 말풍선 주인 줄 (P1 f3) */
   shared: "공용",
 };

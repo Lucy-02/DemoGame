@@ -11,8 +11,8 @@
 - 카드 데이터 파일에는 문구를 적지 않아요. 이름은 `design/canon/naming/cards.csv`에서 정하고 `locales`로 옮겨요.
 - 카드 `ms`는 기본 시간이에요. 실제 시간 = ms × 10 ÷ 정령 스피드(0036). 지금 값은 비용·역할로 잡은 시험 가정값이에요(`TODO_TOKEN`, 플레이테스트 뒤 정함).
 - 적 행동 시각은 패턴 행동의 `at`(ms), 없으면 `constants.json`의 `enemy_at`(등급별). 축 길이 `axis_ms`, 허점 창 `opening_window_ms` · 배율 `opening_mult`, 빙결 늦춤 `freeze_delay_ms`도 시험 가정값이에요.
-- 카드 그림은 `public/assets/cards/<카드 id>.webp`, 장비 그림은 `public/assets/equipment/<장비 id>.webp`예요.
-- 장비의 능력치 보정 `op: add`는 층 4(고정값), `op: pct`는 층 5(영구 배율, 성격과 더해서 한 번 곱함), `when`이 있으면 전투 조건부 층이에요(`src/core/stats.ts` · `docs/architecture/0003-battle-engine.md`). `effects[].passive`는 `src/core/battle/passives.ts`의 `EQUIP_PASSIVES` 키예요.
+- 카드 그림은 `public/assets/cards/<카드 id>.webp`, 장비 그림은 `public/assets/equipment/<장비 id>.webp`예요. 장비 이름은 `locales/<언어>/equipment.json`에 있어요(0065).
+- 장비의 능력치 보정 `op: add`는 층 4(고정값), `op: pct`는 층 5(영구 배율, 성격과 더해서 한 번 곱함), `when`이 있으면 전투 조건부 층이에요(`src/core/stats.ts` · `docs/architecture/0003-battle-engine.md`). `effects[].passive`는 `src/core/battle/passives.ts`의 `EQUIP_PASSIVES` 키예요. 효과를 더하면 `src/core/text.ts`의 `EQUIP_PASSIVE_TEXT`에 효과문도 더해요(테스트가 빠진 것을 잡아요).
 - `growth.json`의 `equip_slots`는 단계별(유체 · 성체 · 각성체) 장비 칸 수예요. 지니는 수와 런 끝에 남기는 수가 같아요(0056). `equip_resonance_cap`은 단계별 공명 상한 시험 가정값이에요.
 - `pnpm test`(`data.test.ts`)가 형식, id 중복, 묶음·언어 목록 누락, 문구 누락을 잡아요.
 - `cards/techniques.json`은 전용 무기가 대표 카드 자리에 넣는 기술 카드예요(`obtain: "equipment"`). id는 `<대표 카드>_<갈래>_<공명>`이고, 이름은 갈래마다 하나예요(0061). 보상이나 상점에는 나오지 않아요.
