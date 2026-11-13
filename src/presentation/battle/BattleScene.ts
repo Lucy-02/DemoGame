@@ -8,15 +8,11 @@ import { darken } from "../style/opacity";
 import { canonRest } from "./fixtures/canonRest";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
-import { unitTipContent } from "./views/unitTip";
-import { GLASS } from "../tooltip/skins";
-import { drawTooltip } from "../tooltip/Tooltip";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
-import { ALLY, BAND, DRAG, ENEMY, FRAME, INFO, LIFT_STYLES, SYS, TARGETING } from "./layout";
-import type { Rect } from "../run/equip";
+import { ALLY, BAND, DRAG, ENEMY, LIFT_STYLES, SYS, TARGETING } from "./layout";
 import { SYS_ICONS, drawSys } from "./views/topbar";
-import { drawAlly, drawEnemy, preloadUnits, type UnitBounds } from "./views/units";
+import { drawAlly, drawEnemy, drawOpenAlly, drawOpenEnemy, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 
 export const BATTLE_SCENE = "battle";
@@ -53,6 +49,8 @@ export class BattleScene extends Phaser.Scene {
   private previews = new Map<string, Phaser.GameObjects.Container>();
   private shown: Phaser.GameObjects.Container | null = null;
   private bounds: { ref: UnitRef; box: UnitBounds }[] = [];
+  /** 쉬는 필드의 접힌 정보판 (가리켜서 길어진 판이 덮는 동안 숨겨요) */
+  private plates: { ref: UnitRef; plate: Phaser.GameObjects.Container }[] = [];
   private hand!: HandView;
 
   // 대상 고르기 상태: 누른 카드(끌기 전), 끄는 카드, 클릭으로 집은 카드, 포인터가 집은 카드 아닌 손패 카드 위인지
@@ -70,7 +68,7 @@ export class BattleScene extends Phaser.Scene {
     drawBand(this);
     drawMana(this, this.vm.mana);
     drawEnd(this, this.vm);
-    // 가리킨 유닛의 설명판은 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
+    // 가리킨 유닛의 길어진 판은 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
     this.showHover(hov < 0 ? null : { side: "enemy", i: hov });
     this.hand = createHand(this, this.vm.hand, {
@@ -118,7 +116,7 @@ export class BattleScene extends Phaser.Scene {
       this.showFocus(start.card, where);
       this.showHover(null);
     }
-    // ?hover=unit:<ally|enemy>:<번호> = 그 유닛을 가리킨 모습. ?hover=equip:<아군 번호>(:<칸>) 는 그 아군을 가리킨 모습 (설명판에 장비 칸)
+    // ?hover=unit:<ally|enemy>:<번호> = 그 유닛을 가리킨 모습. ?hover=equip:<아군 번호>(:<칸>) 는 그 아군을 가리킨 모습 (길어진 판에 장비 칸)
     const unit = this.hover?.match(/^unit:(ally|enemy):(\d+)$/);
     const eq = this.hover?.match(/^equip:(\d+)(?::\d+)?$/);
     if (unit) {
@@ -141,11 +139,13 @@ export class BattleScene extends Phaser.Scene {
     this.hoverUnit(p.x, p.y);
   }
 
-  // ── 가리킴 (0067 추기): 접힌 판 바로 아래 설명판 하나. 판은 늘어나지 않아요.
-  //    카드를 집거나 끄는 동안에는 띄우지 않아요 ──
+  // ── 가리킴 (0067 추기): 정보판이 폭·자리 그대로 아래로만 길어져요. 따로 뜨는 설명판은 없어요.
+  //    카드를 집거나 끄는 동안에는 길어지지 않아요 ──
 
   private hoverRef: UnitRef | null = null;
-  private hoverTip: Phaser.GameObjects.Container | null = null;
+  /** 길어진 판과 그 자리 (판 위에 있는 동안은 같은 유닛을 가리키는 것으로 봐요) */
+  private hoverPlate: Phaser.GameObjects.Container | null = null;
+  private hoverRect: UnitBounds | null = null;
 
   /** 포인터 아래 유닛 (쉬는 필드 판정 영역) */
   private unitAt(x: number, y: number): UnitRef | null {
@@ -155,24 +155,25 @@ export class BattleScene extends Phaser.Scene {
 
   private hoverUnit(x: number, y: number) {
     if (this.dragging || this.held || this.press) return;
+    if (this.hoverRect && inside(this.hoverRect, x, y)) return;
     this.showHover(this.unitAt(x, y));
   }
 
   private showHover(ref: UnitRef | null) {
     if (same(ref, this.hoverRef)) return;
-    this.hoverTip?.destroy();
-    this.hoverTip = null;
+    this.hoverPlate?.destroy();
+    this.hoverPlate = null;
+    this.hoverRect = null;
     this.hoverRef = ref;
-    const box = ref && this.bounds.find((b) => same(b.ref, ref))?.box;
-    if (ref && box) this.hoverTip = this.unitTip(ref, box);
-  }
-
-  /** 설명판: 정보판(under) 가운데 아래, 화면 양쪽 여백(시스템 버튼과 같은 값) 안으로 */
-  private unitTip(ref: UnitRef, under: Rect) {
-    const content = unitTipContent(this, this.vm, ref);
-    const left = Math.max(SYS.right, Math.min(under.x + under.w / 2 - GLASS.w / 2, FRAME.w - SYS.right - GLASS.w));
-    const c = drawTooltip(this, { skin: GLASS, content, at: { left, top: under.y + under.h + INFO.tipGap } });
-    return c.setDepth(DRAG.depth);
+    for (const p of this.plates) p.plate.setVisible(!same(p.ref, ref));
+    if (!ref) return;
+    // 필드 층 맨 위(손패 띠 아래)에 그려요. 폭이 같아서 옆 유닛 판을 덮지 않고 아래 빈 필드로만 길어져요
+    this.hoverPlate = gather(this, 0, 0, () => {
+      this.hoverRect = ref.side === "ally"
+        ? drawOpenAlly(this, this.vm.allies[ref.i], ref.i)
+        : drawOpenEnemy(this, this.vm.enemies[ref.i], ref.i);
+    });
+    this.fieldLayer.add(this.hoverPlate);
   }
 
   /** 포인터 자리에 맞춰 끄는 카드와 필드를 다시 맞춰요 */
@@ -264,6 +265,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
 
+  /** 쉬는 필드의 유닛: 판정 영역과 접힌 정보판을 기억해요 */
+  private rested(ref: UnitRef, v: UnitView) {
+    this.bounds.push({ ref, box: v.bounds });
+    this.plates.push({ ref, plate: v.plate });
+  }
+
   /** 필드 한 장: 순서표·아군·적. focus가 있으면 그 강조·결과로, 없으면 쉬는 필드 */
   private drawField(f: Focus | null): Phaser.GameObjects.Container {
     const o = f?.outcome;
@@ -279,15 +286,15 @@ export class BattleScene extends Phaser.Scene {
       this.vm.allies.forEach((a, i) => {
         const ref = { side: "ally", i } as const;
         unit(ref, () => {
-          const box = drawAlly(this, a, i, { outcome: o?.incoming[i], lit: lit(ref) });
-          if (!f) this.bounds.push({ ref, box });
+          const v = drawAlly(this, a, i, { outcome: o?.incoming[i], lit: lit(ref) });
+          if (!f) this.rested(ref, v);
         });
       });
       this.vm.enemies.forEach((e, i) => {
         const ref = { side: "enemy", i } as const;
         unit(ref, () => {
-          const box = drawEnemy(this, e, i, { outcome: o?.enemies[i], lit: lit(ref) });
-          if (!f) this.bounds.push({ ref, box });
+          const v = drawEnemy(this, e, i, { outcome: o?.enemies[i], lit: lit(ref) });
+          if (!f) this.rested(ref, v);
         });
       });
     });
@@ -298,4 +305,4 @@ export class BattleScene extends Phaser.Scene {
 }
 
 const same = (a: UnitRef | null, b: UnitRef | null) => a === b || (!!a && !!b && a.side === b.side && a.i === b.i);
-const inside = (b: Rect, x: number, y: number) => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
+const inside = (b: UnitBounds, x: number, y: number) => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;

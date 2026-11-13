@@ -30,8 +30,6 @@ export interface TipSkin {
   roles: { body: RoleStyle } & Partial<Record<TipRole, RoleStyle>>;
   /** 용어 점선 밑줄 text-underline-offset (없으면 밑줄 없이) */
   termOffset?: number;
-  /** 낱말 안에서 줄을 끊지 않아요 (CSS word-break: keep-all) */
-  keepAll?: boolean;
   /** 아래 꼬리: 45° 돌린 정사각형, 아래 두 변에 선 */
   tail?: { size: number; line: number; lineColor: string };
   /** 나타날 때 이만큼 아래에서 올라와요 (움직임 시간·곡선은 provisional.motion.hover) */
@@ -57,15 +55,4 @@ export const PAPER: TipSkin = {
   termOffset: 3,
   tail: { size: 14, line: 1, lineColor: P.cardLine },
   enterY: 6,
-};
-
-/** 적 설명판 (.etip): width 262, radius 12, padding 10 12 11, gap 5, line-height 1.45, 테 1 glass-line, 그림자 0 10 26
- *  이름·등급 머리(h4)는 펼친 정보판으로 옮겨서 없어요 (정보판 C안) */
-export const GLASS: TipSkin = {
-  w: 262, pad: [10, 12, 11, 12], radius: 12, gap: 5, keepAll: true,
-  fill: P.glassD, ring: { width: 1, color: P.glassLine },
-  shadow: { y: 10, blur: 26, color: P.tipShadow },
-  roles: {
-    body: role(T.tipBody, T.tipStrong, P.ink2, P.ink, 1.45),
-  },
 };

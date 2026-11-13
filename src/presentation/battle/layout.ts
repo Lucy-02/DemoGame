@@ -48,7 +48,7 @@ export const ENEMY = {
 /** .ground 104×14, 발 y에 가운데. radial-gradient(closest-side, shade, transparent) */
 export const GROUND = { w: 104, h: 14 };
 
-/** 정보판 (.col .plate). 두 줄이고 늘어나지 않아요. 자세한 것은 가리키면 판 아래 설명판에 (0067 추기) */
+/** 정보판 (.col .plate). 두 줄, 가리키면 폭·자리 그대로 아래로만 길어져요 (.more, 0067 추기) */
 export const INFO = {
   /** .col top = 발 + 10 */
   mt: 10,
@@ -72,20 +72,18 @@ export const INFO = {
   lethalRing: 1.5, litRing: 1.5,
   /** 약점 표지 .weak 18, ::before inset 2 rotate(45deg) 테 1.5 radius 2, .ic 11 */
   weak: { size: 18, inset: 2, ring: 1.5, radius: 2, icon: 11 },
-  /** 설명판 머리의 기호 줄 (.mrow gap 5 min-height 18) */
-  tipRow: { gap: 5, minH: 18 },
-  /** 설명판 머리 속성 원 (.elc 18, .ic 12) */
+  /** .more padding-top 4 margin-top 2 border-top 1 gap 5 · .mrow gap 5 min-height 18 · 적 행동 문장 line-height 1.45 (.etip) */
+  more: { padTop: 4, mt: 2, line: 1, gap: 5, rowGap: 5, rowMinH: 18, lh: 1.45 },
+  /** 속성 원 (.elc 18, .ic 12) */
   element: { d: 18, icon: 12 },
-  /** 설명판 상태 칩 (.chipS height 20 padding 0 6 0 4 radius 10 gap 2, .ic 12) */
+  /** 상태 칩 (.chipS height 20 padding 0 6 0 4 radius 10 gap 2, .ic 12) */
   chip: { h: 20, pad: [0, 6, 0, 4] as [number, number, number, number], radius: 10, gap: 2, icon: 12 },
   /** .flag .ic 12 (앞열 깃발) */
   flag: { icon: 12 },
   /** .tag padding 1 6 radius 9, inset 1 */
   tag: { pad: [1, 6, 1, 6] as [number, number, number, number], radius: 9, ring: 1 },
-  /** 장비 칸 줄 (0066): 아군 설명판 머리 끝, 칸 사이 5 */
+  /** 장비 칸 줄 (0066): 길어진 판, 칸 사이 5 */
   equipGap: 5,
-  /** .col gap 6: 정보판과 설명판 사이 */
-  tipGap: 6,
 };
 
 /** .intent top 212 height 28 padding 0 8 0 4 radius 14 gap 4 (.debuff radius 6) */
