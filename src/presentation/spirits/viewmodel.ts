@@ -1,6 +1,7 @@
 // 정령 관리 화면이 그리는 데이터. 화면은 이것만 보고 그려요 (정원 상태 → fromGarden.ts → 이 모양).
 import type { Stage } from "../../core/types";
 import type { IconId } from "../faces";
+import type { EquipTipVM, EquipVM } from "../run/viewmodel";
 import type { Crop, Fit, Frame } from "./artFit";
 
 export type TabId = "overview" | "growth" | "bond";
@@ -109,6 +110,8 @@ export interface SpiritDetailVM {
   /** 정해지지 않은 목업이면 undefined (???) */
   personality?: string;
   stats: StatVM[];
+  /** 남긴 장비 칸 (0056 · 0066). 빈 칸은 null. 목업은 칸이 없어요 */
+  equip: ({ item: EquipVM; tip: EquipTipVM } | null)[];
   tabs: TabVM[];
   facts: FactVM[];
   overview: {

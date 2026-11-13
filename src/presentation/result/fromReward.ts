@@ -1,44 +1,14 @@
 // 보상 세션 → 화면 값.
 import { cardDef, equipDef } from "../../core/data";
 import type { Run } from "../../core/run";
-import { baseStat } from "../../core/stats";
-import { describeCard, describeEquipTier, describeSignatureSwap } from "../../core/text";
-import type { EquipTier, RunEquip, RunSpirit } from "../../core/types";
+import type { RunEquip, RunSpirit } from "../../core/types";
 import type { RewardSession } from "../../session/reward";
-import { cardVM, equipVM, lane, laneWith, statOf } from "../run/fromCore";
+import { cardVM, equipSheet, lane, laneWith, statOf } from "../run/fromCore";
 import type { LaneVM } from "../run/viewmodel";
-import { COPY } from "./copy";
-import type { EquipChipVM, EquipOfferVM, EquipOptionVM, EquipSheetVM, EquipStatId, ResultVM } from "./viewmodel";
+import type { EquipOfferVM, EquipOptionVM, ResultVM } from "./viewmodel";
 
-const EQUIP_STATS: readonly string[] = ["hp", "power", "guard", "focus"] satisfies EquipStatId[];
-const pct = (v: number) => `${Math.round(Math.abs(v) * 100)}%`;
-
-/** 이 층이 조건 없이 주는 수치 (조건부 · 치명 · 스피드는 효과문으로 나와요) */
-const chips = (tier: EquipTier): EquipChipVM[] => (tier.stats ?? [])
-  .filter((m) => !m.when && EQUIP_STATS.includes(m.stat))
-  .map((m) => ({ stat: m.stat as EquipStatId, neg: m.value < 0, label: `${m.value < 0 ? "-" : "+"}${m.op === "pct" ? pct(m.value) : Math.abs(m.value)}` }));
-
-/**
- * 장비 하나의 설명. holder를 주면 그 정령이 지녔을 때의 모습이에요: 공명 점 상한, 갈래의 기술 카드, 그 정령 능력치로 계산한 카드 숫자.
- */
-function sheet(run: Run, e: RunEquip, holder?: RunSpirit): EquipSheetVM {
-  const def = equipDef(e.id);
-  const item = equipVM(e, holder?.stage ?? "awakened");
-  const tiers: EquipTier[] = [def.tiers[item.resonance - 1], ...(def.downside ? [def.downside] : [])];
-  const out: EquipSheetVM = { item, chips: tiers.flatMap(chips), lines: tiers.flatMap(describeEquipTier) };
-  if (def.signature && holder) {
-    const swap = run.signatureSwap(holder, e);
-    const inDeck = run.deck.some((c) => c.owner === holder.id && c.cardId === def.signature!.card);
-    if (swap && inDeck) {
-      out.lines.push(describeSignatureSwap(swap.from, swap.to));
-      const st = { power: baseStat(holder, "power"), guard: baseStat(holder, "guard"), focus: baseStat(holder, "focus") };
-      out.card = { vm: cardVM(swap.to, holder.id), text: describeCard(cardDef(swap.to), st) };
-    } else if (!swap) {
-      out.note = COPY.noBranch;
-    }
-  }
-  return out;
-}
+const sheet = (run: Run, e: RunEquip, holder?: RunSpirit) =>
+  equipSheet(e, holder, (cardId) => !!holder && run.deck.some((c) => c.owner === holder.id && c.cardId === cardId));
 
 /** 이 정령이 이 장비를 받는 방법 하나의 미리보기 */
 function option(run: Run, equipId: string, before: RunSpirit, laneBefore: LaneVM, replace?: RunEquip): EquipOptionVM {

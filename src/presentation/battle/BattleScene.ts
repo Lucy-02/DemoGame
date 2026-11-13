@@ -13,7 +13,11 @@ import { GLASS } from "../tooltip/skins";
 import { drawTooltip } from "../tooltip/Tooltip";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
-import { ALLY, BAND, DRAG, ENEMY, ETIP, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { ALLY, BAND, DRAG, ENEMY, ETIP, INFO, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { preloadHandCard } from "../card/HandCard";
+import { drawMiniSlotHot, type Rect } from "../run/equip";
+import { EQUIP_TIP_ICONS, drawEquipTip } from "../run/equipTip";
+import { EQUIP_MINI, EQUIP_TIP } from "../run/layout";
 import { SYS_ICONS, drawSys, drawWhere } from "./views/topbar";
 import { drawAlly, drawEnemy, preloadUnits, type UnitBounds } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
@@ -44,6 +48,10 @@ export class BattleScene extends Phaser.Scene {
     preloadOrder(this, this.vm.order);
     preloadUnits(this, this.vm);
     preloadHand(this, this.vm);
+    for (const [id, w] of EQUIP_TIP_ICONS) loadIcon(this, id, w);
+    for (const e of this.vm.allies.flatMap((a) => a.equip ?? [])) {
+      if (e.tip.sheet.card) preloadHandCard(this, e.tip.sheet.card.vm, { showRarity: true });
+    }
   }
 
   // 필드: 모든 필드 장은 이 층 안에 있어서, 나중에 그린 미리보기도 손패 띠 아래에 놓여요
@@ -118,7 +126,11 @@ export class BattleScene extends Phaser.Scene {
       this.showFocus(start.card, where);
       this.enemyHover.forEach((o) => o.setVisible(false));
     }
-    if (this.hover) this.hand.setHover(this.hover, true);
+    // ?hover=equip:<아군 번호>:<칸 번호> = 그 장비 칸에 올린 모습
+    const eq = this.hover?.match(/^equip:(\d+):(\d+)$/);
+    const at = eq && this.equipRects.find((r) => r.ally === Number(eq[1]) && r.k === Number(eq[2]))?.rect;
+    if (at) this.hoverEquip(at.x + at.w / 2, at.y + at.h / 2);
+    else if (this.hover) this.hand.setHover(this.hover, true);
   }
 
   // ── 입력 ──────────────────────────────────────────────
@@ -131,6 +143,31 @@ export class BattleScene extends Phaser.Scene {
       this.enemyHover.forEach((o) => o.setVisible(false));
     }
     this.refresh(p);
+    this.hoverEquip(p.x, p.y);
+  }
+
+  // ── 장비 칸 (0066): 올리면 밝은 테와 말풍선. 카드를 집거나 끄는 동안에는 뜨지 않아요 ──
+
+  private equipRects: { ally: number; k: number; rect: Rect }[] = [];
+  private equipOn?: string;
+  private equipTip: Phaser.GameObjects.GameObject[] = [];
+
+  private hoverEquip(x: number, y: number) {
+    const busy = this.dragging || this.held || this.press;
+    const hit = busy ? undefined : this.equipRects.find(({ rect: r }) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
+    const key = hit && `${hit.ally}:${hit.k}`;
+    if (key === this.equipOn) return;
+    this.equipOn = key;
+    for (const o of this.equipTip) o.destroy();
+    this.equipTip = [];
+    if (!hit) return;
+    const slot = this.vm.allies[hit.ally].equip?.[hit.k];
+    if (!slot) return;
+    const before = new Set(this.children.list);
+    drawMiniSlotHot(this, hit.rect, EQUIP_MINI.s24);
+    drawEquipTip(this, slot.tip, { kind: "under", left: ALLY.xs[hit.ally] - INFO.allyW / 2, top: hit.rect.y + hit.rect.h + INFO.pad[2] + EQUIP_TIP.gapToLane });
+    this.equipTip = this.children.list.filter((o) => !before.has(o));
+    for (const o of this.equipTip) (o as Phaser.GameObjects.Image).setDepth?.(DRAG.depth);
   }
 
   /** 포인터 자리에 맞춰 끄는 카드와 필드를 다시 맞춰요 */
@@ -236,7 +273,7 @@ export class BattleScene extends Phaser.Scene {
       this.vm.allies.forEach((a, i) => {
         const ref = { side: "ally", i } as const;
         unit(ref, () => {
-          const box = drawAlly(this, a, i, { outcome: o?.incoming[i], lit: lit(ref) });
+          const box = drawAlly(this, a, i, { outcome: o?.incoming[i], lit: lit(ref) }, f ? undefined : (k, rect) => this.equipRects.push({ ally: i, k, rect }));
           if (!f) this.bounds.push({ ref, box });
         });
       });

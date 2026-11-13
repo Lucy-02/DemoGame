@@ -1,15 +1,15 @@
 // 규칙 데이터(정령·카드) → 런 화면 값 (카드, 정령 줄). 고정 장면과, 런에 연결할 때 함께 써요.
 import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, cardDef, equipDef, equipName, spiritDef } from "../../core/data";
 import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round } from "../../core/stats";
-import { describeCard } from "../../core/text";
-import type { CardDef, CardOp, RunEquip, RunSpirit, Stage } from "../../core/types";
+import { signatureSwapOf } from "../../core/run";
+import { describeCard, describeEquipTier, describeSignatureSwap } from "../../core/text";
+import type { CardDef, CardOp, EquipTier, RunEquip, RunSpirit, Stage } from "../../core/types";
 import { isCardArtId } from "../card/art";
 import type { CardRarity, CardVM, CardValueVM, Material, RichText } from "../card/viewmodel";
-import type { FaceId } from "../faces";
+import { ELEMENT_ICON, type FaceId } from "../faces";
 import { spiritArt } from "../spiritArt";
-import { ELEMENT_ICON } from "../spirits/fromGarden";
 import { COPY, MATERIAL_NAME } from "./copy";
-import { STAT_IDS, type EquipVM, type LaneVM, type StatId } from "./viewmodel";
+import { STAT_IDS, type EquipChipVM, type EquipSheetVM, type EquipStatId, type EquipVM, type LaneVM, type StatId } from "./viewmodel";
 
 /** 카드 그림 창 윗선은 정본 세 정령 모양뿐이에요. 다른 정령은 속성이 같은 모양을 임시로 빌려요 (0044 열린 질문) */
 const WINDOW_OF: Record<string, FaceId> = { fire: "fire", water: "jelly" };
@@ -102,3 +102,34 @@ export function lane(rs: RunSpirit, extras: LaneExtras = { exp: { before: 0, aft
     badges: extras.badges ?? [], unlocked: extras.unlocked ?? [], deck: extras.deck,
   };
 }
+
+const EQUIP_STATS: readonly string[] = ["hp", "power", "guard", "focus"] satisfies EquipStatId[];
+const pct = (v: number) => `${Math.round(Math.abs(v) * 100)}%`;
+
+/** 이 층이 조건 없이 주는 수치 (조건부 · 치명 · 스피드는 효과문으로 나와요) */
+const chips = (tier: EquipTier): EquipChipVM[] => (tier.stats ?? [])
+  .filter((m) => !m.when && EQUIP_STATS.includes(m.stat))
+  .map((m) => ({ stat: m.stat as EquipStatId, neg: m.value < 0, label: `${m.value < 0 ? "-" : "+"}${m.op === "pct" ? pct(m.value) : Math.abs(m.value)}` }));
+
+/**
+ * 장비 하나의 말풍선 값. hasCard = 그 정령의 덱에 대표 카드가 있나 (없으면 바뀔 카드가 없어요). holder를 주면 그 정령이 지녔을 때의 모습이에요: 공명 점 상한, 갈래의 기술 카드, 그 정령 능력치로 계산한 카드 숫자.
+ */
+export function equipSheet(e: RunEquip, holder?: RunSpirit, hasCard: (cardId: string) => boolean = () => true): EquipSheetVM {
+  const def = equipDef(e.id);
+  const item = equipVM(e, holder?.stage ?? "awakened");
+  const tiers: EquipTier[] = [def.tiers[item.resonance - 1], ...(def.downside ? [def.downside] : [])];
+  const out: EquipSheetVM = { item, chips: tiers.flatMap(chips), lines: tiers.flatMap(describeEquipTier) };
+  if (def.signature && holder) {
+    const swap = signatureSwapOf(holder, e);
+    const inDeck = hasCard(def.signature.card);
+    if (swap && inDeck) {
+      out.lines.push(describeSignatureSwap(swap.from, swap.to));
+      const st = { power: baseStat(holder, "power"), guard: baseStat(holder, "guard"), focus: baseStat(holder, "focus") };
+      out.card = { vm: cardVM(swap.to, holder.id), text: describeCard(cardDef(swap.to), st) };
+    } else if (!swap) {
+      out.note = COPY.noBranch;
+    }
+  }
+  return out;
+}
+
