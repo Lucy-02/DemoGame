@@ -58,8 +58,23 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           return;
         }
         if (opts.screen === "home") {
-          const data: HomeSceneData = { scene: opts.scene, hover: opts.hover };
-          game.scene.add(HOME_SCENE, HomeScene, true, data);
+          // 메인 화면과 정령 관리를 오가요. 나머지 줄은 화면이 생기면 이어요.
+          const home: HomeSceneData = {
+            scene: opts.scene, hover: opts.hover,
+            onItem: (id) => {
+              if (id !== "spirits") return;
+              game.scene.stop(HOME_SCENE);
+              game.scene.start(SPIRITS_SCENE, spirits);
+            },
+          };
+          const spirits: SpiritsSceneData = {
+            onBack: () => {
+              game.scene.stop(SPIRITS_SCENE);
+              game.scene.start(HOME_SCENE, { ...home, hover: undefined });
+            },
+          };
+          game.scene.add(SPIRITS_SCENE, SpiritsScene, false);
+          game.scene.add(HOME_SCENE, HomeScene, true, home);
           return;
         }
         if (opts.screen === "shop") {
