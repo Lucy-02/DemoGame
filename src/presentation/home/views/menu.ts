@@ -58,7 +58,7 @@ export function drawItem(scene: Phaser.Scene, item: HomeItemVM, i: number, hover
     .on("pointerover", on.over).on("pointerout", on.out).on("pointerup", on.click);
 }
 
-/** 강조 줄 채움은 Lucy가 고르는 중이에요 (보라 채움은 기각, 2026-11-13). 그때까지 밝은 유리 판이에요 */
+/** 강조 줄 채움: 밝은 유리 판 (Lucy 2026-11-13, 보라 채움은 기각). 크기로만 무게를 줘요 */
 const TONE = { style: { fill: P.veil["09"], ring: { width: PRIMARY.ring, color: P.veil["50"] } }, ink: P.ink };
 
 /** 메뉴 맨 위 강조 줄. 이어하기면 함께 간 정령 얼굴과 층을 붙여요 */
