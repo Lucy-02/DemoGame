@@ -13,13 +13,13 @@ import { GLASS } from "../tooltip/skins";
 import { drawTooltip } from "../tooltip/Tooltip";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
 import { drawOrder, preloadOrder } from "./views/order";
-import { ALLY, BAND, DRAG, ENEMY, FRAME, INFO, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { ALLY, BAND, DRAG, ENEMY, FRAME, INFO, LIFT_STYLES, OPEN_PLATE_DEPTH, SYS, TARGETING } from "./layout";
 import { preloadHandCard } from "../card/HandCard";
 import { drawMiniSlotHot, type Rect } from "../run/equip";
 import { EQUIP_TIP_ICONS, drawEquipTip } from "../run/equipTip";
 import { EQUIP_MINI, EQUIP_TIP } from "../run/layout";
 import { SYS_ICONS, drawSys } from "./views/topbar";
-import { drawAlly, drawEnemy, preloadUnits, type UnitBounds } from "./views/units";
+import { drawAlly, drawEnemy, drawOpenAlly, drawOpenEnemy, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 
 export const BATTLE_SCENE = "battle";
@@ -60,7 +60,8 @@ export class BattleScene extends Phaser.Scene {
   private previews = new Map<string, Phaser.GameObjects.Container>();
   private shown: Phaser.GameObjects.Container | null = null;
   private bounds: { ref: UnitRef; box: UnitBounds }[] = [];
-  private enemyHover: (Phaser.GameObjects.Image | Phaser.GameObjects.Container)[] = [];
+  /** 쉬는 필드의 접힌 정보판 (펼친 판이 덮는 동안 숨겨요) */
+  private plates: { ref: UnitRef; plate: Phaser.GameObjects.Container }[] = [];
   private hand!: HandView;
 
   // 대상 고르기 상태: 누른 카드(끌기 전), 끄는 카드, 클릭으로 집은 카드, 포인터가 집은 카드 아닌 손패 카드 위인지
@@ -78,9 +79,9 @@ export class BattleScene extends Phaser.Scene {
     drawBand(this);
     drawMana(this, this.vm.mana);
     drawEnd(this, this.vm);
-    // 적 호버 표시(고리·설명판)는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
+    // 가리킨 유닛의 펼친 정보판(적은 설명판까지)은 마우스가 손패로 가거나 카드를 고르는 동안 접어요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
-    this.showEnemyTip(hov < 0 ? null : hov);
+    this.openUnit(hov < 0 ? null : { side: "enemy", i: hov });
     this.hand = createHand(this, this.vm.hand, {
       lift: this.lift ? LIFT_STYLES[this.lift] : undefined,
       onPress: (key, p) => {
@@ -92,7 +93,8 @@ export class BattleScene extends Phaser.Scene {
         // 다른 카드를 보는 동안 필드는 쉬는 상태 (판정 2 나). 집은 카드로 돌아오면 포인터 자리로 다시 미리보기
         if (this.onOtherCard) this.showField(null);
         else this.refresh(this.input.activePointer);
-        this.enemyHover.forEach((o) => o.setVisible(key === null && !this.dragging && !this.held));
+        if (key !== null || this.dragging || this.held) this.openUnit(null);
+        else this.hoverUnit(this.input.activePointer.x, this.input.activePointer.y);
       },
     });
     this.input.mouse?.disableContextMenu();
@@ -123,10 +125,11 @@ export class BattleScene extends Phaser.Scene {
         this.hand.moveDrag(at.x, at.y, this.dragAt(start.card, where), true);
       }
       this.showFocus(start.card, where);
-      this.enemyHover.forEach((o) => o.setVisible(false));
+      this.openUnit(null);
     }
     // ?hover=equip:<아군 번호>:<칸 번호> = 그 장비 칸에 올린 모습
     const eq = this.hover?.match(/^equip:(\d+):(\d+)$/);
+    if (eq) this.openUnit({ side: "ally", i: Number(eq[1]) });
     const at = eq && this.equipRects.find((r) => r.ally === Number(eq[1]) && r.k === Number(eq[2]))?.rect;
     if (at) this.hoverEquip(at.x + at.w / 2, at.y + at.h / 2);
     else if (this.hover) this.hand.setHover(this.hover, true);
@@ -139,36 +142,54 @@ export class BattleScene extends Phaser.Scene {
       this.dragging = this.press.key;
       this.held = null;
       this.hand.startDrag(this.dragging);
-      this.enemyHover.forEach((o) => o.setVisible(false));
+      this.openUnit(null);
     }
     this.refresh(p);
+    this.hoverUnit(p.x, p.y);
     this.hoverEquip(p.x, p.y);
-    this.hoverEnemy(p.x, p.y);
   }
 
-  // ── 적 설명판: 가리킨 적의 정보판 바로 아래에 떠요. 카드를 집거나 끄는 동안에는 뜨지 않아요 ──
+  // ── 가리킨 유닛: 정보판을 펼치고, 적이면 설명판을 펼친 판 바로 아래에. 카드를 집거나 끄는 동안에는 펼치지 않아요 ──
 
-  private enemyTipOn: number | null = null;
+  private openRef: UnitRef | null = null;
+  /** 펼친 판 자리 (가리킴을 이어 가는 판정에도 써요) */
+  private openRect: Rect | null = null;
+  private openObjs: Phaser.GameObjects.GameObject[] = [];
 
-  private hoverEnemy(x: number, y: number) {
+  private hoverUnit(x: number, y: number) {
     if (this.dragging || this.held || this.press) return;
-    const hit = this.bounds.find(({ ref, box: b }) => ref.side === "enemy" && x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
-    this.showEnemyTip(hit ? hit.ref.i : null);
+    const inside = (b: Rect) => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
+    // 펼친 판은 옆 유닛 위로 넓어져요. 그 판 위에 있는 동안은 같은 유닛을 가리키는 것으로 봐요
+    if (this.openRef && this.openRect && inside(this.openRect)) return;
+    const hit = y < BAND.top ? this.bounds.find(({ box: b }) => inside(b)) : undefined;
+    this.openUnit(hit?.ref ?? null);
   }
 
-  private showEnemyTip(i: number | null) {
-    if (i === this.enemyTipOn) return;
-    this.enemyTipOn = i;
-    for (const o of this.enemyHover) o.destroy();
-    this.enemyHover = [];
-    const tip = i === null ? undefined : this.vm.enemies[i].tip;
-    const box = i === null ? undefined : this.bounds.find((b) => b.ref.side === "enemy" && b.ref.i === i)?.box;
-    if (!tip || !box) return;
-    // 정보판 왼쪽 끝에 맞추고, 화면 오른쪽 여백(시스템 버튼과 같은 값) 안으로 들여요
-    const left = Math.min(box.x, FRAME.w - SYS.right - GLASS.w);
-    const c = drawTooltip(this, { skin: GLASS, content: enemyTipContent(tip), at: { left, top: box.y + box.h + EQUIP_TIP.gapToLane } });
+  private openUnit(ref: UnitRef | null) {
+    const same = (a: UnitRef | null, b: UnitRef | null) => a === b || (!!a && !!b && a.side === b.side && a.i === b.i);
+    if (same(ref, this.openRef)) return;
+    this.closeEquip();
+    for (const o of this.openObjs) o.destroy();
+    this.openObjs = [];
+    for (const p of this.plates) p.plate.setVisible(!same(p.ref, ref));
+    this.openRef = ref;
+    this.openRect = null;
+    this.equipRects = [];
+    if (!ref) return;
+    const plate = gather(this, 0, 0, () => {
+      this.openRect = ref.side === "ally"
+        ? drawOpenAlly(this, this.vm.allies[ref.i], ref.i, (k, rect) => this.equipRects.push({ ally: ref.i, k, rect }))
+        : drawOpenEnemy(this, this.vm.enemies[ref.i], ref.i);
+    }).setDepth(OPEN_PLATE_DEPTH);
+    this.openObjs.push(plate);
+    const tip = ref.side === "enemy" ? this.vm.enemies[ref.i].tip : undefined;
+    const r = this.openRect as Rect | null;
+    if (!tip || !r) return;
+    // 펼친 판 가운데 아래, 화면 양쪽 여백(시스템 버튼과 같은 값) 안으로
+    const left = Math.max(SYS.right, Math.min(r.x + r.w / 2 - GLASS.w / 2, FRAME.w - SYS.right - GLASS.w));
+    const c = drawTooltip(this, { skin: GLASS, content: enemyTipContent(tip), at: { left, top: r.y + r.h + INFO.tipGap } });
     c.setDepth(DRAG.depth);
-    this.enemyHover.push(c);
+    this.openObjs.push(c);
   }
 
   // ── 장비 칸 (0066): 올리면 밝은 테와 말풍선. 카드를 집거나 끄는 동안에는 뜨지 않아요 ──
@@ -182,17 +203,22 @@ export class BattleScene extends Phaser.Scene {
     const hit = busy ? undefined : this.equipRects.find(({ rect: r }) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
     const key = hit && `${hit.ally}:${hit.k}`;
     if (key === this.equipOn) return;
+    this.closeEquip();
     this.equipOn = key;
-    for (const o of this.equipTip) o.destroy();
-    this.equipTip = [];
-    if (!hit) return;
-    const slot = this.vm.allies[hit.ally].equip?.[hit.k];
-    if (!slot) return;
+    const slot = hit && this.vm.allies[hit.ally].equip?.[hit.k];
+    const plate = this.openRect;
+    if (!hit || !slot || !plate) return;
     const before = new Set(this.children.list);
     drawMiniSlotHot(this, hit.rect, EQUIP_MINI.s24);
-    drawEquipTip(this, slot.tip, { kind: "under", left: ALLY.xs[hit.ally] - INFO.allyW / 2, top: hit.rect.y + hit.rect.h + INFO.pad[2] + EQUIP_TIP.gapToLane });
+    drawEquipTip(this, slot.tip, { kind: "under", left: plate.x, top: plate.y + plate.h + EQUIP_TIP.gapToLane });
     this.equipTip = this.children.list.filter((o) => !before.has(o));
     for (const o of this.equipTip) (o as Phaser.GameObjects.Image).setDepth?.(DRAG.depth);
+  }
+
+  private closeEquip() {
+    this.equipOn = undefined;
+    for (const o of this.equipTip) o.destroy();
+    this.equipTip = [];
   }
 
   /** 포인터 자리에 맞춰 끄는 카드와 필드를 다시 맞춰요 */
@@ -283,6 +309,12 @@ export class BattleScene extends Phaser.Scene {
     this.shown = next;
   }
 
+  /** 쉬는 필드의 유닛: 판정 영역과 접힌 정보판을 기억해요 */
+  private rested(ref: UnitRef, v: UnitView) {
+    this.bounds.push({ ref, box: v.bounds });
+    this.plates.push({ ref, plate: v.plate });
+  }
+
   /** 필드 한 장: 순서표·아군·적. focus가 있으면 그 강조·결과로, 없으면 쉬는 필드 */
   private drawField(f: Focus | null): Phaser.GameObjects.Container {
     const o = f?.outcome;
@@ -298,15 +330,15 @@ export class BattleScene extends Phaser.Scene {
       this.vm.allies.forEach((a, i) => {
         const ref = { side: "ally", i } as const;
         unit(ref, () => {
-          const box = drawAlly(this, a, i, { outcome: o?.incoming[i], lit: lit(ref) }, f ? undefined : (k, rect) => this.equipRects.push({ ally: i, k, rect }));
-          if (!f) this.bounds.push({ ref, box });
+          const v = drawAlly(this, a, i, { outcome: o?.incoming[i], lit: lit(ref) });
+          if (!f) this.rested(ref, v);
         });
       });
       this.vm.enemies.forEach((e, i) => {
         const ref = { side: "enemy", i } as const;
         unit(ref, () => {
-          const box = drawEnemy(this, e, i, { outcome: o?.enemies[i], lit: lit(ref) });
-          if (!f) this.bounds.push({ ref, box });
+          const v = drawEnemy(this, e, i, { outcome: o?.enemies[i], lit: lit(ref) });
+          if (!f) this.rested(ref, v);
         });
       });
     });

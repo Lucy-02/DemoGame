@@ -3,6 +3,7 @@ import type { BattleVM } from "../viewmodel";
 import { canonAim, exampleDrag, exampleDragAlly, exampleDragField, exampleDragRandom } from "./canonAim";
 import { exampleCardArt } from "./cardArt";
 import { canonRest } from "./canonRest";
+import { exampleCrowded } from "./crowded";
 import { exampleEquip } from "./equip";
 
 export const FIXTURES: Record<string, BattleVM> = {
@@ -22,4 +23,6 @@ export const FIXTURES: Record<string, BattleVM> = {
   art: exampleCardArt,
   /** 예시: 장비를 지닌 아군 (0066). ?hover=equip:1:0 으로 말풍선 */
   equip: exampleEquip,
+  /** 예시: 꽉 찬 정보판 (상태 다섯, 치명 받을 피해) */
+  crowded: exampleCrowded,
 };

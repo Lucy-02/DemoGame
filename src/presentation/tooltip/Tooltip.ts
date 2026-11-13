@@ -1,11 +1,10 @@
-// 툴팁 그리기와 띄우기. 판(바탕·테·그림자) + 블록(머리, 문단) + 선택 꼬리.
+// 툴팁 그리기와 띄우기. 판(바탕·테·그림자) + 블록(문단) + 선택 꼬리.
 // 카드 말풍선, 적 설명판이 이걸 써요. 상태이상·해결 순서표 칸처럼 호버로 뜨는 정보도 TooltipHost.attach로 붙여요.
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { rgba } from "../style/color";
 import { box } from "../style/draw";
 import { cubicBezier, ms } from "../style/ease";
-import { render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
 import { shadowTexture } from "../style/shadow";
 import { inlineLine, lineBox, wrapSpans, type Span } from "../style/text";
@@ -31,22 +30,6 @@ const spans = (r: RichText, s: RoleStyle, termOffset?: number): Span[] =>
 
 /** 블록 하나를 재고, 그리는 함수를 돌려줘요 */
 function layoutBlock(skin: TipSkin, b: TipBlock, inner: number): { h: number; draw: (scene: Phaser.Scene, x: number, y: number) => void } {
-  if (b.kind === "title") {
-    const t = skin.title;
-    if (!t) throw new Error("이 스킨에는 머리(title) 모양이 없어요");
-    const node: Node = {
-      t: "row", align: "center", gap: t.gap,
-      children: [
-        { t: "text", text: b.text, size: t.size, color: t.color, lh: t.lh },
-        ...(b.tag ? [{
-          t: "row", pad: [0, t.tag.padX, 0, t.tag.padX], radius: t.tag.radius,
-          style: { ring: { width: t.tag.ring, color: t.tag.ringColor } },
-          children: [{ t: "text", text: b.tag, size: t.tag.size, color: t.tag.color, lh: t.lh }],
-        } as Node] : []),
-      ],
-    };
-    return { h: size(node).h, draw: (scene, x, y) => { render(scene, node, x, y); } };
-  }
   const s = skin.roles[b.role];
   if (!s) throw new Error(`이 스킨에는 "${b.role}" 문단 모양이 없어요`);
   const lines = wrapSpans(spans(b.text, s, skin.termOffset), inner, skin.keepAll);

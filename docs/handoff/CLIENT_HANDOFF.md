@@ -98,11 +98,11 @@ src/presentation/battle/
   fixtures/canonRest.ts        정본 고정 장면
   views/backdrop.ts            배경 방사 그라데이션 + 바닥
   views/topbar.ts, order.ts    위치·시스템 버튼, 행동 순서 띠
-  views/units.ts               아군·적(그림 자리, 그림자, 정보판, 의도 알약). drawEnemy → { ring }
-  views/enemyTip.ts            적 툴팁 (gather로 Container)
+  views/units.ts               아군·적(그림 자리, 그림자, 정보판 C안, 의도 알약). drawAlly/drawEnemy → { bounds, plate }, 가리키면 drawOpenAlly/drawOpenEnemy(펼친 판)
+  views/enemyTip.ts            적 설명판 내용 (이름·등급은 펼친 정보판에, 설명판은 펼친 판 바로 아래)
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
-  HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }. 몸(drawBody)과 비용 동전·이유 띠(drawSignals)를 나눠 그림
+  HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }. 몸(drawBody)과 비용 동전·자물쇠 꼬리표(drawSignals, CardVM.need)를 나눠 그림
   cardTip.ts                   카드 호버 말풍선 내용 → tooltip/
   materials.ts                 bandTexture, windowTexture, paintPattern, MATERIAL_FILL, liftedBodyTexture
   layout.ts                    HAND_CARD, WINDOW_PATH(정령별 창 윗선 SVG path), BUBBLE

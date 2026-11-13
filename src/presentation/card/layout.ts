@@ -24,8 +24,8 @@ export const HAND_CARD = {
   glyph: { size: 11, sizeTwo: 10, mr: 1 }, up: { ml: 1, mt: 1 },
   /** .mk right 3 top 44 height 16 padding 0 4 radius 8 gap 2, .ic 10 */
   mark: { right: 3, y: 45, h: 16, padX: 4, radius: 8, icon: 10 },
-  /** .h .why top 36 padding 1 6 radius 5 line-height 1.3, 가운데 */
-  why: { y: 37, pad: [1, 6, 1, 6] as [number, number, number, number], radius: 5, lh: 1.3 },
+  /** 조건 미달 자물쇠 꼬리표 (전투 정보판 C안 .lock, 임시 값): 윗선 가운데 top -9, height 18 padding 0 6 radius 9 gap 3, .ic 11, 바깥 테 1.5 */
+  lock: { y: -9, h: 18, padX: 6, radius: 9, gap: 3, icon: 11, ring: 1.5 },
   /** .cd.act box-shadow 0 10px 24px */
   liftShadow: { y: 10, blur: 24 },
   /** .cd.act.held outline 2 offset 2 (outline은 border-radius를 따라 둥글어요) */

@@ -32,10 +32,6 @@ export interface TipSkin {
   termOffset?: number;
   /** 낱말 안에서 줄을 끊지 않아요 (CSS word-break: keep-all) */
   keepAll?: boolean;
-  title?: {
-    size: string; color: string; lh: number; gap: number;
-    tag: { size: string; color: string; padX: number; radius: number; ring: number; ringColor: string };
-  };
   /** 아래 꼬리: 45° 돌린 정사각형, 아래 두 변에 선 */
   tail?: { size: number; line: number; lineColor: string };
   /** 나타날 때 이만큼 아래에서 올라와요 (움직임 시간·곡선은 provisional.motion.hover) */
@@ -64,16 +60,12 @@ export const PAPER: TipSkin = {
 };
 
 /** 적 설명판 (.etip): width 262, radius 12, padding 10 12 11, gap 5, line-height 1.45, 테 1 glass-line, 그림자 0 10 26
- *  h4 gap 6 · h4 span padding 0 6 radius 8 테 1 */
+ *  이름·등급 머리(h4)는 펼친 정보판으로 옮겨서 없어요 (정보판 C안) */
 export const GLASS: TipSkin = {
   w: 262, pad: [10, 12, 11, 12], radius: 12, gap: 5, keepAll: true,
   fill: P.glassD, ring: { width: 1, color: P.glassLine },
   shadow: { y: 10, blur: 26, color: P.tipShadow },
   roles: {
     body: role(T.tipBody, T.tipStrong, P.ink2, P.ink, 1.45),
-  },
-  title: {
-    size: T.tipTitle, color: P.ink, lh: 1.45, gap: 6,
-    tag: { size: T.tipChip, color: P.ink3, padX: 6, radius: 8, ring: 1, ringColor: P.glassLine },
   },
 };
