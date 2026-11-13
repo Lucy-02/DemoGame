@@ -59,10 +59,10 @@
    "id": "obsidian_horn",
    "name": "흑요석 뿔",
    "owner": "magma_ibex",
-   "composition": "symbol",
-   "case_id": "ibex_08-M-o-s3602",
-   "fit_size": 0.54,
-   "decision": "0042"
+   "composition": "scene",
+   "case_id": "obsidian_horn-S-o-s4001",
+   "fit_size": null,
+   "decision": "0063-r10"
   },
   {
    "id": "landslide",
@@ -77,10 +77,10 @@
    "id": "stardust",
    "name": "스타더스트",
    "owner": "star_spirit",
-   "composition": "scene",
-   "case_id": "stardust-S-o-s3901",
-   "fit_size": null,
-   "decision": "0063"
+   "composition": "symbol",
+   "case_id": "stardust-M-o-s4001",
+   "fit_size": 0.5,
+   "decision": "0063-r10"
   },
   {
    "id": "star_mantle",
@@ -96,9 +96,9 @@
    "name": "스타 링크",
    "owner": "star_spirit",
    "composition": "scene",
-   "case_id": "star_link-S-o-s3902",
+   "case_id": "star_link-S-o-s4001",
    "fit_size": null,
-   "decision": "0063"
+   "decision": "0063-r10"
   },
   {
    "id": "astrolabe",
@@ -132,36 +132,36 @@
    "name": "샛별",
    "owner": "star_spirit",
    "composition": "scene",
-   "case_id": "morning_star-S-o-s3901",
+   "case_id": "morning_star-S-o-s4002",
    "fit_size": null,
-   "decision": "0063"
+   "decision": "0063-r10"
   },
   {
    "id": "astraea",
    "name": "아스트레아",
    "owner": "star_spirit",
-   "composition": "scene",
-   "case_id": "astraea-S-o-s3901",
-   "fit_size": null,
-   "decision": "0063"
+   "composition": "symbol",
+   "case_id": "astraea-M-o-s4002",
+   "fit_size": 0.52,
+   "decision": "0063-r10"
   },
   {
    "id": "starfall",
    "name": "스타폴",
    "owner": "star_spirit",
    "composition": "scene",
-   "case_id": "starfall-S-o-s3901",
+   "case_id": "starfall-S-o-s4002",
    "fit_size": null,
-   "decision": "0063"
+   "decision": "0063-r10"
   },
   {
    "id": "wish_star",
    "name": "위시 스타",
    "owner": "star_spirit",
    "composition": "scene",
-   "case_id": "wish_star-S-o-s3901",
+   "case_id": "wish_star-M-o-s4002",
    "fit_size": null,
-   "decision": "0063"
+   "decision": "0063-r10"
   },
   {
    "id": "glass_scale",
@@ -204,9 +204,9 @@
    "name": "잔열",
    "owner": "glass_salamander",
    "composition": "symbol",
-   "case_id": "afterglow-M-c-s3902",
+   "case_id": "afterglow-M-c-s4001",
    "fit_size": 0.4,
-   "decision": "0063"
+   "decision": "0063-r10"
   },
   {
    "id": "ricochet",
@@ -267,9 +267,9 @@
    "name": "눈부심",
    "owner": "pearl_oyster",
    "composition": "scene",
-   "case_id": "glare-S-o-s3902",
+   "case_id": "glare-S-o-s4001",
    "fit_size": null,
-   "decision": "0063"
+   "decision": "0063-r10"
   },
   {
    "id": "nacre_glow",
@@ -293,10 +293,10 @@
    "id": "twin_pearl",
    "name": "쌍진주",
    "owner": "pearl_oyster",
-   "composition": "scene",
-   "case_id": "twin_pearl-S-o-s3901",
-   "fit_size": null,
-   "decision": "0063"
+   "composition": "symbol",
+   "case_id": "twin_pearl-M-o-s4001",
+   "fit_size": 0.46,
+   "decision": "0063-r10"
   },
   {
    "id": "nest",
@@ -338,10 +338,10 @@
    "id": "black_pearl",
    "name": "흑진주",
    "owner": "pearl_oyster",
-   "composition": "scene",
-   "case_id": "black_pearl-S-o-s3902",
-   "fit_size": null,
-   "decision": "0063"
+   "composition": "symbol",
+   "case_id": "black_pearl-M-o-s4001",
+   "fit_size": 0.46,
+   "decision": "0063-r10"
   },
   {
    "id": "dragon_palace",
@@ -401,19 +401,19 @@
    "id": "locked_horns",
    "name": "맞뿔",
    "owner": "magma_ibex",
-   "composition": "symbol",
-   "case_id": "locked_horns-M-o-s3902",
-   "fit_size": 0.52,
-   "decision": "0063"
+   "composition": "scene",
+   "case_id": "locked_horns-S-o-s4002",
+   "fit_size": null,
+   "decision": "0063-r10"
   },
   {
    "id": "fault_line",
    "name": "단층",
    "owner": "magma_ibex",
-   "composition": "scene",
-   "case_id": "fault_line-S-o-s3901",
-   "fit_size": null,
-   "decision": "0063"
+   "composition": "symbol",
+   "case_id": "fault_line-M-o-s4002",
+   "fit_size": 0.56,
+   "decision": "0063-r10"
   },
   {
    "id": "caldera",
@@ -447,9 +447,9 @@
    "name": "날름",
    "owner": "prism_chameleon",
    "composition": "scene",
-   "case_id": "flick-S-o-s3901",
+   "case_id": "flick-S-o-s4002",
    "fit_size": null,
-   "decision": "0063"
+   "decision": "0063-r10"
   },
   {
    "id": "snap",
@@ -501,9 +501,9 @@
    "name": "매복",
    "owner": "prism_chameleon",
    "composition": "scene",
-   "case_id": "ambush-S-o-s3902",
+   "case_id": "ambush-S-o-s4001",
    "fit_size": null,
-   "decision": "0063"
+   "decision": "0063-r10"
   },
   {
    "id": "disguise_veil",
@@ -518,10 +518,10 @@
    "id": "prism",
    "name": "프리즘",
    "owner": "prism_chameleon",
-   "composition": "scene",
-   "case_id": "prism-S-o-s3902",
-   "fit_size": null,
-   "decision": "0063"
+   "composition": "symbol",
+   "case_id": "prism-M-o-s4001",
+   "fit_size": 0.48,
+   "decision": "0063-r10"
   },
   {
    "id": "thousand_eyes",
@@ -537,9 +537,9 @@
    "name": "레인보우",
    "owner": "prism_chameleon",
    "composition": "scene",
-   "case_id": "rainbow-S-o-s3901",
+   "case_id": "rainbow-S-o-s4001",
    "fit_size": null,
-   "decision": "0063"
+   "decision": "0063-r10"
   }
  ]
 }
