@@ -49,7 +49,7 @@ function layoutBlock(skin: TipSkin, b: TipBlock, inner: number): { h: number; dr
   }
   const s = skin.roles[b.role];
   if (!s) throw new Error(`이 스킨에는 "${b.role}" 문단 모양이 없어요`);
-  const lines = wrapSpans(spans(b.text, s, skin.termOffset), inner);
+  const lines = wrapSpans(spans(b.text, s, skin.termOffset), inner, skin.keepAll);
   const pad = s.padTop ?? 0;
   const h = pad + lines.reduce((a, l) => { const lb = lineBox(s.size, l, s.lh); return a + lb.above + lb.below; }, 0);
   return {

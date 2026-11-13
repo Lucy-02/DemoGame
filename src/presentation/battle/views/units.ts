@@ -28,7 +28,7 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
   loadIcon(scene, "fx-block", I.block.icon);
   for (const e of vm.enemies) {
     loadIcon(scene, e.element, I.status.icon);
-    loadIcon(scene, e.weakTo, I.status.icon);
+    if (e.weakTo) loadIcon(scene, e.weakTo, I.status.icon);
     loadIcon(scene, e.intent.icon, INTENT.icon);
     e.statuses.forEach((s) => loadIcon(scene, s.icon, I.status.icon));
   }
@@ -189,11 +189,11 @@ function enemyInfo(scene: Phaser.Scene, e: EnemyVM, pv?: EnemyOutcomeVM, lit = f
         style: { fill: P.chipSoft },
         children: [{ t: "icon", id: e.element, w: I.status.icon, h: I.status.icon, tint: P.ink2 }],
       },
-      {
+      ...(e.weakTo ? [{
         t: "row", h: I.weak.h, pad: I.weak.pad, radius: I.weak.radius, gap: I.weak.gap, align: "center",
         style: { ring: { width: 1, color: P.glassLine } },
         children: [text(COPY.weak, T.tag, P.ink2), { t: "icon", id: e.weakTo, w: I.status.icon, h: I.status.icon, tint: P.ink2 }],
-      },
+      } satisfies Node] : []),
       ...e.statuses.map(statusChip),
     ],
   };
@@ -219,7 +219,7 @@ function intentNode(it: IntentVM, cut = false): Node {
   // 끊김: 수치만 흐린 글자 + 취소선 (.intent.cut .amt)
   const strike = cut ? { strike: { color: P.accHi, width: PV.intentCut.strike } } : {};
   const amount = debuff
-    ? [text(it.label, T.intentLabel, P.ink2), text(it.amount, T.intentAmountDebuff, cut ? P.ink2 : P.ink, strike)]
+    ? [text(it.amount, T.intentAmountDebuff, cut ? P.ink2 : P.ink, strike)]
     : [text(it.amount, T.intentAmount, cut ? P.ink2 : charge ? P.warn : P.ink, strike)];
   return {
     t: "row", h: INTENT.h, pad: INTENT.pad, radius: debuff ? INTENT.debuffRadius : INTENT.radius, gap: INTENT.gap, align: "center",

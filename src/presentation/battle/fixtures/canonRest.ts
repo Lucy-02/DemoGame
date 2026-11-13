@@ -25,24 +25,23 @@ export const canonRest: BattleVM = {
   ],
   enemies: [
     {
-      art: "en-1", hp: 18, maxHp: 30, block: 4, element: "el-none", weakTo: "el-fire", statuses: [{ icon: "kw-burn", n: 3 }],
+      art: "en-1", hp: 18, maxHp: 30, block: 4, element: "el-none", statuses: [{ icon: "kw-burn", n: 3 }],
       intent: { kind: "attack", order: 1, icon: "i-claw", amount: "6×2", target: "jelly" },
     },
     {
-      art: "en-2", hp: 12, maxHp: 22, element: "el-wind", weakTo: "el-fire",
+      art: "en-2", hp: 12, maxHp: 22, element: "el-wind",
       statuses: [{ icon: "kw-chill", n: 1 }, { icon: "kw-vuln", n: 1 }],
-      intent: { kind: "debuff", order: 2, icon: "kw-weak", label: "약화", amount: "2", target: "fire" },
+      intent: { kind: "debuff", order: 2, icon: "kw-weak", amount: "2", target: "fire" },
     },
     {
-      art: "en-3", hp: 41, maxHp: 48, block: 4, element: "el-water", weakTo: "el-wind", statuses: [],
+      art: "en-3", hp: 41, maxHp: 48, block: 4, element: "el-water", weakTo: "el-ice", statuses: [],
       intent: { kind: "charge", order: 3, icon: "kw-charge", amount: "18", target: "all" },
       hovered: true,
       tip: {
         name: "껍질 거북", rank: "정예",
         lines: [
-          [{ text: "해일 · 이번 적 차례에 아군 전체에게 " }, { text: "18", strong: true }],
+          [{ text: "해일 · 이번 적 차례에 모든 아군에게 피해를 " }, { text: "18", strong: true }, { text: " 입힙니다." }],
           [{ text: "브레이크", term: true }, { text: " 가능" }],
-          [{ text: "속성 물 · 약점 바람" }],
         ],
       },
     },

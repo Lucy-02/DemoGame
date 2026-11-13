@@ -10,7 +10,5 @@ export const COPY = {
   all: "전체",
   to: "→",
   maxPrefix: "/",
-  mana: "마력",
   endTurn: "턴 종료",
-  playable: "사용할 수 있는 카드 ",
 };

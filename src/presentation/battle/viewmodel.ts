@@ -41,7 +41,7 @@ export interface AllyVM {
 
 export type IntentVM =
   | { kind: "attack" | "charge"; order: number; icon: IconId; amount: string; target: FaceId | "all" }
-  | { kind: "debuff"; order: number; icon: IconId; label: string; amount: string; target: FaceId | "all" };
+  | { kind: "debuff"; order: number; icon: IconId; amount: string; target: FaceId | "all" };
 
 export interface EnemyVM {
   art: IconId;
@@ -49,7 +49,8 @@ export interface EnemyVM {
   maxHp: number;
   block?: number;
   element: IconId;
-  weakTo: IconId;
+  /** 약점 속성. 바람·무속성처럼 약점이 없으면 비움 (0028) */
+  weakTo?: IconId;
   statuses: StatusVM[];
   intent: IntentVM;
   hovered?: boolean;

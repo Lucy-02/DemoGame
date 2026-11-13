@@ -30,6 +30,8 @@ export interface TipSkin {
   roles: { body: RoleStyle } & Partial<Record<TipRole, RoleStyle>>;
   /** 용어 점선 밑줄 text-underline-offset (없으면 밑줄 없이) */
   termOffset?: number;
+  /** 낱말 안에서 줄을 끊지 않아요 (CSS word-break: keep-all) */
+  keepAll?: boolean;
   title?: {
     size: string; color: string; lh: number; gap: number;
     tag: { size: string; color: string; padX: number; radius: number; ring: number; ringColor: string };
@@ -64,7 +66,7 @@ export const PAPER: TipSkin = {
 /** 적 설명판 (.etip): width 262, radius 12, padding 10 12 11, gap 5, line-height 1.45, 테 1 glass-line, 그림자 0 10 26
  *  h4 gap 6 · h4 span padding 0 6 radius 8 테 1 */
 export const GLASS: TipSkin = {
-  w: 262, pad: [10, 12, 11, 12], radius: 12, gap: 5,
+  w: 262, pad: [10, 12, 11, 12], radius: 12, gap: 5, keepAll: true,
   fill: P.glassD, ring: { width: 1, color: P.glassLine },
   shadow: { y: 10, blur: 26, color: P.tipShadow },
   roles: {

@@ -88,7 +88,7 @@ export const INTENT = {
 export const BAND = { top: 646, line: 1 };
 
 /** .mana left 22 top 672 80×80, inset 1.5 테, padding-top 16 · .ml bottom 13 */
-export const MANA = { x: 22, y: 672, d: 80, ring: 1.5, padTop: 16, labelBottom: 13 };
+export const MANA = { x: 22, y: 672, d: 80, ring: 1.5 };
 
 /** .hand left 120 top 657 gap 8 · .grp padding 5 gap 4 radius 11 테 1 · .gface 26 top -15 바깥 테 2 */
 export const HAND = {
