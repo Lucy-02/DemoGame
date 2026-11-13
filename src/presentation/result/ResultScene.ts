@@ -92,9 +92,7 @@ export class ResultScene extends Phaser.Scene {
     for (const c of this.vm.cards) preloadHandCard(this, c.card, { showRarity: true, scale: REWARD.scale });
     const options = Object.values(this.vm.equip?.takers ?? {}).flat();
     for (const o of options) {
-      if (!o.tip.swap) continue;
-      preloadHandCard(this, o.tip.swap.from, { showRarity: true, scale: EQUIP_TIP.swap.wasScale });
-      preloadHandCard(this, o.tip.swap.to, { showRarity: true });
+      if (o.tip.swap) preloadHandCard(this, o.tip.swap.to, { showRarity: true });
     }
     preloadEquipArt(this, [
       ...(this.vm.equip ? [this.vm.equip.item.id] : []),

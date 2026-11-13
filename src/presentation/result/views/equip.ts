@@ -156,20 +156,15 @@ function body(scene: Phaser.Scene, tip: EquipTipVM, inner: number, owner?: LaneV
   }
   if (tip.stats.length) out.push(piece(scene, { t: "row", gap: TIP.stat.gap, align: "center", children: tip.stats.map(statRow) }, TIP.stat.mt));
   if (tip.swap) {
+    // 이전 카드는 이름만 작고 흐리게, 새 카드 한 장이 주인공이에요 (Lucy 2026-11-13)
     const { from, to } = tip.swap;
-    const arrow = text(RUN_COPY.arrow, T.tipStat, P.accHi);
-    const as = size(arrow);
+    const was = text(`${from.name}${RUN_COPY.arrow}`, T.tipBody, P.ink3Spirit);
+    const ws = size(was);
     out.push({
       mt: TIP.swap.mt, h: HAND_CARD.h,
       draw: (x, y) => {
-        // 이전 카드는 작고 흐리게, 아래를 맞춰요
-        const k = TIP.swap.wasScale;
-        // 키운(줄인) 카드는 원래 상자의 아래 가운데를 기준으로 놓여요
-        const was = createHandCard(scene, cardWithFace(scene, from, owner, k), x - (HAND_CARD.w * (1 - k)) / 2, y, { showRarity: true, scale: k });
-        was.opacity = TIP.swap.was;
-        const ax = x + HAND_CARD.w * k + TIP.swap.gap;
-        render(scene, arrow, ax, y + (HAND_CARD.h - as.h) / 2);
-        createHandCard(scene, cardWithFace(scene, to, owner), ax + as.w + TIP.swap.gap, y, { showRarity: true });
+        render(scene, was, x, y + (HAND_CARD.h - ws.h) / 2);
+        createHandCard(scene, cardWithFace(scene, to, owner), x + ws.w + TIP.swap.gap, y, { showRarity: true });
       },
     });
   }
@@ -183,7 +178,7 @@ export type EquipTipAt = { kind: "lane"; right: number; pointY: number } | { kin
 
 export function drawEquipTip(scene: Phaser.Scene, tip: EquipTipVM, at: EquipTipAt, owner?: LaneVM) {
   const [pt, pr, pb, pl] = TIP.pad;
-  const w = tip.lose ? TIP.w.two : tip.swap ? TIP.w.swap : TIP.w.plain;
+  const w = tip.lose ? TIP.w.two : TIP.w.plain;
   const inner = w - pl - pr;
   const pieces = body(scene, tip, inner, owner);
   const headH = size({ t: "row", align: "center", children: [{ t: "block", w: TIP.head.thumb, h: TIP.head.thumb }, text(tip.item.rarityName, T.tipTitle, P.ink)] }).h;
