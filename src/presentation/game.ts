@@ -5,6 +5,7 @@ import { tokens } from "../design/tokens";
 import { BATTLE_SCENE, BattleScene } from "./battle/BattleScene";
 import { FIXTURES } from "./battle/fixtures";
 import { FRAME } from "./battle/layout";
+import { HOME_SCENE, HomeScene, type HomeSceneData } from "./home/HomeScene";
 import { RESULT_SCENE, ResultScene, type ResultSceneData } from "./result/ResultScene";
 import { SHOP_SCENE, ShopScene, type ShopSceneData } from "./shop/ShopScene";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
@@ -14,7 +15,7 @@ import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
   /** 띄울 화면 (기본 전투). spirits = 정령 관리, result = 전투 결과, shop = 상점 */
-  screen?: "battle" | "spirits" | "result" | "shop";
+  screen?: "battle" | "spirits" | "result" | "shop" | "home";
   /** 전투 결과: 받은 상태로 시작 (카드 key 또는 skip, 시각 검증용) */
   taken?: string;
   /** 정령 관리: 처음 고를 정령·탭, 패널 접힘 (?select=&tab=&closed) */
@@ -54,6 +55,11 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         if (opts.screen === "result") {
           const data: ResultSceneData = { scene: opts.scene, hover: opts.hover, taken: opts.taken };
           game.scene.add(RESULT_SCENE, ResultScene, true, data);
+          return;
+        }
+        if (opts.screen === "home") {
+          const data: HomeSceneData = { scene: opts.scene, hover: opts.hover };
+          game.scene.add(HOME_SCENE, HomeScene, true, data);
           return;
         }
         if (opts.screen === "shop") {
