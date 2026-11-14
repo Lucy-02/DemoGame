@@ -1,8 +1,9 @@
 import { describeOp } from "./battle/effects";
 import { join, type Clause, type TextContext } from "./clauses";
-import { cardDef } from "./data";
+import { josa } from "./korean";
+import { C, cardDef } from "./data";
 import { scale } from "./stats";
-import type { CardDef, CardTarget } from "./types";
+import type { CardDef, CardTarget, EquipStat, EquipTier, StatCondition } from "./types";
 
 export interface CasterStats {
   power: number;
@@ -56,3 +57,63 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
 }
 
 export const cardName = (id: string) => cardDef(id).name;
+
+// ───────────────────────── 장비 효과문 (0064) ─────────────────────────
+
+const pct = (v: number) => Math.round(v * 100);
+
+/** 수치 이름과 "높습니다" 앞에 오는 조사 */
+const EQUIP_STAT_NAME: Record<EquipStat, string> = {
+  hp: "최대 HP가", power: "파워가", guard: "가드가", focus: "포커스가", speed: "스피드가", crit_chance: "치명 확률이", crit_mult: "치명 피해가",
+};
+/** 화면에 숫자(a→b)로 보이지 않는 수치는 문장으로 써요 */
+const TEXT_STATS: readonly EquipStat[] = ["speed", "crit_chance", "crit_mult"];
+const RATIO_STATS: readonly EquipStat[] = ["crit_chance", "crit_mult"];
+
+const WHEN: Record<StatCondition["k"], (w: StatCondition) => string> = {
+  hpBelow: (w) => (w.k === "hpBelow" && w.ratio !== 0.5 ? `HP가 ${pct(w.ratio)}% 아래이면 ` : "HP가 절반 아래이면 "),
+  released: () => "해방 중이면 ",
+  hurt: () => "HP가 가득이 아니면 ",
+};
+
+/** 장비가 정령의 동사를 바꾸는 효과의 문장. 키는 `EQUIP_PASSIVES`와 같아요 */
+export const EQUIP_PASSIVE_TEXT: Record<string, (v: number) => string> = {
+  start_block: (v) => `전투 시작 시 방어도를 ${v} 얻습니다.`,
+  start_block_return: (v) => `전투 시작 시 방어도를 ${v} 얻습니다. 쓰러졌다 돌아올 때 HP를 ${C.equip_return_hp} 더 회복합니다.`,
+  first_hit: (v) => `내 턴의 첫 타격은 피해를 추가로 ${v} 입힙니다.`,
+  longest_card_hit: (v) => `이번 턴에 시간이 가장 긴 카드의 타격은 피해를 추가로 ${v} 입힙니다.`,
+  linger_once: (v) => `전투마다 한 번 적의 화상, 약화, 취약이 줄어들 때 ${v} 덜 줄어듭니다.`,
+  linger_turn: (v) => `턴마다 한 번 적의 화상, 약화, 취약이 줄어들 때 ${v} 덜 줄어듭니다.`,
+  first_card_time: (v) => `내 턴의 첫 카드는 시간이 ${v}ms 줄어듭니다.`,
+  first_card_time_opening: (v) => `내 턴의 첫 카드는 시간이 ${v}ms 줄어듭니다. 허점타 피해가 ${pct(C.equip_opening_bonus)}% 높습니다.`,
+  crit_vs_full: (v) => `대상의 HP가 가득이면 치명 확률이 ${pct(v)}% 높습니다.`,
+  crit_vs_healthy: (v) => `대상의 HP가 절반보다 많으면 치명 확률이 ${pct(v)}% 높습니다.`,
+  first_card_cost: (v) => `내 턴의 첫 카드는 비용이 ${v} 줄어듭니다.`,
+  time_cut: (v) => `카드 시간이 ${v}ms 줄어듭니다.`,
+  carry_block: (v) => `내 턴 시작 시 방어도가 ${pct(v)}% 남습니다.`,
+};
+
+/**
+ * 장비 한 층(공명 단계 또는 대가)의 효과문. 한 줄에 한 효과예요.
+ * 조건 없는 HP · 파워 · 가드 · 포커스 보정은 화면이 숫자(a→b)로 보여 줘서 여기에 넣지 않아요.
+ */
+export function describeEquipTier(tier: EquipTier): string[] {
+  const lines: string[] = [];
+  for (const m of tier.stats ?? []) {
+    if (!m.when && !TEXT_STATS.includes(m.stat)) continue;
+    const ratio = m.op === "pct" || RATIO_STATS.includes(m.stat);
+    const n = `${ratio ? pct(Math.abs(m.value)) : Math.abs(m.value)}${ratio ? "%" : ""}`;
+    const cond = m.when ? WHEN[m.when.k](m.when) : "";
+    lines.push(`${cond}${EQUIP_STAT_NAME[m.stat]} ${n} ${m.when ? "더 " : ""}${m.value < 0 ? "낮습니다" : "높습니다"}.`);
+  }
+  for (const e of tier.effects ?? []) {
+    const text = EQUIP_PASSIVE_TEXT[e.passive];
+    if (!text) throw new Error(`효과문이 없는 장비 효과: ${e.passive}`);
+    lines.push(text(e.value));
+  }
+  return lines;
+}
+
+/** 전용 무기가 대표 카드를 기술로 바꾸는 효과문 (0055) */
+export const describeSignatureSwap = (from: string, to: string) =>
+  `${josa(cardName(from), "이/가")} ${josa(cardName(to), "으로/로")} 바뀝니다.`;

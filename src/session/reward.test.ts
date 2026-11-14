@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Run } from "../core/run";
+import { maxHpOf } from "../core/stats";
 import { RewardSession } from "./reward";
 
 const newRun = () => new Run({ seed: 5, frontId: "fire_fox", adult: false, unlockAll: true });
@@ -36,5 +37,40 @@ describe("보상 세션", () => {
     const spirit = s.offers[0].learners.at(-1)!;
     s.dispatch({ kind: "take", cardId, spirit });
     expect(run.deck.at(-1)).toMatchObject({ cardId, owner: spirit });
+  });
+
+  it("정예 보상: 카드 다음에 장비를 주고, 그 뒤에 끝나요", () => {
+    const run = newRun();
+    const reward = run.rollBattleReward("elite");
+    reward.equipment = { equipId: "bone_sword" };
+    reward.equipDone = false;
+    const s = new RewardSession(run, { kind: "battle", reward });
+    const taker = run.spirits[0].id;
+    expect(s.phase).toBe("cards");
+    expect(s.dispatch({ kind: "equip", spirit: taker })).toBe(false);
+    s.dispatch({ kind: "skip" });
+    expect(s.phase).toBe("equip");
+    expect(s.done).toBe(false);
+    expect(s.canSkipEquip).toBe(false);
+    expect(s.dispatch({ kind: "skipEquip" })).toBe(false);
+    expect(s.dispatch({ kind: "equip", spirit: taker })).toBe(true);
+    expect(run.spirit(taker).equipment.map((e) => e.id)).toEqual(["bone_sword"]);
+    expect(s.done).toBe(true);
+  });
+
+  it("정예 보상: 꽉 찬 정령은 내려놓을 장비를 정해야 받고, 모두 꽉 찼으면 넘길 수 있어요", () => {
+    const run = newRun();
+    for (const sp of run.spirits) run.giveEquipment("bronze_helmet", sp.id);
+    const reward = run.rollBattleReward("elite");
+    reward.equipment = { equipId: "bone_sword" };
+    reward.equipDone = false;
+    const s = new RewardSession(run, { kind: "battle", reward });
+    s.dispatch({ kind: "skip" });
+    const taker = run.spirits[0].id;
+    expect(s.canSkipEquip).toBe(true);
+    expect(s.dispatch({ kind: "equip", spirit: taker })).toBe(false);
+    expect(s.dispatch({ kind: "equip", spirit: taker, replace: "bronze_helmet" })).toBe(true);
+    expect(run.spirit(taker).equipment.map((e) => e.id)).toEqual(["bone_sword"]);
+    expect(run.spirit(taker).hp).toBeLessThanOrEqual(maxHpOf(run.spirit(taker)));
   });
 });

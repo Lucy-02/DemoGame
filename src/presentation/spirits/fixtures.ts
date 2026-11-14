@@ -24,6 +24,18 @@ export const GARDENS: Record<string, Garden> = {
       exp: L[5] + 20, stage: "awakened", branch: "freeze", seen: ["mist_cat_lv2", "mist_cat_lv3", "mist_cat_adult"], affinity: 160, episodes: 3,
     },
   }, 12),
+  /** 남긴 장비 (0066): 불여우 빈 칸, 도롱뇽 전용 무기, 고양이 두 칸(전용 무기 공명 2 · 전설) */
+  equip: shape({
+    fire_fox: { exp: L[2] },
+    glass_salamander: {
+      exp: L[4] + 40, stage: "adult", branch: "hold", seen: ["glass_salamander_lv2", "glass_salamander_lv3"],
+      equipment: [{ id: "salamander_gauntlet", resonance: 1 }],
+    },
+    mist_cat: {
+      exp: L[5] + 20, stage: "awakened", branch: "freeze", seen: ["mist_cat_lv2", "mist_cat_lv3", "mist_cat_adult"],
+      equipment: [{ id: "cat_fan", resonance: 2 }, { id: "moss_hammer", resonance: 1 }],
+    },
+  }, 0),
   /** 갈래 고르기 (0047 S15): 도롱뇽 Lv4 · 갈래 1만 열림 */
   branch: shape({
     fire_fox: { exp: L[1] },
