@@ -168,3 +168,9 @@
 - Q2-B 장비 줄 안에: https://claude.ai/artifact/7Kpawa2LB6MaKgcZKL5ctq
 - Q2-C 받는 정령 줄에: https://claude.ai/artifact/KMVowSLLj4QWM7CUEYKxGh
 - 프레임: /mnt/project-files/design/round-q2/A~C/ (f1 일반 장비, f1b 유니크 무기)
+
+## 결과 창 라운드 X (2026-11-15): 전투 결과를 전투 위 창으로 (Lucy 확인 대기)
+- X1 뼈대 그대로 줄인 창: https://claude.ai/artifact/6VPabrXkV3yHm54NkwXMp1
+- X2 정령은 싸운 자리에: https://claude.ai/artifact/SSyLbjtUNDnuioyiBczxCh
+- X3 정령마다 한 칸: https://claude.ai/artifact/XxB1n8gtAsvA13cNj7Dfkp
+- 프레임: /mnt/project-files/design/round-x/X1~X3/ (f1 평소 · f2 카드에 올림 · f3 정예 장비 · f4 정령 하나), 바탕 캡처 /mnt/project-files/design/round-x/assets/
