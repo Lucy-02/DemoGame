@@ -30,7 +30,7 @@ const q0 = new URLSearchParams(location.search);
 const BEATS = q0.get("look") !== "full" ? ["대기", "희미해짐", "그림자", "속성·역할", "변화", "공개", "정리"] : ["대기", "모임", "속성", "역할", "변화", "공개", "정리"];
 const DUR = q0.get("look") !== "full" ? [0, 700, 800, 1300, 1000, 1500, 0] : [0, 1500, 1700, 1500, 2600, 2200, 0]; // ms, 임시. 변화 박자 1300→1000(Lucy 11/06)
 const W = 1280, H = 720, CX = W / 2, CY = H * 0.56;
-const FONT = "Orbit, Pretendard, sans-serif";
+const FONT = "Pretendard, sans-serif";
 
 const q = new URLSearchParams(location.search);
 const spiritId = q.get("spirit") && SPIRITS[q.get("spirit")!] ? q.get("spirit")! : "glass-salamander";
@@ -433,7 +433,7 @@ class Evolution extends Phaser.Scene {
 
 const start = async () => {
   try {
-    const f = new FontFace("Orbit", "url(assets/fonts/Orbit-Regular.ttf)");
+    const f = new FontFace("Pretendard", "url(assets/fonts/Pretendard-Regular.woff2)");
     document.fonts.add(await f.load());
   } catch { /* 글꼴이 없으면 대체 글꼴 */ }
   // ?capture=1: 영상으로 뽑을 때 프레임을 직접 넘겨요(tools/evolution-preview/record.cjs).

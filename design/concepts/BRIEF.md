@@ -92,7 +92,7 @@ MVP 정령 3종: 불여우(불·공격), 유리 도롱뇽(불·수호), 안개 �
 ## 먼저 읽을 것 (톤·디자인 시스템·서술투 노하우)
 1. `design/concepts/LEDGER.md` 전체 (확정 조각, 기각, 작업 가정) + `docs/handoff/DECISIONS.md`
 2. 톤: `design/BRAND_BRIEF.md` (다정함·성장·애착, 슬라이더 2·2·2·2·3, 과한 장식 금지, 각성체만 우아·장엄)
-3. 시각 정본: `design/canon/spirit-r4v5/page.html`(정령 관리), `design/canon/battle-r5/page.html`(전투). 다크 "무채 유리 + 자두빛 강조 하나", Orbit 단일 글꼴(`public/assets/fonts/Orbit-Regular.ttf`, 빠진 글자만 Pretendard), 굵기 1종이라 위계는 크기·색. 임시 색 값은 `design/tokens/tokens.json`의 `provisional.palette`(floor #232120, wall #4a4743, ink #f3efe8, ink2 #cbc4ba, acc #7a4577, accHi #c99bc4, glass rgba(31,29,27,.76) …)
+3. 시각 정본: `design/canon/spirit-r4v5/page.html`(정령 관리), `design/canon/battle-r5/page.html`(전투). 다크 "무채 유리 + 자두빛 강조 하나", Pretendard 단일 글꼴(`public/assets/fonts/Pretendard-Regular.woff2`, 0068. 정본 HTML에 남은 Orbit은 Pretendard로 읽기), 굵기 1종이라 위계는 크기·색. 임시 색 값은 `design/tokens/tokens.json`의 `provisional.palette`(floor #232120, wall #4a4743, ink #f3efe8, ink2 #cbc4ba, acc #7a4577, accHi #c99bc4, glass rgba(31,29,27,.76) …)
 4. 서술투: `design/canon/text/TEXT_RULES.md`. 결과 창은 목소리가 섞이는 화면이라 특히 지켜요: 제목·라벨·탭 = 명사구(마침표 없음), 버튼 = 명사구·`~기`, 기록 = 명사형(`승리`, `패배: 세 정령 모두 쓰러짐`), 안내·알림 = 해요체(`불여우가 성체로 자랐어요`), 남은 양 문장(`N 남았어요`)은 정산 자리에만, 숫자 규칙(`Lv 4`, `재료 3`, `19→15`, `24/32`), 효과문은 합니다체 틀
 5. 피드백 원칙 0019: 상태·이유는 글 대신 형태·색·모션. 문장은 익히는 정보에만. 10/30 R2-1은 문장이 너무 많았어요
 6. 아이콘: `public/assets/ui/icons/*.svg`(속성 el-*, 효과 fx-*, 키워드 kw-*, 정원 g-*: g-seed 재료, g-up 키우기, g-cardnew 새 카드, g-flag 출발 등). 실제 SVG를 인라인으로 써요. 문법은 0024(한 색 100%, 모서리 둥글게, 그림 위에선 자두빛 받침)

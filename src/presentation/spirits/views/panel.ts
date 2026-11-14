@@ -129,8 +129,8 @@ function overview(d: SpiritDetailVM, statsFrom?: StatRowVM[]): Node[] {
       children: [
         head(COPY.personality),
         { t: "row", children: [personalityPill(per?.name)] },
-        text(per?.desc ?? COPY.undecided, T.tags, P.ink2, { wrap: BODY.w }),
-        ...(per?.note ? [text(per.note, T.small, P.ink3Spirit, { wrap: BODY.w })] : []),
+        text(per?.desc ?? COPY.undecided, T.tags, P.ink2, { wrap: BODY.w, keepAll: true }),
+        ...(per?.note ? [text(per.note, T.small, P.ink3Spirit, { wrap: BODY.w, keepAll: true })] : []),
       ],
     },
   ];
@@ -152,7 +152,7 @@ function growthRow(r: GrowthRowVM, act: PanelActions): Node {
           ...(c.fresh ? [text(COPY.fresh, T.small, P.accHi)] : []),
         ],
       },
-      text(c.detail, T.small, c.open ? P.ink2 : P.ink3Spirit, { wrap: width }),
+      text(c.detail, T.small, c.open ? P.ink2 : P.ink3Spirit, { wrap: width, keepAll: true }),
     ],
   }));
   const notes = r.notes.map((n) => text(n, T.small, r.state === "next" ? P.ink3Spirit : P.ink2));
@@ -291,6 +291,6 @@ function drawSpine(scene: Phaser.Scene, body: Node[]) {
 function releaseFoot(d: SpiritDetailVM): Node {
   return {
     t: "col", gap: B.secGap,
-    children: [head(COPY.release), text(d.overview.release.desc, T.tags, P.ink, { wrap: BODY.w })],
+    children: [head(COPY.release), text(d.overview.release.desc, T.tags, P.ink, { wrap: BODY.w, keepAll: true })],
   };
 }

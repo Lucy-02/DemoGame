@@ -29,8 +29,8 @@ export function fontBox(px: number): FontBox {
 
 export const px = (size: string) => parseFloat(size);
 
-/** Orbit OS/2 yStrikeoutPosition 300, yStrikeoutSize 50 (unitsPerEm 1000). 브라우저 line-through가 이 값을 써요. */
-const STRIKE = { position: 0.3, size: 0.05 };
+/** Pretendard OS/2 yStrikeoutPosition 652, yStrikeoutSize 139 (unitsPerEm 2048). 브라우저 line-through가 이 값을 써요. */
+const STRIKE = { position: 652 / 2048, size: 139 / 2048 };
 
 /** 취소선: 기준선 위 중심 높이와 굵기. 굵기를 주면(text-decoration-thickness) 같은 중심에서 그 굵기로 */
 export function strikeLine(fontPx: number, width?: number) {

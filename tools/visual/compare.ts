@@ -27,16 +27,16 @@ const crop = opt("crop")?.split(",").map(Number) as [number, number, number, num
 const outDir = resolve("test-results/visual");
 mkdirSync(outDir, { recursive: true });
 
-const orbitUrl = pathToFileURL(resolve("public/assets/fonts/Orbit-Regular.ttf")).href;
+const fontUrl = pathToFileURL(resolve("public/assets/fonts/Pretendard-Regular.woff2")).href;
 
 const CANON_PAGE = { battle: "design/canon/battle-r5/page.html", spirits: "design/canon/spirit-r4v5/page.html" } as const;
 
 async function shootCanon(page: Page): Promise<Buffer> {
   await page.goto(pathToFileURL(resolve(CANON_PAGE[screen as keyof typeof CANON_PAGE])).href);
-  // 정본은 Orbit을 Google Fonts에서 받아요. 오프라인에서도 같게 나오도록 번들 글꼴을 같은 이름으로 넣어요.
-  await page.addStyleTag({ content: `@font-face{font-family:"Orbit";src:url("${orbitUrl}")}` });
+  // 정본 CSS는 Orbit을 쓰지만 게임은 Pretendard예요(0068). 글꼴 차이가 아닌 배치 차이만 보이도록 정본 글꼴 변수를 번들 Pretendard로 바꿔요.
+  await page.addStyleTag({ content: `@font-face{font-family:"Pretendard";src:url("${fontUrl}")}:root{--f:"Pretendard",sans-serif;--f-display:"Pretendard",sans-serif;--f-body:"Pretendard",sans-serif;--f-num:"Pretendard",sans-serif}` });
   await page.evaluate(async () => {
-    await document.fonts.load("16px Orbit", "가");
+    await document.fonts.load("16px Pretendard", "가");
     await document.fonts.ready;
   });
   await page.evaluate(() => {
