@@ -58,11 +58,11 @@ export const tokens = {
     }
   },
   "font": {
-    "display": "Orbit, Pretendard, sans-serif",
-    "title": "Orbit, Pretendard, sans-serif",
-    "body": "Orbit, Pretendard, sans-serif",
-    "number": "Orbit, Pretendard, sans-serif",
-    "caption": "Orbit, Pretendard, sans-serif"
+    "display": "Pretendard, sans-serif",
+    "title": "Pretendard, sans-serif",
+    "body": "Pretendard, sans-serif",
+    "number": "Pretendard, sans-serif",
+    "caption": "Pretendard, sans-serif"
   },
   "size": {
     "text": {

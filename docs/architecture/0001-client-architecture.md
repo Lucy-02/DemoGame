@@ -36,4 +36,4 @@ src/platform      Platform 인터페이스, Electron/웹 구현. 저장은 문�
 
 - Spine 에디터 4.2 / 4.3 (런타임을 거기에 맞춰 고정)
 - 기준 해상도·화면비 대응 (디자인 시스템 §4)
-- 글꼴 번들 (Orbit·Pretendard, 지금은 임시 UI가 Google Fonts CDN 사용)
+- 글꼴 번들 (Pretendard, 0068. 임시 UI는 Google Fonts CDN 사용)

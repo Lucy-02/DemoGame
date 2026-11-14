@@ -67,7 +67,7 @@
 
 ### 토큰
 - 원본: `design/tokens/tokens.json` (DTCG). `pnpm tokens` → `src/design/tokens.ts`. 생성 파일은 손으로 고치지 않아요.
-- **확정 구역** `color · font · size · motion · screen`: Lucy가 고른 값만 넣어요. 지금은 글꼴만 확정이에요(Orbit + 빠진 글자는 Pretendard, 결정 0006). 나머지 53개는 `TODO_TOKEN`이에요.
+- **확정 구역** `color · font · size · motion · screen`: Lucy가 고른 값만 넣어요. 지금은 글꼴만 확정이에요(Pretendard 단일, 결정 0068. 정본 HTML은 아직 Orbit이라 `pnpm visual`이 정본 글꼴을 Pretendard로 바꿔 찍어요). 나머지 53개는 `TODO_TOKEN`이에요.
 - **임시 구역** `provisional`: 정본에서 옮긴 값.
   - `palette`: 정본 CSS 변수 그대로. 별칭은 `{provisional.palette.x}`로 써요.
   - `text.battle`: 정본 글자 크기.

@@ -57,7 +57,7 @@ await page.evaluate((cards) => {
   const frame = document.createElement("div"); frame.className = "frame pv"; document.body.append(frame);
   const st = document.createElement("style");
   st.textContent = `
-    body{margin:0;background:#2e2c2a;color:#e8e4dc;font:12px Orbit,sans-serif}
+    body{margin:0;background:#2e2c2a;color:#e8e4dc;font:12px Pretendard,sans-serif}
     .frame.pv{position:static;transform:none;width:auto;height:auto;overflow:visible;background:#2e2c2a}
     .sheet{padding:16px;display:flex;flex-direction:column;gap:18px}
     .grp h2{font-size:14px;margin:0 0 6px}
