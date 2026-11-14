@@ -93,12 +93,12 @@ src/presentation/game.ts       Phaser.Game (WEBGL, 1280×800, Scale.NONE). 글�
 src/presentation/faces.ts      IconId, FaceId, FACES, faceKey, preloadFaces (battle↔card 순환을 끊으려고 여기 둠)
 src/presentation/battle/
   BattleScene.ts               init({vm?, hover?}) → create()에서 views를 순서대로 그림
-  layout.ts                    FRAME BG FLOOR SYS ORDER ALLY ENEMY GROUND HOVER_RING INFO INTENT BAND MANA HAND END HOVER
+  layout.ts                    FRAME BG FLOOR SYS ORDER ALLY ENEMY GROUND INFO TIP INTENT BAND MANA HAND END HOVER
   viewmodel.ts, copy.ts        BattleVM 타입, 화면 문구
   fixtures/canonRest.ts        정본 고정 장면
   views/backdrop.ts            배경 방사 그라데이션 + 바닥
   views/topbar.ts, order.ts    위치·시스템 버튼, 행동 순서 띠
-  views/units.ts               아군·적(그림 자리, 그림자, 정보판 C안, 의도 알약). drawAlly/drawEnemy → { bounds, plate }, 가리키면 drawOpenAlly/drawOpenEnemy(같은 폭으로 아래로 길어진 판: 이름·속성·약점·상태·장비·적 행동 문장)
+  views/units.ts               아군·적(그림 자리, 그림자, 발밑 정보 묶음 "캡슐 막대 V1": HP 막대 + 기호 칩 줄, 의도 알약). drawAlly/drawEnemy → { bounds, info, marks, bottom, intent? }. 가리키면 drawUnitTip(유닛 풀이)·drawMarkTip(기호 한 줄 풀이)·drawAllyPulse(깎일 구간 깜빡임)·drawIntent(이어진 의도 밝게)
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
   HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }. 몸(drawBody)과 비용 동전·자물쇠 꼬리표(drawSignals, CardVM.need)를 나눠 그림
@@ -165,7 +165,7 @@ scripts/                       build-tokens, check-literals, check-assets
   - 같은 묶음 옆 카드 ±12, 옆 묶음 ±10, 나머지 카드 opacity .62.
   - 말풍선: 폭 240, 아래 끝 y=598, 가로는 `clamp(8, 1280-8-240, cx-120)`. 꼬리는 카드 가운데. 나타날 때 alpha 0 + translateY 6에서 올라와요.
   - 카드 사이를 옮겨 다닐 때 깜빡이지 않게 pointerout은 1ms 늦게 처리해요.
-  - 카드에 호버하는 동안 가리킨 유닛의 길어진 정보판을 접어요.
+  - 카드에 호버하는 동안 가리킨 유닛의 풀이·가리킴 효과를 숨겨요.
   - 트윈 길이와 곡선은 `tokens.provisional.motion.hover`.
 - 말풍선 문단: 본문 13px/1.5(강조 14.5, 용어 점선 밑줄 offset 3), 계산 12px(강조 13, padding-top 5, **선 없음**), 이유 12.5px, 주인 12px.
 
@@ -179,7 +179,7 @@ scripts/                       build-tokens, check-literals, check-assets
 
 ```
 pnpm install
-pnpm dev:web                    # http://localhost:5173 (개발용 창 틀 포함). ?hover=claw 처럼 호버 상태로 시작 가능 (유닛: ?hover=unit:enemy:2)
+pnpm dev:web                    # http://localhost:5173 (개발용 창 틀 포함). ?hover=claw 처럼 호버 상태로 시작 가능 (유닛: ?hover=unit:enemy:2, 기호: ?hover=unit:ally:2:3)
 pnpm dev                        # Electron
 pnpm check                      # 타입 + 의존 규칙 + 단위 테스트 + 리터럴 (CI와 같음)
 pnpm test:e2e                   # Electron 스모크 (리눅스 무화면 환경은 xvfb-run -a)

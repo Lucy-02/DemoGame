@@ -1,6 +1,6 @@
 // 고정 장면 고르기 (?scene=…). session 층이 생기면 실제 전투 상태가 이 자리를 대신해요.
 import type { BattleVM } from "../viewmodel";
-import { canonAim, exampleDrag, exampleDragAlly, exampleDragField, exampleDragRandom } from "./canonAim";
+import { canonAim, exampleDrag, exampleDragAlly, exampleDragField, exampleDragRandom, exampleWeak } from "./canonAim";
 import { exampleCardArt } from "./cardArt";
 import { canonRest } from "./canonRest";
 import { exampleCrowded } from "./crowded";
@@ -23,6 +23,8 @@ export const FIXTURES: Record<string, BattleVM> = {
   art: exampleCardArt,
   /** 예시: 장비를 지닌 아군 (0066). ?hover=unit:ally:1 로 설명판의 장비 칸 */
   equip: exampleEquip,
-  /** 예시: 꽉 찬 정보판 (상태 다섯, 치명 받을 피해) */
+  /** 예시: 든 카드의 속성이 약점인 적 (약점 배지 켜짐) */
+  weak: exampleWeak,
+  /** 예시: 꽉 찬 정보 묶음 (상태 다섯, 치명 받을 피해) */
   crowded: exampleCrowded,
 };

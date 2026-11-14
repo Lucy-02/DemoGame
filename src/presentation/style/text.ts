@@ -38,8 +38,20 @@ export function strikeLine(fontPx: number, width?: number) {
   return { center: fontPx * STRIKE.position - (fontPx * STRIKE.size) / 2, width: w };
 }
 
+/** 굵게(글꼴에 굵은 벌이 없으면 브라우저가 만든 굵기) · 바깥 외곽선(CSS text-shadow로 두른 테와 같은 두께) */
+export interface TextLook {
+  bold?: boolean;
+  outline?: { color: string; width: number };
+}
+
+const fontOf = (size: string, bold?: boolean) => `${bold ? "bold " : ""}${size} ${FONT_STACK}`;
+
+/** 외곽선을 준 글자를 놓을 때 왼쪽·위로 빼는 양. Phaser가 글자를 외곽선 두께만큼 안쪽에 그리는데,
+ *  두께가 정수가 아니면 반 픽셀에 걸쳐 흐려지니 textStyle이 여백으로 정수까지 채워요. */
+export const outlineInset = (look: TextLook) => Math.ceil(look.outline?.width ?? 0);
+
 /** Phaser Text 스타일. metrics를 직접 넣어 글자 상자 = 브라우저의 인라인 상자가 되게 해요. */
-export function textStyle(size: string, color: string, letterSpacing = 0): Phaser.Types.GameObjects.Text.TextStyle {
+export function textStyle(size: string, color: string, letterSpacing = 0, look: TextLook = {}): Phaser.Types.GameObjects.Text.TextStyle {
   const s = px(size);
   const { ascent, descent } = fontBox(s);
   return {
@@ -48,7 +60,25 @@ export function textStyle(size: string, color: string, letterSpacing = 0): Phase
     color,
     letterSpacing,
     metrics: { ascent, descent, fontSize: ascent + descent },
+    ...(look.bold ? { fontStyle: "bold" } : {}),
+    ...(look.outline ? { stroke: look.outline.color, strokeThickness: look.outline.width * 2, padding: { x: outlineInset(look) - look.outline.width, y: outlineInset(look) - look.outline.width } } : {}),
   };
+}
+
+const inkShifts = new Map<string, number>();
+
+/** 숫자 잉크(실제 획)의 가운데가 글꼴 상자 가운데보다 얼마나 아래인지 (px). 기호와 숫자를 한 눈높이에 놓을 때 빼요. */
+export function digitInkShift(size: string, bold = false): number {
+  const key = fontOf(size, bold);
+  let v = inkShifts.get(key);
+  if (v === undefined) {
+    const b = fontBox(px(size));
+    probe!.font = key;
+    const m = probe!.measureText("0123456789");
+    v = (b.ascent - b.descent) / 2 - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+    inkShifts.set(key, v);
+  }
+  return v;
 }
 
 export interface Span {
@@ -110,9 +140,9 @@ export function inlineLine(
 }
 
 /** 글자 한 조각의 너비만 재요 (배치 전에 가운데 정렬 계산용). */
-export function measure(text: string, size: string, letterSpacing = 0): number {
+export function measure(text: string, size: string, letterSpacing = 0, bold = false): number {
   fontBox(px(size));
-  probe!.font = `${size} ${FONT_STACK}`;
+  probe!.font = fontOf(size, bold);
   // CSS letter-spacing은 글자마다 뒤에 붙어요 (마지막 글자 포함)
   return probe!.measureText(text).width + letterSpacing * [...text].length;
 }

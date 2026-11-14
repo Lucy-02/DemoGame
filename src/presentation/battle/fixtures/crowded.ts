@@ -1,4 +1,4 @@
-// 예시: 꽉 찬 정보판 (전투 정보판 C안 ③). 상태 다섯이 걸린 적, 받을 피해로 쓰러지는 아군(치명 테·충격 기호 맥박).
+// 예시: 꽉 찬 정보 묶음. 상태 다섯이 걸린 적(칩 줄 넘김), 받을 피해로 쓰러지는 아군(빗금 구간·뾰족한 충격 기호 맥박).
 import type { BattleVM } from "../viewmodel";
 import { canonRest } from "./canonRest";
 

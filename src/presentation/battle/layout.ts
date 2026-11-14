@@ -29,8 +29,8 @@ export const ORDER = {
   action: { size: 13, pad: 1, ml: -8, mt: 12 },
 };
 
-// ── 필드 줄: 전투 정보판 C안 (Lucy 2026-11-13 "C + 약점 표지 상시", 시안 https://claude.ai/artifact/RyrFUdM6pkHfWXPZc2NEPH).
-// 유닛 85%, 간격 72%. 시안에서 새로 지은 임시 값이에요 (정본 R5 값을 줄인 것). 주석에 시안 선택자를 적어요.
+// ── 필드 줄: 유닛 85%, 간격 72% (Lucy 2026-11-13, 정본 R5 값을 줄인 임시 값).
+// 유닛 정보는 "캡슐 막대 V1(두 줄)" 시안 (R3-1 rev 6, Lucy 2026-11-14). 시안에서 새로 지은 임시 값이고, 주석에 시안 선택자를 적어요.
 
 /** 아군 가운데 x 198·322·446 (간격 72%, 가운데 322), 발 y 338. 그림 자리는 정본 .ally .body 110×132의 85% */
 export const ALLY = {
@@ -48,42 +48,47 @@ export const ENEMY = {
 /** .ground 104×14, 발 y에 가운데. radial-gradient(closest-side, shade, transparent) */
 export const GROUND = { w: 104, h: 14 };
 
-/** 정보판 (.col .plate). 두 줄, 가리키면 폭·자리 그대로 아래로만 길어져요 (.more, 0067 추기) */
+/** 유닛 정보 묶음 (.info.nv): 판 없이 발 가운데에 대칭. 첫 줄 = HP 막대 + 가운데 HP 수, 둘째 줄 = 기호 칩 */
 export const INFO = {
-  /** .col top = 발 + 10 */
-  mt: 10,
-  /** 판 폭 --pw 112 / 116 */
-  allyW: 112, enemyW: 116,
-  /** .plate padding 5 6 4, radius 8, gap 3 */
-  pad: [5, 6, 4, 6] as [number, number, number, number], radius: 8, gap: 3,
-  /** .r1 height 16 gap 5 · .r2 height 20 gap 4 */
-  row1: { h: 16, gap: 5 }, row2: { h: 20, gap: 4 },
-  /** .bar height 4 radius 2 min-width 26 · .ghost/.pv repeating-linear-gradient(135deg, c 0 2px, c2 2px 4px) */
-  bar: { h: 4, radius: 2, minW: 26, stripeDeg: 135, stripe: 2 },
-  /** .blk height 16 padding 0 4 0 2 radius 8 gap 1, .ic 11 */
-  block: { h: 16, pad: [0, 4, 0, 2] as [number, number, number, number], radius: 8, gap: 1, icon: 11 },
-  /** .st1 gap 1, .ic 12, em margin-left 2 */
-  status: { gap: 1, icon: 12, moreMl: 2 },
-  /** .inc gap 2, .ic 13 */
-  incoming: { gap: 2, icon: 13 },
-  /** .hpn .to margin 0 1 */
-  arrowMargin: 1,
-  /** .plate.lethal inset 1.5 danger · 조준 대상 .unit.aim .plate inset 1.5 acc-hi */
-  lethalRing: 1.5, litRing: 1.5,
-  /** 약점 표지 .weak 18, ::before inset 2 rotate(45deg) 테 1.5 radius 2, .ic 11 */
-  weak: { size: 18, inset: 2, ring: 1.5, radius: 2, icon: 11 },
-  /** .more padding-top 4 margin-top 2 border-top 1 gap 5 · .mrow gap 5 min-height 18 · 적 행동 문장 line-height 1.45 (.etip) */
-  more: { padTop: 4, mt: 2, line: 1, gap: 5, rowGap: 5, rowMinH: 18, lh: 1.45 },
-  /** 속성 원 (.elc 18, .ic 12) */
-  element: { d: 18, icon: 12 },
-  /** 상태 칩 (.chipS height 20 padding 0 6 0 4 radius 10 gap 2, .ic 12) */
-  chip: { h: 20, pad: [0, 6, 0, 4] as [number, number, number, number], radius: 10, gap: 2, icon: 12 },
-  /** .flag .ic 12 (앞열 깃발) */
-  flag: { icon: 12 },
-  /** .tag padding 1 6 radius 9, inset 1 */
-  tag: { pad: [1, 6, 1, 6] as [number, number, number, number], radius: 9, ring: 1 },
-  /** 장비 칸 줄 (0066): 길어진 판, 칸 사이 5 */
-  equipGap: 5,
+  /** .info.nv top = 발 + 16, 폭 104 = 그림자 폭 */
+  mt: 16, w: GROUND.w,
+  /** .row height 20 */
+  row: { h: 20 },
+  /** .bar top 4 height 12 border 2 radius 6 · 치명 .loss 빗금 135deg 4px + 2px · 미리보기 .gone 빗금 2px + 2px
+   *  · .pulse .bar 테 색 ink + 바깥 1.5 · margin = 구운 텍스처 바깥 여백 */
+  bar: { top: 4, h: 12, line: 2, radius: 6, stripeDeg: 135, lethalStripe: [4, 2], pvStripe: [2, 2], pulseOutline: 1.5, margin: 2 },
+  /** .hp 외곽선 2 (--ol) */
+  hp: { outline: 2 },
+  /** .chips gap 3px 4px, margin 3px -8px 0, min-height 24 */
+  chips: { mt: 3, gap: 4, rowGap: 3, minH: 24, over: 8 },
+  /** .el 22 원, border 2, 기호 16, 속성색 45% + paper */
+  element: { d: 22, line: 2, icon: 16, mix: 0.45 },
+  /** .blk height 20 border 2 padding 0 4 0 0 radius 5, 기호 16 */
+  block: { h: 20, pad: [2, 6, 2, 2] as [number, number, number, number], radius: 5, line: 2, icon: 16 },
+  /** .inc.ia height 20 gap 1 · .imp 16 (치명 20, 16갈래) · b padding-left 2, 외곽선 1.5 (--ol1)
+   *  · .b-out stroke 6 · .b-in stroke 1.4 (24 눈금 기준) · 치명 갈래는 22.5° 돌린 별 */
+  incoming: {
+    h: 20, gap: 1, icon: 16, lethalIcon: 20, numMl: 2, outline: 1.5, back: 6, spike: 1.4, spikeDeg: 22.5, margin: 4,
+    /** 충격 모양 (시안 BURST, 24 눈금) */
+    grid: 24,
+    burst: "M12 3.6L13.84 7.57L17.94 6.06L16.43 10.16L20.4 12L16.43 13.84L17.94 17.94L13.84 16.43L12 20.4L10.16 16.43L6.06 17.94L7.57 13.84L3.6 12L7.57 10.16L6.06 6.06L10.16 7.57z",
+  },
+  /** .weak 24 원 border 2 · i 테 2 · 십자 틈 4 · 기호 16, 속성색 60% + ink · .on scale 1.25, 테 inset -5 */
+  weak: { d: 24, line: 2, ring: 2, gap: 4, icon: 16, mix: 0.6, on: { scale: 1.25, ringOut: 5 } },
+  /** .st height 20 radius 10 padding 0 6 0 3 gap 1, 기호 16 */
+  status: { h: 20, pad: [0, 6, 0, 3] as [number, number, number, number], radius: 10, gap: 1, icon: 16 },
+  /** .flag 22, left x + 47, top 발 - 21, 외곽선 1.5 (drop-shadow 네 방향) */
+  flag: { x: 47, y: -21, icon: 22, outline: 1.5 },
+};
+
+/** 가리킴 풀이: 묶음 바로 아래 (.nv .mt top 100% + 9). 화면 가장자리 여백 12 (.tip right 12)
+ *  mark = 기호 한 줄 풀이 (.mt height 28 padding 0 10 radius 7 gap 6, 꼬리 10, .sep 3)
+ *  unit = 유닛 풀이 (.tip padding 9 12 radius 8 gap 5, 줄 18 gap 6, 꼬리 12, .tag padding 1 6 radius 9, .tst gap 3 기호 12, .eq gap 5) */
+export const TIP = {
+  mt: 9, edge: 12, ring: 1, sep: 3,
+  mark: { h: 28, padX: 10, radius: 7, gap: 6, tail: 10 },
+  unit: { pad: [9, 12, 9, 12] as [number, number, number, number], radius: 8, gap: 5, line: { h: 18, gap: 6 }, tail: 12,
+    tag: { pad: [1, 6, 1, 6] as [number, number, number, number], radius: 9, ring: 1 }, stat: { gap: 3, icon: 12 }, equipGap: 5 },
 };
 
 /** .intent top 212 height 28 padding 0 8 0 4 radius 14 gap 4 (.debuff radius 6) */
@@ -96,6 +101,8 @@ export const INTENT = {
   icon: 15,
   /** .face 18, 바깥 테 1.5 */
   face: 18, faceRing: 1.5,
+  /** .intent.on inset 1.5 ink (가리킨 유닛과 이어진 의도) */
+  onRing: 1.5,
   /** 모든 아군 .all: 점 7 셋, 바깥 테 1.5, 겹침 1 (span+span margin-left -1) */
   all: { dot: 7, ring: 1.5, overlap: 1 },
 };
@@ -123,7 +130,7 @@ export const END = {
 
 /** 집음·조준 미리보기 (.fld-pv, page.html·r5.css) */
 export const PREVIEW = {
-  /** 대상 강조: 정본 .ring.aim의 바깥 빛(box-shadow 0 0 14)을 정보판·그림에 써요 (테는 INFO.litRing). 발밑 고리(타원)는 0013 후속으로 뺐어요 */
+  /** 대상 강조: 정본 .ring.aim의 바깥 빛(box-shadow 0 0 14)을 그림 뒤에 깔아요. 발밑 고리(타원)는 0013 후속으로 뺐어요 */
   lit: { glow: 14 },
   /** .hits left -14 top -6 gap 4 · .hit height 24 padding 0 8 0 6 radius 13 gap 2, translateX(d×14) · .hti 13 */
   hits: { left: -14, top: -6, gap: 4, h: 24, pad: [0, 8, 0, 6] as [number, number, number, number], radius: 13, inGap: 2, step: 14, icon: 13 },
