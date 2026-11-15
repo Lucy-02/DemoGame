@@ -13,7 +13,8 @@ export class BootScene extends Phaser.Scene {
     this.load.on("loaderror", (f: { key: string }) => console.warn("asset load failed:", f.key));
     preloadVisuals(this);
   }
-  create() {
-    this.scene.start("TitleScene");
+  create(data: { onReady: () => void }) {
+    // create 안에서 바로 다른 장면으로 가면 이 장면이 닫히지 않아요. 한 프레임 뒤에 넘겨요
+    this.events.once("update", () => data.onReady());
   }
 }

@@ -1,7 +1,11 @@
 // 새 화면(정본 기준)으로 게임을 띄워요. 기준 해상도는 정본 프레임과 같은 1280×800.
 // 창 크기에 맞춰 늘이지 않고 1280×800 고정 뷰포트로 그려요.
+// screen이 없으면 저장에 이어진 게임(메인 화면에서 시작, flow.ts)이고, 화면 이름을 주면 그 화면의 고정 장면이에요.
 import * as Phaser from "phaser";
 import { tokens } from "../design/tokens";
+import type { GameSession } from "../session/game";
+import { GameFlow } from "./flow";
+import { LEGACY_PLUGINS, LEGACY_SCENES, waitForLegacyFonts } from "./placeholder";
 import { BATTLE_SCENE, BattleScene } from "./battle/BattleScene";
 import { FIXTURES } from "./battle/fixtures";
 import { FRAME } from "./battle/layout";
@@ -14,8 +18,14 @@ import { installCursor } from "./style/cursor";
 import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
-  /** 띄울 화면 (기본 전투). spirits = 정령 관리, result = 전투 결과, shop = 상점 */
+  /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
   screen?: "battle" | "spirits" | "result" | "shop" | "home";
+  /** 저장에 이어진 게임의 세션 (screen이 없을 때) */
+  session?: GameSession;
+  /** 시험 판: 메인 화면 없이 바로 떠나요 (?screen=legacy) */
+  trial?: boolean;
+  /** 메인 화면의 종료 */
+  quit?: () => void;
   /** 전투 결과: 받은 상태로 시작 (카드 key 또는 skip, 시각 검증용) */
   taken?: string;
   /** 정령 관리: 처음 고를 정령·탭, 패널 접힘 (?select=&tab=&closed) */
@@ -33,7 +43,8 @@ export interface GameOptions {
 }
 
 export async function startGame(parent: string, opts: GameOptions = {}): Promise<Phaser.Game> {
-  await loadFonts();
+  const live = !opts.screen && opts.session;
+  await Promise.all([loadFonts(), live ? waitForLegacyFonts() : undefined]);
   return new Phaser.Game({
     type: Phaser.WEBGL,
     parent,
@@ -43,10 +54,20 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
     // 가운데 정렬은 index.html의 #game(flex)이 맡아요.
     scale: { mode: Phaser.Scale.NONE },
     scene: [],
+    // 임시 전투 장면의 Spine 정령 (임시 장면이 사라지면 함께 빼요)
+    plugins: live ? { scene: LEGACY_PLUGINS } : undefined,
     callbacks: {
       postBoot: (game) => {
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
+        if (live) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [SPIRITS_SCENE, SpiritsScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene]] as const) {
+            game.scene.add(key, scene, false);
+          }
+          for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
+          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit }).start();
+          return;
+        }
         if (opts.screen === "spirits") {
           const data: SpiritsSceneData = { scene: opts.scene, select: opts.select, tab: opts.tab as TabId | undefined, closed: opts.closed, pick: opts.pick };
           game.scene.add(SPIRITS_SCENE, SpiritsScene, true, data);
