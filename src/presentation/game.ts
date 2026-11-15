@@ -61,7 +61,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
         if (live) {
-          for (const [key, scene] of [[HOME_SCENE, HomeScene], [SPIRITS_SCENE, SpiritsScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene]] as const) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);

@@ -14,6 +14,8 @@ export const COPY = {
   incomingSub: "이번 적 차례에 받는 피해 합계",
   weak: "약점",
   front: "앞열",
+  /** 적 이름 옆 등급 꼬리표 */
+  rank: { elite: "정예", boss: "보스" } as Record<string, string | undefined>,
 };
 
 /** 코어 데이터에 아직 없는 속성 이름 (0028 상성 고리의 이름 그대로) */

@@ -5,7 +5,10 @@ import * as Phaser from "phaser";
 import { gather } from "../style/gather";
 import { loadIcon } from "../style/icons";
 import { darken } from "../style/opacity";
+import type { BattleSession } from "../../session/battle";
+import { bakeSpiritFace, preloadSpiritArt } from "../spiritArt";
 import { canonRest } from "./fixtures/canonRest";
+import { battleVM, cardUid, refOf } from "./fromBattle";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
@@ -16,6 +19,17 @@ import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, dr
 import type { BattleVM, UnitRef } from "./viewmodel";
 
 export const BATTLE_SCENE = "battle";
+
+export interface BattleSceneData {
+  /** 고정 장면 (fixtures). session을 주면 무시해요 */
+  vm?: BattleVM;
+  /** 실제 전투. 주면 명령을 보내고 바뀐 상태로 다시 그려요 */
+  session?: BattleSession;
+  /** 전투가 끝났어요 (session이 있을 때) */
+  onOver?: (scene: Phaser.Scene) => void;
+  hover?: string;
+  lift?: string;
+}
 
 export class BattleScene extends Phaser.Scene {
   private vm: BattleVM = canonRest;
@@ -30,8 +44,24 @@ export class BattleScene extends Phaser.Scene {
   /** 들기 크기 바꿔 보기 (?lift=h1 정본) */
   private lift?: string;
 
-  init(data: { vm?: BattleVM; hover?: string; lift?: string }) {
-    if (data.vm) this.vm = data.vm;
+  private session?: BattleSession;
+  private onOver?: (scene: Phaser.Scene) => void;
+
+  init(data: BattleSceneData) {
+    this.session = data.session;
+    this.onOver = data.onOver;
+    this.vm = data.session ? battleVM(data.session.battle) : data.vm ?? canonRest;
+    this.previews.clear();
+    this.bounds = [];
+    this.units = [];
+    this.press = null;
+    this.dragging = null;
+    this.held = null;
+    this.onOtherCard = false;
+    this.hoverRef = null;
+    this.hoverMark = undefined;
+    this.hoverFx = null;
+    this.hoverTip = null;
     this.hover = data.hover;
     this.lift = data.lift;
   }
@@ -41,6 +71,7 @@ export class BattleScene extends Phaser.Scene {
     preloadOrder(this, this.vm.order);
     preloadUnits(this, this.vm);
     preloadHand(this, this.vm);
+    if (this.session) preloadSpiritArt(this, this.session.battle.spirits.map((s) => s.id));
   }
 
   // 필드: 모든 필드 장은 이 층 안에 있어서, 나중에 그린 미리보기도 손패 띠 아래에 놓여요
@@ -60,6 +91,8 @@ export class BattleScene extends Phaser.Scene {
   private onOtherCard = false;
 
   create() {
+    // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
+    for (const s of this.session?.battle.spirits ?? []) bakeSpiritFace(this, s.id, s.run.stage);
     drawBackdrop(this);
     drawSys(this);
     this.fieldLayer = this.add.container(0, 0);
@@ -67,7 +100,7 @@ export class BattleScene extends Phaser.Scene {
     this.shown = this.rest;
     drawBand(this);
     drawMana(this, this.vm.mana);
-    drawEnd(this, this.vm);
+    drawEnd(this, this.vm, this.session ? () => this.endTurn() : undefined);
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
     this.showHover(hov < 0 ? null : { side: "enemy", i: hov });
@@ -282,9 +315,27 @@ export class BattleScene extends Phaser.Scene {
     this.showField(null);
   }
 
-  /** 카드 내기. 전투 규칙(session 층)이 아직 없어서 지금은 기록만 하고 쉬는 상태로 돌아가요 (TODO: session 층에 넘기기) */
+  /** 카드 내기: 세션에 명령을 보내고 바뀐 상태로 다시 그려요. 고정 장면이면 기록만 해요 */
   private play(card: string, target?: UnitRef) {
-    console.info("[battle] 카드 사용", card, target ?? "(대상 고르기 없음)");
+    const s = this.session;
+    if (!s) return console.info("[battle] 카드 사용", card, target ?? "(대상 고르기 없음)");
+    const events = s.dispatch({ kind: "play", uid: cardUid(card), target: refOf(s.battle, target) });
+    if (events.length || !s.over) this.settle();
+  }
+
+  private endTurn() {
+    if (!this.session || this.dragging) return;
+    this.session.dispatch({ kind: "endTurn" });
+    this.settle();
+  }
+
+  /**
+   * 명령 뒤: 확정된 상태로 다시 그려요. 연출 재생(시퀀서, 아키텍처 0001 PR 3)은 시간 값이 정해지면 이 자리에 들어가요 (TODO_TOKEN).
+   * 전투가 끝났으면 바로 나가요.
+   */
+  private settle() {
+    if (this.session?.over) return this.onOver?.(this);
+    this.scene.restart({ session: this.session, onOver: this.onOver } satisfies BattleSceneData);
   }
 
   // ── 대상 강조 ──────────────────────────────────────────
@@ -338,7 +389,7 @@ export class BattleScene extends Phaser.Scene {
       const c = gather(this, 0, 0, draw);
       if (f && dimmed(f, ref)) darken(c, TARGETING.dim);
     };
-    const cutOrders = new Set(this.vm.enemies.filter((_, i) => o?.enemies[i]?.cut).map((e) => e.intent.order));
+    const cutOrders = new Set(this.vm.enemies.filter((_, i) => o?.enemies[i]?.cut).flatMap((e) => (e.intent?.order !== undefined ? [e.intent.order] : [])));
     const root = gather(this, 0, 0, () => {
       drawOrder(this, { ...this.vm.order, slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: true } : s)) });
       this.vm.allies.forEach((a, i) => {

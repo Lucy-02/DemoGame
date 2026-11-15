@@ -2,10 +2,10 @@
 // 지금은 정본 고정 장면(fixtures/)으로 채우고, session 층이 생기면 Battle 상태에서 만들어요.
 import type { CardVM } from "../card/viewmodel";
 import type { RichText } from "../tooltip/content";
-import type { FaceId, IconId } from "../faces";
+import type { FaceId, IconId, UnitFace } from "../faces";
 import type { EquipVM } from "../run/viewmodel";
 
-export type { FaceId, IconId };
+export type { FaceId, IconId, UnitFace };
 
 export interface OrderSlotVM {
   n: number;
@@ -25,7 +25,7 @@ export interface StatusVM {
 }
 
 export interface AllyVM {
-  face: FaceId;
+  face: UnitFace;
   /** 이름 (가리키면 뜨는 유닛 풀이) */
   name?: string;
   /** 속성 기호 el-* (정보 묶음의 속성 배지) */
@@ -44,9 +44,13 @@ export interface AllyVM {
   equip?: EquipVM[];
 }
 
+/** 의도의 대상: 아군 얼굴, 전체, 무작위, 없음(자기 자신·새끼에게) */
+export type IntentTarget = UnitFace | "all" | "random" | "none";
+
 export type IntentVM =
-  | { kind: "attack" | "charge"; order: number; icon: IconId; amount: string; target: FaceId | "all" }
-  | { kind: "debuff"; order: number; icon: IconId; amount: string; target: FaceId | "all" };
+  | { kind: "attack" | "charge" | "defend" | "buff"; order?: number; icon: IconId; amount: string; target: IntentTarget }
+  | { kind: "debuff"; order?: number; icon: IconId; amount: string; target: IntentTarget };
+// order: 이번 턴 순서표 번호. 차징 중처럼 이번 턴에 행동하지 않으면 없어요
 
 export interface EnemyVM {
   art: IconId;
@@ -57,7 +61,8 @@ export interface EnemyVM {
   /** 약점 속성. 바람·무속성처럼 약점이 없으면 비움 (0028). 있으면 약점 배지를 늘 그리고, 맞는 속성 카드를 들면 켜요 */
   weakTo?: IconId;
   statuses: StatusVM[];
-  intent: IntentVM;
+  /** 이번 턴 행동. 없으면 의도 알약을 그리지 않아요 */
+  intent?: IntentVM;
   hovered?: boolean;
   /** 가리키면 뜨는 유닛 풀이: 이름 + 등급, 행동 문장 (lines 첫 줄. 나머지는 이름 줄에 덧붙여요) */
   tip?: EnemyTipVM;
@@ -79,7 +84,7 @@ export interface BattleVM {
   enemies: EnemyVM[];
   mana: { n: number; max: number };
   /** 정령별 손패 묶음 (왼쪽부터) */
-  hand: { owner: FaceId; cards: CardVM[] }[];
+  hand: { owner: UnitFace; cards: CardVM[] }[];
   /** 지금 낼 수 있는 카드 수 */
   playable: number;
   piles: { draw: number; discard: number; exhaust: number };

@@ -5,9 +5,12 @@ import type * as Phaser from "phaser";
 export type IconId = string;
 
 export type FaceId = "star" | "fire" | "jelly";
+
+/** 전투 화면의 얼굴: 정본 임시 얼굴(FaceId) 또는 정령 id. 정령 얼굴은 spiritArt.bakeSpiritFace가 같은 키(faceKey)로 구워요 */
+export type UnitFace = string;
 export const FACES: readonly FaceId[] = ["star", "fire", "jelly"];
 
-export const faceKey = (f: FaceId) => `face:${f}`;
+export const faceKey = (f: UnitFace) => `face:${f}`;
 
 export function preloadFaces(scene: Phaser.Scene) {
   for (const f of FACES) {
