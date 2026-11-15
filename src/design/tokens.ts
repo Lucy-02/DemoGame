@@ -237,6 +237,8 @@ export const tokens = {
         "endTurn": "18px",
         "pile": "13px",
         "tipBody": "12.5px",
+        "tipTitle": "15px",
+        "tipChip": "12px",
         "tipStrong": "14px",
         "bubbleText": "13px",
         "bubbleStrong": "14.5px",
@@ -323,6 +325,13 @@ export const tokens = {
         "button": "16px",
         "kbd": "12px",
         "cardName": "12px"
+      },
+      "home": {
+        "logo": "44px",
+        "item": "16px",
+        "badge": "12px",
+        "floor": "17px",
+        "primary": "24px"
       }
     },
     "pattern": {
