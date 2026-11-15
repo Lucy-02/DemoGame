@@ -29,8 +29,8 @@ export function fontBox(px: number): FontBox {
 
 export const px = (size: string) => parseFloat(size);
 
-/** Orbit OS/2 yStrikeoutPosition 300, yStrikeoutSize 50 (unitsPerEm 1000). 브라우저 line-through가 이 값을 써요. */
-const STRIKE = { position: 0.3, size: 0.05 };
+/** Pretendard OS/2 yStrikeoutPosition 652, yStrikeoutSize 139 (unitsPerEm 2048). 브라우저 line-through가 이 값을 써요. */
+const STRIKE = { position: 652 / 2048, size: 139 / 2048 };
 
 /** 취소선: 기준선 위 중심 높이와 굵기. 굵기를 주면(text-decoration-thickness) 같은 중심에서 그 굵기로 */
 export function strikeLine(fontPx: number, width?: number) {
@@ -119,13 +119,14 @@ export function measure(text: string, size: string, letterSpacing = 0): number {
 
 /**
  * 글자 조각들을 maxW 폭에 맞춰 줄로 나눠요 (브라우저 기본 줄바꿈: 공백과 한글 음절 사이에서 끊김).
- * 줄 끝 공백은 버려요.
+ * 줄 끝 공백은 버려요. keepAll이면 낱말 안에서 끊지 않아요 (CSS word-break: keep-all).
  */
-export function wrapSpans(spans: Span[], maxW: number): Span[][] {
+export function wrapSpans(spans: Span[], maxW: number, keepAll = false): Span[][] {
   // 끊을 수 있는 단위로 쪼개기: 한글 한 음절, 공백 하나, 나머지 글자 묶음
   const units: Span[] = [];
+  const unit = keepAll ? /\s|\S+/g : /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]|\s|[^\s\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+/g;
   for (const s of spans) {
-    for (const piece of s.text.match(/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]|\s|[^\s\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+/g) ?? []) {
+    for (const piece of s.text.match(unit) ?? []) {
       units.push({ ...s, text: piece });
     }
   }

@@ -3,6 +3,7 @@ import type { BattleVM } from "../viewmodel";
 import { canonAim, exampleDrag, exampleDragAlly, exampleDragField, exampleDragRandom } from "./canonAim";
 import { exampleCardArt } from "./cardArt";
 import { canonRest } from "./canonRest";
+import { exampleEquip } from "./equip";
 
 export const FIXTURES: Record<string, BattleVM> = {
   /** 정본 쉬는 상태 (#rest) */
@@ -19,4 +20,6 @@ export const FIXTURES: Record<string, BattleVM> = {
   "drag-random": exampleDragRandom,
   /** 예시: 손패에 카드 일러스트 (물방울 휘갈기기·물결 장막은 그림 없음) */
   art: exampleCardArt,
+  /** 예시: 장비를 지닌 아군 (0066). ?hover=equip:1:0 으로 말풍선 */
+  equip: exampleEquip,
 };

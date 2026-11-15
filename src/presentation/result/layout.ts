@@ -15,3 +15,13 @@ export const SKIP = {
   x: GRID.gutter, y: GRID.buttonY, w: REWARD_W, h: GRID.buttonH, radius: 12, gap: 10,
   todo: { size: 18, radius: 5, ring: 1, dash: 3 }, gold: { coin: 16, gap: 4, ml: 2 },
 };
+
+/** 정예 장비 줄 (0051 자리 · 0064 Q2-A 모양): .strip left 48 top 526 564×96 radius 14, padding 0 26 0 12 gap 18
+ *  .tile 64×64 radius 10 (그림 inset 4) · .stx gap 4 · .strip.on 테 accHi + 바깥 4px accHi .14 · 기호 15 gap 6 */
+export const STRIP = {
+  x: GRID.gutter, y: 526, w: 564, h: 96, radius: 14, padL: 12, padR: 26, gap: 18,
+  tile: { size: 64, radius: 10, inset: 4 }, textGap: 4, hot: { outer: 4, alpha: 0.14 },
+  gain: { icon: 15, gap: 6, between: 16 }, off: 0.5,
+};
+
+export { EQUIP_TIP } from "../run/layout";

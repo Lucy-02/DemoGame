@@ -16,8 +16,9 @@ import { placeholderArt } from "../style/placeholder";
 import { ringTexture } from "../style/ring";
 import { shadowTexture } from "../style/shadow";
 import { COPY, STAT_ICON } from "./copy";
-import { INFO, LANE, RING, SOCKET } from "./layout";
-import { STAT_IDS, type LaneVM, type StatId } from "./viewmodel";
+import { drawEquipSlot, type SlotDraw } from "./equip";
+import { EQUIP_SLOT, INFO, LANE, LANE_PREVIEW, RING, SOCKET } from "./layout";
+import { STAT_IDS, type EquipVM, type LaneVM, type StatId } from "./viewmodel";
 
 const T = tokens.provisional.text.result;
 const STAT_COLOR = P.stat;
@@ -41,8 +42,34 @@ export interface LaneState {
   deckTo?: number;
   /** HP가 이만큼 찰 예정 (치료 미리보기): 막대에 연두 구간 */
   heal?: number;
+  /** 장비를 받는 미리보기 (0064) */
+  equip?: LaneEquipState;
+  /** 빈 카드 칸을 그리지 않아요 (카드를 고르는 때가 아니면 빈 칸은 뜻이 없어요). 받은 카드는 그대로 보여요 */
+  noSocket?: boolean;
+  /** 지금 고를 수 없는 줄: 내용이 흐려져요 (전용 무기의 주인이 아닌 정령) */
+  dim?: boolean;
   /** 줄을 누르면 / 올리면 / 벗어나면 */
   on?: { click?: () => void; over?: () => void; out?: () => void };
+}
+
+type Handlers = { click?: () => void; over?: () => void; out?: () => void };
+
+export interface LaneEquipState {
+  /** 받을 수 있는 칸들 (점선). 칸마다 누르면 / 올리면 / 벗어나면 */
+  slots: Record<number, Handlers>;
+  /** 비쳐 보이는 장비: 이 칸에 들어가요. drop이 있으면 그 장비를 내려놓아요 */
+  ghost?: { slot: number; item: EquipVM; drop?: EquipVM; hot?: boolean };
+  /** 받으면 바뀌는 능력치 (숫자 옆 증감) */
+  delta?: Partial<Record<StatId, number>>;
+  /** 받으면 바뀌는 최대 HP */
+  maxHpTo?: number;
+}
+
+/** 줄 i의 장비 칸 n개 중 k번째 칸의 왼쪽 위 (세로 가운데로 쌓아요) */
+export function slotAt(i: number, n: number, k: number) {
+  const K = EQUIP_SLOT;
+  const total = n * K.size + (n - 1) * K.gap;
+  return { x: LANE.x + K.x, y: laneY(i) + (LANE.h - total) / 2 + k * (K.size + K.gap) };
 }
 
 export const laneY = (i: number) => LANE.y + i * (LANE.h + LANE.gap);
@@ -89,7 +116,7 @@ function drawFace(scene: Phaser.Scene, l: LaneVM, x: number, y: number) {
   });
 }
 
-function info(l: LaneVM, lit?: StatId, heal = 0): Node {
+function info(l: LaneVM, lit?: StatId, heal = 0, equip?: LaneEquipState): Node {
   const U = INFO.levelUp, S = INFO.stats, C = INFO.chip;
   const level: Node = l.levelUp
     ? {
@@ -99,14 +126,16 @@ function info(l: LaneVM, lit?: StatId, heal = 0): Node {
     : text(COPY.lv(l.level), T.level, P.ink3Spirit);
   const low = !!l.down;
   const stat = (k: StatId): Node => {
-    const on = lit === k;
+    const delta = equip?.delta?.[k];
+    const on = lit === k || !!delta;
     const fade = (c: string) => (lit && !on ? withAlpha(c, S.dim) : c);
     const iconSize = on ? S.iconOn : S.icon;
     return {
       t: "row", pad: S.pad, ml: S.ml, gap: S.iconGap, align: "center",
       children: [
         { t: "icon", id: STAT_ICON[k], w: iconSize, h: iconSize, tint: fade(STAT_COLOR[k]) },
-        text(String(l.stats[k]), on ? T.statOn : T.stat, on ? STAT_COLOR[k] : fade(P.ink2)),
+        text(String(l.stats[k]), on && !delta ? T.statOn : T.stat, on ? STAT_COLOR[k] : fade(P.ink2)),
+        ...(delta ? [text(COPY.delta(delta), T.statDelta, delta < 0 ? P.danger : P.accHi)] : []),
       ],
     };
   };
@@ -119,7 +148,16 @@ function info(l: LaneVM, lit?: StatId, heal = 0): Node {
         children: [
           {
             t: "row", gap: INFO.hp.numGap, align: "baseline",
-            children: [text(String(l.hp), T.hp, low ? P.danger : P.ink, { lh: 1 }), text(`/${l.maxHp}`, T.hpMax, P.ink3Spirit)],
+            children: [
+              text(String(l.hp), T.hp, low ? P.danger : P.ink, { lh: 1 }),
+              // 바뀌기 전 값은 작고 흐리게, 바뀐 값이 주인공이에요
+              ...(equip?.maxHpTo === undefined
+                ? [text(`/${l.maxHp}`, T.hpMax, P.ink3Spirit)]
+                : [
+                  text(`/${l.maxHp}${COPY.arrow}`, T.level, P.ink3Spirit),
+                  text(String(equip.maxHpTo), T.hpMax, equip.maxHpTo < l.maxHp ? P.danger : P.accHi),
+                ]),
+            ],
           },
           { t: "row", children: [hpBar(l, heal)] },
         ],
@@ -186,10 +224,23 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
   const line = st.hot ? P.accHi : l.down ? withAlpha(P.danger, LANE.down.ring) : P.glassLine;
   box(scene.add.graphics(), x, y, w, h, radius, { ring: { width: LANE.ring, color: line } });
 
-  drawFace(scene, l, x + RING.x, y + RING.y);
-  const node = info(l, st.stat, st.heal);
-  render(scene, node, x + INFO.x, y + (h - size(node).h) / 2);
-  drawSocket(scene, x + SOCKET.x, y + SOCKET.y, st.card, st.open);
+  const body = gather(scene, 0, 0, () => {
+    drawFace(scene, l, x + RING.x, y + RING.y);
+    const node = info(l, st.stat, st.heal, st.equip);
+    render(scene, node, x + INFO.x, y + (h - size(node).h) / 2);
+    l.slots.forEach((item, k) => {
+      const at = slotAt(i, l.slots.length, k);
+      const ghost = st.equip?.ghost?.slot === k ? st.equip.ghost : undefined;
+      const slot: SlotDraw = ghost
+        ? { item: ghost.item, state: "ghost", drop: ghost.drop, hot: ghost.hot }
+        : { item, state: st.equip?.slots[k] ? "cand" : undefined };
+      drawEquipSlot(scene, at.x, at.y, slot);
+    });
+    // 덱 장수를 칸 아래에 보이는 줄(상점)은 칸이 위로 붙고, 아니면 줄 가운데에 놓여요 (장비 칸과 같은 가운데 줄)
+    const socketY = l.deck === undefined ? (h - SOCKET.h) / 2 : SOCKET.y;
+    if (!st.noSocket || st.card) drawSocket(scene, x + SOCKET.x, y + socketY, st.card, st.open);
+  });
+  if (st.dim) body.setAlpha(LANE_PREVIEW.dim);
   if (st.deckTo !== undefined && l.deck !== undefined) {
     const D = SOCKET.deck;
     const deck: Node = {
@@ -206,5 +257,12 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
     const zone = hitArea(scene, x, y, w, h, st.on.click ?? (() => {}));
     if (st.on.over) zone.on("pointerover", st.on.over);
     if (st.on.out) zone.on("pointerout", st.on.out);
+  }
+  // 칸 입력은 줄 입력 위에 놓여요
+  for (const [k, on] of Object.entries(st.equip?.slots ?? {})) {
+    const at = slotAt(i, l.slots.length, Number(k));
+    const zone = hitArea(scene, at.x, at.y, EQUIP_SLOT.size, EQUIP_SLOT.size, on.click ?? (() => {}));
+    if (on.over) zone.on("pointerover", on.over);
+    if (on.out) zone.on("pointerout", on.out);
   }
 }

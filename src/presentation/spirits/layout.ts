@@ -42,6 +42,8 @@ export const ID = {
   per: { gap: 8, pad: [2, 10, 2, 10] as [number, number, number, number], radius: 6 },
   /** .q-stats margin-top 6 padding-top 12 border-top 1 gap 8 · .q-st gap 2 · b line-height 1.1 */
   stats: { mt: 6, pt: 12, line: 1, gap: 2, valueLh: 1.1 },
+  /** 장비 칸 (Q2-A f5 .gslots): margin-top 16 (카드 gap 8 + 8) padding-top 18 border-top 1 gap 26 */
+  equip: { mt: 8, pt: 18, gap: 26 },
 };
 
 /** .q-panel right 20 top 72 460×548 radius 16 */
