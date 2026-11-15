@@ -469,8 +469,16 @@ export class BattleScene extends Phaser.Scene {
       }
       // 전투 결과는 새 화면이 맡아요 (0044 · 0051). 고르면 지도로 돌아가요
       const session = new RewardSession(run, { kind: "battle", reward: run.rollBattleReward(this.kind) });
-      const data: ResultSceneData = { session, onDone: (scene) => scene.scene.start("MapScene") };
-      this.scene.start(RESULT_SCENE, data);
+      // 싸우던 장면은 아래에 멈춰 두고 그 위에 창으로 띄워요 (라운드 X1)
+      const data: ResultSceneData = {
+        session, over: true,
+        onDone: (scene) => {
+          scene.scene.stop("BattleScene");
+          scene.scene.start("MapScene");
+        },
+      };
+      this.scene.launch(RESULT_SCENE, data);
+      this.scene.pause();
     });
   }
 
