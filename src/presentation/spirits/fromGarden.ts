@@ -4,9 +4,11 @@ import {
   canEvolve, canFeed, episodesOpen, evolveChoices, branchProgress, isBranchAdultCard, feedGain, gardenSpirit, isFinalStage, levelOf, levelProgress,
   spiritUnlocks, todos, toRunSpirit, type Garden, type GardenSpirit, type Todo,
 } from "../../core/garden";
-import { baseStat, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
+import { baseStat, equipSlots, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
 import { describeCard } from "../../core/text";
+import { ELEMENT_ICON } from "../faces";
 import { awakenedPuppet } from "../puppet/puppetIds";
+import { equipSheet, equipVM } from "../run/fromCore";
 import { spiritArt } from "../spiritArt";
 import { STAGES, type CardDef, type Stage, type StatKey } from "../../core/types";
 import { COPY, DEED_LABEL, STAGE_LABEL, TAB_LABEL } from "./copy";
@@ -21,9 +23,6 @@ export const TODO_ICON: Record<Todo["kind"], string> = { evolve: "g-up", unlock:
 
 const STAT_ORDER: StatKey[] = ["hp", "power", "guard", "focus", "speed"];
 const STAT_LABEL: Record<StatKey, string> = { hp: "HP", power: "파워", guard: "가드", focus: "포커스", speed: "스피드" };
-export const ELEMENT_ICON: Record<string, string> = {
-  fire: "el-fire", water: "el-water", forest: "el-forest", wind: "el-wind", light: "el-light", earth: "el-earth", none: "el-none",
-};
 const ROLE_ICON: Record<string, string> = { attack: "role-attack", guard: "role-guard", support: "role-support", disrupt: "role-disrupt" };
 
 /** 이 정령의 전용 카드 (해금 키 순서: lv2, lv3, adult) */
@@ -130,6 +129,15 @@ function episodes(s: GardenSpirit): EpisodeVM[] {
   }));
 }
 
+/** 남긴 장비 칸: 단계의 칸 수만큼, 빈 칸은 null */
+function equipSlotsOf(s: GardenSpirit): SpiritDetailVM["equip"] {
+  const rs = toRunSpirit(s);
+  return Array.from({ length: equipSlots(s.stage) }, (_, i) => {
+    const e = rs.equipment[i];
+    return e ? { item: equipVM(e, s.stage), tip: { sheet: equipSheet(e, rs) } } : null;
+  });
+}
+
 function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
   const def = spiritDef(s.id);
   const level = levelOf(s.exp);
@@ -177,6 +185,7 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
     ],
     personality: personalityDef(s.personality).name,
     stats: rows.map((r) => ({ label: r.label, value: r.total, up: r.stage > 0 })),
+    equip: equipSlotsOf(s),
     tabs,
     facts,
     overview: {
@@ -227,6 +236,7 @@ function mockDetail(m: Mockup, stage: Stage): SpiritDetailVM {
     id: m.id, name: m.name, art: art(m.id, stage), stage: STAGE_LABEL[stage], final: stage === "awakened", mock: true,
     tags: [{ icon: mockIcon(m), text: m.element }, { text: COPY.mock }],
     stats: STAT_ORDER.map((k) => ({ label: STAT_LABEL[k], up: false })),
+    equip: [],
     tabs: [
       { id: "overview", label: TAB_LABEL.overview },
       { id: "growth", label: TAB_LABEL.growth },

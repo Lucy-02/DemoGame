@@ -14,3 +14,8 @@ export function preloadFaces(scene: Phaser.Scene) {
     if (!scene.textures.exists(faceKey(f))) scene.load.image(faceKey(f), `assets/ui/faces/${f}-face.webp`);
   }
 }
+
+/** 속성 id → 속성 기호 */
+export const ELEMENT_ICON: Record<string, string> = {
+  fire: "el-fire", water: "el-water", forest: "el-forest", wind: "el-wind", light: "el-light", earth: "el-earth", none: "el-none",
+};

@@ -58,11 +58,11 @@ export const tokens = {
     }
   },
   "font": {
-    "display": "Orbit, Pretendard, sans-serif",
-    "title": "Orbit, Pretendard, sans-serif",
-    "body": "Orbit, Pretendard, sans-serif",
-    "number": "Orbit, Pretendard, sans-serif",
-    "caption": "Orbit, Pretendard, sans-serif"
+    "display": "Pretendard, sans-serif",
+    "title": "Pretendard, sans-serif",
+    "body": "Pretendard, sans-serif",
+    "number": "Pretendard, sans-serif",
+    "caption": "Pretendard, sans-serif"
   },
   "size": {
     "text": {
@@ -319,7 +319,14 @@ export const tokens = {
         "deck": "22px",
         "price": "17px",
         "service": "24px",
-        "servicePrice": "22px"
+        "servicePrice": "22px",
+        "equipName": "18px",
+        "equipMeta": "12px",
+        "statDelta": "16px",
+        "tipTitle": "15px",
+        "tipTag": "11px",
+        "tipBody": "12.5px",
+        "tipStat": "18px"
       },
       "branch": {
         "name": "26px",

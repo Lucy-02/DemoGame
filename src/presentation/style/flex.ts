@@ -33,10 +33,12 @@ export interface TextNode extends Margins {
   strike?: { color?: string; width?: number };
   /** 이 폭에서 줄을 바꿔요 (브라우저 기본 줄바꿈). 상자 폭 = 이 값 */
   wrap?: number;
+  /** 줄을 바꿀 때 낱말 안에서 끊지 않아요 (word-break: keep-all) */
+  keepAll?: boolean;
 }
 
 /** 줄바꿈할 글자의 줄들 */
-const linesOf = (n: TextNode) => (n.wrap ? wrapSpans([{ text: n.text, size: n.size, color: n.color }], n.wrap).map((l) => l.map((s) => s.text).join("")) : [n.text]);
+const linesOf = (n: TextNode) => (n.wrap ? wrapSpans([{ text: n.text, size: n.size, color: n.color }], n.wrap, n.keepAll).map((l) => l.map((s) => s.text).join("")) : [n.text]);
 
 export interface IconNode extends Margins {
   t: "icon";
@@ -152,7 +154,13 @@ export function place(
       if (n.wrap) {
         const lineH = px(n.size) * (n.lh ?? LINE_HEIGHT);
         linesOf(n).forEach((line, i) => {
-          scene.add.text(x, y + i * lineH + (lineH - (b.ascent + b.descent)) / 2, line, textStyle(n.size, n.color, n.ls));
+          const top = y + i * lineH + (lineH - (b.ascent + b.descent)) / 2;
+          scene.add.text(x, top, line, textStyle(n.size, n.color, n.ls));
+          if (n.strike) {
+            const st = strikeLine(px(n.size), n.strike.width);
+            const c = rgba(n.strike.color ?? n.color);
+            scene.add.graphics().fillStyle(c.color, c.alpha).fillRect(x, top + b.ascent - st.center - st.width / 2, measure(line, n.size, n.ls), st.width);
+          }
         });
         return;
       }

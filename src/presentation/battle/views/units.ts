@@ -10,6 +10,8 @@ import { loadIcon } from "../../style/icons";
 import { placeholderArt } from "../../style/placeholder";
 import { shadowTexture } from "../../style/shadow";
 import { faceKey, preloadFaces } from "../../faces";
+import { miniSlotNode, preloadEquipArt, type Rect } from "../../run/equip";
+import { EQUIP_MINI } from "../../run/layout";
 import { COPY } from "../copy";
 import { ALLY, ENEMY, GROUND, INFO as I, INTENT, PREVIEW as PV } from "../layout";
 import type { AllyVM, BattleVM, Change, EnemyOutcomeVM, EnemyVM, IntentVM, StatusVM } from "../viewmodel";
@@ -22,6 +24,7 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
   for (const a of vm.allies) {
     a.statuses.forEach((s) => loadIcon(scene, s.icon, I.status.icon));
   }
+  preloadEquipArt(scene, vm.allies.flatMap((a) => (a.equip ?? []).map((e) => e.item.id)));
   loadIcon(scene, "fx-block", I.block.icon);
   for (const e of vm.enemies) {
     loadIcon(scene, e.element, I.status.icon);
@@ -135,7 +138,7 @@ function incomingChip(n: number, pv?: Change): Node {
   };
 }
 
-function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change, lit = false): Node {
+function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change, lit = false, onEquip?: (k: number, r: Rect) => void): Node {
   const rowA: Node = {
     t: "row", h: I.rowA.h, gap: I.rowA.gap, align: "center",
     children: [...(a.block ? [blockChip(a.block)] : []), hpBar(scene, a.hp, a.maxHp)],
@@ -152,6 +155,15 @@ function allyInfo(scene: Phaser.Scene, a: AllyVM, pv?: Change, lit = false): Nod
         t: "row", pad: I.front.pad, radius: I.front.radius, align: "center", ml: "auto",
         style: { ring: { width: 1, color: P.glassLine } },
         children: [text(COPY.front, T.tag, P.ink2)],
+      } as Node] : []),
+      ...(a.equip?.length ? [{
+        t: "row", gap: I.equipGap, align: "center", ...(a.front ? {} : { ml: "auto" }),
+        children: a.equip.map((e, k): Node => {
+          const slot = miniSlotNode(scene, e.item, EQUIP_MINI.s24);
+          if (slot.t !== "block" || !onEquip) return slot;
+          const draw = slot.draw;
+          return { ...slot, draw: (g, x, y, w, h) => { draw?.(g, x, y, w, h); onEquip(k, { x, y, w, h }); } };
+        }),
       } as Node] : []),
     ],
   };
@@ -275,12 +287,13 @@ export interface UnitPreview<R> {
 }
 
 /** pv.outcome: 이 아군의 받을 피해 a→b */
-export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<Change> = {}): UnitBounds {
+/** onEquip: 장비 칸이 놓인 자리 (칸 번호, 자리) */
+export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<Change> = {}, onEquip?: (k: number, r: Rect) => void): UnitBounds {
   const cx = ALLY.xs[i];
   const bodyX = cx - ALLY.body.w / 2;
   const bodyBottom = ALLY.top + ALLY.body.h;
   const lit = !!pv.lit;
-  const info = allyInfo(scene, a, pv.outcome, lit);
+  const info = allyInfo(scene, a, pv.outcome, lit, onEquip);
   const plateY = bodyBottom + I.mt;
   const plateH = size(info).h;
   if (lit) {
