@@ -144,7 +144,11 @@ export const tokens = {
         "wood": "#9eab8b",
         "wind": "#b4b8b0",
         "light": "#c9bb93",
-        "none": "#a59f96"
+        "none": "#a59f96",
+        "earth": "#b8a27c",
+        "electric": "#d3c57a",
+        "ice": "#a3c6d6",
+        "shadow": "#a195b8"
       },
       "sil": {
         "star": "#8c887f",

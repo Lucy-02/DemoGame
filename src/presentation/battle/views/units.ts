@@ -26,9 +26,10 @@ const T = tokens.provisional.text.battle;
 const LETHAL = tokens.provisional.motion.lethal;
 const PULSE = tokens.provisional.motion.lossPulse;
 
-/** 속성색. 토큰에 색이 없는 속성(땅·전기·얼음·그림자)은 무속성 색으로 그려요 (TODO_TOKEN: Lucy가 색을 고르면 el.* 토큰으로) */
+/** 속성색 (땅·전기·얼음·그림자는 0069 후보 1, 임시). 기호가 아직 없는 속성은 무속성 색으로 그려요 */
 const ELEMENT_TINT: Record<string, string> = {
   "el-fire": P.el.fire, "el-water": P.el.water, "el-forest": P.el.wood, "el-wind": P.el.wind, "el-light": P.el.light, "el-none": P.el.none,
+  "el-earth": P.el.earth, "el-electric": P.el.electric, "el-ice": P.el.ice, "el-shadow": P.el.shadow,
 };
 const elementTint = (el: string) => ELEMENT_TINT[el] ?? P.el.none;
 
