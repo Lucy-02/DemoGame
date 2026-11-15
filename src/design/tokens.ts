@@ -342,6 +342,13 @@ export const tokens = {
         "button": "16px",
         "kbd": "12px",
         "cardName": "12px"
+      },
+      "home": {
+        "logo": "44px",
+        "item": "16px",
+        "badge": "12px",
+        "floor": "17px",
+        "primary": "24px"
       }
     },
     "pattern": {
