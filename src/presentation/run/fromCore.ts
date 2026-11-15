@@ -1,6 +1,6 @@
 // 규칙 데이터(정령·카드) → 런 화면 값 (카드, 정령 줄). 고정 장면과, 런에 연결할 때 함께 써요.
 import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, cardDef, equipDef, equipName, spiritDef } from "../../core/data";
-import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round } from "../../core/stats";
+import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round, scale } from "../../core/stats";
 import { signatureSwapOf } from "../../core/run";
 import { describeCard, describeEquipTier, describeSignatureSwap } from "../../core/text";
 import type { CardDef, CardOp, EquipTier, RunEquip, RunSpirit, Stage } from "../../core/types";
@@ -32,13 +32,21 @@ const OP_ICON: Partial<Record<CardOp["op"], string>> = {
 };
 const PLATE_MAX = 2;
 
-/** 수치판: 앞에서부터 기호가 있는 효과 두 개까지, 원래 숫자로 */
-export function valuesOf(def: CardDef): CardValueVM[] {
+/** 수치판 숫자가 따르는 능력치 (효과문과 같은 능력치: core/battle/effects.ts). 없는 효과는 능력치를 따르지 않아요 */
+const OP_STAT: Partial<Record<CardOp["op"], StatId>> = {
+  damage: "power", block: "guard", wall: "guard", thorns: "guard", heal: "focus", burn: "focus", chill: "focus",
+};
+
+/** 수치판: 앞에서부터 기호가 있는 효과 두 개까지. st가 없으면 원래 숫자, 있으면 그 정령의 능력치로 계산한 숫자(오르면 ▲) */
+export function valuesOf(def: CardDef, st?: Record<StatId, number>): CardValueVM[] {
   return def.effects.flatMap((op): CardValueVM[] => {
     const icon = OP_ICON[op.op];
-    const n = "value" in op && typeof op.value === "number" ? op.value : "turns" in op && typeof op.turns === "number" ? op.turns : undefined;
-    if (!icon || n === undefined) return [];
-    return [{ icon, n, mult: "hits" in op ? op.hits : undefined }];
+    const fromValue = "value" in op && typeof op.value === "number";
+    const base = fromValue ? (op.value as number) : "turns" in op && typeof op.turns === "number" ? op.turns : undefined;
+    if (!icon || base === undefined) return [];
+    const k = fromValue ? OP_STAT[op.op] : undefined;
+    const n = st && k ? scale(base, st[k]) : base;
+    return [{ icon, n, mult: "hits" in op ? op.hits : undefined, ...(n > base ? { up: true } : {}) }];
   }).slice(0, PLATE_MAX);
 }
 
@@ -49,8 +57,9 @@ export function statOf(def: CardDef): StatId | undefined {
   return STAT_IDS.find((k) => describeCard(def, { ...base, [k]: base[k] * 2 }) !== plain);
 }
 
-/** 카드 한 장. 숫자는 원래 값이에요 (0044: describeCard(def, null)). ownerId가 없으면 주인이 정해지지 않은 카드 */
-export function cardVM(cardId: string, ownerId?: string): CardVM {
+/** 카드 한 장. 숫자는 원래 값이에요 (0044: describeCard(def, null)). st를 주면 그 정령의 능력치로 계산한 값이에요.
+ *  ownerId가 없으면 주인이 정해지지 않은 카드 */
+export function cardVM(cardId: string, ownerId?: string, st?: Record<StatId, number>): CardVM {
   const def = cardDef(cardId);
   const material = materialOf(def.element);
   const who = ownerId ? spiritDef(ownerId).name : COPY.shared;
@@ -59,8 +68,8 @@ export function cardVM(cardId: string, ownerId?: string): CardVM {
     element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, art: "i-spark",
     illustration: isCardArtId(cardId) ? cardId : undefined,
     rarity: def.rarity === "basic" ? undefined : (def.rarity as CardRarity),
-    values: valuesOf(def),
-    detail: { text: richText(describeCard(def, null)), owner: [who, ELEMENT_NAME[def.element], MATERIAL_NAME[material]].filter(Boolean).join(COPY.sep) },
+    values: valuesOf(def, st),
+    detail: { text: richText(describeCard(def, st ?? null)), owner: [who, ELEMENT_NAME[def.element], MATERIAL_NAME[material]].filter(Boolean).join(COPY.sep) },
   };
 }
 
@@ -125,7 +134,7 @@ export function equipSheet(e: RunEquip, holder?: RunSpirit, hasCard: (cardId: st
     if (swap && inDeck) {
       out.lines.push(describeSignatureSwap(swap.from, swap.to));
       const st = { power: baseStat(holder, "power"), guard: baseStat(holder, "guard"), focus: baseStat(holder, "focus") };
-      out.card = { vm: cardVM(swap.to, holder.id), text: describeCard(cardDef(swap.to), st) };
+      out.card = { vm: cardVM(swap.to, holder.id, st), text: describeCard(cardDef(swap.to), st) };
     } else if (!swap) {
       out.note = COPY.noBranch;
     }
