@@ -118,7 +118,6 @@ export const tokens = {
       "glass": "rgba(31,29,27,.76)",
       "glassD": "rgba(31,29,27,.86)",
       "glassLine": "rgba(246,241,233,.14)",
-      "plate": "rgba(24,23,22,.74)",
       "chip": "#46423e",
       "face": "#3a3734",
       "paper": "#e9e6df",
@@ -145,7 +144,11 @@ export const tokens = {
         "wood": "#9eab8b",
         "wind": "#b4b8b0",
         "light": "#c9bb93",
-        "none": "#a59f96"
+        "none": "#a59f96",
+        "earth": "#b8a27c",
+        "electric": "#d3c57a",
+        "ice": "#a3c6d6",
+        "shadow": "#a195b8"
       },
       "sil": {
         "star": "#8c887f",
@@ -153,10 +156,6 @@ export const tokens = {
         "jelly": "#7f898b"
       },
       "glassThin": "rgba(31,29,27,.5)",
-      "barTrack": "rgba(246,241,233,.14)",
-      "chipSoft": "rgba(246,241,233,.08)",
-      "chipSofter": "rgba(246,241,233,.07)",
-      "plateLine": "rgba(246,241,233,.06)",
       "debuffLine": "rgba(246,241,233,.32)",
       "groundShade": "rgba(0,0,0,.35)",
       "up": "#3f6b38",
@@ -179,9 +178,7 @@ export const tokens = {
       "cardLiftShadow": "rgba(0,0,0,.5)",
       "cardLiftShine": "rgba(255,255,255,.6)",
       "pvFill": "rgba(122,69,119,.26)",
-      "pvBlockFill": "rgba(122,69,119,.28)",
       "aimGlow": "rgba(201,155,196,.45)",
-      "ghostStripe": "rgba(217,120,106,.35)",
       "scrim": "rgba(22,20,19,.55)",
       "glassSel": "rgba(246,241,233,.09)",
       "ink3Spirit": "#a39c92",
@@ -217,37 +214,27 @@ export const tokens = {
     },
     "text": {
       "battle": {
-        "where": "14px",
-        "whereNum": "15px",
         "orderLabel": "13px",
         "orderNum": "12px",
         "hp": "16px",
-        "hpMax": "12px",
-        "incoming": "15px",
-        "incomingLabel": "12px",
+        "incoming": "13px",
         "chip": "13px",
-        "block": "14px",
-        "tag": "12px",
-        "intentOrder": "12px",
-        "intentAmount": "19px",
-        "intentAmountDebuff": "16px",
-        "intentLabel": "14px",
-        "intentTo": "12px",
-        "intentAll": "13px",
+        "tipTag": "11px",
+        "block": "13px",
+        "intentOrder": "11px",
+        "intentAmount": "17px",
+        "intentAmountDebuff": "15px",
+        "intentMult": "12px",
         "cardCost": "14px",
         "cardValue": "22px",
         "cardValueTwo": "15px",
         "cardMult": "11px",
         "cardUp": "11px",
         "cardName": "12px",
-        "cardWhy": "11.5px",
         "cardMark": "11px",
         "mana": "32px",
         "manaMax": "15px",
-        "manaLabel": "12px",
         "endTurn": "18px",
-        "endSub": "12px",
-        "endSubNum": "13px",
         "pile": "13px",
         "tipBody": "12.5px",
         "tipTitle": "15px",
@@ -259,10 +246,6 @@ export const tokens = {
         "bubbleCalcStrong": "13px",
         "bubbleWhy": "12.5px",
         "bubbleOwner": "12px",
-        "pvFrom": "12px",
-        "pvIncomingFrom": "13px",
-        "pvArrow": "12px",
-        "pvHp": "17px",
         "hit": "16px"
       },
       "spirits": {
@@ -533,6 +516,28 @@ export const tokens = {
           0.2,
           1
         ]
+      },
+      "lethal": {
+        "duration": "1100ms",
+        "easing": [
+          0.42,
+          0,
+          0.58,
+          1
+        ],
+        "peak": 0.4,
+        "scale": 1.25
+      },
+      "lossPulse": {
+        "duration": "1100ms",
+        "easing": [
+          0.42,
+          0,
+          0.58,
+          1
+        ],
+        "peak": 0.45,
+        "low": 0.25
       }
     },
     "effect": {

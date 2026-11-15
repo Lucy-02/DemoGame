@@ -36,3 +36,10 @@ export const exampleDragRandom: BattleVM = {
   plays: { ...canonAim.plays, meteor: { target: { kind: "random", side: "enemy" } } },
   start: { card: "meteor", mode: "drag" },
 };
+
+/** 예시(정본에 없음): 약점 배지 켜짐. 두꺼비를 숲 속성(약점 불)으로 바꾸고 불꽃 할퀴기를 집어 댄 상태 */
+export const exampleWeak: BattleVM = {
+  ...canonAim,
+  enemies: canonAim.enemies.map((e, i) => (i === 0 ? { ...e, element: "el-forest", weakTo: "el-fire" } : e)),
+  start: { card: "claw", mode: "held", over: { side: "enemy", i: 0 } },
+};

@@ -54,10 +54,10 @@ export interface CardVM {
   /** 카드 일러스트. 없으면 그림 자리를 비워 둬요 */
   illustration?: CardArtId;
   values: CardValueVM[];
-  /** 못 내는 카드: 카드째 회색으로 흐려요. 이유 띠와 비용 동전은 또렷하게 (0043) */
+  /** 못 내는 카드: 카드째 회색으로 흐려요. 자물쇠 꼬리표와 비용 동전은 또렷하게 (0043) */
   off?: boolean;
-  /** 마력 말고 다른 사유 글 꼬리표 */
-  why?: string;
+  /** 마력 말고 다른 조건이 모자라요: 필요한 조건 기호 (윗선 자물쇠 꼬리표 옆). 사유 글은 말풍선(detail.why)에만 */
+  need?: IconId;
   /** 무작위 같은 표식 기호 */
   mark?: IconId;
   detail: CardDetailVM;
