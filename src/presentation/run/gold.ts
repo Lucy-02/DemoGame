@@ -17,7 +17,8 @@ export interface GoldLook {
   was?: number;
 }
 
-export function drawGold(scene: Phaser.Scene, total: number, look: GoldLook = {}) {
+/** at = 놓을 자리 (기본: 화면 위 띠) */
+export function drawGold(scene: Phaser.Scene, total: number, look: GoldLook = {}, at: { x: number; y: number } = GOLD) {
   const node: Node = {
     t: "row", h: GOLD.h, gap: GOLD.gap, align: "center",
     children: [
@@ -27,5 +28,5 @@ export function drawGold(scene: Phaser.Scene, total: number, look: GoldLook = {}
       ...(look.plus ? [text(look.plus, T.goldPlus, P.gold)] : []),
     ],
   };
-  render(scene, node, GOLD.x, GOLD.y);
+  render(scene, node, at.x, at.y);
 }

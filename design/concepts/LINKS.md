@@ -198,3 +198,9 @@
 - L2 오른쪽 아래 묶음: https://claude.ai/artifact/8uz4t8M1oCHY7gkv4jcQ4p
 - L3 아래 가로 줄: https://claude.ai/artifact/AqBM1GsKRToxSgBQwHNw2M
 - 프레임: /mnt/project-files/design/batch-c-r4/L1~L3/
+
+## 결과 창 라운드 X (2026-11-15): 전투 결과를 전투 위 창으로 (Lucy: X1 → 0069)
+- X1 뼈대 그대로 줄인 창: https://claude.ai/artifact/6VPabrXkV3yHm54NkwXMp1
+- X2 정령은 싸운 자리에: https://claude.ai/artifact/SSyLbjtUNDnuioyiBczxCh
+- X3 정령마다 한 칸: https://claude.ai/artifact/XxB1n8gtAsvA13cNj7Dfkp
+- 프레임: /mnt/project-files/design/round-x/X1~X3/ (f1 평소 · f2 카드에 올림 · f3 정예 장비 · f4 정령 하나), 바탕 캡처 /mnt/project-files/design/round-x/assets/

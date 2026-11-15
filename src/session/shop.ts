@@ -1,5 +1,5 @@
 // 상점 세션: 화면이 보내는 명령(카드 사기, 치료)을 받아 런 상태를 바꾸고 알려요.
-// 값·진열 수·치료량은 규칙 데이터(constants.json shop)에서 읽어요. 카드 빼기는 덱 고르기 화면이 생기면 붙여요.
+// 값·진열 수·치료량은 규칙 데이터(constants.json shop)에서 읽어요. 빼기 값은 쓸 때마다 올라요(0049 4절).
 import { C } from "../core/data";
 import type { Run } from "../core/run";
 import type { CardDef } from "../core/types";
@@ -14,13 +14,16 @@ export type ShopCommand =
   /** slot 번째 카드를 사서 spirit에게 가르쳐요 */
   | { kind: "buy"; slot: number; spirit: string }
   /** 모두 치료 (상점마다 한 번) */
-  | { kind: "heal" };
+  | { kind: "heal" }
+  /** 덱에서 카드 한 장 빼기 (상점마다 한 번) */
+  | { kind: "remove"; uid: number };
 
 const PRICE = C.shop.price as Record<string, number>;
 
 export class ShopSession {
   readonly offers: ShopOffer[];
   private healed = false;
+  private removed = false;
   private listeners = new Set<() => void>();
 
   constructor(readonly run: Run) {
@@ -44,7 +47,11 @@ export class ShopSession {
   }
 
   get removePrice(): number {
-    return C.shop.remove_price;
+    return this.run.removePrice();
+  }
+
+  canRemove(): boolean {
+    return !this.removed && this.run.gold >= this.removePrice && this.run.deck.length > 0;
   }
 
   get healPrice(): number {
@@ -84,6 +91,12 @@ export class ShopSession {
         this.run.gold -= this.healPrice;
         this.run.healAllPct(C.shop.heal_pct);
         this.healed = true;
+        return true;
+      }
+      case "remove": {
+        if (!this.canRemove() || !this.run.deck.some((c) => c.uid === cmd.uid)) return false;
+        this.run.buyRemoval(cmd.uid);
+        this.removed = true;
         return true;
       }
     }
