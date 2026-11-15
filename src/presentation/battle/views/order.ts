@@ -4,6 +4,7 @@ import { tokens } from "../../../design/tokens";
 import { box, circle } from "../../style/draw";
 import { icon, loadIcon } from "../../style/icons";
 import { placeholderArt } from "../../style/placeholder";
+import { faceKey } from "../../faces";
 import { LINE_HEIGHT, fontBox, measure, px, textStyle } from "../../style/text";
 import { COPY } from "../copy";
 import { ORDER as O, PREVIEW } from "../layout";
@@ -15,12 +16,16 @@ const T = tokens.provisional.text.battle;
 
 
 const slotW = O.slot.padX * 2 + O.numW + O.slot.gap + O.face + O.slot.gap + (O.action.size + O.action.ml);
+/** 아군 토큰 하나: 얼굴 + 카드 기호 (번호 없음) */
+const tokenW = O.face + O.slot.gap + O.action.ml + O.action.size + O.slot.gap;
+const bundleWidth = (n: number) => O.slot.padX * 2 + n * tokenW - O.slot.gap;
 const lineW = O.line.w + O.line.mx * 2;
 
 export function preloadOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   for (const s of vm.slots) {
     loadIcon(scene, s.action, O.action.size - O.action.pad * 2);
   }
+  for (const t of (vm.bundles ?? []).flat()) loadIcon(scene, t.icon, O.action.size - O.action.pad * 2);
 }
 
 /** 끊김 사선 (.rs-slot.cut::after): 칸 좌우 inset, 위 50%에서 아래로 높이만큼, 가운데 기준 회전.
@@ -52,7 +57,10 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   const nextText = `${COPY.turn} ${vm.nextTurn}`;
   const meW = O.meDot + O.meGap + measure(meText, T.orderLabel);
   const nextW = measure(nextText, T.orderLabel);
-  const innerW = meW + vm.slots.length * (lineW + slotW) + lineW + nextW;
+  const bundles = vm.bundles ?? [];
+  const bundleW = (i: number) => (bundles[i]?.length ? bundleWidth(bundles[i].length) + lineW : 0);
+  const bundlesW = bundles.reduce((a, _, i) => a + bundleW(i), 0);
+  const innerW = meW + vm.slots.length * (lineW + slotW) + lineW + nextW + bundlesW;
   const w = innerW + O.padX * 2;
   const x0 = O.cx - w / 2;
   const cy = O.top + O.h / 2;
@@ -74,7 +82,29 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
     x += lineW;
   };
 
-  for (const s of vm.slots) {
+  /** 아군 묶음: 둥근 테 안에 얼굴 + 카드 기호 (0038). 크기는 적 칸 값을 임시로 써요 (아군 토큰 크기 TODO_TOKEN) */
+  const bundle = (i: number) => {
+    const list = bundles[i];
+    if (!list?.length) return;
+    line();
+    const top = cy - O.slot.h / 2;
+    box(g, x, top, bundleWidth(list.length), O.slot.h, O.slot.radius, { ring: { width: 1, color: P.glassLine } });
+    let sx = x + O.slot.padX;
+    for (const t of list) {
+      circle(g, sx + O.face / 2, cy, O.face, { fill: P.face });
+      scene.add.image(sx, cy - O.face / 2, faceKey(t.face)).setOrigin(0, 0).setDisplaySize(O.face, O.face);
+      sx += O.face + O.slot.gap + O.action.ml;
+      const aTop = cy - (O.action.size + O.action.mt) / 2 + O.action.mt;
+      circle(g, sx + O.action.size / 2, aTop + O.action.size / 2, O.action.size, { fill: P.face });
+      const inner = O.action.size - O.action.pad * 2;
+      icon(scene, sx + O.action.pad, aTop + O.action.pad, t.icon, inner, inner, P.ink2);
+      sx += O.action.size + O.slot.gap;
+    }
+    x += bundleWidth(list.length);
+  };
+
+  for (const [i, s] of vm.slots.entries()) {
+    bundle(i);
     line();
     const top = cy - O.slot.h / 2;
     if (s.state === "now") box(g, x, top, slotW, O.slot.h, O.slot.radius, { ring: { width: O.slot.nowRing, color: P.warn } });
@@ -98,6 +128,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
     if (s.cut) cutMark(scene, x, top);
     x += slotW;
   }
+  bundle(vm.slots.length);
   line();
   scene.add.text(x, labelTop, nextText, textStyle(T.orderLabel, P.ink3));
   return g;

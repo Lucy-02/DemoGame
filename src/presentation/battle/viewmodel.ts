@@ -19,6 +19,13 @@ export interface OrderSlotVM {
   cut?: boolean;
 }
 
+/** 순서표의 아군 토큰: 놓은 카드 한 장 (0038). 주인 얼굴 + 카드 기호, 번호 없음 */
+export interface AllyTokenVM {
+  face: UnitFace;
+  /** 카드 그림 창의 효과 기호 */
+  icon: IconId;
+}
+
 export interface StatusVM {
   icon: IconId;
   n: number;
@@ -79,7 +86,8 @@ export interface EnemyTipVM {
 }
 
 export interface BattleVM {
-  order: { slots: OrderSlotVM[]; nextTurn: number };
+  /** bundles: 적 칸마다 그 앞에 묶인 아군 토큰, 마지막은 꼬리 묶음 (길이 = slots + 1, 0038). 없으면 적 칸만 */
+  order: { slots: OrderSlotVM[]; nextTurn: number; bundles?: AllyTokenVM[][] };
   allies: AllyVM[];
   enemies: EnemyVM[];
   mana: { n: number; max: number };

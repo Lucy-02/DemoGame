@@ -7,7 +7,7 @@ import { ELEMENT_ICON, faceKey } from "../faces";
 import { cardVM, equipVM } from "../run/fromCore";
 import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
-import type { AllyVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
+import type { AllyTokenVM, AllyVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
 
 /** 상태 → 정본 기호. 기호가 아직 없는 상태(벽·늦춤·별 등)는 그리지 않아요 (기호는 Lucy 확인 대기) */
 const STATUS_ICON: Partial<Record<StatusId, string>> = {
@@ -34,7 +34,7 @@ export function battleVM(b: Battle): BattleVM {
   const plays: Record<string, PlayVM> = {};
   for (const c of b.hand) if (b.canPlay(c).ok) plays[cardKey(c)] = { target: targetRule(b, c) };
   return {
-    order: { slots: order.map((o) => o.slot), nextTurn: b.turn + 1 },
+    order: { slots: order.map((o) => o.slot), nextTurn: b.turn + 1, bundles: bundlesOf(b) },
     allies, enemies,
     mana: { n: b.mana, max: C.mana_per_turn },
     hand,
@@ -70,6 +70,20 @@ function orderOf(b: Battle): OrderEntry[] {
     const main = move.actions[0];
     return { uid: x.uid, slot: { n: i + 1, art: "", action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON } };
   });
+}
+
+/** 놓은 카드를 끝나는 시각으로 적 칸 사이에 묶어요. 같은 시각이면 아군이 먼저 (0038 정렬) */
+function bundlesOf(b: Battle): AllyTokenVM[][] {
+  const ats = b.slots.filter((x) => !x.done).sort((x, y) => x.at - y.at).map((x) => x.at);
+  const out: AllyTokenVM[][] = ats.map(() => []);
+  out.push([]);
+  const planned = [...b.planned].sort((x, y) => x.end - y.end);
+  for (const p of planned) {
+    const k = ats.findIndex((at) => p.end <= at);
+    const icon = cardVM(p.card.cardId, p.owner).values[0]?.icon ?? CHARGE_ICON;
+    out[k < 0 ? ats.length : k].push({ face: p.owner, icon });
+  }
+  return out;
 }
 
 // ── 아군 ──
