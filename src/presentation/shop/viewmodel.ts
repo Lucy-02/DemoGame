@@ -25,4 +25,11 @@ export interface ShopVM {
   /** gain: 치료하면 줄마다 차는 HP */
   heal: ServiceVM & { gain: Record<string, number> };
   lanes: LaneVM[];
+  /** 빼기에서 고를 덱: 정령 줄(LaneVM.id)마다 그 정령의 카드 */
+  deck: Record<string, DeckCardVM[]>;
+}
+
+export interface DeckCardVM {
+  uid: number;
+  card: CardVM;
 }

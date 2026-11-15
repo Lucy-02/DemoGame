@@ -1,6 +1,8 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
 import { FLOORS, getRun, type MapNode, type NodeType } from "../../../core/run";
+import { ShopSession } from "../../../session/shop";
+import { SHOP_SCENE, type ShopSceneData } from "../../shop/ShopScene";
 import { runHud } from "../ui/hud";
 import { COLORS, H, bgFill, txt } from "../ui/widgets";
 
@@ -72,9 +74,12 @@ export class MapScene extends Phaser.Scene {
       case "event":
         this.scene.start("EventScene");
         break;
-      case "shop":
-        this.scene.start("ShopScene");
+      case "shop": {
+        // 상점은 새 화면이 맡아요 (0046 · 0050). 떠나면 지도로 돌아와요
+        const data: ShopSceneData = { session: new ShopSession(run), onLeave: (scene) => scene.scene.start("MapScene") };
+        this.scene.start(SHOP_SCENE, data);
         break;
+      }
       case "rest":
         this.scene.start("RestScene");
         break;

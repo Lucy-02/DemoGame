@@ -2,7 +2,7 @@
 
 - 날짜: 2026-11-09
 - 단계: 런 화면 묶음 B (갈래 고르기·정원 허브·일시정지와 포기·첫 시작·설정·도감)
-- 상태: **페르소나 컨펌, Lucy 확인 대기** (Lucy 위임 2026-11-09 18:40, 판단 기준 `design/concepts/LUCY_CRITERIA.md`)
+- 상태: **Lucy 확인 (2026-11-11 "확인했어")**. 페르소나 컨펌(Lucy 위임 2026-11-09 18:40) 뒤 확인. 첫 시작(셋이 한 화면)·정원 편성 버튼·열린 질문 4·7은 `0052`가 대체해요.
 - 근거 자료: 브리프 `design/concepts/BRIEF.md` "# 묶음 B" · 시안 B1 정령 관리 문법, B2 공통 오버레이 · **정리안 https://claude.ai/artifact/WcoL9EGghyJJb5QGsrU1N4** (프레임 `/mnt/project-files/design/batch-b/final/f1–f8.png`) · 페르소나 리뷰 `design/review/persona/batch-b.md` (링크 전체: `design/concepts/LINKS.md`)
 
 ## 맥락

@@ -20,3 +20,12 @@ export const SERVICE = {
 
 /** .btn2.quiet.b3 떠나기: 166×48 radius 12 gap 10 기호 18 */
 export const LEAVE = { x: GRID.gutter, y: GRID.buttonY, w: 166, h: GRID.buttonH, radius: 12, gap: 10, icon: 18 };
+
+/** 빼기 (P1 f4): 정령 줄마다 그 정령의 덱 한 줄. 줄 위에서 40 내려온 곳, 카드 92 간격 26. 장수가 많으면 간격을 좁혀 폭 564에 맞춰요
+ *  .rmmark 고른 카드 오른쪽 위 − 표식: 원 26 (바깥 테 3), 카드 밖으로 12 · 22
+ *  확인 줄: 카드 줄 아래 22, 높이 44 · 취소 132 + 12 + 빼기 168, 오른쪽 끝 맞춤 */
+export const DECK = {
+  x: GRID.gutter, w: 564, dy: 40, step: 118, lift: 10,
+  mark: { d: 26, ring: 3, dx: 12, dy: 22, bar: { w: 10, h: 2 } },
+  confirm: { dy: 151, h: 44, radius: 12, gap: 12, cancelW: 132, okW: 168, icon: 18, inner: 10, coin: 14, coinGap: 5 },
+};
