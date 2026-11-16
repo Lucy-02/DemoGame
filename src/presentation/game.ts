@@ -11,6 +11,9 @@ import { FIXTURES } from "./battle/fixtures";
 import { FRAME } from "./battle/layout";
 import { HOME_SCENE, HomeScene, type HomeSceneData } from "./home/HomeScene";
 import { RESULT_SCENE, ResultScene, type ResultSceneData } from "./result/ResultScene";
+import { EVENT_SCENE, EventScene, type EventSceneData } from "./event/EventScene";
+import { REST_SCENE, RestScene, type RestSceneData } from "./rest/RestScene";
+import { RUN_END_SCENE, RunEndScene, type RunEndSceneData } from "./runEnd/RunEndScene";
 import { SHOP_SCENE, ShopScene, type ShopSceneData } from "./shop/ShopScene";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
 import type { TabId } from "./spirits/viewmodel";
@@ -19,7 +22,7 @@ import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
   /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
-  screen?: "battle" | "spirits" | "result" | "shop" | "home";
+  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd";
   /** 저장에 이어진 게임의 세션 (screen이 없을 때) */
   session?: GameSession;
   /** 시험 판: 메인 화면 없이 바로 떠나요 (?screen=legacy) */
@@ -59,7 +62,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
         if (live) {
-          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene]] as const) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
@@ -99,6 +102,21 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         if (opts.screen === "shop") {
           const data: ShopSceneData = { scene: opts.scene, hover: opts.hover };
           game.scene.add(SHOP_SCENE, ShopScene, true, data);
+          return;
+        }
+        if (opts.screen === "runEnd") {
+          const data: RunEndSceneData = { scene: opts.scene };
+          game.scene.add(RUN_END_SCENE, RunEndScene, true, data);
+          return;
+        }
+        if (opts.screen === "event") {
+          const data: EventSceneData = { scene: opts.scene, hover: opts.hover };
+          game.scene.add(EVENT_SCENE, EventScene, true, data);
+          return;
+        }
+        if (opts.screen === "rest") {
+          const data: RestSceneData = { scene: opts.scene, hover: opts.hover };
+          game.scene.add(REST_SCENE, RestScene, true, data);
           return;
         }
         game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, lift: opts.lift });

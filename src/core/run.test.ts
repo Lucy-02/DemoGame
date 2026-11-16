@@ -220,3 +220,41 @@ describe("상점 카드 빼기 누진 (0049 4절)", () => {
     expect(r.deck.length).toBe(n);
   });
 });
+
+describe("카드 강화 (0080)", () => {
+  it("숫자 효과마다 +30% 올림, 최소 +1. 이름은 그대로", () => {
+    const base = cardDef("fire_claw");
+    const up = cardDef("fire_claw+");
+    expect(up.name).toBe(base.name);
+    expect(up.effects).toEqual([{ op: "damage", value: 8 }]);
+    expect(cardDef("glass_scale+").effects).toEqual([{ op: "wall", value: 3 }]);
+  });
+
+  it("강화는 카드당 한 번, 전투 덱에는 강화한 id로", () => {
+    const r = run(3);
+    const card = r.deck.find((c) => c.cardId === "basic_claw")!;
+    expect(r.canUpgrade(card.uid)).toBe(true);
+    r.upgradeCard(card.uid);
+    expect(r.canUpgrade(card.uid)).toBe(false);
+    expect(() => r.upgradeCard(card.uid)).toThrow();
+    expect(r.battleDeck().find((c) => c.uid === card.uid)!.cardId).toBe("basic_claw+");
+    expect(r.deck.find((c) => c.uid === card.uid)!.cardId).toBe("basic_claw");
+  });
+
+  it("숫자 효과가 없는 카드는 강화할 수 없어요", () => {
+    const r = run(1, true);
+    r.addCard("ricochet", "glass_salamander");
+    const card = r.deck.at(-1)!;
+    expect(r.canUpgrade(card.uid)).toBe(false);
+  });
+
+  it("복제는 같은 주인 · 같은 강화로 한 장 더", () => {
+    const r = run(4);
+    const card = r.deck[0];
+    r.upgradeCard(card.uid);
+    const n = r.deck.length;
+    r.duplicateCard(card.uid);
+    expect(r.deck.length).toBe(n + 1);
+    expect(r.deck.at(-1)).toMatchObject({ cardId: card.cardId, owner: card.owner, upgraded: true });
+  });
+});

@@ -10,18 +10,18 @@ import { HAND_CARD } from "../card/layout";
 import type { CardVM } from "../card/viewmodel";
 import { drawBackdrop } from "../run/backdrop";
 import { cardWithFace, drawCardTip } from "../run/cards";
+import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
 import { GOLD_ICONS, drawGold } from "../run/gold";
 import { LANE_ICONS, drawLane, type LaneState } from "../run/lanes";
-import { laneY } from "../run/lanes";
 import { CARD_FOCUS, FRAME } from "../run/layout";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
 import { adjustColor } from "../style/opacity";
 import { shopSession } from "./fixtures";
 import { shopVM } from "./fromShop";
-import { DECK, STOCK } from "./layout";
-import { REMOVE_ICONS, drawRemoveConfirm, drawRemoveMark } from "./views/remove";
-import { SERVICE_ICONS, drawLeave, drawPrice, drawService } from "./views/services";
+import { STOCK } from "./layout";
+import { COPY } from "./copy";
+import { SERVICE_ICONS, drawPrice, drawService } from "./views/services";
 import type { ShopVM } from "./viewmodel";
 
 export const SHOP_SCENE = "shop";
@@ -69,7 +69,7 @@ export class ShopScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...SERVICE_ICONS, ...REMOVE_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...SERVICE_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
     const vm = shopVM(this.session);
     for (const c of vm.cards) if (c) preloadHandCard(this, c.card, { showRarity: true, scale: STOCK.scale });
     for (const row of Object.values(vm.deck)) for (const c of row) preloadHandCard(this, c.card, { showRarity: true });
@@ -221,7 +221,7 @@ export class ShopScene extends Phaser.Scene {
         this.session.dispatch({ kind: "heal" });
       },
     });
-    drawLeave(this, "leave", () => this.onLeave?.(this));
+    drawQuietButton(this, "g-back", COPY.leave, () => this.onLeave?.(this));
   }
 
   private stopRemoving() {
@@ -234,64 +234,26 @@ export class ShopScene extends Phaser.Scene {
   /** 빼기: 왼쪽에 덱. 올리면 주인 줄에 덱 장수 a→b, 고르면 그 줄 아래에 취소 · 빼기 */
   private paintRemove(vm: ShopVM) {
     const { hover, pick } = this;
-    const focus = pick ?? (hover?.kind === "deck" ? hover.uid : undefined);
     drawBackdrop(this);
-    // 빈 곳을 누르면 고른 카드를 내려놓아요
-    this.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive().on("pointerup", () => {
-      if (this.pick === undefined) return;
-      this.pick = undefined;
-      this.redraw();
-    });
     drawGold(this, vm.gold - (pick === undefined ? 0 : vm.remove.price), pick === undefined ? {} : { was: vm.gold });
-
-    const late: (() => void)[] = [];
-    vm.lanes.forEach((l, i) => {
-      const row = vm.deck[l.id] ?? [];
-      const mine = focus !== undefined && row.some((c) => c.uid === focus);
-      drawLane(this, l, i, mine ? { hot: true, deckTo: (l.deck ?? row.length) - 1 } : {});
-      const y = laneY(i) + DECK.dy;
-      const step = row.length > 1 ? Math.min(DECK.step, (DECK.w - HAND_CARD.w) / (row.length - 1)) : DECK.step;
-      row.forEach((c, j) => {
-        const x = DECK.x + j * step;
-        const on = focus === c.uid;
-        const draw = () => {
-          const top = on ? y - DECK.lift : y;
-          const card = cardWithFace(this, c.card, l);
-          const view = createHandCard(this, card, x, top, { showRarity: true });
-          view.setHeld(on);
-          view.setLifted(on);
-          if (focus !== undefined && !on) view.opacity = CARD_FOCUS.dim;
-          // 겹친 줄에서는 다음 카드에 가려지지 않은 폭만 받아요 (올린 카드는 통째로)
-          const hitW = on || j === row.length - 1 ? HAND_CARD.w : Math.min(HAND_CARD.w, step);
-          this.add.zone(x, y, hitW, HAND_CARD.h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
-            .on("pointerover", () => this.setHover({ kind: "deck", uid: c.uid }))
-            .on("pointerout", () => this.leaveHover({ kind: "deck", uid: c.uid }))
-            .on("pointerup", (_p: unknown, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
-              e.stopPropagation();
-              this.pick = this.pick === c.uid ? undefined : c.uid;
-              this.redraw();
-            });
-          if (!on) return;
-          drawRemoveMark(this, x, top);
-          drawCardTip(this, card, x, top, HAND_CARD.w);
-          if (pick === c.uid) {
-            drawRemoveConfirm(this, y, vm.remove.price, {
-              cancel: () => { this.pick = undefined; this.redraw(); },
-              ok: () => {
-                this.removing = false;
-                this.pick = undefined;
-                this.hover = undefined;
-                this.session.dispatch({ kind: "remove", uid: c.uid });
-              },
-            });
-          }
-        };
-        if (on) late.push(draw);
-        else draw();
-      });
+    drawDeckPick(this, {
+      lanes: vm.lanes, rows: vm.deck, mode: "remove", pick,
+      hover: hover?.kind === "deck" ? hover.uid : undefined,
+      lane: (l, mine) => (mine ? { hot: true, deckTo: (l.deck ?? 0) - 1 } : {}),
+      confirm: { label: COPY.remove, icon: "fx-discard", danger: true, price: vm.remove.price },
+      cancelLabel: COPY.cancel,
+      on: {
+        hover: (uid) => (uid === undefined ? this.leaveHover(this.hover ?? { kind: "remove" }) : this.setHover({ kind: "deck", uid })),
+        toggle: (uid) => { this.pick = this.pick === uid ? undefined : uid; this.redraw(); },
+        clear: () => { this.pick = undefined; this.redraw(); },
+        ok: (uid) => {
+          this.removing = false;
+          this.pick = undefined;
+          this.hover = undefined;
+          this.session.dispatch({ kind: "remove", uid });
+        },
+        back: () => this.stopRemoving(),
+      },
     });
-    for (const f of late) f();
-    // 돌아가기는 덱 줄에 가려지지 않게 마지막 줄의 확인 줄 자리에 둬요
-    if (pick === undefined) drawLeave(this, "cancel", () => this.stopRemoving(), laneY(vm.lanes.length - 1) + DECK.dy + DECK.confirm.dy);
   }
 }

@@ -12,6 +12,9 @@ export const COPY = {
   shared: "공용",
   /** 내려놓는 장비의 꼬리표 (TEXT_RULES 5절 명사형) */
   dropped: "사라짐",
+  /** 버튼 동사 (0046 · 0076 17번) */
+  leave: "떠나기",
+  cancel: "취소",
   /** 안내 (TEXT_RULES 8절 해요체) */
   noBranch: "갈래를 고르면 대표 카드가 기술로 바뀌어요",
 };

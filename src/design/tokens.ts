@@ -314,6 +314,15 @@ export const tokens = {
         "tipBody": "12.5px",
         "tipStat": "18px"
       },
+      "runScreen": {
+        "record": "14px",
+        "story": "18px",
+        "optLabel": "17px",
+        "optText": "14px",
+        "keep": "15px",
+        "onlyNum": "20px",
+        "onlyWas": "14px"
+      },
       "branch": {
         "name": "26px",
         "level": "13px",

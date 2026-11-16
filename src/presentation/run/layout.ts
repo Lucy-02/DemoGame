@@ -3,7 +3,7 @@
 export const FRAME = { w: 1280, h: 800 };
 
 /** 0050 격자: 바깥 여백 48, 왼쪽 열 48~612, 정령 줄 664~1232, 버튼 줄 660~708 */
-export const GRID = { gutter: 48, lanesX: 664, lanesW: 568, buttonY: 660, buttonH: 48 };
+export const GRID = { gutter: 48, colW: 564, lanesX: 664, lanesW: 568, buttonY: 660, buttonH: 48 };
 
 /** .bg radial-gradient(70% 80% at 28% 45%, stageHi 0, floor 58%, stageLo 100%) */
 export const BG = { rx: 0.7, ry: 0.8, cx: 0.28, cy: 0.45, mid: 0.58 };
@@ -99,4 +99,38 @@ export const EQUIP_TIP = {
   line: { mt: 7, lh: 1.6 },
   /** 내려놓는 장비: 위 선까지 12, 선 아래 12 · 그림 24 (.75) · 흐린 기호 .5 */
   drop: { mt: 12, pt: 12, thumb: 24, thumbAlpha: 0.75, dim: 0.5 },
+};
+
+/** .btn2.quiet.b3 떠나기: 166×48 radius 12 gap 10 기호 18 */
+export const LEAVE = { x: GRID.gutter, y: GRID.buttonY, w: 166, h: GRID.buttonH, radius: 12, gap: 10, icon: 18 };
+
+/** 덱에서 고르기 (P1 f4, 상점 빼기 · 휴식 강화 · 이벤트, 0046): 정령 줄마다 그 정령의 덱 한 줄. 줄 위에서 40 내려온 곳, 카드 92 간격 26. 장수가 많으면 간격을 좁혀 폭 564에 맞춰요
+ *  .rmmark 고른 카드 오른쪽 위 − 표식: 원 26 (바깥 테 3), 카드 밖으로 12 · 22
+ *  확인 줄: 카드 줄 아래 22, 높이 44 · 취소 132 + 12 + 빼기 168, 오른쪽 끝 맞춤 */
+export const DECK_PICK = {
+  x: GRID.gutter, w: 564, dy: 40, step: 118, lift: 10,
+  mark: { d: 26, ring: 3, dx: 12, dy: 22, bar: { w: 10, h: 2 } },
+  /** 강화 미리보기 (정리안 f7): 고른 카드 오른쪽에 화살표 칸을 두고 강화한 카드를 끼워요. 뒤 카드는 그만큼 밀려요 */
+  upgrade: { arrow: 22 },
+  confirm: { dy: 151, h: 44, radius: 12, gap: 12, cancelW: 132, okW: 168, icon: 18, inner: 10, coin: 14, coinGap: 5 },
+};
+
+/** 선택지 판 (정리안 .opts · .opt, 휴식 · 이벤트 같은 부품): 왼쪽 열 폭, 첫 판 top 316, 판 사이 14
+ *  padding 16 20 radius 12, 이름 · 효과문 gap 6 (효과문 줄 높이 1.5) · .opt.hov 테 accHi + 바깥 4px accHi .14 · 고를 수 없으면 .4 */
+export const CHOICE = {
+  x: GRID.gutter, w: GRID.colW, top: 316, gap: 14, pad: [16, 20, 16, 20] as [number, number, number, number],
+  radius: 12, inner: 6, textLh: 1.5, hot: { outer: 4, alpha: 0.14 }, offAlpha: 0.4, belowStory: 24,
+};
+
+/** 이벤트 이름 줄 · 상황 글 (정리안 .evt · .evx): 상황 글 top 206 폭 564 줄 높이 1.6, 이름 줄은 그 위 gap 14 (A1 .event) */
+export const STORY = { x: GRID.gutter, w: GRID.colW, top: 206, gap: 14, lh: 1.6, titleLh: 1.35 };
+
+/** 판 결과 왼쪽 열 (정리안 .runleft · .rec · .keep · .onlybox): top 84, 줄 사이 22
+ *  "이번 판에서만" 점선 상자: 테 1.5 dashed veil .22, padding 22 20 18, 줄 사이 12, radius 12 · 줄 높이 28 · 기호 18 gap 10
+ *  배운 카드 썸네일 .tcard 46×65 (카드 .5배) gap 6, 넘치면 겹쳐요 · 버튼 두 개 166×48 gap 16, 버튼 줄(660) */
+export const RUN_END = {
+  x: GRID.gutter, top: 84, w: GRID.colW, gap: 22, recordLh: 1.35, keepGap: 8, keepIcon: 16,
+  only: { ring: 1.5, dash: 6, lineAlpha: 0.22, pad: [22, 20, 18, 20] as [number, number, number, number], gap: 12, radius: 12, rowH: 28, icon: 18, iconGap: 10 },
+  thumb: { w: 46, gap: 6 },
+  button: { w: 166, h: GRID.buttonH, gap: 16, radius: 12, y: GRID.buttonY },
 };

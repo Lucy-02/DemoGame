@@ -11,7 +11,8 @@ export type RunPhase =
   | { kind: "map" }
   /** 전투 칸에 들어왔어요. 편성은 들어올 때 뽑아 둬요 */
   | { kind: "battle"; tier: BattleTier; enemies: string[] }
-  | { kind: "event" }
+  /** 이벤트 칸. 이벤트는 들어올 때 뽑아 둬요 (이어하기에도 같은 이벤트) */
+  | { kind: "event"; eventId?: string }
   | { kind: "shop" }
   | { kind: "rest" }
   /** 이긴 전투의 보상을 고르는 중. 골드와 정원 경험은 이미 들어갔어요 */
@@ -133,7 +134,7 @@ function phaseOf(run: Run, node: MapNode): RunPhase {
     case "elite":
     case "boss":
       return { kind: "battle", tier: node.type === "battle" ? "normal" : node.type, enemies: run.pickEncounter(node.type).enemies };
-    case "event": return { kind: "event" };
+    case "event": return { kind: "event", eventId: run.pickEvent().id };
     case "shop": return { kind: "shop" };
     case "rest": return { kind: "rest" };
   }
