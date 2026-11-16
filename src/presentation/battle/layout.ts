@@ -29,8 +29,12 @@ export const ORDER = {
   numW: os(9),
   /** .rs-face 28, .rsf 24×20 */
   face: os(28), art: { w: os(24), h: os(20) },
-  /** .rsa 13px padding 1 margin-left -8 margin-top 12 */
-  action: { size: os(13), pad: os(1), ml: os(-8), mt: os(12) },
+  /** 행동 · 카드 기호 배지 (0074): 지름 = 얼굴 지름의 0.42배, 얼굴 원 둘레 45° 자리(오른쪽 아래). 안쪽 여백은 정본 .rsa padding 1 */
+  badge: { ratio: 0.42, deg: 45, pad: os(1) },
+  /** 아군 토큰 얼굴 = 적 얼굴의 0.8배 (0074) */
+  allyFace: os(28) * 0.8,
+  /** 묶음 하나에 보이는 얼굴 상한 N (0074). 넘으면 N−1개 + "+n" */
+  bundleMax: 4,
   /** 머리 오른쪽 · 다음 턴 앞 세로 구분선: 연결선과 같은 두께, 칸 높이 (0038 규격) */
   divider: { w: 1 },
 };

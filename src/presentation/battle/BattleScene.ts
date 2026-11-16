@@ -221,6 +221,12 @@ export class BattleScene extends Phaser.Scene {
     const tip = token?.tip ?? (enemyTip && { title: enemyTip.name, text: enemyTip.lines[0] ?? [] });
     this.orderFx = gather(this, 0, 0, () => {
       const ring = drawOrderRing(this, hit);
+      // 같은 적의 다른 토큰도 함께 밝혀요 (0074)
+      if (slot?.enemy !== undefined) {
+        for (const h of this.orderHits) {
+          if (h !== hit && h.kind === "enemy" && this.vm.order.slots[h.slot]?.enemy === slot.enemy) drawOrderRing(this, h);
+        }
+      }
       if (!tip) return;
       // 화면 밖으로 나가면 말풍선만 안쪽으로 밀어요
       const left = Math.max(SYS.right, Math.min(FRAME.w - SYS.right - GLASS.w, ring.cx - GLASS.w / 2));

@@ -13,20 +13,36 @@ import type { BattleVM } from "../viewmodel";
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
 
+/** 순서표 글자: 정본 크기의 1.4배 (0038) */
+const scaled = (size: string) => `${px(size) * ORDER_SCALE}px`;
+const LABEL_SIZE = scaled(T.orderLabel);
+const NUM_SIZE = scaled(T.orderNum);
 
 
-const slotW = O.slot.padX * 2 + O.numW + O.slot.gap + O.face + O.slot.gap + (O.action.size + O.action.ml);
-/** 아군 토큰 하나: 얼굴 + 카드 기호 (번호 없음) */
-const tokenW = O.face + O.slot.gap + O.action.ml + O.action.size + O.slot.gap;
-const bundleWidth = (n: number) => O.slot.padX * 2 + n * tokenW - O.slot.gap;
+
+/** 배지: 얼굴 지름 d의 0.42배 원을 얼굴 둘레 45° 자리에 (0074). over = 얼굴 원 밖으로 나온 길이 */
+const badgeOf = (d: number) => {
+  const size = d * O.badge.ratio;
+  const off = (d / 2) * Math.cos((O.badge.deg * Math.PI) / 180);
+  return { size, off, over: Math.max(0, off + size / 2 - d / 2) };
+};
+const ENEMY_BADGE = badgeOf(O.face);
+const ALLY_BADGE = badgeOf(O.allyFace);
+const slotW = O.slot.padX * 2 + O.numW + O.slot.gap + O.face + ENEMY_BADGE.over;
+/** 아군 토큰 하나: 얼굴(적의 0.8배) + 카드 기호 배지 (번호 없음) */
+const tokenW = O.allyFace + ALLY_BADGE.over + O.slot.gap;
+/** 묶음에 보이는 칸 수: 상한을 넘으면 N−1개 + "+n" 칩 한 칸 (0074) */
+const shownOf = (n: number) => (n > O.bundleMax ? O.bundleMax - 1 : n);
+const moreW = (n: number) => (n > O.bundleMax ? measure(`+${n - shownOf(n)}`, NUM_SIZE) + O.slot.gap : 0);
+const bundleWidth = (n: number) => O.slot.padX * 2 + shownOf(n) * tokenW - O.slot.gap + moreW(n);
 const lineW = O.line.w + O.line.mx * 2;
 
 
+const badgeIcon = (b: { size: number }) => Math.round(b.size - O.badge.pad * 2);
+
 export function preloadOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
-  for (const s of vm.slots) {
-    loadIcon(scene, s.action, O.action.size - O.action.pad * 2);
-  }
-  for (const t of (vm.bundles ?? []).flat()) loadIcon(scene, t.icon, O.action.size - O.action.pad * 2);
+  for (const s of vm.slots) loadIcon(scene, s.action, badgeIcon(ENEMY_BADGE));
+  for (const t of (vm.bundles ?? []).flat()) loadIcon(scene, t.icon, badgeIcon(ALLY_BADGE));
 }
 
 /** 끊김 사선 (.rs-slot.cut::after): 칸 좌우 inset, 위 50%에서 아래로 높이만큼, 가운데 기준 회전.
@@ -53,10 +69,8 @@ function textTopInLine(size: string) {
   return (px(size) * LINE_HEIGHT - (b.ascent + b.descent)) / 2;
 }
 
-/** 순서표 글자: 정본 크기의 1.4배 (0038) */
-const scaled = (size: string) => `${px(size) * ORDER_SCALE}px`;
-const LABEL = scaled(T.orderLabel);
-const NUM = scaled(T.orderNum);
+const LABEL = LABEL_SIZE;
+const NUM = NUM_SIZE;
 
 /** 그린 토큰의 자리 (호버 판정). bundle = 몇 번째 묶음, i = 그 안의 순서 / slot = 적 칸 번호(0부터) */
 export type OrderHit = { x: number; y: number; w: number; h: number } & ({ kind: "ally"; bundle: number; i: number } | { kind: "enemy"; slot: number });
@@ -110,6 +124,14 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     x += len;
   };
 
+  /** 배지: 얼굴(가운데 fx, cy) 둘레 45° 자리의 작은 원 + 기호. 얼굴 위에 쌓여요 (0074: 얼굴 < 테 < 배지) */
+  const badge = (fx: number, b: typeof ENEMY_BADGE, id: string, tint: string) => {
+    const bg = scene.add.graphics();
+    circle(bg, fx + b.off, cy + b.off, b.size, { fill: P.face });
+    const inner = badgeIcon(b);
+    icon(scene, fx + b.off - inner / 2, cy + b.off - inner / 2, id, inner, inner, tint);
+  };
+
   /** 묶음 칸: 연결선 + (있으면) 다음 적 쪽에 붙은 둥근 테 묶음. 아군 토큰 크기는 적 칸 값을 임시로 써요 (TODO_TOKEN) */
   const cell = (k: number) => {
     const list = bundles[k] ?? [];
@@ -119,17 +141,18 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     const top = cy - O.slot.h / 2;
     box(g, x, top, bw, O.slot.h, O.slot.radius, { ring: { width: 1, color: P.glassLine } });
     let sx = x + O.slot.padX;
-    list.forEach((t, i) => {
-      hits.push({ kind: "ally", bundle: k, i, x: sx, y: top, w: O.face, h: O.slot.h });
-      circle(g, sx + O.face / 2, cy, O.face, { fill: P.face });
-      scene.add.image(sx, cy - O.face / 2, faceKey(t.face)).setOrigin(0, 0).setDisplaySize(O.face, O.face);
-      sx += O.face + O.slot.gap + O.action.ml;
-      const aTop = cy - (O.action.size + O.action.mt) / 2 + O.action.mt;
-      circle(g, sx + O.action.size / 2, aTop + O.action.size / 2, O.action.size, { fill: P.face });
-      const inner = O.action.size - O.action.pad * 2;
-      icon(scene, sx + O.action.pad, aTop + O.action.pad, t.icon, inner, inner, P.ink2);
-      sx += O.action.size + O.slot.gap;
+    const d = O.allyFace;
+    list.slice(0, shownOf(list.length)).forEach((t, i) => {
+      hits.push({ kind: "ally", bundle: k, i, x: sx, y: cy - d / 2, w: d, h: d });
+      circle(g, sx + d / 2, cy, d, { fill: P.face });
+      scene.add.image(sx, cy - d / 2, faceKey(t.face)).setOrigin(0, 0).setDisplaySize(d, d);
+      badge(sx + d / 2, ALLY_BADGE, t.icon, P.ink2);
+      sx += tokenW;
     });
+    if (list.length > O.bundleMax) {
+      const more = `+${list.length - shownOf(list.length)}`;
+      scene.add.text(sx, cy - (px(NUM) * LINE_HEIGHT) / 2 + textTopInLine(NUM), more, textStyle(NUM, P.ink3));
+    }
     x += bw;
     line(O.line.mx);
   };
@@ -138,7 +161,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   for (const [k, s] of vm.slots.entries()) {
     cell(k);
     const top = cy - O.slot.h / 2;
-    hits.push({ kind: "enemy", slot: k, x, y: top, w: slotW, h: O.slot.h });
+    hits.push({ kind: "enemy", slot: k, x: x + O.slot.padX + O.numW + O.slot.gap, y: cy - O.face / 2, w: O.face, h: O.face });
     if (s.state === "now") box(g, x, top, slotW, O.slot.h, O.slot.radius, { ring: { width: O.slot.nowRing, color: P.warn } });
     let sx = x + O.slot.padX;
     const numH = px(NUM) * LINE_HEIGHT;
@@ -151,12 +174,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     sx += O.numW + O.slot.gap;
     circle(g, sx + O.face / 2, cy, O.face, { fill: P.face });
     placeholderArt(scene, sx + (O.face - O.art.w) / 2, cy - O.art.h / 2, O.art.w, O.art.h, P.ink3);
-    sx += O.face + O.slot.gap + O.action.ml;
-    // 행동 기호: 마진 상자(13 + 위 12)가 칸 가운데 → 위로 12 밀림
-    const aTop = cy - (O.action.size + O.action.mt) / 2 + O.action.mt;
-    circle(g, sx + O.action.size / 2, aTop + O.action.size / 2, O.action.size, { fill: P.face });
-    const inner = O.action.size - O.action.pad * 2;
-    icon(scene, sx + O.action.pad, aTop + O.action.pad, s.action, inner, inner, s.state === "now" ? P.warn : P.ink2);
+    badge(sx + O.face / 2, ENEMY_BADGE, s.action, s.state === "now" ? P.warn : P.ink2);
     if (s.cut) cutMark(scene, x, top);
     x += slotW;
   }
@@ -166,10 +184,10 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   return { g, hits };
 }
 
-/** 가리킨 토큰: 얼굴 원에 흰 테 (0038 호버) */
+/** 가리킨 토큰: 얼굴 원에 흰 테 (0038 호버). 테는 얼굴 원만 감싸요 (0074) */
 export function drawOrderRing(scene: Phaser.Scene, hit: OrderHit) {
   const g = scene.add.graphics();
-  const cx = hit.kind === "ally" ? hit.x + O.face / 2 : hit.x + O.slot.padX + O.numW + O.slot.gap + O.face / 2;
-  circle(g, cx, hit.y + hit.h / 2, O.face, { ring: { width: O.slot.nowRing, color: P.ink } });
+  const cx = hit.x + hit.w / 2;
+  circle(g, cx, hit.y + hit.h / 2, hit.w, { ring: { width: O.slot.nowRing, color: P.ink } });
   return { g, cx, bottom: O.top + O.h };
 }
