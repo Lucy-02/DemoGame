@@ -1,4 +1,5 @@
-// 전투 결과 화면 (0044 배치 + 0050 표현 + 0051 보상 구조). 왼쪽에 골드·보상 카드·넘기기, 오른쪽에 정령 세 줄.
+// 전투 결과 (0044 배치 + 0050 표현 + 0051 보상 구조). 전투 무대 위에 뜨는 창 하나예요 (라운드 X1): 왼쪽에 골드·보상 카드·넘기기, 오른쪽에 정령 줄.
+// 줄 자리는 런 화면 격자 그대로 쓰고, 창이 화면 가운데에 오도록 카메라만 옮겨요.
 // 카드에 올리면 주인 줄이 밝아지고 칸에 카드가 비쳐 보여요. 누르면 그 줄로 들어가요(전투 보상은 주인 고정, 0040).
 // 배울 정령이 여럿인 카드(이벤트)는 카드를 집은 뒤 줄을 눌러 정해요.
 // 정예 보상은 카드 아래 장비 줄이 처음부터 보이고, 카드를 받거나 넘긴 뒤에 장비를 누구에게 줄지 골라요 (0051 · 0064 Q2-A).
@@ -8,7 +9,7 @@ import * as Phaser from "phaser";
 import type { RewardSession } from "../../session/reward";
 import { createHandCard, preloadHandCard } from "../card/HandCard";
 import { HAND_CARD } from "../card/layout";
-import { drawBackdrop } from "../run/backdrop";
+import { drawBackdrop as drawStage } from "../battle/views/backdrop";
 import { cardWithFace, drawCardTip } from "../run/cards";
 import { GOLD_ICONS, drawGold } from "../run/gold";
 import { preloadEquipArt } from "../run/equip";
@@ -19,10 +20,11 @@ import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
 import { DEFAULT_RESULT, RESULTS } from "./fixtures";
 import { resultVM } from "./fromReward";
-import { EQUIP_TIP, REWARD, STRIP } from "./layout";
+import { EQUIP_TIP, REWARD, STRIP, placeResult } from "./layout";
 import type { EquipOptionVM, ResultVM } from "./viewmodel";
 import { EQUIP_ICONS, drawEquipStrip, drawEquipTip } from "./views/equip";
 import { REWARD_ICONS, drawSkip } from "./views/reward";
+import { drawWindow } from "./views/window";
 
 export const RESULT_SCENE = "result";
 
@@ -38,6 +40,8 @@ export interface ResultSceneData {
   hover?: string;
   /** 시각 검증용: 이 카드(key)를 받은 상태, 또는 "skip" */
   taken?: string;
+  /** 싸우던 장면 위에 띄웠어요 (그 장면이 아래에 멈춰 있음). 아니면 빈 전투 무대를 깔아요 */
+  over?: boolean;
   /** 다 고른 뒤에 불려요. 이 장면을 넘겨받아 다음 장면으로 넘어가요 */
   onDone?: (scene: Phaser.Scene) => void;
 }
@@ -59,6 +63,7 @@ export class ResultScene extends Phaser.Scene {
   /** 장비를 받은 정령, 또는 넘김 */
   private equipDone?: { spirit: string } | "skip";
   private onDone?: (scene: Phaser.Scene) => void;
+  private over = false;
   /** 입력 처리 중에 지우면 안 돼서, 다시 그리기는 다음 update에서 해요 */
   private dirty = false;
 
@@ -84,6 +89,7 @@ export class ResultScene extends Phaser.Scene {
     this.held = undefined;
     this.equipDone = undefined;
     this.onDone = data.onDone;
+    this.over = !!data.over;
     this.dirty = false;
   }
 
@@ -174,9 +180,12 @@ export class ResultScene extends Phaser.Scene {
     /** 말풍선은 다 그린 뒤 맨 위에 올려요 */
     let tip: (() => void) | undefined;
     const lane = (id?: string) => vm.lanes.find((l) => l.id === id);
-    drawBackdrop(this);
+    const at = placeResult(vm.lanes.length, !!vm.equip);
+    this.cameras.main.setScroll(at.scroll.x, at.scroll.y);
+    if (!this.over) drawStage(this).setScrollFactor(0);
+    drawWindow(this, at.win);
     // 빈 곳을 누르면 집은 카드를 내려놓아요 (맨 아래에 깔아서 다른 입력이 먼저 받아요)
-    this.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive().on("pointerup", () => {
+    this.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setScrollFactor(0).setInteractive().on("pointerup", () => {
       if (this.held === undefined) return;
       this.held = undefined;
       this.dirty = true;
@@ -187,7 +196,7 @@ export class ResultScene extends Phaser.Scene {
     const skipHover = hover?.kind === "skip" && phase === "cards";
     const total = vm.gold.total + (skipped && !this.session ? vm.skipGold ?? 0 : 0);
     const plus = skipHover && vm.skipGold !== undefined ? `+${vm.skipGold}` : !done && vm.gold.gained ? `+${vm.gold.gained}` : undefined;
-    drawGold(this, total, { plus });
+    drawGold(this, total, { plus }, { x: at.col.x, y: at.goldY });
 
     const focusI = done ? undefined : held ?? (hover?.kind === "card" ? hover.i : undefined);
     const focus = focusI === undefined ? undefined : vm.cards[focusI];
@@ -249,17 +258,17 @@ export class ResultScene extends Phaser.Scene {
 
     if (vm.equip && phase !== "done") {
       const offer = vm.equip;
-      drawEquipStrip(this, offer, phase === "equip", {
+      drawEquipStrip(this, offer, phase === "equip", { x: at.col.x, y: at.stripY, w: at.col.w }, {
         over: () => this.setHover({ kind: "strip" }),
         out: () => this.leaveHover({ kind: "strip" }),
       });
-      if (hover?.kind === "strip") tip = () => drawEquipTip(this, offer.tip, { kind: "below", right: STRIP.x + STRIP.w, top: STRIP.y + STRIP.h + EQUIP_TIP.belowStrip });
+      if (hover?.kind === "strip") tip = () => drawEquipTip(this, offer.tip, { kind: "below", right: at.col.x + at.col.w, top: at.stripY + STRIP.h + EQUIP_TIP.belowStrip });
     }
 
     // 보상 카드: 왼→오 = 줄 위→아래
     vm.cards.forEach((c, i) => {
       if (got?.card === i) return;
-      const x = REWARD.x + i * (REWARD.w + REWARD.gap), y = REWARD.y;
+      const x = at.col.x + i * (REWARD.w + REWARD.gap), y = at.cardsY;
       const card = cardWithFace(this, c.card, c.owners.length === 1 ? lane(c.owners[0]) : undefined, REWARD.scale);
       const view = createHandCard(this, card, x + (REWARD.w - HAND_CARD.w) / 2, y + REWARD.h - HAND_CARD.h, { showRarity: true, scale: REWARD.scale });
       const on = focusI === i;
@@ -281,14 +290,14 @@ export class ResultScene extends Phaser.Scene {
     });
 
     if (!done) {
-      drawSkip(this, vm.skipGold, skipHover, {
+      drawSkip(this, vm.skipGold, skipHover, { x: at.col.x, y: at.skipY }, {
         over: () => this.setHover({ kind: "skip" }),
         out: () => this.leaveHover({ kind: "skip" }),
         click: () => this.take("skip"),
       });
     } else if (equip?.canSkip) {
       // 받을 정령이 모두 꽉 찼을 때만 장비를 넘길 수 있어요 (0056). 받는 것은 없어요
-      drawSkip(this, undefined, hover?.kind === "skip", {
+      drawSkip(this, undefined, hover?.kind === "skip", { x: at.col.x, y: at.skipY }, {
         over: () => this.setHover({ kind: "skip" }),
         out: () => this.leaveHover({ kind: "skip" }),
         click: () => this.skipEquip(),

@@ -30,3 +30,10 @@ export function withAlpha(css: string, a: number): string {
   const { color } = rgba(css);
   return `rgba(${color >> 16},${(color >> 8) & 255},${color & 255},${a})`;
 }
+
+/** CSS color-mix(in srgb, a t, b): a를 t만큼, 나머지는 b (불투명 색끼리) */
+export function mix(a: string, b: string, t: number): string {
+  const ca = rgba(a).color, cb = rgba(b).color;
+  const ch = (shift: number) => Math.round(((ca >> shift) & 255) * t + ((cb >> shift) & 255) * (1 - t));
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+}

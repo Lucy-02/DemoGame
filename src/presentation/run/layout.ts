@@ -73,7 +73,7 @@ export const EQUIP_SLOT = {
   old: { d: 32, out: 13, inset: 3, alpha: 0.7, line: 1.5 },
 };
 
-/** 평소 자리의 작은 칸 (0064 Q2-A f5 · 0066). s32 = 정령 관리 이름 카드 (.s32 .slot), s24 = 전투 정보판 (.bslot)
+/** 평소 자리의 작은 칸 (0064 Q2-A f5 · 0066). s32 = 정령 관리 이름 카드 (.s32 .slot), s24 = 전투 유닛 풀이 (.bslot)
  *  표식: left -3 top -3, 마름모 6 / 5, 바깥 테 1.5, 둘째는 8 / 7 옆 · 공명 점(.pips.big): 칸 아래 10, 지름 8 gap 5 */
 export const EQUIP_MINI = {
   s32: { size: 32, radius: 6, ring: 1, dash: 4, inset: 2, emptyLine: 0.24, hot: { outer: 3, alpha: 0.16 }, mark: { x: -3, y: -3, d: 6, outline: 1.5, step: 8 } },

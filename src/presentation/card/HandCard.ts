@@ -1,5 +1,5 @@
 // 손패 크기 카드 (.cd.h 92×129). 정본 frame-old.css "카드" + r5.css "카드: ▲ 성장, 꼬리표".
-// 못 내는 카드는 몸(틀·그림·이름·수치·초상)에만 회색 필터를 걸고, 비용 동전과 이유 띠는 그 위에 또렷하게 그려요(0043).
+// 못 내는 카드는 몸(틀·그림·이름·수치·초상)에만 회색 필터를 걸고, 비용 동전과 자물쇠 꼬리표는 그 위에 또렷하게 그려요(0043).
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { rgba } from "../style/color";
@@ -36,6 +36,7 @@ export function preloadHandCard(scene: Phaser.Scene, c: CardVM, opts: HandCardOp
   const icons: [string, number][] = [[c.element, C.element.size], ...c.values.map((v): [string, number] => [v.icon, two ? C.glyph.sizeTwo : C.glyph.size])];
   if (opts.showRarity && c.rarity) icons.push([`rarity-${c.rarity}`, C.rarity.size], [`rarity-${c.rarity}-edge`, C.rarity.size]);
   if (c.mark) icons.push([c.mark, C.mark.icon]);
+  if (c.need) icons.push(["g-lock", C.lock.icon], [c.need, C.lock.icon]);
   for (const [id, w] of icons) {
     loadIcon(scene, id, w);
     if (opts.scale && opts.scale !== 1) loadIcon(scene, id, sharpSize(w, opts.scale));
@@ -198,7 +199,7 @@ function drawRarity(scene: Phaser.Scene, rarity: NonNullable<CardVM["rarity"]>, 
   icon(scene, x + rx, y + ry, `rarity-${rarity}`, s, s, RARITY_TINT[rarity]);
 }
 
-/** 낼 수 있는지를 알리는 것: 비용 동전(마력 부족이면 테)과 못 내는 이유 띠. 못 내는 카드에서도 흐리지 않아요. */
+/** 낼 수 있는지를 알리는 것: 비용 동전(마력 부족이면 테)과 조건 미달 자물쇠 꼬리표. 못 내는 카드에서도 흐리지 않아요. */
 function drawSignals(scene: Phaser.Scene, c: CardVM, x: number, y: number) {
   const g = scene.add.graphics();
   const cx = x + C.cost.x + C.cost.d / 2, cy = y + C.cost.y + C.cost.d / 2;
@@ -209,12 +210,20 @@ function drawSignals(scene: Phaser.Scene, c: CardVM, x: number, y: number) {
   const cs = size(costN);
   render(scene, costN, cx - cs.w / 2, cy - cs.h / 2);
 
-  if (c.why) {
-    const wn: Node = {
-      t: "row", pad: C.why.pad, radius: C.why.radius, align: "center", style: { fill: P.whyBg },
-      children: [text(c.why, T.cardWhy, P.whyInk, { lh: C.why.lh })],
+  if (c.need) {
+    // 조건 미달 (C안): 윗선 가운데 자물쇠 + 필요한 조건 기호. 바깥 테는 종이색 (.lock box-shadow 0 0 0 1.5 paper)
+    const L = C.lock;
+    const ln: Node = {
+      t: "row", h: L.h, pad: [0, L.padX, 0, L.padX], radius: L.radius, gap: L.gap, align: "center", style: { fill: P.whyBg },
+      children: [
+        { t: "icon", id: "g-lock", w: L.icon, h: L.icon, tint: P.whyInk },
+        { t: "icon", id: c.need, w: L.icon, h: L.icon, tint: P.danger },
+      ],
     };
-    const ws = size(wn);
-    render(scene, wn, x + C.w / 2 - ws.w / 2, y + C.why.y);
+    const ls = size(ln);
+    // 반 픽셀에 놓이면 가는 기호가 뭉개져요
+    const lx = Math.round(x + C.w / 2 - ls.w / 2), ly = y + L.y;
+    box(g, lx - L.ring, ly - L.ring, ls.w + L.ring * 2, ls.h + L.ring * 2, L.radius + L.ring, { fill: P.paper });
+    render(scene, ln, lx, ly);
   }
 }

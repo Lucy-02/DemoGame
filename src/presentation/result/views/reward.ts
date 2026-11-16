@@ -12,7 +12,7 @@ const T = tokens.provisional.text.result;
 export const REWARD_ICONS = [["i-coin", SKIP.gold.coin]] as const;
 
 /** 넘기기: 받을 골드가 있으면 버튼 안에 늘 붙어 있어요 (0051). 넘기기 기호는 아직 없어서 점선 칸으로 비워 둬요 (TODO_ICON) */
-export function drawSkip(scene: Phaser.Scene, gold: number | undefined, hover: boolean, on: { click: () => void; over: () => void; out: () => void }) {
+export function drawSkip(scene: Phaser.Scene, gold: number | undefined, hover: boolean, at: { x: number; y: number }, on: { click: () => void; over: () => void; out: () => void }) {
   const S = SKIP;
   const todo: Node = {
     t: "block", w: S.todo.size, h: S.todo.size,
@@ -33,8 +33,8 @@ export function drawSkip(scene: Phaser.Scene, gold: number | undefined, hover: b
       } as Node]),
     ],
   };
-  render(scene, node, S.x, S.y);
+  render(scene, node, at.x, at.y);
   const s = size(node);
-  scene.add.zone(S.x, S.y, s.w, s.h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+  scene.add.zone(at.x, at.y, s.w, s.h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
     .on("pointerover", on.over).on("pointerout", on.out).on("pointerup", on.click);
 }

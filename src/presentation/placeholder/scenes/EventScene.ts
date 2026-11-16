@@ -3,7 +3,7 @@ import { RewardSession } from "../../../session/reward";
 import { RESULT_SCENE, type ResultSceneData } from "../../result/ResultScene";
 import * as Phaser from "phaser";
 import { C } from "../../../core/data";
-import { getRun } from "../../../core/run";
+import { flowOf } from "../flow";
 import { maxHpOf } from "../../../core/stats";
 import type { EventDef, EventOutcome } from "../../../core/types";
 import { runHud } from "../ui/hud";
@@ -15,7 +15,7 @@ export class EventScene extends Phaser.Scene {
     super("EventScene");
   }
   init() {
-    this.ev = getRun().pickEvent();
+    this.ev = flowOf(this).run.pickEvent();
   }
   create() {
     const ev = this.ev;
@@ -31,8 +31,9 @@ export class EventScene extends Phaser.Scene {
   }
 
   private apply(outs: EventOutcome[]) {
-    const run = getRun();
-    let next: (() => void) | null = () => this.scene.start("MapScene");
+    const flow = flowOf(this);
+    const run = flow.run;
+    let next: (() => void) | null = () => flow.leave();
     for (const o of outs) {
       switch (o.type) {
         case "healPct": run.healAllPct(o.value); break;
@@ -44,14 +45,14 @@ export class EventScene extends Phaser.Scene {
           const cards = run.rollCards(3, C.reward.rarity_normal, o.rarity);
           next = () => {
             const session = new RewardSession(run, { kind: "cards", cardIds: cards.map((c) => c.id) });
-            const data: ResultSceneData = { session, onDone: (scene) => scene.scene.start("MapScene") };
+            const data: ResultSceneData = { session, onDone: () => flow.leave() };
             this.scene.start(RESULT_SCENE, data);
           };
           break;
         }
         case "removeCard":
           next = null;
-          this.events.once("resume", () => this.scene.start("MapScene"));
+          this.events.once("resume", () => flow.leave());
           this.scene.launch("DeckScene", { mode: "remove", from: this.scene.key, onPick: (uid: number) => run.removeCard(uid) });
           this.scene.pause();
           break;

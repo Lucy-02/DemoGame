@@ -1,6 +1,7 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
-import { FLOORS, getRun, type MapNode, type NodeType } from "../../../core/run";
+import { FLOORS, type MapNode, type NodeType } from "../../../core/run";
+import { flowOf } from "../flow";
 import { runHud } from "../ui/hud";
 import { COLORS, H, bgFill, txt } from "../ui/widgets";
 
@@ -19,7 +20,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   create() {
-    const run = getRun();
+    const run = flowOf(this).run;
     bgFill(this, 0x1f2a24, 0x14121c);
     runHud(this);
 
@@ -59,25 +60,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private enter(n: MapNode) {
-    const run = getRun();
-    run.enter(n);
-    switch (n.type) {
-      case "battle":
-      case "elite":
-      case "boss": {
-        const enc = run.pickEncounter(n.type);
-        this.scene.start("BattleScene", { enemies: enc.enemies, kind: n.type });
-        break;
-      }
-      case "event":
-        this.scene.start("EventScene");
-        break;
-      case "shop":
-        this.scene.start("ShopScene");
-        break;
-      case "rest":
-        this.scene.start("RestScene");
-        break;
-    }
+    // 칸으로 가는 길은 게임 흐름이 정해요 (전투 편성 뽑기·저장도 거기서)
+    flowOf(this).enter(n.id);
   }
 }

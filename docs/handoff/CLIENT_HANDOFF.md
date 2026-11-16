@@ -17,7 +17,7 @@
 ### 지켜야 하는 것
 - **정본 값은 확정 토큰이 아니에요.** "정본을 따른다"와 "그 값을 확정한다"는 다른 일이라, 정본 값은 `provisional` 구역에만 둬요.
 - **정본 CSS는 실제로 적용되는 값만 옮겨요.** 정의 안 된 변수, 덮어쓰기, 무효 선언은 브라우저에서 그려지지 않아요(예: `.calc`의 `border-top`은 `--me`가 없어 선이 없음). 판단 기준은 CSS 원문이 아니라 정본 캡처(frame-*.png)예요.
-- 개발 서버 기본 화면은 새 전투 화면이에요(`?screen=legacy`가 임시 UI).
+- 개발 서버 기본 화면은 저장에 이어진 게임(메인 화면)이에요. 새 전투 화면 고정 장면은 `?screen=battle`, 정원·저장 없는 시험 판은 `?screen=legacy`.
 - 1280×800 고정 뷰포트로 그리고, 브라우저에서는 개발용 창 틀(제목줄·전체 화면·닫기)을 씌워요. 창에 맞춰 확대하지 않아요.
 
 ### 결정이 필요한 것은 묻기
@@ -87,28 +87,27 @@
 ## 5. 코드 지도
 
 ```
-src/app/main.ts                기본 = 새 전투 화면, ?screen=legacy = 예전 임시 UI, ?hover=<cardKey>
+src/app/main.ts                기본 = 저장에 이어진 게임(GameSession.load), ?screen=battle 등 = 고정 장면, ?screen=legacy = 시험 판, ?hover=<cardKey>
                                브라우저면 개발용 창 틀(index.html #dev-window, body.dev-window)을 켬
 src/presentation/game.ts       Phaser.Game (WEBGL, 1280×800, Scale.NONE). 글꼴 로드 후 시작, postBoot에서 BattleScene 추가
 src/presentation/faces.ts      IconId, FaceId, FACES, faceKey, preloadFaces (battle↔card 순환을 끊으려고 여기 둠)
 src/presentation/battle/
   BattleScene.ts               init({vm?, hover?}) → create()에서 views를 순서대로 그림
-  layout.ts                    FRAME BG FLOOR WHERE SYS ORDER ALLY ENEMY GROUND HOVER_RING INFO INTENT BAND MANA HAND END ETIP HOVER
+  layout.ts                    FRAME BG FLOOR SYS ORDER ALLY ENEMY GROUND INFO TIP INTENT BAND MANA HAND END HOVER
   viewmodel.ts, copy.ts        BattleVM 타입, 화면 문구
   fixtures/canonRest.ts        정본 고정 장면
   views/backdrop.ts            배경 방사 그라데이션 + 바닥
   views/topbar.ts, order.ts    위치·시스템 버튼, 행동 순서 띠
-  views/units.ts               아군·적(그림 자리, 그림자, 정보판, 의도 알약). drawEnemy → { ring }
-  views/enemyTip.ts            적 툴팁 (gather로 Container)
+  views/units.ts               아군·적(그림 자리, 그림자, 발밑 정보 묶음 "캡슐 막대 V1": HP 막대 + 기호 칩 줄, 의도 알약). drawAlly/drawEnemy → { bounds, info, marks, bottom, intent? }. 가리키면 drawUnitTip(유닛 풀이)·drawMarkTip(기호 한 줄 풀이)·drawAllyPulse(깎일 구간 깜빡임)·drawIntent(이어진 의도 밝게)
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
-  HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }. 몸(drawBody)과 비용 동전·이유 띠(drawSignals)를 나눠 그림
+  HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }. 몸(drawBody)과 비용 동전·자물쇠 꼬리표(drawSignals, CardVM.need)를 나눠 그림
   cardTip.ts                   카드 호버 말풍선 내용 → tooltip/
   materials.ts                 bandTexture, windowTexture, paintPattern, MATERIAL_FILL, liftedBodyTexture
   layout.ts                    HAND_CARD, WINDOW_PATH(정령별 창 윗선 SVG path), BUBBLE
   viewmodel.ts                 CardVM(key, illustration?, off?, detail…), CardDetailVM {text, calc?, why?, owner}, RichText
   art.ts                       CARD_ART_IDS, CardArtId, cardArtKey, preloadCardArt (public/assets/cards/<id>.webp)
-src/presentation/tooltip/      말풍선 공용(Tooltip.ts 그리기·배치, skins.ts 유리 스킨, content.ts 문단)
+src/presentation/tooltip/      말풍선 공용(Tooltip.ts 그리기·배치, skins.ts 카드 말풍선 스킨, content.ts 문단)
 src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/canon/spirit-r4v5, 탭 내용 0021)
   SpiritsScene.ts              정원 세션 상태 → spiritsVM → 통째로 다시 그리기 (입력 중엔 다음 update에서)
   fromGarden.ts                core/garden 상태 → SpiritsVM (규칙 판단은 core 함수만 씀)
@@ -121,13 +120,17 @@ src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오�
   gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경
   cards.ts                     cardWithFace(초상 홈 얼굴 굽기), drawCardTip(카드 위 말풍선)
   fromCore.ts                  cardVM(cardId, owner?), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 임시 표)
-src/presentation/result/       전투 결과 (?screen=result, 0044·0051). 고정 장면 RESULTS. 런 연결 전
-src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, P1 f3). 씨앗 런 + ShopSession. 빼기는 덱 고르기 화면이 생기면
-src/session/shop.ts            상점 세션: buy·heal 명령 → Run, onChange. 진열·값·치료량은 constants.json shop
-src/session/garden.ts          정원 세션: 명령 → core/garden → onChange. snapshot/restore (platform 저장 연결 전)
+src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 게임 흐름(flow.ts)이 전투 위에 띄움. 고정 장면 RESULTS
+src/presentation/home/         타이틀 겸 메인 화면 (0054). 기본 진입점, 정원·판 저장에 연결(fromGame.ts). 고정 장면 ?screen=home&scene=first|full|running
+src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=remove[:카드], P1 f3 · f4). 레거시 지도에서 열림. 빼기 = 덱 펼침 → 고르기 → 확인
+src/session/shop.ts            상점 세션: buy·heal·remove 명령 → Run, onChange. 진열·값·치료량은 constants.json shop
+src/session/garden.ts          정원 세션: 명령 → core/garden → onChange. snapshot/restore
+src/session/run.ts             판 세션: 판의 자리(phase) + enter·leave·finishBattle·finishReward. 칸 사이 저장 save/restore
+src/session/game.ts            게임 세션: 정원 + 판 + platform 저장. 판 떠나기·경험(grantBattle)·판 닫기(endRun)
+src/presentation/flow.ts       게임 흐름: phase를 보고 그 칸을 맡은 화면을 열어요. 새 화면이 없는 칸은 임시 장면
 src/core/garden.ts             판 밖 정령 상태와 성장 규칙 (0021), 수치는 src/data/growth.json
 src/presentation/style/        CSS 재현 도우미 (6절). flex 노드에 onClick(클릭 영역)·wrap(줄바꿈 글자)
-src/presentation/placeholder/  예전 임시 UI. 새 화면이 규칙에 연결될 때마다 해당 화면을 지움
+src/presentation/placeholder/  예전 임시 장면. flow.ts에서 새 화면이 없는 칸만 맡아요. 새 화면이 규칙에 연결될 때마다 해당 화면을 지움
 src/core, src/data             게임 로직·데이터. UI 작업에서 건드리지 않음. 바꾸면 골든 스냅샷 이유를 PR에
 src/platform, electron/        저장·창. 렌더러는 Electron을 직접 import하지 않음(window.platformBridge)
 tools/visual/compare.ts        pnpm visual
@@ -166,7 +169,7 @@ scripts/                       build-tokens, check-literals, check-assets
   - 같은 묶음 옆 카드 ±12, 옆 묶음 ±10, 나머지 카드 opacity .62.
   - 말풍선: 폭 240, 아래 끝 y=598, 가로는 `clamp(8, 1280-8-240, cx-120)`. 꼬리는 카드 가운데. 나타날 때 alpha 0 + translateY 6에서 올라와요.
   - 카드 사이를 옮겨 다닐 때 깜빡이지 않게 pointerout은 1ms 늦게 처리해요.
-  - 카드에 호버하는 동안 적 호버 링과 적 툴팁을 숨겨요.
+  - 카드에 호버하는 동안 가리킨 유닛의 풀이·가리킴 효과를 숨겨요.
   - 트윈 길이와 곡선은 `tokens.provisional.motion.hover`.
 - 말풍선 문단: 본문 13px/1.5(강조 14.5, 용어 점선 밑줄 offset 3), 계산 12px(강조 13, padding-top 5, **선 없음**), 이유 12.5px, 주인 12px.
 
@@ -180,7 +183,7 @@ scripts/                       build-tokens, check-literals, check-assets
 
 ```
 pnpm install
-pnpm dev:web                    # http://localhost:5173 (개발용 창 틀 포함). ?hover=claw 처럼 호버 상태로 시작 가능
+pnpm dev:web                    # http://localhost:5173 (개발용 창 틀 포함). ?hover=claw 처럼 호버 상태로 시작 가능 (유닛: ?hover=unit:enemy:2, 기호: ?hover=unit:ally:2:3)
 pnpm dev                        # Electron
 pnpm check                      # 타입 + 의존 규칙 + 단위 테스트 + 리터럴 (CI와 같음)
 pnpm test:e2e                   # Electron 스모크 (리눅스 무화면 환경은 xvfb-run -a)
@@ -220,6 +223,7 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 1. **session 층**: `src/session`에서 `src/core` 전투 상태 → `BattleVM` 변환, 카드 사용·턴 종료 명령. fixture 대신 실제 상태로 그리기. 의존 방향은 아키텍처 문서를 따라요.
 2. **모션 디테일**: 지금 모션 값은 `provisional.motion.hover` 하나뿐이에요. 들기·밀림·말풍선·카드 사용(0009 "가벼운 종이", 0010 "빛 한 번 쓸기")의 길이·곡선은 Lucy가 정할 값이에요. 선택지를 보여 주고 고르게 해요.
 3. 기믹·차징(`frame-gimmick.png`), H3.
+5. **순서표(0074)**: 토큰은 `battle/views/order.ts` 한 규칙(얼굴 → 테 → 배지)으로 그리고, Lucy가 고른 값은 `provisional.order` 토큰에 있어요. 상태 모음은 `?screen=battle&scene=order-plan|order-play`. 턴 재생은 `battle/playback.ts`가 턴 종료 이벤트를 턴 종료 직전 VM에 입혀 행동마다 한 장면을 만들고, 장면마다 다시 그려요(행동 하나 450ms, `provisional.motion.playback.step`). 남은 것: 재생 연출(타격·쓰러짐·상태 변화·늦춰진 행동의 자리 옮김), 아군 토큰 되돌리기(전투 규칙 필요), 말풍선의 아군 결과 값·썸네일·꼬리, 적 효과문을 문구 규칙 문장 틀로.
 4. 고해상도 화면(devicePixelRatio) 대응. 글자·구운 텍스처 해상도까지 같이 다뤄야 해요.
 
 정령 관리·정원
@@ -228,4 +232,4 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 - 성장 길 카드를 카드 몸체(`card/HandCard`)로, 이야기 문안(S3 뒤)
 - 정렬·필터·편성 바꾸기는 모양만 있어요 (출전 준비 화면과 함께)
 
-임시 UI(`src/presentation/placeholder`, `?screen=legacy`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 임시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 규칙으로 끝까지 플레이되는 화면은 임시 UI뿐이에요.
+임시 UI(`src/presentation/placeholder`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 임시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 판의 지도·이벤트·휴식·판 결과는 아직 임시 장면이 맡아요(`presentation/flow.ts`).

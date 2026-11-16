@@ -18,8 +18,9 @@ export { drawEquipTip, type EquipTipAt } from "../../run/equipTip";
 type Handlers = { click?: () => void; over?: () => void; out?: () => void };
 
 /** 장비 줄. on = 지금 장비를 고를 차례 (카드를 받거나 넘긴 뒤) */
-export function drawEquipStrip(scene: Phaser.Scene, offer: EquipOfferVM, on: boolean, handlers: Handlers) {
-  const S = STRIP;
+/** at = 줄의 왼쪽 위와 폭 (왼쪽 열 폭) */
+export function drawEquipStrip(scene: Phaser.Scene, offer: EquipOfferVM, on: boolean, at: { x: number; y: number; w: number }, handlers: Handlers) {
+  const S = { ...STRIP, ...at };
   const g = scene.add.graphics();
   if (on) {
     const o = S.hot.outer;

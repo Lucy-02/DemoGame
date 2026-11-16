@@ -13,3 +13,4 @@ src/presentation/spirits/
 src/presentation/result/
 src/presentation/run/
 src/presentation/shop/
+src/presentation/home/

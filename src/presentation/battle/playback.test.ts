@@ -1,0 +1,55 @@
+// 턴 재생 장면: 실제 전투의 턴 종료 이벤트를 턴 종료 직전 화면에 입혀요
+import { describe, expect, it } from "vitest";
+import { Run } from "../../core/run";
+import { BattleSession } from "../../session/battle";
+import { battleVM, cardUid } from "./fromBattle";
+import { playbackFrames } from "./playback";
+
+function turn(seed: number, plays: number) {
+  const run = new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: false, party: ["fire_fox", "mist_cat", "glass_salamander"] });
+  const s = new BattleSession(run, run.pickEncounter("battle").enemies);
+  for (let i = 0; i < plays; i++) {
+    const vm = battleVM(s.battle);
+    const key = Object.keys(vm.plays)[0];
+    if (!key) break;
+    const enemy = s.battle.aliveEnemies()[0];
+    s.dispatch({ kind: "play", uid: cardUid(key), target: vm.plays[key].target.kind === "pick" ? { side: "e", uid: enemy.uid } : undefined });
+  }
+  const before = battleVM(s.battle);
+  const cast = { allies: s.battle.spirits.map((x) => x.id), enemies: s.battle.enemies.filter((e) => !e.dead).map((e) => e.uid) };
+  const events = s.dispatch({ kind: "endTurn" });
+  return { s, before, frames: playbackFrames(before, cast, events), events };
+}
+
+describe("턴 재생", () => {
+  it("행동 하나마다 한 장면: 첫 장면은 재생 시작, 마지막 장면에는 모두 지나가요", () => {
+    const { before, frames, events } = turn(7, 2);
+    const acts = events.filter((e) => e.k === "spiritAct" || e.k === "enemyAct").length;
+    expect(frames).toHaveLength(acts + 1);
+    expect(frames[0].order.playing).toBe(true);
+    expect((frames[0].order.bundles ?? []).flat().some((t) => t.past)).toBe(false);
+    const last = frames[frames.length - 1];
+    expect((last.order.bundles ?? []).flat().every((t) => t.past)).toBe(true);
+    expect(last.order.slots.every((x) => x.state === "past" || x.cut === "done")).toBe(true);
+    // 턴 종료 직전 화면은 그대로예요
+    expect(before.order.playing).toBeUndefined();
+  });
+
+  it("재생 중에는 카드를 낼 수 없고, 지금 차례는 지나가지 않은 첫 적 행동이에요", () => {
+    const { frames } = turn(7, 1);
+    for (const f of frames) {
+      expect(f.plays).toEqual({});
+      const open = f.order.slots.filter((x) => x.state !== "past" && x.cut !== "done");
+      expect(f.order.slots.filter((x) => x.state === "now")).toEqual(open.slice(0, 1));
+    }
+  });
+
+  it("마지막 장면의 HP는 확정된 전투 상태와 같아요 (턴 끝 효과가 없을 때)", () => {
+    const { s, frames, events } = turn(7, 2);
+    const last = frames[frames.length - 1];
+    const lastAct = events.map((e) => e.k).lastIndexOf("enemyAct");
+    const after = events.slice(lastAct).filter((e) => e.k === "damage" || e.k === "heal");
+    // 마지막 행동 뒤(턴 끝 · 다음 턴 시작)에 HP가 바뀌지 않았을 때만 견줘요
+    if (after.length === 0) expect(last.allies.map((a) => a.hp)).toEqual(s.battle.spirits.map((x) => x.hp));
+  });
+});

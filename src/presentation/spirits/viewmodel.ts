@@ -51,12 +51,14 @@ export type FactVM =
   /** 할 일이 있을 때만 (장부 §3-2 C). 버튼은 그 탭을 열어요 (타일 → 탭 → 행동) */
   | { kind: "todo"; label: string; action: string; tab: TabId; badge: IconId };
 
-/** 개요 탭 능력치 한 줄: 기본 + 단계 + 성격 */
+/** 개요 탭 능력치 한 줄: 기본 + 단계 + 성격 + 장비 */
 export interface StatRowVM {
   label: string;
   base: number;
   stage: number;
   personality: number;
+  /** 남긴 장비가 더하거나 깎는 몫 (0066: 어디서 온 값인지는 여기서만 쪼개요) */
+  equip: number;
   total: number;
 }
 

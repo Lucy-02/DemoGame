@@ -46,9 +46,8 @@ export function drawMana(scene: Phaser.Scene, mana: BattleVM["mana"]) {
       text(`${COPY.maxPrefix}${mana.max}`, T.manaMax, P.ink3),
     ],
   };
-  render(scene, num, MANA.x, MANA.y + MANA.padTop);
-  const label = text(COPY.mana, T.manaLabel, P.ink3, { w: MANA.d });
-  render(scene, label, MANA.x, MANA.y + MANA.d - MANA.labelBottom - size(label).h);
+  // 0050: 라벨 글자 없이 숫자만, 동전 가운데
+  render(scene, num, MANA.x, MANA.y + (MANA.d - size(num).h) / 2);
 }
 
 export interface HandView {
@@ -218,7 +217,8 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
   return { setHover, setHeld, startDrag, moveDrag, endDrag };
 }
 
-export function drawEnd(scene: Phaser.Scene, vm: BattleVM) {
+/** onEnd: 턴 종료를 누르면 (고정 장면에서는 없어요) */
+export function drawEnd(scene: Phaser.Scene, vm: BattleVM, onEnd?: () => void) {
   const B = END.button;
   const pile = (id: string, n: number): Node => ({
     t: "row", align: "center", gap: END.piles.gap,
@@ -228,13 +228,9 @@ export function drawEnd(scene: Phaser.Scene, vm: BattleVM) {
     t: "col", w: END.w, gap: END.gap, align: "stretch",
     children: [
       {
-        t: "row", h: B.h, radius: B.radius, align: "center", justify: "center",
+        t: "row", h: B.h, radius: B.radius, align: "center", justify: "center", onClick: onEnd,
         style: { fill: P.endCalm, ring: { width: B.ring, color: P.endCalmLine } },
         children: [text(COPY.endTurn, T.endTurn, P.ink2)],
-      },
-      {
-        t: "row", align: "baseline", justify: "center",
-        children: [text(COPY.playable, T.endSub, P.ink3), text(String(vm.playable), T.endSubNum, P.ink)],
       },
       {
         t: "row", justify: "between", pad: END.piles.pad,
