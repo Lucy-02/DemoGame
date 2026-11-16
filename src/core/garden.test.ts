@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { C, CARDS, GROWTH, SPIRITS, enemyDef, partyScale, scaleEnemy } from "./data";
 import {
-  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, joinCandidates, join, joinOffer, keepEquipment, levelOf, newGarden,
+  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, joinCandidates, defaultFront, setFront, join, joinOffer, keepEquipment, levelOf, newGarden,
   seeEpisode, startGarden, todos, unlockKeys, type Garden,
 } from "./garden";
 import { Run } from "./run";
@@ -177,6 +177,14 @@ describe("처음 세 마리 (0053)", () => {
     const g2 = join(g1, second[0]);
     expect(g2.spirits).toHaveLength(3);
     expect(joinOffer(g2)).toEqual([]);
+  });
+
+  it("기본 앞열은 지난 판의 앞열이고, 없거나 가진 정령이 아니면 첫 정령이에요 (0076 14)", () => {
+    const g = newGarden(1);
+    expect(defaultFront(g)).toBe(g.spirits[0].id);
+    const g2 = setFront(g, g.spirits[2].id);
+    expect(defaultFront(g2)).toBe(g.spirits[2].id);
+    expect(setFront(g2, "nobody")).toBe(g2);
   });
 
   it("출전하지 않은 정령은 경험을 받지 않아요", () => {

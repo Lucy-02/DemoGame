@@ -52,6 +52,8 @@ export interface Garden {
   runs?: number;
   /** 아직 고르지 않은 깃들기 수 (0053) */
   joins?: number;
+  /** 지난 판의 앞열. 출전 준비의 기본값이에요 (0076 14) */
+  front?: string;
 }
 
 // ───────────────────────── 만들기 · 찾기 ─────────────────────────
@@ -108,6 +110,16 @@ export function join(g: Garden, id: string): Garden {
     ...g, joins: (g.joins ?? 0) - 1,
     spirits: [...g.spirits, { id, exp: 0, stage: "baby", personality: pick.personality, deed: 0, affinity: 0, episodes: 0, seen: [] }],
   };
+}
+
+/** 다음 판의 기본 앞열: 지난 판의 앞열, 없으면 첫 정령 (0076 14) */
+export function defaultFront(g: Garden): string {
+  return g.front && g.spirits.some((s) => s.id === g.front) ? g.front : g.spirits[0].id;
+}
+
+/** 이번 판의 앞열을 남겨요. 가진 정령만 돼요 */
+export function setFront(g: Garden, id: string): Garden {
+  return g.spirits.some((s) => s.id === id) && g.front !== id ? { ...g, front: id } : g;
 }
 
 /** 시작 풀에 아직 없는 정령이 남았을 때만 깃들기를 하나 더해요 */
