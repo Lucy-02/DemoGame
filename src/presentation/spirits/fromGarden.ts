@@ -23,7 +23,7 @@ export const TODO_ICON: Record<Todo["kind"], string> = { evolve: "g-up", unlock:
 
 const STAT_ORDER: StatKey[] = ["hp", "power", "guard", "focus", "speed"];
 const STAT_LABEL: Record<StatKey, string> = { hp: "HP", power: "파워", guard: "가드", focus: "포커스", speed: "스피드" };
-const ROLE_ICON: Record<string, string> = { attack: "role-attack", guard: "role-guard", support: "role-support", disrupt: "role-disrupt" };
+export const ROLE_ICON: Record<string, string> = { attack: "role-attack", guard: "role-guard", support: "role-support", disrupt: "role-disrupt" };
 
 /** 이 정령의 전용 카드 (해금 키 순서: lv2, lv3, adult) */
 function exclusiveCards(id: string): { card: CardDef; key: string; at: string }[] {

@@ -28,4 +28,5 @@
 ## 결과와 후속 작업
 - 규칙: 후보마다 성격(`joinCandidates`, 0076 12), 지난 앞열(`Garden.front`), 떠나기 전에 정하는 오늘 센 기운.
 - 화면: `src/presentation/join/`(깃들기 + 박자), `src/presentation/depart/`(출전 준비). 흐름은 판 결과 → 깃들기 → 메인, 메인 `탐험 떠나기` → 출전 준비(정령 둘 이상) → 지도.
+- 구현 캡처(2026-11-16): `/mnt/project-files/design/join-impl/` 1~7. 고정 장면 `?screen=join&scene=first|second`, `?screen=depart&scene=three|two`.
 - 남은 것: 오늘 센 기운 기호(`TODO_ICON`), 성격 기호(칩만), 무대 조명 · 박자 시간 값(`TODO_TOKEN`), 불여우 그림(실루엣).
