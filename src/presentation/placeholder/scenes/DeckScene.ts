@@ -1,7 +1,7 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
 import { cardDef } from "../../../core/data";
-import { getRun } from "../../../core/run";
+import { flowOf } from "../flow";
 import type { DeckCard } from "../../../core/types";
 import { runStats } from "../ui/preview";
 import { CARD_H, CARD_W, COLORS, H, W, button, cardView, txt } from "../ui/widgets";
@@ -20,7 +20,7 @@ export class DeckScene extends Phaser.Scene {
   }
 
   create(data: DeckSceneData) {
-    const run = getRun();
+    const run = flowOf(this).run;
     const cards = (data.cards ?? run.deck).slice().sort((a, b) =>
       a.owner === b.owner ? cardDef(a.cardId).cost - cardDef(b.cardId).cost : a.owner.localeCompare(b.owner));
     this.add.rectangle(0, 0, W, H, 0x000000, 0.85).setOrigin(0, 0).setInteractive();
@@ -40,7 +40,7 @@ export class DeckScene extends Phaser.Scene {
     const ch = CARD_H * scale + 14;
     const x0 = W / 2 - ((cols - 1) * cw) / 2;
     cards.forEach((c, i) => {
-      const v = cardView(this, c.cardId, c.owner, runStats(c.owner));
+      const v = cardView(this, c.cardId, c.owner, runStats(run, c.owner));
       v.setScale(scale).setPosition(x0 + (i % cols) * cw, 150 + Math.floor(i / cols) * ch);
       content.add(v);
       if (data.mode === "remove") {

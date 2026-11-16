@@ -17,7 +17,7 @@
 ### 지켜야 하는 것
 - **정본 값은 확정 토큰이 아니에요.** "정본을 따른다"와 "그 값을 확정한다"는 다른 일이라, 정본 값은 `provisional` 구역에만 둬요.
 - **정본 CSS는 실제로 적용되는 값만 옮겨요.** 정의 안 된 변수, 덮어쓰기, 무효 선언은 브라우저에서 그려지지 않아요(예: `.calc`의 `border-top`은 `--me`가 없어 선이 없음). 판단 기준은 CSS 원문이 아니라 정본 캡처(frame-*.png)예요.
-- 개발 서버 기본 화면은 새 전투 화면이에요(`?screen=legacy`가 임시 UI).
+- 개발 서버 기본 화면은 저장에 이어진 게임(메인 화면)이에요. 새 전투 화면 고정 장면은 `?screen=battle`, 정원·저장 없는 시험 판은 `?screen=legacy`.
 - 1280×800 고정 뷰포트로 그리고, 브라우저에서는 개발용 창 틀(제목줄·전체 화면·닫기)을 씌워요. 창에 맞춰 확대하지 않아요.
 
 ### 결정이 필요한 것은 묻기
@@ -87,7 +87,7 @@
 ## 5. 코드 지도
 
 ```
-src/app/main.ts                기본 = 새 전투 화면, ?screen=legacy = 예전 임시 UI, ?hover=<cardKey>
+src/app/main.ts                기본 = 저장에 이어진 게임(GameSession.load), ?screen=battle 등 = 고정 장면, ?screen=legacy = 시험 판, ?hover=<cardKey>
                                브라우저면 개발용 창 틀(index.html #dev-window, body.dev-window)을 켬
 src/presentation/game.ts       Phaser.Game (WEBGL, 1280×800, Scale.NONE). 글꼴 로드 후 시작, postBoot에서 BattleScene 추가
 src/presentation/faces.ts      IconId, FaceId, FACES, faceKey, preloadFaces (battle↔card 순환을 끊으려고 여기 둠)
@@ -121,13 +121,16 @@ src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오�
   cards.ts                     cardWithFace(초상 홈 얼굴 굽기), drawCardTip(카드 위 말풍선)
   fromCore.ts                  cardVM(cardId, owner?), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 임시 표)
 src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 레거시 전투가 그 위에 띄움. 고정 장면 RESULTS
-src/presentation/home/         타이틀 겸 메인 화면 (?screen=home&scene=first|full|running, 0054). 고정 장면. 저장·정원·런 연결 전
+src/presentation/home/         타이틀 겸 메인 화면 (0054). 기본 진입점, 정원·판 저장에 연결(fromGame.ts). 고정 장면 ?screen=home&scene=first|full|running
 src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=remove[:카드], P1 f3 · f4). 레거시 지도에서 열림. 빼기 = 덱 펼침 → 고르기 → 확인
 src/session/shop.ts            상점 세션: buy·heal·remove 명령 → Run, onChange. 진열·값·치료량은 constants.json shop
-src/session/garden.ts          정원 세션: 명령 → core/garden → onChange. snapshot/restore (platform 저장 연결 전)
+src/session/garden.ts          정원 세션: 명령 → core/garden → onChange. snapshot/restore
+src/session/run.ts             판 세션: 판의 자리(phase) + enter·leave·finishBattle·finishReward. 칸 사이 저장 save/restore
+src/session/game.ts            게임 세션: 정원 + 판 + platform 저장. 판 떠나기·경험(grantBattle)·판 닫기(endRun)
+src/presentation/flow.ts       게임 흐름: phase를 보고 그 칸을 맡은 화면을 열어요. 새 화면이 없는 칸은 임시 장면
 src/core/garden.ts             판 밖 정령 상태와 성장 규칙 (0021), 수치는 src/data/growth.json
 src/presentation/style/        CSS 재현 도우미 (6절). flex 노드에 onClick(클릭 영역)·wrap(줄바꿈 글자)
-src/presentation/placeholder/  예전 임시 UI. 새 화면이 규칙에 연결될 때마다 해당 화면을 지움
+src/presentation/placeholder/  예전 임시 장면. flow.ts에서 새 화면이 없는 칸만 맡아요. 새 화면이 규칙에 연결될 때마다 해당 화면을 지움
 src/core, src/data             게임 로직·데이터. UI 작업에서 건드리지 않음. 바꾸면 골든 스냅샷 이유를 PR에
 src/platform, electron/        저장·창. 렌더러는 Electron을 직접 import하지 않음(window.platformBridge)
 tools/visual/compare.ts        pnpm visual
@@ -228,4 +231,4 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 - 성장 길 카드를 카드 몸체(`card/HandCard`)로, 이야기 문안(S3 뒤)
 - 정렬·필터·편성 바꾸기는 모양만 있어요 (출전 준비 화면과 함께)
 
-임시 UI(`src/presentation/placeholder`, `?screen=legacy`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 임시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 규칙으로 끝까지 플레이되는 화면은 임시 UI뿐이에요.
+임시 UI(`src/presentation/placeholder`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 임시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 판의 지도·전투·이벤트·휴식·판 결과는 아직 임시 장면이 맡아요(`presentation/flow.ts`).

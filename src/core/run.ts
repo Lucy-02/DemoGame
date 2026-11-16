@@ -61,6 +61,29 @@ export interface BattleReward {
   equipDone: boolean;
 }
 
+/** 칸 사이 저장 (아키텍처 0001 PR 2). 모양이 바뀌면 RUN_SAVE_VERSION을 올려요 */
+export const RUN_SAVE_VERSION = 1;
+
+export interface RunSave {
+  version: number;
+  opts: RunOptions;
+  rng: number;
+  spirits: RunSpirit[];
+  deck: DeckCard[];
+  received: DeckCard[];
+  nextUid: number;
+  gold: number;
+  frontId: string;
+  map: MapNode[];
+  current: string | null;
+  visited: string[];
+  strongElement: Element;
+  recentEncounters: string[];
+  normalBattles: number;
+  removals: number;
+  bossDefeated: boolean;
+}
+
 export const FLOORS = 7; // 보스 전 층 수. 보스는 FLOORS + 1층
 const COLS = 4;
 
@@ -117,6 +140,40 @@ export class Run {
     const drawn = this.rng.pick(C.acts[0].elements as Element[]);
     this.strongElement = opts.strongElement ?? drawn;
     for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
+  }
+
+  /** 저장용 값. JSON으로 바꿔도 돼요 */
+  save(): RunSave {
+    const copy = <T>(v: T): T => structuredClone(v);
+    return {
+      version: RUN_SAVE_VERSION, opts: copy(this.opts), rng: this.rng.state,
+      spirits: copy(this.spirits), deck: copy(this.deck), received: copy(this.received), nextUid: this.nextUid,
+      gold: this.gold, frontId: this.frontId, map: copy([...this.map.values()]), current: this.current?.id ?? null, visited: [...this.visited],
+      strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles,
+      removals: this.removals, bossDefeated: this.bossDefeated,
+    };
+  }
+
+  /** 저장해 둔 판을 그 자리에서 이어요. 난수도 같은 자리에서 이어져요 (0052 같은 드로우) */
+  static load(s: RunSave): Run {
+    if (s.version !== RUN_SAVE_VERSION) throw new Error(`판 저장 형식이 달라요: ${s.version}`);
+    const run = new Run(structuredClone(s.opts));
+    run.rng = new Rng(s.rng);
+    run.spirits = structuredClone(s.spirits);
+    run.deck = structuredClone(s.deck);
+    run.received = structuredClone(s.received);
+    run.nextUid = s.nextUid;
+    run.gold = s.gold;
+    run.frontId = s.frontId;
+    run.map = new Map(structuredClone(s.map).map((n) => [n.id, n]));
+    run.current = s.current ? run.map.get(s.current) ?? null : null;
+    run.visited = [...s.visited];
+    run.strongElement = s.strongElement;
+    run.recentEncounters = [...s.recentEncounters];
+    run.normalBattles = s.normalBattles;
+    run.removals = s.removals;
+    run.bossDefeated = s.bossDefeated;
+    return run;
   }
 
   addCard(cardId: string, owner: string) {
@@ -451,13 +508,6 @@ export class Run {
     }
   }
 }
-
-let current: Run | null = null;
-export const getRun = () => {
-  if (!current) throw new Error("no run");
-  return current;
-};
-export const setRun = (r: Run) => (current = r);
 
 /**
  * 이 정령이 지닌 전용 무기가 바꾸는 카드 (0055 · 0056): 대표 카드 → 갈래의 기술.

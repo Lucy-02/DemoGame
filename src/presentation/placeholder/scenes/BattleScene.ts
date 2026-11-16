@@ -1,12 +1,9 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
-import { RewardSession } from "../../../session/reward";
-import { RESULT_SCENE, type ResultSceneData } from "../../result/ResultScene";
 import * as Phaser from "phaser";
 import { ASSETS, C, ELEMENT_COLOR, ELEMENT_NAME, ROLE_NAME, cardDef, type VisualAsset } from "../../../core/data";
-import { returnHp } from "../../../core/stats";
 import { Battle, statusN, statusStrength, type BCard, type BEnemy, type BSpirit, type BattleEvent, type Ref } from "../../../core/battle";
 import { Rng } from "../../../core/rng";
-import { getRun } from "../../../core/run";
+import { flowOf } from "../flow";
 import type { Element } from "../../../core/types";
 import { makeVisual, type Visual } from "../ui/visual";
 import { CARD_H, CARD_W, COLORS, H, W, bar, bgFill, button, cardView, toast, txt } from "../ui/widgets";
@@ -63,7 +60,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create() {
-    const run = getRun();
+    const run = flowOf(this).run;
     bgFill(this, this.kind === "boss" ? 0x2c1f2a : 0x1f2a2a, 0x14121c);
     this.add.ellipse(W / 2, 470, W * 1.1, 160, 0x000000, 0.25);
     this.battle = new Battle(run.spirits, run.battleDeck(), this.enemyIds, run.frontId, new Rng(run.rng.int(0, 1e9)), run.enemyScale(), run.battleTraits());
@@ -248,7 +245,7 @@ export class BattleScene extends Phaser.Scene {
 
   private drawUi() {
     const b = this.battle;
-    const run = getRun();
+    const run = flowOf(this).run;
     const u = this.uiLayer;
     u.removeAll(true);
     u.add(this.add.rectangle(0, 0, W, 44, 0x0e0c15, 0.9).setOrigin(0, 0));
@@ -453,33 +450,15 @@ export class BattleScene extends Phaser.Scene {
     const b = this.battle;
     if (b.result === "ongoing" || this.finished) return;
     this.finished = true;
-    const run = getRun();
-    for (const s of b.spirits) run.spirit(s.id).hp = s.downed ? returnHp(run.spirit(s.id)) : s.hp;
-    if (b.result === "defeat") {
+    const outcome = { won: b.result !== "defeat", spirits: b.spirits.map((s) => ({ id: s.id, hp: s.hp, downed: s.downed })) };
+    if (!outcome.won) {
       this.banner("모두 쓰러졌어요…", 0x5a2020);
-      this.time.delayedCall(1400, () => this.scene.start("EndScene", { victory: false }));
+      this.time.delayedCall(1400, () => flowOf(this).battleOver(this, outcome));
       return;
     }
     this.banner("승리!", 0x2d5a2d);
-    this.time.delayedCall(1100, () => {
-      if (this.kind === "boss") {
-        run.bossDefeated = true;
-        this.scene.start("EndScene", { victory: true });
-        return;
-      }
-      // 전투 결과는 새 화면이 맡아요 (0044 · 0051). 고르면 지도로 돌아가요
-      const session = new RewardSession(run, { kind: "battle", reward: run.rollBattleReward(this.kind) });
-      // 싸우던 장면은 아래에 멈춰 두고 그 위에 창으로 띄워요 (라운드 X1)
-      const data: ResultSceneData = {
-        session, over: true,
-        onDone: (scene) => {
-          scene.scene.stop("BattleScene");
-          scene.scene.start("MapScene");
-        },
-      };
-      this.scene.launch(RESULT_SCENE, data);
-      this.scene.pause();
-    });
+    // 보상(새 전투 결과 창)·판 결과로 가는 길은 게임 흐름이 정해요
+    this.time.delayedCall(1100, () => flowOf(this).battleOver(this, outcome));
   }
 
   // ───────────────────────── 연출 ─────────────────────────
