@@ -37,9 +37,10 @@ export const SLIM = {
   close: { right: 18, top: 14, h: 26, icon: 18, gap: 6 },
 };
 
-/** 펼친 줄 아래 붙는 판 (0046 f9): 출처별 능력치 막대, 성격, 이번 판에 받은 카드 */
+/** 펼친 줄의 아래쪽 (0046 f9): 머리 아래에 출처별 능력치 막대, 성격, 이번 판에 받은 카드가 같은 상자 안에 이어져요 */
 export const SHEET = {
-  gap: 6, pad: 20, colGap: 28,
+  /** 왼쪽 끝은 얼굴 고리와 같은 줄, 아래 여백 */
+  padX: 29, pad: 24,
   /** 능력치 줄: 기호 · 값 · 막대 (기본 · 단계 · 그 밖) */
   stat: { rowH: 26, icon: 15, valueW: 30, gap: 8, bar: { w: 150, h: 6, gap: 2 }, baseAlpha: 0.45 },
   per: { gap: 10 },

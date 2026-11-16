@@ -29,7 +29,7 @@ import { COPY, KIND_ICON } from "./copy";
 import { DEFAULT_MAP, mapRun } from "./fixtures";
 import { mapVM, sheetVM } from "./fromRun";
 import { FRAME, GOLD_AT, MINI, PATH, SHEET, SLIM } from "./layout";
-import type { MapNodeVM, MapVM } from "./viewmodel";
+import type { MapNodeVM, MapVM, SheetVM } from "./viewmodel";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.result;
@@ -212,28 +212,32 @@ export class MapScene extends Phaser.Scene {
         y += SLIM.h + SLIM.gap;
         return;
       }
-      drawLane(this, l, i, { y, noSocket: true, on: { click: () => this.toggle(l.id) } });
+      // 머리(얼굴 · 이름 · HP) → 출처별 막대 넷 → 받은 카드가 한 상자예요. 같은 능력치를 두 번 보이지 않아요
+      const sheet = sheetVM(this.run, l.id);
+      const h = LANE.h + (sheet ? this.sheetH(sheet) : 0);
+      drawLane(this, l, i, { y, h, noStats: true, noSocket: true, on: { click: () => this.toggle(l.id) } });
+      if (sheet) this.drawSheet(l, sheet, y + LANE.h);
       const C = SLIM.close;
       const close: Node = {
         t: "row", align: "center", gap: C.gap, h: C.h, onClick: () => this.toggle(l.id),
         children: [{ t: "icon", id: "g-close", w: C.icon, h: C.icon, tint: P.ink3Spirit }, { t: "text", text: COPY.close, size: T.button, color: P.ink2 }],
       };
       render(this, close, SLIM.x + SLIM.w - C.right - size(close).w, y + C.top);
-      y += LANE.h + SHEET.gap;
-      y += this.drawSheet(l, y) + SLIM.gap;
+      y += h + SLIM.gap;
     });
   }
 
-  /** 펼친 줄 아래 판: 능력치 출처 막대(기본 · 단계 · 그 밖), 성격, 이번 판에 받은 카드. 풀이는 올렸을 때만 나와요 (0050). 그린 높이를 돌려줘요 */
-  private drawSheet(l: LaneVM, y: number): number {
-    const sheet = sheetVM(this.run, l.id);
-    if (!sheet) return 0;
+  /** 펼친 줄의 아래쪽: 능력치 출처 막대(기본 · 단계 · 그 밖), 성격, 이번 판에 받은 카드. 풀이는 올렸을 때만 나와요 (0050) */
+  private sheetH(sheet: SheetVM): number {
+    const S = SHEET, R = S.stat;
+    const leftH = sheet.stats.length * R.rowH + (sheet.personality ? S.per.gap + R.rowH : 0);
+    return Math.max(leftH, sheet.cards.length ? HAND_CARD.h : 0) + S.pad;
+  }
+
+  private drawSheet(l: LaneVM, sheet: SheetVM, y: number) {
     const S = SHEET, R = S.stat;
     const cards = sheet.cards.slice(0, S.cards.max);
-    const leftH = sheet.stats.length * R.rowH + (sheet.personality ? S.per.gap + R.rowH : 0);
-    const h = S.pad * 2 + Math.max(leftH, cards.length ? HAND_CARD.h : 0);
     const x = SLIM.x;
-    box(this.add.graphics(), x, y, SLIM.w, h, SLIM.radius, { fill: P.glass, ring: { width: 1, color: P.glassLine } });
     const tip = (zx: number, zy: number, zw: number, zh: number, title: string, text: string) => {
       this.add.zone(zx, zy, zw, zh).setOrigin(0, 0).setInteractive()
         .on("pointerover", () => {
@@ -246,8 +250,8 @@ export class MapScene extends Phaser.Scene {
           this.hover = null;
         });
     };
-    const lx = x + S.pad;
-    let ry = y + S.pad;
+    const lx = x + S.padX;
+    let ry = y;
     for (const st of sheet.stats) {
       const row: Node = {
         t: "row", h: R.rowH, gap: R.gap, align: "center",
@@ -283,8 +287,8 @@ export class MapScene extends Phaser.Scene {
     }
     // 이번 판에 받은 카드: 오른쪽 끝부터, 넘치면 +n
     const more = sheet.cards.length - cards.length;
-    let cx = x + SLIM.w - S.pad - cards.length * HAND_CARD.w - (cards.length - 1) * S.cards.gap;
-    const cy = y + S.pad;
+    let cx = x + SLIM.w - S.padX - cards.length * HAND_CARD.w - (cards.length - 1) * S.cards.gap;
+    const cy = y;
     if (more > 0) {
       const n: Node = { t: "text", text: COPY.more(more), size: T.was, color: P.ink2 };
       render(this, n, cx - S.cards.gap - size(n).w, cy + (HAND_CARD.h - size(n).h) / 2);
@@ -304,7 +308,6 @@ export class MapScene extends Phaser.Scene {
         });
       cx += HAND_CARD.w + S.cards.gap;
     }
-    return h;
   }
 
   private toggle(id: string) {
