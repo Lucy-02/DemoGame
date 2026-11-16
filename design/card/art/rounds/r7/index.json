@@ -866,7 +866,7 @@
    "scale": 6,
    "cfg_rescale": 0.1,
    "skip_cfg_above_sigma": null,
-   "source_png": "runs/card-art-r7-20261108-20261108T001300Z-caf741ce/images/req_000073_eac046b4ae18.png",
+   "source_png": "runs/card-art-r7-20261108-20261108T001300Z-caf741ce/images/req_000071_eac046b4ae18.png",
    "image_sha256": "7a45334921aacac40133890b50b8c7cdf73cf70e7d31bcb0de5fbe9835b46d07"
   },
   "hall_of_mirrors-P-c-s3701": {
