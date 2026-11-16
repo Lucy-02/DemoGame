@@ -17,39 +17,32 @@ export const FLOOR = { top: 330, stops: [[0, 0], [0.3, 0.55], [1, 0.9]] as const
 /** .sys right:16px top:10px gap:6px; .ib 34px; .ic 16px */
 export const SYS = { right: 16, top: 10, gap: 6, button: 34, icon: 16 };
 
-/** 순서표 배율: 정본 R5 크기의 1.4배 (0038) */
-export const ORDER_SCALE = 1.4;
-const os = (n: number) => n * ORDER_SCALE;
-
-/** 정본 .rs(top:10 height:40 padding 0 12 radius 18)의 1.4배를 화면 가운데 위에 (0038: 가운데 위 한 줄 판) */
+/** 순서표: 0074 시안(https://claude.ai/artifact/2Dn6Yso4LzqHk57eLj6xyg) 값 그대로 (Lucy 2026-11-16 "시안대로"). 화면 가운데 위 한 줄 판 (0038).
+ *  .rt height 64 padding 0 16 radius 22 */
+const ORDER_FACE = 40;
 export const ORDER = {
-  cx: FRAME.w / 2, top: 10, h: os(40), padX: os(12), radius: os(18),
-  /** .rs-me gap 6, ::before 6px 점 */
-  meGap: os(6), meDot: os(6),
-  /** .rs-ln 12×1, margin 0 4. 선 두께는 그대로 1 */
-  line: { w: os(12), h: 1, mx: os(4) },
-  /** .rs-slot height 32 padding 0 4 radius 14 gap 3 */
-  slot: { h: os(32), padX: os(4), radius: os(14), gap: os(3) },
-  /** .rs-n width 9 */
-  numW: os(9),
-  /** .rs-face 28, .rsf 24×20 */
-  face: os(28), art: { w: os(24), h: os(20) },
+  cx: FRAME.w / 2, top: 10, h: 64, padX: 16, radius: 22,
+  /** .rt .head padding-right 14, margin-right 4, border-right 1 (height 38) · .tn gap 6 · .dot 6 */
+  head: { padR: 14, mr: 4, h: 38, line: 1, gap: 6, dot: 6 },
+  /** .rt .ln width 18 height 1 */
+  line: { w: 18, h: 1 },
+  /** .tok.en gap 4, padding 0 4 · .num width 10 */
+  enemy: { gap: 4, padX: 4, numW: 10 },
+  /** 적 얼굴 EN = 40 · 자리 그림 .fc svg 62% */
+  face: ORDER_FACE, art: ORDER_FACE * 0.62,
   /** 아군 토큰 얼굴 = 적 얼굴 × allyScale (0074) */
-  allyFace: os(28) * OT.allyScale,
+  allyFace: ORDER_FACE * OT.allyScale,
   /** 테 (0074 토큰 그리기 규칙): 모든 테가 같은 굵기 · 같은 간격, 얼굴 원만 감싸는 정원. dash = 점선 테의 선 · 틈 (시안 border dashed) */
   ring: { w: OT.ring.width, gap: OT.ring.gap, dash: [OT.ring.width * 2, OT.ring.width * 2] as [number, number] },
   /** 배지 (0074): 지름 = 얼굴 지름 × ratio, 가운데가 얼굴 원 둘레 deg 자리.
    *  시안 .disc>.bg: 판 색 바깥 테 box-shadow 0 0 0 1.5, 상태 테 border 1.5 (점선은 선 3 · 틈 2), 기호 68%, 글자(✦) 62% */
   badge: { ratio: OT.badge.ratio, deg: OT.badge.deg, outline: 1.5, border: 1.5, dash: [3, 2] as [number, number], icon: 0.68, glyph: 0.62 },
-  /** 아군 묶음: 테가 옆 얼굴의 테 · 묶음 테두리에 닿지 않게, 테가 나가는 길이(간격 + 굵기)에 테 굵기만큼 더 띄워요 (0074 토큰 그리기 규칙).
-   *  시안 .rt .bun은 gap 10 · padding 6 (테 둘이 나란하면 맞닿음) */
-  bundle: { gap: (OT.ring.gap + OT.ring.width) * 2 + OT.ring.width, pad: OT.ring.gap + OT.ring.width * 2, max: OT.bundleMax },
-  /** "+n" 칩 (시안 .more): padding 2 7, 테 1 */
+  /** 아군 묶음 (.rt .bun): gap 10, padding 6, 테 1 */
+  bundle: { gap: 10, pad: 6, ring: 1, max: OT.bundleMax },
+  /** "+n" 칩 (.more): padding 2 7, 테 1 */
   more: { padX: 7, padY: 2, ring: 1 },
   /** 흐림: 지나간 토큰 (0074 8번) · 든 카드 자리 (시안 held .62) · 끊긴 적 얼굴 (시안 faceOp .4) */
   fade: { past: OT.pastOpacity, held: 0.62, cutFace: 0.4 },
-  /** 머리 오른쪽 세로 구분선: 연결선과 같은 두께, 칸 높이 (0038 규격) */
-  divider: { w: 1 },
 };
 
 // ── 필드 줄: 유닛 85%, 간격 72% (Lucy 2026-11-13, 정본 R5 값을 줄인 임시 값).

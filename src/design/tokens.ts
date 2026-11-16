@@ -214,8 +214,10 @@ export const tokens = {
     },
     "text": {
       "battle": {
-        "orderLabel": "13px",
-        "orderNum": "12px",
+        "orderPlace": "12px",
+        "orderState": "14px",
+        "orderNum": "13px",
+        "orderMore": "12px",
         "hp": "16px",
         "incoming": "13px",
         "chip": "13px",

@@ -11,18 +11,16 @@ import { ringTexture } from "../../style/ring";
 import { faceKey } from "../../faces";
 import { LINE_HEIGHT, fontBox, measure, px, textStyle } from "../../style/text";
 import { COPY } from "../copy";
-import { ORDER as O, ORDER_SCALE } from "../layout";
+import { ORDER as O } from "../layout";
 import type { AllyTokenVM, BattleVM, OrderSlotVM } from "../viewmodel";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
 
-/** 순서표 글자: 정본 크기의 1.4배 (0038) */
-const scaled = (size: string) => `${px(size) * ORDER_SCALE}px`;
-const LABEL = scaled(T.orderLabel);
-const NUM = scaled(T.orderNum);
+const NUM = T.orderNum;
+const MORE = T.orderMore;
 /** 머리 글자: 장소(위) · 턴 + 단계(아래) */
-const HEAD = { place: LABEL, state: LABEL };
+const HEAD = { place: T.orderPlace, state: T.orderState };
 
 /** 끊긴 적 · 끊을 예정인 적의 배지 기호 (0074 10번) */
 const BREAK_ICON = "kw-break";
@@ -101,15 +99,13 @@ function allyRing(t: AllyTokenVM): RingStyle | undefined {
 
 // ── 판 배치 ──
 
-/** 적 칸: 번호 · 얼굴. 얼굴 양옆은 테가 번호 · 연결선에 닿지 않게 테 폭만큼 더 띄워요 */
-const NUM_GAP = O.slot.gap + RING_OUT;
-const slotW = O.slot.padX + O.numW + NUM_GAP + O.face + RING_OUT + O.slot.padX;
+/** 적 칸 (.tok.en): 번호 · 얼굴 */
+const slotW = O.enemy.padX * 2 + O.enemy.numW + O.enemy.gap + O.face;
 /** 묶음에 보이는 토큰 수: 상한을 넘으면 N−1개 + "+n" 칩 (0074 4번) */
 const shownOf = (n: number) => (n > O.bundle.max ? O.bundle.max - 1 : n);
 const moreText = (n: number) => `+${n - shownOf(n)}`;
-const moreW = (n: number) => (n > O.bundle.max ? O.bundle.gap + measure(moreText(n), NUM) + O.more.padX * 2 : 0);
+const moreW = (n: number) => (n > O.bundle.max ? O.bundle.gap + measure(moreText(n), MORE) + O.more.padX * 2 : 0);
 const bundleWidth = (n: number) => O.bundle.pad * 2 + shownOf(n) * O.allyFace + (shownOf(n) - 1) * O.bundle.gap + moreW(n);
-const lineW = O.line.w + O.line.mx * 2;
 
 export function preloadOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   for (const s of vm.slots) loadIcon(scene, s.action, ENEMY_BADGE.icon);
@@ -142,23 +138,24 @@ export type OrderHit = { x: number; y: number; w: number; h: number; badge: () =
 export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phaser.GameObjects.Graphics; hits: OrderHit[] } {
   const hits: OrderHit[] = [];
   const phaseText = COPY.myTurn;
-  const turnText = vm.head ? `${COPY.turn} ${vm.head.turn}${COPY.sep}` : "";
+  const turnText = vm.head ? `${COPY.turn} ${vm.head.turn}` : "";
   const placeH = px(HEAD.place) * LINE_HEIGHT, stateH = px(HEAD.state) * LINE_HEIGHT;
-  const stateW = measure(turnText, HEAD.state) + O.meDot + O.meGap + measure(phaseText, HEAD.state);
+  // .tn: 턴 N · 점 · 단계가 gap 6으로 나란히
+  const turnW = turnText ? measure(turnText, HEAD.state) + O.head.gap : 0;
+  const stateW = turnW + O.head.dot + O.head.gap + measure(phaseText, HEAD.state);
   const headW = Math.max(stateW, vm.head?.place ? measure(vm.head.place, HEAD.place) : 0);
   const bundles = vm.bundles ?? [];
   const cellW = Math.max(0, ...bundles.map((b) => (b.length ? bundleWidth(b.length) : 0)));
-  const gaps = vm.slots.length + 1;
-  const dividerW = O.divider.w + O.line.mx * 2;
-  const innerW = headW + dividerW + vm.slots.length * slotW + gaps * (lineW + cellW);
+  const dividerW = O.head.padR + O.head.line + O.head.mr;
+  const innerW = headW + dividerW + vm.slots.length * (slotW + O.line.w * 2) + (vm.slots.length + 1) * cellW;
   const w = innerW + O.padX * 2;
   const x0 = O.cx - w / 2;
   const cy = O.top + O.h / 2;
 
   const g = scene.add.graphics();
-  box(g, x0, O.top, w, O.h, O.radius, { fill: P.glassThin, ring: { width: 1, color: P.glassLine } });
+  box(g, x0, O.top, w, O.h, O.radius, { fill: P.glass, ring: { width: 1, color: P.glassLine } });
 
-  const numTop = cy - (px(NUM) * LINE_HEIGHT) / 2 + textTopInLine(NUM);
+  const lineTop = (size: string) => cy - (px(size) * LINE_HEIGHT) / 2 + textTopInLine(size);
   let x = x0 + O.padX;
 
   // 머리: 장소(위) · 턴 + 단계(아래). 장소가 없으면 단계 한 줄을 가운데
@@ -168,11 +165,11 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   if (vm.head?.place) scene.add.text(x, headTop + textTopInLine(HEAD.place), vm.head.place, textStyle(HEAD.place, P.ink3));
   let hx = x;
   if (turnText) {
-    scene.add.text(hx, stateTop, turnText, textStyle(HEAD.state, P.ink2));
-    hx += measure(turnText, HEAD.state);
+    scene.add.text(hx, stateTop, turnText, textStyle(HEAD.state, P.ink));
+    hx += turnW;
   }
-  circle(g, hx + O.meDot / 2, stateCy, O.meDot, { fill: P.ink });
-  scene.add.text(hx + O.meDot + O.meGap, stateTop, phaseText, textStyle(HEAD.state, P.ink));
+  circle(g, hx + O.head.dot / 2, stateCy, O.head.dot, { fill: P.ink });
+  scene.add.text(hx + O.head.dot + O.head.gap, stateTop, phaseText, textStyle(HEAD.state, P.ink));
   x += headW;
 
   const line = (len: number) => {
@@ -186,15 +183,15 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     if (fade !== undefined) opacityOf(c).value = fade;
   };
 
-  /** 묶음 칸: 연결선 + (있으면) 다음 적 쪽에 붙은 둥근 테 묶음 */
+  /** 묶음 칸 (.slot): 칸 폭만큼 연결선이 지나가고, 묶음은 다음 적 쪽(오른쪽)에 붙어 선을 덮어요 */
   const cell = (k: number) => {
     const list = bundles[k] ?? [];
     const bw = list.length ? bundleWidth(list.length) : 0;
-    line(lineW + cellW - bw - (bw ? O.line.mx : 0));
+    line(cellW - bw);
     if (!bw) return;
     const d = O.allyFace;
     const h = d + O.bundle.pad * 2;
-    box(g, x, cy - h / 2, bw, h, h / 2, { ring: { width: 1, color: P.glassLine } });
+    box(g, x, cy - h / 2, bw, h, h / 2, { fill: P.glass, ring: { width: O.bundle.ring, color: P.manaLine } });
     let sx = x + O.bundle.pad;
     list.slice(0, shownOf(list.length)).forEach((t, i) => {
       const fx = sx + d / 2;
@@ -214,36 +211,37 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     });
     if (list.length > O.bundle.max) {
       const text = moreText(list.length);
-      const mw = measure(text, NUM) + O.more.padX * 2;
-      const mh = px(NUM) * LINE_HEIGHT + O.more.padY * 2;
+      const mw = measure(text, MORE) + O.more.padX * 2;
+      const mh = px(MORE) * LINE_HEIGHT + O.more.padY * 2;
       box(g, sx, cy - mh / 2, mw, mh, mh / 2, { fill: P.veil["06"], ring: { width: O.more.ring, color: P.glassLine } });
-      scene.add.text(sx + O.more.padX, numTop, text, textStyle(NUM, P.ink2));
+      scene.add.text(sx + O.more.padX, lineTop(MORE), text, textStyle(MORE, P.ink2));
     }
     x += bw;
-    line(O.line.mx);
   };
 
-  box(g, x + O.line.mx, cy - O.slot.h / 2, O.divider.w, O.slot.h, 0, { fill: P.glassLine });
+  box(g, x + O.head.padR, cy - O.head.h / 2, O.head.line, O.head.h, 0, { fill: P.glassLine });
   x += dividerW;
   for (const [k, s] of vm.slots.entries()) {
     cell(k);
-    const nx = x + O.slot.padX;
-    const fx = nx + O.numW + NUM_GAP + O.face / 2;
+    line(O.line.w);
+    const nx = x + O.enemy.padX;
+    const fx = nx + O.enemy.numW + O.enemy.gap + O.face / 2;
     const badge = () => drawBadge(scene, fx, cy, ENEMY_BADGE, enemyBadge(s));
     hits.push({ kind: "enemy", slot: k, x: fx - O.face / 2, y: cy - O.face / 2, w: O.face, h: O.face, badge });
     token(() => {
       const numText = String(s.n);
-      scene.add.text(nx + (O.numW - measure(numText, NUM)) / 2, numTop, numText, textStyle(NUM, P.ink3));
+      scene.add.text(nx + (O.enemy.numW - measure(numText, NUM)) / 2, lineTop(NUM), numText, textStyle(NUM, P.ink3));
       // 끊긴 적은 얼굴만 흐리고 배지는 그대로 (0074 10번)
       const face = gather(scene, 0, 0, () => {
         circle(scene.add.graphics(), fx, cy, O.face, { fill: P.face });
-        placeholderArt(scene, fx - O.art.w / 2, cy - O.art.h / 2, O.art.w, O.art.h, P.ink3);
+        placeholderArt(scene, fx - O.art / 2, cy - O.art / 2, O.art, O.art, P.ink3);
       });
       if (s.cut === "done") opacityOf(face).value = O.fade.cutFace;
       if (s.state === "now") drawRing(scene, fx, cy, O.face, { color: P.ink });
       badge();
     }, s.state === "past" ? O.fade.past : undefined);
     x += slotW;
+    line(O.line.w);
   }
   cell(vm.slots.length);
   return { g, hits };
