@@ -79,18 +79,34 @@ const START_SALT = 0x51ed;
 
 /** 지금 깃들 수 있는 후보: 시작 풀에서 아직 없는 정령 가운데 둘 (0053). 고를 것이 없으면 빈 목록 */
 export function joinOffer(g: Garden): string[] {
-  if (!g.joins) return [];
-  const left = (C.start_pool as string[]).filter((id) => !g.spirits.some((s) => s.id === id));
-  return new Rng((g.seed ?? 0) + g.spirits.length * 7919).shuffle(left).slice(0, 2);
+  return joinCandidates(g).map((c) => c.id);
 }
 
-/** 후보 가운데 하나가 깃들어요 */
+/** 깃들기 후보 하나: 정령과 깃들면 가질 성격 */
+export interface JoinCandidate {
+  id: string;
+  personality: string;
+}
+
+/**
+ * 깃들기 후보와 후보마다의 성격 (0053 · 0076 12). 고르기 화면에서 성격을 보고 골라요.
+ * 성격은 후보를 띄울 때 후보마다 따로 굴리고, 두 후보가 같은 성격을 받지 않아요. 같은 정원이면 다시 켜도 같아요.
+ */
+export function joinCandidates(g: Garden): JoinCandidate[] {
+  if (!g.joins) return [];
+  const left = (C.start_pool as string[]).filter((id) => !g.spirits.some((s) => s.id === id));
+  const ids = new Rng((g.seed ?? 0) + g.spirits.length * 7919).shuffle(left).slice(0, 2);
+  const personalities = new Rng((g.seed ?? 0) + g.spirits.length * 104729).shuffle(PERSONALITIES.map((p) => p.id));
+  return ids.map((id, i) => ({ id, personality: personalities[i % personalities.length] }));
+}
+
+/** 후보 가운데 하나가 그 후보의 성격으로 깃들어요 */
 export function join(g: Garden, id: string): Garden {
-  if (!joinOffer(g).includes(id)) return g;
-  const personality = new Rng((g.seed ?? 0) + g.spirits.length * 104729).pick(PERSONALITIES).id;
+  const pick = joinCandidates(g).find((c) => c.id === id);
+  if (!pick) return g;
   return {
     ...g, joins: (g.joins ?? 0) - 1,
-    spirits: [...g.spirits, { id, exp: 0, stage: "baby", personality, deed: 0, affinity: 0, episodes: 0, seen: [] }],
+    spirits: [...g.spirits, { id, exp: 0, stage: "baby", personality: pick.personality, deed: 0, affinity: 0, episodes: 0, seen: [] }],
   };
 }
 
