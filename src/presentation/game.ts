@@ -12,6 +12,7 @@ import { FRAME } from "./battle/layout";
 import { HOME_SCENE, HomeScene, type HomeSceneData } from "./home/HomeScene";
 import { RESULT_SCENE, ResultScene, type ResultSceneData } from "./result/ResultScene";
 import { SHOP_SCENE, ShopScene, type ShopSceneData } from "./shop/ShopScene";
+import { DECK_SCENE, DeckScene, type DeckSceneData } from "./deck/DeckScene";
 import { EVOLUTION_SCENE, EvolutionScene } from "./evolution/EvolutionScene";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
 import type { TabId } from "./spirits/viewmodel";
@@ -20,7 +21,7 @@ import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
   /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
-  screen?: "battle" | "spirits" | "result" | "shop" | "home";
+  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "deck";
   /** 저장에 이어진 게임의 세션 (screen이 없을 때) */
   session?: GameSession;
   /** 시험 판: 메인 화면 없이 바로 떠나요 (?screen=legacy) */
@@ -97,6 +98,12 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           game.scene.add(SPIRITS_SCENE, SpiritsScene, false);
           game.scene.add(EVOLUTION_SCENE, EvolutionScene, false);
           game.scene.add(HOME_SCENE, HomeScene, true, home);
+          return;
+        }
+        if (opts.screen === "deck") {
+          // 덱 보기는 다른 화면 위에 뜨는 창이라, 확인할 때는 전투 고정 장면 위에 띄워요
+          game.scene.add(BATTLE_SCENE, BattleScene, true, {});
+          game.scene.add(DECK_SCENE, DeckScene, true, { scene: opts.scene } satisfies DeckSceneData);
           return;
         }
         if (opts.screen === "shop") {
