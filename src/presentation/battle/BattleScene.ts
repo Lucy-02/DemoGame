@@ -20,6 +20,7 @@ import { drawOrder, drawOrderRing, preloadOrder, preloadOrderIcon, type OrderHit
 import { drawTooltip } from "../tooltip/Tooltip";
 import { GLASS } from "../tooltip/skins";
 import { ALLY, BAND, DRAG, ENEMY, FRAME, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { playOrderMotion, snapshotOrder, type OrderSnapshot } from "./views/orderMotion";
 import { SYS_ICONS, drawSys } from "./views/topbar";
 import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
@@ -115,6 +116,8 @@ export class BattleScene extends Phaser.Scene {
   private onOtherCard = false;
   /** 열린 가운데 고르기 창 (0075). 보이는 동안 아래 화면의 조작은 쉬어요 */
   private pick: PickView | null = null;
+  /** 앞 장면의 순서표 (장면을 다시 그려도 남아요) */
+  private orderPrev?: { session?: BattleSession; snap: OrderSnapshot };
 
   create() {
     // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
@@ -501,7 +504,13 @@ export class BattleScene extends Phaser.Scene {
         ...this.vm.order, bundles,
         slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: "plan" as const } : s)),
       });
-      if (!f) this.orderHits = order.hits;
+      if (!f) {
+        this.orderHits = order.hits;
+        // 앞 장면의 토큰 자리에서 이어 움직여요 (0077). 다른 전투의 표와는 잇지 않아요
+        const prev = this.orderPrev;
+        if (prev && prev.session === this.session) playOrderMotion(this, prev.snap, order.marks, order.cursor);
+        this.orderPrev = { session: this.session, snap: snapshotOrder(order.marks, order.cursor) };
+      }
       this.vm.allies.forEach((a, i) => {
         const ref = { side: "ally", i } as const;
         unit(ref, () => {

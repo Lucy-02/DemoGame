@@ -8,6 +8,8 @@ import type { EquipVM } from "../run/viewmodel";
 export type { FaceId, IconId, UnitFace };
 
 export interface OrderSlotVM {
+  /** 장면이 바뀌어도 같은 토큰임을 알아보는 이름 (모션, 0077). 없으면 움직이지 않아요 */
+  key?: string;
   n: number;
   /** 적 그림 기호 (en-*) */
   art: IconId;
@@ -32,6 +34,8 @@ export interface OrderHeadVM {
 
 /** 순서표의 아군 토큰: 놓은 카드 한 장 (0038). 주인 얼굴 + 카드 기호, 번호 없음 */
 export interface AllyTokenVM {
+  /** 장면이 바뀌어도 같은 토큰임을 알아보는 이름 (모션, 0077) */
+  key?: string;
   face: UnitFace;
   /** 카드 그림 창의 효과 기호 */
   icon: IconId;

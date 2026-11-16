@@ -545,6 +545,34 @@ export const tokens = {
       },
       "playback": {
         "step": "450ms"
+      },
+      "orderToken": {
+        "act": {
+          "duration": "220ms",
+          "scale": 1.16
+        },
+        "cut": {
+          "duration": "420ms",
+          "peak": 0.85
+        },
+        "enter": {
+          "duration": "200ms",
+          "delay": "120ms",
+          "stagger": "50ms",
+          "from": 0.85,
+          "easing": [
+            0.3,
+            1.5,
+            0.5,
+            1
+          ]
+        },
+        "cursor": {
+          "grow": "200ms"
+        },
+        "leave": {
+          "duration": "160ms"
+        }
       }
     },
     "effect": {

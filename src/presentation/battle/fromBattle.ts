@@ -114,7 +114,7 @@ function orderOf(b: Battle): OrderEntry[] {
       text: [{ text: b.intent(e).text }],
       chips: [{ text: COPY.order.n(i + 1) }, ...(charge ? [{ text: COPY.order.breakable, tone: "acc" as const }] : [])],
     };
-    return { uid: x.uid, slot: { n: i + 1, art: "", action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
+    return { uid: x.uid, slot: { key: `t${b.turn}:s${b.slots.indexOf(x)}`, n: i + 1, art: "", action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
   });
 }
 
@@ -140,6 +140,8 @@ interface Lane {
   owner: string;
   /** 해방은 카드가 없어요 */
   card: BCard | null;
+  /** 놓은 순서 (토큰 이름) */
+  n?: number;
   target?: Ref;
 }
 
@@ -168,6 +170,9 @@ function hitsOpening(b: Battle, p: Lane): boolean {
   return targets.some((e) => b.inOpening(e, p.end));
 }
 
+/** 놓은 카드의 토큰 이름. 든 카드 자리는 놓으면 받을 이름을 미리 써서, 놓는 순간 같은 토큰으로 이어져요 */
+const keyOf = (b: Battle, p: Lane) => `t${b.turn}:p${p.n ?? b.planned.length}`;
+
 /** k번째 묶음의 토큰. 묶음 뒤에 적 칸이 있으면 그 번호의 "앞" 칩 */
 function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
   if (!p.card) {
@@ -176,7 +181,7 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
       title: b.spirit(p.owner).def.release.name, kind: vm.name, text: vm.detail.text,
       chips: k < slots ? [{ text: COPY.order.before(k + 1) }] : [],
     };
-    return { token: { face: p.owner, icon: vm.art, mark: "release", tip }, owner: p.owner };
+    return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", tip }, owner: p.owner };
   }
   const icon = cardVM(p.card.cardId, p.owner).values[0]?.icon ?? CHARGE_ICON;
   const vm = handCard(b, p.card);
@@ -185,10 +190,10 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
     title: vm.name, kind: COPY.order.card, text: vm.detail.text,
     chips: [...(k < slots ? [{ text: COPY.order.before(k + 1) }] : []), ...(gap ? [{ text: COPY.order.gap, tone: "warn" as const }] : [])],
   };
-  return { token: { face: p.owner, icon, mark: gap ? "gap" : undefined, tip }, cardId: p.card.cardId, owner: p.owner };
+  return { token: { key: keyOf(b, p), face: p.owner, icon, mark: gap ? "gap" : undefined, tip }, cardId: p.card.cardId, owner: p.owner };
 }
 
-const lanesOf = (b: Battle): Lane[] => b.planned.map((p) => ({ end: p.end, owner: p.owner, card: p.card, target: p.target }));
+const lanesOf = (b: Battle): Lane[] => b.planned.map((p, n) => ({ end: p.end, owner: p.owner, card: p.card, target: p.target, n }));
 
 export function bundlesOf(b: Battle): PlannedToken[][] {
   const out = bundle(b, lanesOf(b));
