@@ -30,7 +30,6 @@ export interface FlowOptions {
 export class GameFlow implements LegacyFlow {
   /** 지금 화면이 그리는 판. 판이 닫혀도 결과를 그리는 동안은 남아요 */
   private current?: RunSession;
-  private legacyReady = false;
 
   constructor(private game: Phaser.Game, private session: GameSession, private opts: FlowOptions = {}) {
     game.registry.set(LEGACY_FLOW, this);
@@ -71,17 +70,10 @@ export class GameFlow implements LegacyFlow {
     const run = this.session.run;
     if (!run) return this.home();
     this.current = run;
-    if (!this.legacyReady) {
-      // 임시 장면의 정령 그림을 한 번 불러 둬요
-      this.legacyReady = true;
-      return this.go(LEGACY.boot, { onReady: () => this.resume() });
-    }
     const phase = run.phase;
     switch (phase.kind) {
       case "map": return this.go(LEGACY.map);
       case "battle": {
-        // 시험 판은 아직 임시 전투 장면이에요: 새 전투 화면에 없는 해방 · 품기 · 낙하 고르기를 카드 엔진 시험에 써요
-        if (this.opts.trial) return this.go(LEGACY.battle, { enemies: phase.enemies, kind: phase.tier === "normal" ? "battle" : phase.tier });
         const session = new BattleSession(run.run, phase.enemies);
         const floor = run.run.current?.floor;
         const data: BattleSceneData = {

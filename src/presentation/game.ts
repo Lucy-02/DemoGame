@@ -5,7 +5,7 @@ import * as Phaser from "phaser";
 import { tokens } from "../design/tokens";
 import type { GameSession } from "../session/game";
 import { GameFlow } from "./flow";
-import { LEGACY_PLUGINS, LEGACY_SCENES, waitForLegacyFonts } from "./placeholder";
+import { LEGACY_SCENES, waitForLegacyFonts } from "./placeholder";
 import { BATTLE_SCENE, BattleScene } from "./battle/BattleScene";
 import { FIXTURES } from "./battle/fixtures";
 import { FRAME } from "./battle/layout";
@@ -54,8 +54,6 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
     // 가운데 정렬은 index.html의 #game(flex)이 맡아요.
     scale: { mode: Phaser.Scale.NONE },
     scene: [],
-    // 임시 전투 장면의 Spine 정령 (임시 장면이 사라지면 함께 빼요)
-    plugins: live ? { scene: LEGACY_PLUGINS } : undefined,
     callbacks: {
       postBoot: (game) => {
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop

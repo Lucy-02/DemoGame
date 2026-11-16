@@ -120,7 +120,7 @@ src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오�
   gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경
   cards.ts                     cardWithFace(초상 홈 얼굴 굽기), drawCardTip(카드 위 말풍선)
   fromCore.ts                  cardVM(cardId, owner?), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 임시 표)
-src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 레거시 전투가 그 위에 띄움. 고정 장면 RESULTS
+src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 게임 흐름(flow.ts)이 전투 위에 띄움. 고정 장면 RESULTS
 src/presentation/home/         타이틀 겸 메인 화면 (0054). 기본 진입점, 정원·판 저장에 연결(fromGame.ts). 고정 장면 ?screen=home&scene=first|full|running
 src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=remove[:카드], P1 f3 · f4). 레거시 지도에서 열림. 빼기 = 덱 펼침 → 고르기 → 확인
 src/session/shop.ts            상점 세션: buy·heal·remove 명령 → Run, onChange. 진열·값·치료량은 constants.json shop
@@ -231,4 +231,4 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 - 성장 길 카드를 카드 몸체(`card/HandCard`)로, 이야기 문안(S3 뒤)
 - 정렬·필터·편성 바꾸기는 모양만 있어요 (출전 준비 화면과 함께)
 
-임시 UI(`src/presentation/placeholder`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 임시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 판의 지도·전투·이벤트·휴식·판 결과는 아직 임시 장면이 맡아요(`presentation/flow.ts`).
+임시 UI(`src/presentation/placeholder`)는 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 임시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 판의 지도·이벤트·휴식·판 결과는 아직 임시 장면이 맡아요(`presentation/flow.ts`).
