@@ -11,11 +11,6 @@ export interface PlaybackCast {
   enemies: number[];
 }
 
-/** 재생 속도 후보: 한 행동을 보여 주는 시간(ms). 값은 Lucy가 게임에서 보고 골라요 (TODO_TOKEN: 고르면 provisional.motion으로 옮겨요) */
-export const PLAYBACK_SPEEDS = { fast: 250, mid: 450, slow: 700 } as const;
-export type PlaybackSpeed = keyof typeof PLAYBACK_SPEEDS;
-export const isPlaybackSpeed = (v: unknown): v is PlaybackSpeed => typeof v === "string" && v in PLAYBACK_SPEEDS;
-
 interface Frame {
   vm: BattleVM;
 }

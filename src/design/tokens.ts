@@ -541,6 +541,9 @@ export const tokens = {
         ],
         "peak": 0.45,
         "low": 0.25
+      },
+      "playback": {
+        "step": "450ms"
       }
     },
     "effect": {

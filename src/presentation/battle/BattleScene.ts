@@ -9,7 +9,9 @@ import type { BattleSession } from "../../session/battle";
 import { bakeSpiritFace, preloadSpiritArt } from "../spiritArt";
 import { canonRest } from "./fixtures/canonRest";
 import { battleVM, cardUid, refOf } from "./fromBattle";
-import { PLAYBACK_SPEEDS, isPlaybackSpeed, playbackFrames, type PlaybackSpeed } from "./playback";
+import { tokens } from "../../design/tokens";
+import { ms } from "../style/ease";
+import { playbackFrames } from "./playback";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
@@ -37,9 +39,6 @@ export interface BattleSceneData {
   /** 턴 재생: 남은 장면들. 첫 장면을 그리고, 한 행동 시간 뒤 다음 장면으로 넘어가요 */
   playback?: BattleVM[];
 }
-
-/** 재생 속도 후보를 고른 값 (레지스트리). 개발용: 전투에서 1 · 2 · 3 키, 또는 ?speed=fast|mid|slow */
-export const PLAYBACK_SPEED = "battle:playbackSpeed";
 
 export class BattleScene extends Phaser.Scene {
   private vm: BattleVM = canonRest;
@@ -119,10 +118,7 @@ export class BattleScene extends Phaser.Scene {
     drawBand(this);
     drawMana(this, this.vm.mana);
     drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined);
-    if (this.playback) this.time.delayedCall(PLAYBACK_SPEEDS[this.speed()], () => this.step());
-    for (const [key, speed] of [["ONE", "fast"], ["TWO", "mid"], ["THREE", "slow"]] as const) {
-      this.input.keyboard?.on(`keydown-${key}`, () => this.registry.set(PLAYBACK_SPEED, speed));
-    }
+    if (this.playback) this.time.delayedCall(ms(tokens.provisional.motion.playback.step), () => this.step());
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
     this.showHover(hov < 0 ? null : { side: "enemy", i: hov });
@@ -397,11 +393,6 @@ export class BattleScene extends Phaser.Scene {
     const cast = { allies: s.battle.spirits.map((x) => x.id), enemies: s.battle.enemies.filter((e) => !e.dead).map((e) => e.uid) };
     const frames = playbackFrames(this.vm, cast, s.dispatch({ kind: "endTurn" }));
     this.scene.restart({ session: s, onOver: this.onOver, place: this.place, playback: frames } satisfies BattleSceneData);
-  }
-
-  private speed(): PlaybackSpeed {
-    const v: unknown = this.registry.get(PLAYBACK_SPEED);
-    return isPlaybackSpeed(v) ? v : "mid";
   }
 
   /** 재생: 다음 장면으로. 남은 장면이 없으면 확정된 상태로 */
