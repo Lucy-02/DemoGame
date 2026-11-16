@@ -1,6 +1,11 @@
 // 전투 화면 배치 수치. 모두 정본 CSS(design/canon/battle-r5/frame-old.css, r5.css)에서 옮겼고, 주석에 선택자를 적어요.
 // 색·글자 크기는 여기 두지 않고 토큰(tokens.provisional.palette, tokens.provisional.text)에서 가져와요.
 
+import { tokens } from "../../design/tokens";
+
+/** 순서표 토큰 그리기 값 (Lucy가 0074 시안에서 고른 값) */
+const OT = tokens.provisional.order;
+
 export const FRAME = { w: 1280, h: 800 }; // .frame
 
 /** .bg radial-gradient(60% 70% at 50% 34%, wall-hi, wall 50%, wall-lo) */
@@ -12,21 +17,34 @@ export const FLOOR = { top: 330, stops: [[0, 0], [0.3, 0.55], [1, 0.9]] as const
 /** .sys right:16px top:10px gap:6px; .ib 34px; .ic 16px */
 export const SYS = { right: 16, top: 10, gap: 6, button: 34, icon: 16 };
 
-/** .rs top:10 left:941 translateX(-50%) height:40 padding 0 12 radius 18 */
+/** 순서표: 0074 시안(https://claude.ai/artifact/2Dn6Yso4LzqHk57eLj6xyg) 값 그대로 (Lucy 2026-11-16 "시안대로"). 화면 가운데 위 한 줄 판 (0038).
+ *  .rt height 64 padding 0 16 radius 22 */
+const ORDER_FACE = 40;
 export const ORDER = {
-  cx: 941, top: 10, h: 40, padX: 12, radius: 18,
-  /** .rs-me gap 6, ::before 6px 점 */
-  meGap: 6, meDot: 6,
-  /** .rs-ln 12×1, margin 0 4 */
-  line: { w: 12, h: 1, mx: 4 },
-  /** .rs-slot height 32 padding 0 4 radius 14 gap 3 */
-  slot: { h: 32, padX: 4, radius: 14, gap: 3, nowRing: 1.5 },
-  /** .rs-n width 9 */
-  numW: 9,
-  /** .rs-face 28, .rsf 24×20 */
-  face: 28, art: { w: 24, h: 20 },
-  /** .rsa 13px padding 1 margin-left -8 margin-top 12 */
-  action: { size: 13, pad: 1, ml: -8, mt: 12 },
+  cx: FRAME.w / 2, top: 10, h: 64, padX: 16, radius: 22,
+  /** .rt .head padding-right 14, margin-right 4, border-right 1 (height 38) · .tn gap 6 · .dot 6 */
+  head: { padR: 14, mr: 4, h: 38, line: 1, gap: 6, dot: 6, playRing: 1.5 },
+  /** 재생 위치 선 (.ph): width 2 height 44 margin 0 3 radius 1. 재생 중 점 (.dot.play): 테 1.5 */
+  cursor: { w: 2, h: 44, mx: 3, radius: 1 },
+  /** .rt .ln width 18 height 1 */
+  line: { w: 18, h: 1 },
+  /** .tok.en gap 4, padding 0 4 · .num width 10 */
+  enemy: { gap: 4, padX: 4, numW: 10 },
+  /** 적 얼굴 EN = 40 · 자리 그림 .fc svg 62% */
+  face: ORDER_FACE, art: ORDER_FACE * 0.62,
+  /** 아군 토큰 얼굴 = 적 얼굴 × allyScale (0074) */
+  allyFace: ORDER_FACE * OT.allyScale,
+  /** 테 (0074 토큰 그리기 규칙): 모든 테가 같은 굵기 · 같은 간격, 얼굴 원만 감싸는 정원. dash = 점선 테의 선 · 틈 (시안 border dashed) */
+  ring: { w: OT.ring.width, gap: OT.ring.gap, dash: [OT.ring.width * 2, OT.ring.width * 2] as [number, number] },
+  /** 배지 (0074): 지름 = 얼굴 지름 × ratio, 가운데가 얼굴 원 둘레 deg 자리.
+   *  시안 .disc>.bg: 판 색 바깥 테 box-shadow 0 0 0 1.5, 상태 테 border 1.5 (점선은 선 3 · 틈 2), 기호 68%, 글자(✦) 62% */
+  badge: { ratio: OT.badge.ratio, deg: OT.badge.deg, outline: 1.5, border: 1.5, dash: [3, 2] as [number, number], icon: 0.68, glyph: 0.62 },
+  /** 아군 묶음 (.rt .bun): gap 10, padding 6, 테 1 */
+  bundle: { gap: 10, pad: 6, ring: 1, max: OT.bundleMax },
+  /** "+n" 칩 (.more): padding 2 7, 테 1 */
+  more: { padX: 7, padY: 2, ring: 1 },
+  /** 흐림: 지나간 토큰 (0074 8번) · 든 카드 자리 (시안 held .62) · 끊긴 적 얼굴 (시안 faceOp .4) */
+  fade: { past: OT.pastOpacity, held: 0.62, cutFace: 0.4 },
 };
 
 // ── 필드 줄: 유닛 85%, 간격 72% (Lucy 2026-11-13, 정본 R5 값을 줄인 임시 값).
@@ -136,8 +154,6 @@ export const PREVIEW = {
   hits: { left: -14, top: -6, gap: 4, h: 24, pad: [0, 8, 0, 6] as [number, number, number, number], radius: 13, inGap: 2, step: 14, icon: 13 },
   /** .intent.cut inset 1.5, .amt text-decoration-thickness 2 */
   intentCut: { ring: 1.5, strike: 2 },
-  /** .rs-slot.cut::after left 2 right 2 top 50% height 2 rotate(-14deg) */
-  orderCut: { inset: 2, h: 2, deg: -14 },
 };
 
 /** 손패 호버 H1 (r5 스크립트 "시안 값"): 든 카드 translateY(-30) scale(1.2), 같은 묶음 옆 카드 ±12,

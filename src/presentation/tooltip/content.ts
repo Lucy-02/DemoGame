@@ -10,6 +10,10 @@ export type TipRole = "body" | "calc" | "why" | "meta";
 export type TipBlock =
   /** 머리: 이름 + 옆 꼬리표 (정예 등) */
   | { kind: "title"; text: string; tag?: string }
+  /** 결과 한 줄: 대상 이름 + 크게 쓴 값 (순서표 토큰 풀이, 0074) */
+  | { kind: "result"; who?: string; value: string }
+  /** 칩 줄: 순서 · 상태 (문장 대신 칩, 0019). tone: warn = 허점, acc = 브레이크 */
+  | { kind: "chips"; items: { text: string; tone?: "warn" | "acc" }[] }
   /** 문단: 판 폭에 맞춰 줄바꿈 */
   | { kind: "text"; role: TipRole; text: RichText };
 

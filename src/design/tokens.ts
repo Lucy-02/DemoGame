@@ -214,8 +214,10 @@ export const tokens = {
     },
     "text": {
       "battle": {
-        "orderLabel": "13px",
-        "orderNum": "12px",
+        "orderPlace": "12px",
+        "orderState": "14px",
+        "orderNum": "13px",
+        "orderMore": "12px",
         "hp": "16px",
         "incoming": "13px",
         "chip": "13px",
@@ -246,7 +248,8 @@ export const tokens = {
         "bubbleCalcStrong": "13px",
         "bubbleWhy": "12.5px",
         "bubbleOwner": "12px",
-        "hit": "16px"
+        "hit": "16px",
+        "tipResult": "20px"
       },
       "spirits": {
         "res": "16px",
@@ -538,6 +541,9 @@ export const tokens = {
         ],
         "peak": 0.45,
         "low": 0.25
+      },
+      "playback": {
+        "step": "450ms"
       }
     },
     "effect": {
@@ -546,6 +552,19 @@ export const tokens = {
         "contrast": 0.7,
         "brightness": 1.1,
         "opacity": 0.62
+      }
+    },
+    "order": {
+      "allyScale": 0.8,
+      "bundleMax": 4,
+      "pastOpacity": 0.5,
+      "ring": {
+        "width": 2,
+        "gap": 3
+      },
+      "badge": {
+        "ratio": 0.42,
+        "deg": 45
       }
     }
   }

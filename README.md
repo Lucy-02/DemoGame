@@ -20,7 +20,7 @@ Electron + Vite + TypeScript + Phaser 4 + Spine. 구조는 `docs/architecture/00
 - `src/data/assets.json`: 정령/적 비주얼 지정 (shape / image / spine)
 - `src/core/`: 게임 로직. Phaser를 import하지 않아요(`pnpm lint:deps`가 막아요). 전투 규칙(battle.ts), 런·맵·보상(run.ts), 능력치(stats.ts), 카드 문구(text.ts)
 - `src/presentation/battle/`, `spirits/`, `card/`, `style/`: 정본 기준 새 화면 (`docs/handoff/CLIENT_HANDOFF.md`)
-- `src/presentation/placeholder/`: 임시 장면. 게임 흐름(`src/presentation/flow.ts`)에서 새 화면이 아직 없는 칸(지도·전투·이벤트·휴식·덱·판 결과)을 맡아요. 새 화면이 규칙에 연결될 때 화면 단위로 지워요
+- `src/presentation/placeholder/`: 임시 장면. 게임 흐름(`src/presentation/flow.ts`)에서 새 화면이 아직 없는 칸(지도·이벤트·휴식·덱·판 결과)을 맡아요. 새 화면이 규칙에 연결될 때 화면 단위로 지워요
 - `tools/`: 시뮬레이터와 자동 플레이 AI (골든 테스트도 같이 씀)
 
 ## 디자인 작업

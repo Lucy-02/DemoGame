@@ -4,9 +4,12 @@
 import * as Phaser from "phaser";
 import type { Run } from "../core/run";
 import type { GameSession } from "../session/game";
+import { BattleSession } from "../session/battle";
 import { RewardSession } from "../session/reward";
 import type { BattleOutcome, RunSession } from "../session/run";
 import { ShopSession } from "../session/shop";
+import { BATTLE_SCENE, type BattleSceneData } from "./battle/BattleScene";
+import { COPY as BATTLE_COPY } from "./battle/copy";
 import { homeVM } from "./home/fromGame";
 import { HOME_SCENE, type HomeSceneData } from "./home/HomeScene";
 import { LEGACY, LEGACY_FLOW, type LegacyFlow } from "./placeholder";
@@ -27,7 +30,6 @@ export interface FlowOptions {
 export class GameFlow implements LegacyFlow {
   /** 지금 화면이 그리는 판. 판이 닫혀도 결과를 그리는 동안은 남아요 */
   private current?: RunSession;
-  private legacyReady = false;
 
   constructor(private game: Phaser.Game, private session: GameSession, private opts: FlowOptions = {}) {
     game.registry.set(LEGACY_FLOW, this);
@@ -68,15 +70,18 @@ export class GameFlow implements LegacyFlow {
     const run = this.session.run;
     if (!run) return this.home();
     this.current = run;
-    if (!this.legacyReady) {
-      // 임시 장면의 정령 그림을 한 번 불러 둬요
-      this.legacyReady = true;
-      return this.go(LEGACY.boot, { onReady: () => this.resume() });
-    }
     const phase = run.phase;
     switch (phase.kind) {
       case "map": return this.go(LEGACY.map);
-      case "battle": return this.go(LEGACY.battle, { enemies: phase.enemies, kind: phase.tier === "normal" ? "battle" : phase.tier });
+      case "battle": {
+        const session = new BattleSession(run.run, phase.enemies);
+        const floor = run.run.current?.floor;
+        const data: BattleSceneData = {
+          session, onOver: (scene) => this.battleOver(scene, session.outcome()),
+          place: floor === undefined ? undefined : BATTLE_COPY.floor(floor),
+        };
+        return this.go(BATTLE_SCENE, data);
+      }
       case "event": return this.go(LEGACY.event);
       case "rest": return this.go(LEGACY.rest);
       case "shop": {
