@@ -56,6 +56,7 @@ export class EventScene extends Phaser.Scene {
           this.scene.launch("DeckScene", { mode: "remove", from: this.scene.key, onPick: (uid: number) => run.removeCard(uid) });
           this.scene.pause();
           break;
+        default: run.applyMark(o);
       }
     }
     next?.();

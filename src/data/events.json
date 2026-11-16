@@ -18,5 +18,15 @@
     "options": [
       { "label": "기도한다", "desc": "모든 정령의 최대 HP가 3 늘어납니다.", "outcome": [{ "type": "maxHpAll", "value": 3 }] },
       { "label": "지나친다", "desc": "아무 일도 일어나지 않습니다.", "outcome": [] }
+    ] },
+  { "id": "ev_crossroad", "title": "바람 갈림길", "text": "두 갈래 길 위로 바람이 서로 다른 쪽에서 불어와요.",
+    "options": [
+      { "label": "바람을 거슬러 간다", "desc": "남은 정예의 거친 특성을 다시 뽑습니다.", "outcome": [{ "type": "rerollEliteTraits" }] },
+      { "label": "바람을 따라 오른다", "desc": "보스가 큰 차징을 몇 번째 턴에 시작하는지 알게 됩니다.", "outcome": [{ "type": "peekBossCharge" }] }
+    ] },
+  { "id": "ev_trace", "title": "큰 정령의 흔적", "text": "큰 정령이 지나간 자국이 땅에 깊게 남아 있어요.",
+    "options": [
+      { "label": "자국을 살핀다", "desc": "보스전에서 처음 열리는 틈이 1턴 길어집니다.", "outcome": [{ "type": "extendBossGap", "turns": 1 }] },
+      { "label": "자국 곁에서 쉰다", "desc": "모든 정령이 최대 HP의 15%만큼 회복합니다.", "outcome": [{ "type": "healPct", "value": 0.15 }] }
     ] }
 ]

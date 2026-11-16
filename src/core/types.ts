@@ -259,7 +259,13 @@ export type EventOutcome =
   | { type: "damageFront"; value: number }
   | { type: "cardReward"; rarity?: Rarity }
   | { type: "removeCard" }
-  | { type: "maxHpAll"; value: number };
+  | { type: "maxHpAll"; value: number }
+  /** 남은 정예 칸의 거친 특성을 다시 뽑아요 (0079) */
+  | { type: "rerollEliteTraits" }
+  /** 보스의 큰 차징이 몇 턴째인지 알려 줘요. 화면은 `Run.bossPeek()`를 읽어요 (0079) */
+  | { type: "peekBossCharge" }
+  /** 보스전에서 처음 열리는 틈이 그만큼 길어져요 (0079) */
+  | { type: "extendBossGap"; turns: number };
 
 export interface EventDef {
   id: string;

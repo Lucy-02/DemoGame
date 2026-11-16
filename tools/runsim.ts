@@ -77,6 +77,7 @@ const hpPct = (run: Run) => run.spirits.reduce((a, s) => a + s.hp, 0) / run.spir
 /** 전투 하나. 이기면 true. HP를 런에 되돌려요 (쓰러진 정령은 복귀 HP). */
 function fight(run: Run, enc: EncounterDef, rng: Rng, bot: Bot): { won: boolean; turns: number } {
   const b = new Battle(run.spirits, run.battleDeck(), enc.enemies, run.frontId, rng, run.enemyScale(), run.battleTraits());
+  b.firstGapBonus = run.battleGapBonus();
   while (b.result === "ongoing" && b.turn < MAX_TURNS) {
     bot(b, rng);
     b.drain();
@@ -169,6 +170,7 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
           const cards = run.rollCards(3, C.reward.rarity_normal as Record<string, number>, o.rarity);
           if (cards.length) { const c = rng.pick(cards); run.addCard(c.id, rng.pick(run.learnersOf(c.id)).id); }
         } else if (o.type === "removeCard") removeOne(run, policy);
+        else run.applyMark(o);
       }
     }
   }

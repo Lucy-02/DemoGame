@@ -194,3 +194,34 @@ describe("오늘 센 기운과 편성 풀", () => {
     for (const n of elites) expect(n.trait).toBeDefined();
   });
 });
+
+describe("판에 표시를 남기는 이벤트", () => {
+  const fresh = (seed = 5, strong: Element = "forest") => new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: false, strongElement: strong });
+
+  it("남은 정예의 거친 특성이 모두 다른 것으로 바뀌어요", () => {
+    const r = fresh();
+    const before = new Map([...r.map.values()].filter((n) => n.type === "elite").map((n) => [n.id, n.trait]));
+    expect(r.applyMark({ type: "rerollEliteTraits" })).toBe(true);
+    for (const [id, t] of before) expect(r.map.get(id)!.trait).not.toBe(t);
+  });
+
+  it("미리 보면 보스의 큰 차징이 시작되는 턴을 알려 줘요", () => {
+    const want: Record<string, number> = { forest: 5, fire: 5, wind: 3 };
+    for (const el of C.acts[0].elements as Element[]) {
+      const r = fresh(5, el);
+      expect(r.bossPeek()).toBeNull();
+      r.applyMark({ type: "peekBossCharge" });
+      expect(Run.load(r.save()).bossPeek()?.turn).toBe(want[el]);
+    }
+  });
+
+  it("보스전의 첫 틈만 길어져요", () => {
+    const r = fresh();
+    r.applyMark({ type: "extendBossGap", turns: 1 });
+    expect(r.battleGapBonus()).toBe(0);
+    r.current = [...r.map.values()].find((n) => n.type === "boss")!;
+    expect(Run.load(r.save()).bossGapBonus).toBe(1);
+    expect(r.battleGapBonus()).toBe(1);
+    expect(r.applyMark({ type: "gold", value: 1 })).toBe(false);
+  });
+});

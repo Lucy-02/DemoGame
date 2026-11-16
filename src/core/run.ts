@@ -1,9 +1,9 @@
-import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, cardDef, equipDef, partyScale } from "./data";
+import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, cardDef, enemyDef, equipDef, partyScale } from "./data";
 import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
 import { Rng } from "./rng";
 import { equipSlots, maxHpOf, resonanceOf } from "./stats";
 import { ENEMY_TRAITS } from "./types";
-import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, Obtain, Rarity, RunEquip, RunSpirit } from "./types";
+import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, EventOutcome, Obtain, Rarity, RunEquip, RunSpirit } from "./types";
 
 export type NodeType = "battle" | "elite" | "event" | "shop" | "rest" | "boss";
 
@@ -81,6 +81,8 @@ export interface RunSave {
   recentEncounters: string[];
   normalBattles: number;
   strongEliteMet?: boolean;
+  bossPeeked?: boolean;
+  bossGapBonus?: number;
   removals: number;
   bossDefeated: boolean;
 }
@@ -105,6 +107,9 @@ export class Run {
   normalBattles = 0;
   /** 센 기운의 정예를 이미 만났는지. 이 판의 첫 정예는 센 기운 정예예요 (0079) */
   strongEliteMet = false;
+  /** 이벤트로 얻은 표시 (0079): 보스의 큰 차징 미리 보기, 보스전 첫 틈이 길어지는 턴 수 */
+  bossPeeked = false;
+  bossGapBonus = 0;
   /** 이번 런에서 상점 카드 빼기를 쓴 횟수 (0049 4절: 쓸 때마다 값이 올라요) */
   removals = 0;
   bossDefeated = false;
@@ -154,7 +159,7 @@ export class Run {
       version: RUN_SAVE_VERSION, opts: copy(this.opts), rng: this.rng.state,
       spirits: copy(this.spirits), deck: copy(this.deck), received: copy(this.received), nextUid: this.nextUid,
       gold: this.gold, frontId: this.frontId, map: copy([...this.map.values()]), current: this.current?.id ?? null, visited: [...this.visited],
-      strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet,
+      strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet, bossPeeked: this.bossPeeked, bossGapBonus: this.bossGapBonus,
       removals: this.removals, bossDefeated: this.bossDefeated,
     };
   }
@@ -177,6 +182,8 @@ export class Run {
     run.recentEncounters = [...s.recentEncounters];
     run.normalBattles = s.normalBattles;
     run.strongEliteMet = s.strongEliteMet ?? false;
+    run.bossPeeked = s.bossPeeked ?? false;
+    run.bossGapBonus = s.bossGapBonus ?? 0;
     run.removals = s.removals;
     run.bossDefeated = s.bossDefeated;
     return run;
@@ -294,6 +301,35 @@ export class Run {
   bossEncounter(): EncounterDef {
     const bosses = ENCOUNTERS.filter((e) => e.tier === "boss");
     return bosses.find((e) => e.element === this.strongElement) ?? bosses[0];
+  }
+
+  /** 판에 표시를 남기는 이벤트 결과를 적용해요. 이 종류가 아니면 false (0079) */
+  applyMark(o: EventOutcome): boolean {
+    if (o.type === "rerollEliteTraits") {
+      for (const n of this.map.values()) {
+        if (n.type !== "elite" || this.visited.includes(n.id)) continue;
+        n.trait = this.rng.pick(ENEMY_TRAITS.filter((t) => t !== n.trait));
+      }
+    } else if (o.type === "peekBossCharge") this.bossPeeked = true;
+    else if (o.type === "extendBossGap") this.bossGapBonus += o.turns;
+    else return false;
+    return true;
+  }
+
+  /** 미리 본 보스의 큰 차징: 이름과 차징을 시작하는 턴. 미리 보지 않았으면 null */
+  bossPeek(): { name: string; turn: number } | null {
+    if (!this.bossPeeked) return null;
+    const def = enemyDef(this.bossEncounter().enemies[0]);
+    const idx = def.pattern.findIndex((m) => m.big);
+    if (idx < 0) return null;
+    let turn = 0;
+    for (let used = 0; used <= idx; turn++) used += def.acts ? def.acts[turn % def.acts.length].length : 1;
+    return { name: def.pattern[idx].name, turn };
+  }
+
+  /** 지금 칸이 보스면 첫 틈에 더할 턴 수 */
+  battleGapBonus(): number {
+    return this.current?.type === "boss" ? this.bossGapBonus : 0;
   }
 
   /** 지금 칸의 전투에 붙는 거친 특성 */
