@@ -246,7 +246,8 @@ export const tokens = {
         "bubbleCalcStrong": "13px",
         "bubbleWhy": "12.5px",
         "bubbleOwner": "12px",
-        "hit": "16px"
+        "hit": "16px",
+        "tipResult": "20px"
       },
       "spirits": {
         "res": "16px",
@@ -546,6 +547,19 @@ export const tokens = {
         "contrast": 0.7,
         "brightness": 1.1,
         "opacity": 0.62
+      }
+    },
+    "order": {
+      "allyScale": 0.8,
+      "bundleMax": 4,
+      "pastOpacity": 0.5,
+      "ring": {
+        "width": 2,
+        "gap": 3
+      },
+      "badge": {
+        "ratio": 0.42,
+        "deg": 45
       }
     }
   }

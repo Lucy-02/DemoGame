@@ -13,7 +13,7 @@ export const canonRest: BattleVM = {
     slots: [
       { n: 1, art: "en-1", action: "i-claw" },
       { n: 2, art: "en-2", action: "kw-weak" },
-      { n: 3, art: "en-3", action: "kw-charge", state: "now" },
+      { n: 3, art: "en-3", action: "kw-charge", charge: true },
     ],
   },
   allies: [

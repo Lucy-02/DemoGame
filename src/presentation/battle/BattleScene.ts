@@ -12,7 +12,7 @@ import { battleVM, cardUid, refOf } from "./fromBattle";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
-import { drawOrder, drawOrderRing, preloadOrder, type OrderHit } from "./views/order";
+import { drawOrder, drawOrderRing, preloadOrder, preloadOrderIcon, type OrderHit } from "./views/order";
 import { drawTooltip } from "../tooltip/Tooltip";
 import { GLASS } from "../tooltip/skins";
 import { ALLY, BAND, DRAG, ENEMY, FRAME, LIFT_STYLES, SYS, TARGETING } from "./layout";
@@ -78,6 +78,7 @@ export class BattleScene extends Phaser.Scene {
   preload() {
     for (const id of SYS_ICONS) loadIcon(this, id, SYS.icon);
     preloadOrder(this, this.vm.order);
+    for (const p of Object.values(this.vm.plays)) if (p.slot) preloadOrderIcon(this, p.slot.token.icon);
     preloadUnits(this, this.vm);
     preloadHand(this, this.vm);
     if (this.session) preloadSpiritArt(this, this.session.battle.spirits.map((s) => s.id));
@@ -217,14 +218,13 @@ export class BattleScene extends Phaser.Scene {
     // 풀이는 토큰 아래 말풍선 하나만: 유닛 아래 풀이는 지우고 강조만 남겨요
     this.hoverTip?.destroy();
     this.hoverTip = null;
-    const enemyTip = slot?.enemy === undefined ? undefined : this.vm.enemies[slot.enemy]?.tip;
-    const tip = token?.tip ?? (enemyTip && { title: enemyTip.name, text: enemyTip.lines[0] ?? [] });
+    const tip = token?.tip ?? slot?.tip;
     this.orderFx = gather(this, 0, 0, () => {
       const ring = drawOrderRing(this, hit);
       // 같은 적의 다른 토큰도 함께 밝혀요 (0074)
       if (slot?.enemy !== undefined) {
         for (const h of this.orderHits) {
-          if (h !== hit && h.kind === "enemy" && this.vm.order.slots[h.slot]?.enemy === slot.enemy) drawOrderRing(this, h);
+          if (h !== hit && h.kind === "enemy" && this.vm.order.slots[h.slot]?.enemy === slot.enemy) drawOrderRing(this, h, true);
         }
       }
       if (!tip) return;
@@ -232,7 +232,13 @@ export class BattleScene extends Phaser.Scene {
       const left = Math.max(SYS.right, Math.min(FRAME.w - SYS.right - GLASS.w, ring.cx - GLASS.w / 2));
       drawTooltip(this, {
         skin: GLASS, at: { left, top: ring.bottom + SYS.gap },
-        content: [{ kind: "title", text: tip.title }, { kind: "text", role: "body", text: tip.text }],
+        // 결과 먼저 (0074 9번): 이름 + 종류 칩 → 결과 → 효과문 → 순서 · 상태 칩
+        content: [
+          { kind: "title", text: tip.title, tag: tip.kind },
+          ...(tip.result ? [{ kind: "result" as const, ...tip.result }] : []),
+          { kind: "text", role: "body", text: tip.text },
+          ...(tip.chips?.length ? [{ kind: "chips" as const, items: tip.chips }] : []),
+        ],
       });
     });
     this.fieldLayer.add(this.orderFx);
@@ -441,7 +447,15 @@ export class BattleScene extends Phaser.Scene {
     };
     const cutOrders = new Set(this.vm.enemies.filter((_, i) => o?.enemies[i]?.cut).flatMap((e) => (e.intent?.order !== undefined ? [e.intent.order] : [])));
     const root = gather(this, 0, 0, () => {
-      const order = drawOrder(this, { ...this.vm.order, slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: true } : s)) });
+      // 든 카드: 들어갈 자리에 흰 점선 토큰, 끊을 적은 배지가 브레이크 기호로 (0074)
+      const held = card ? this.vm.plays[card]?.slot : undefined;
+      const bundles = held && this.vm.order.bundles
+        ? this.vm.order.bundles.map((l, k) => (k === held.bundle ? [...l.slice(0, held.i), held.token, ...l.slice(held.i)] : l))
+        : this.vm.order.bundles;
+      const order = drawOrder(this, {
+        ...this.vm.order, bundles,
+        slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: "plan" as const } : s)),
+      });
       if (!f) this.orderHits = order.hits;
       this.vm.allies.forEach((a, i) => {
         const ref = { side: "ally", i } as const;

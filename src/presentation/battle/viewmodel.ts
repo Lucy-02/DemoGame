@@ -13,12 +13,15 @@ export interface OrderSlotVM {
   art: IconId;
   /** 행동 기호 (i-*) */
   action: IconId;
-  /** now = 지금 차징 완료(곧 해결) */
-  state?: "now";
-  /** 미리보기에서 끊김 (사선, .rs-slot.cut). now와 함께 올 수 있어요 */
-  cut?: boolean;
+  /** now = 재생 중 지금 차례 (얼굴에 흰 테) · past = 재생 중 지나감 (흐림) (0074) */
+  state?: "now" | "past";
+  /** 차징 중: 행동 기호 배지의 테와 기호가 보라 (0074 11번) */
+  charge?: boolean;
+  /** 끊김 (0074 10번): 배지가 브레이크 기호로. plan = 든 카드가 끊을 예정(보라 점선 테), done = 끊김(보라로 채움 + 얼굴 흐림) */
+  cut?: "plan" | "done";
   /** 이 행동을 하는 적 (enemies 인덱스). 가리키면 그 적의 풀이와 맞는 아군 강조 */
   enemy?: number;
+  tip?: OrderTipVM;
 }
 
 /** 순서표 머리: 장소 위, 턴 + 단계 아래 (0038). 없으면 단계만 (고정 장면) */
@@ -32,8 +35,23 @@ export interface AllyTokenVM {
   face: UnitFace;
   /** 카드 그림 창의 효과 기호 */
   icon: IconId;
-  /** 가리키면 뜨는 풀이: 카드 이름 + 효과문 */
-  tip?: { title: string; text: RichText };
+  /** gap = 허점 창에 끝나는 공격(노란 테) · held = 든 카드가 들어갈 자리(흰 점선 테 + 반투명) · release = 해방(보라 테 + 왼쪽 위 ✦) (0074 1번) */
+  mark?: "gap" | "held" | "release";
+  /** 재생 중 지나감 (흐림) */
+  past?: boolean;
+  tip?: OrderTipVM;
+}
+
+/** 순서표 토큰 풀이 (0074 9번, 결과 먼저): 이름 + 종류 칩 → 결과(크게) → 효과문 → 순서·상태 칩 */
+export interface OrderTipVM {
+  title: string;
+  /** 종류 칩: 카드 · 해방 · 차징 */
+  kind?: string;
+  /** 결과: 대상 이름 + 값 (18→3, 14) */
+  result?: { who?: string; value: string };
+  text: RichText;
+  /** 순서·상태 칩. tone: warn = 허점(노랑), acc = 브레이크 가능(보라) */
+  chips?: { text: string; tone?: "warn" | "acc" }[];
 }
 
 export interface StatusVM {
@@ -153,6 +171,8 @@ export interface EnemyOutcomeVM {
 
 export interface PlayVM {
   target: TargetRule;
+  /** 지금 놓으면 순서표에 들어갈 자리: bundles[bundle]의 i번째 (든 동안 흰 점선 토큰, 0074) */
+  slot?: { bundle: number; i: number; token: AllyTokenVM };
   /** pick: 고른 대상 인덱스마다 결과. all·random: 한 가지 결과("all"). 없으면 강조만 해요 */
   outcomes?: Partial<Record<number | "all", OutcomeVM>>;
 }
