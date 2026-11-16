@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { Battle, statusN, type BattleEvent } from "./battle";
 import { C, ENCOUNTERS, applyTraits, enemyDef } from "./data";
+import { newGarden } from "./garden";
 import { Rng } from "./rng";
 import { Run } from "./run";
 import type { Element, EnemyTrait } from "./types";
@@ -162,6 +163,28 @@ describe("오늘 센 기운과 편성 풀", () => {
         seen.push(id);
       }
     }
+  });
+
+  it("이 판의 첫 정예는 센 기운의 정예예요", () => {
+    for (const el of C.acts[0].elements as Element[]) {
+      for (let seed = 1; seed <= 10; seed++) {
+        const r = new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: false, strongElement: el });
+        expect(r.pickEncounter("elite").element).toBe(el);
+        expect(Run.load(r.save()).strongEliteMet).toBe(true);
+      }
+    }
+  });
+
+  it("첫 판은 센 기운이 정해져 있어요", () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const first = new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: false, garden: newGarden(seed, ["fire_fox"]) });
+      expect(first.strongElement).toBe(C.run_pool.first_run_strong);
+    }
+    const later = new Set<string>();
+    for (let seed = 1; seed <= 30; seed++) {
+      later.add(new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: false, garden: { ...newGarden(seed, ["fire_fox"]), runs: 1 } }).strongElement);
+    }
+    expect(later.size).toBeGreaterThan(1);
   });
 
   it("정예 칸마다 거친 특성이 하나 붙어요", () => {

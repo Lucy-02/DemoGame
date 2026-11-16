@@ -80,6 +80,7 @@ export interface RunSave {
   strongElement: Element;
   recentEncounters: string[];
   normalBattles: number;
+  strongEliteMet?: boolean;
   removals: number;
   bossDefeated: boolean;
 }
@@ -102,6 +103,8 @@ export class Run {
   recentEncounters: string[] = [];
   /** 지금까지 치른 일반 전투 수 (처음 몇 번은 약한 풀) */
   normalBattles = 0;
+  /** 센 기운의 정예를 이미 만났는지. 이 판의 첫 정예는 센 기운 정예예요 (0079) */
+  strongEliteMet = false;
   /** 이번 런에서 상점 카드 빼기를 쓴 횟수 (0049 4절: 쓸 때마다 값이 올라요) */
   removals = 0;
   bossDefeated = false;
@@ -138,7 +141,9 @@ export class Run {
     this.dealt = true;
     this.generateMap();
     const drawn = this.rng.pick(C.acts[0].elements as Element[]);
-    this.strongElement = opts.strongElement ?? drawn;
+    // 첫 판은 센 기운을 정해 둬요 (0079). 난수는 그대로 뽑아 둬서 지도 · 특성 순서가 안 바뀌어요
+    const first = garden && !(garden.runs ?? 0) ? (C.run_pool.first_run_strong as Element) : undefined;
+    this.strongElement = opts.strongElement ?? first ?? drawn;
     for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
   }
 
@@ -149,7 +154,7 @@ export class Run {
       version: RUN_SAVE_VERSION, opts: copy(this.opts), rng: this.rng.state,
       spirits: copy(this.spirits), deck: copy(this.deck), received: copy(this.received), nextUid: this.nextUid,
       gold: this.gold, frontId: this.frontId, map: copy([...this.map.values()]), current: this.current?.id ?? null, visited: [...this.visited],
-      strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles,
+      strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet,
       removals: this.removals, bossDefeated: this.bossDefeated,
     };
   }
@@ -171,6 +176,7 @@ export class Run {
     run.strongElement = s.strongElement;
     run.recentEncounters = [...s.recentEncounters];
     run.normalBattles = s.normalBattles;
+    run.strongEliteMet = s.strongEliteMet ?? false;
     run.removals = s.removals;
     run.bossDefeated = s.bossDefeated;
     return run;
@@ -263,6 +269,12 @@ export class Run {
       const want = this.normalBattles < rule.weak_battles ? "weak" : "strong";
       pool = pool.filter((e) => e.pool === want);
       this.normalBattles++;
+    }
+    if (tier === "elite" && !this.strongEliteMet) {
+      // 첫 정예는 센 기운의 정예
+      const own = pool.filter((e) => e.element === this.strongElement);
+      if (own.length) pool = own;
+      this.strongEliteMet = true;
     }
     if (tier === "boss") {
       // 보스는 센 기운의 큰 정령
