@@ -23,7 +23,9 @@ const ORDER_FACE = 40;
 export const ORDER = {
   cx: FRAME.w / 2, top: 10, h: 64, padX: 16, radius: 22,
   /** .rt .head padding-right 14, margin-right 4, border-right 1 (height 38) · .tn gap 6 · .dot 6 */
-  head: { padR: 14, mr: 4, h: 38, line: 1, gap: 6, dot: 6 },
+  head: { padR: 14, mr: 4, h: 38, line: 1, gap: 6, dot: 6, playRing: 1.5 },
+  /** 재생 위치 선 (.ph): width 2 height 44 margin 0 3 radius 1. 재생 중 점 (.dot.play): 테 1.5 */
+  cursor: { w: 2, h: 44, mx: 3, radius: 1 },
   /** .rt .ln width 18 height 1 */
   line: { w: 18, h: 1 },
   /** .tok.en gap 4, padding 0 4 · .num width 10 */

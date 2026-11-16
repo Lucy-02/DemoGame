@@ -137,7 +137,7 @@ export type OrderHit = { x: number; y: number; w: number; h: number; badge: () =
  */
 export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phaser.GameObjects.Graphics; hits: OrderHit[] } {
   const hits: OrderHit[] = [];
-  const phaseText = COPY.myTurn;
+  const phaseText = vm.playing ? COPY.playing : COPY.myTurn;
   const turnText = vm.head ? `${COPY.turn} ${vm.head.turn}` : "";
   const placeH = px(HEAD.place) * LINE_HEIGHT, stateH = px(HEAD.state) * LINE_HEIGHT;
   // .tn: 턴 N · 점 · 단계가 gap 6으로 나란히
@@ -147,7 +147,18 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   const bundles = vm.bundles ?? [];
   const cellW = Math.max(0, ...bundles.map((b) => (b.length ? bundleWidth(b.length) : 0)));
   const dividerW = O.head.padR + O.head.line + O.head.mr;
-  const innerW = headW + dividerW + vm.slots.length * (slotW + O.line.w * 2) + (vm.slots.length + 1) * cellW;
+  // 재생 위치: 아직 다 지나가지 않은 첫 칸(묶음 또는 적) 앞
+  const pastCell = (k: number) => (bundles[k] ?? []).every((t) => t.past);
+  const pastSlot = (s: OrderSlotVM) => s.state === "past" || s.cut === "done";
+  let cursorAt: { kind: "cell" | "slot"; k: number } | undefined;
+  if (vm.playing) {
+    for (let k = 0; k <= vm.slots.length && !cursorAt; k++) {
+      if (!pastCell(k)) cursorAt = { kind: "cell", k };
+      else if (k < vm.slots.length && !pastSlot(vm.slots[k])) cursorAt = { kind: "slot", k };
+    }
+  }
+  const cursorW = cursorAt ? O.cursor.w + O.cursor.mx * 2 : 0;
+  const innerW = headW + dividerW + vm.slots.length * (slotW + O.line.w * 2) + (vm.slots.length + 1) * cellW + cursorW;
   const w = innerW + O.padX * 2;
   const x0 = O.cx - w / 2;
   const cy = O.top + O.h / 2;
@@ -168,13 +179,19 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     scene.add.text(hx, stateTop, turnText, textStyle(HEAD.state, P.ink));
     hx += turnW;
   }
-  circle(g, hx + O.head.dot / 2, stateCy, O.head.dot, { fill: P.ink });
+  circle(g, hx + O.head.dot / 2, stateCy, O.head.dot, vm.playing ? { ring: { width: O.head.playRing, color: P.ink } } : { fill: P.ink });
   scene.add.text(hx + O.head.dot + O.head.gap, stateTop, phaseText, textStyle(HEAD.state, P.ink));
   x += headW;
 
   const line = (len: number) => {
     if (len > 0) box(g, x, cy - O.line.h / 2, len, O.line.h, 0, { fill: P.glassLine });
     x += len;
+  };
+
+  const cursor = (kind: "cell" | "slot", k: number) => {
+    if (cursorAt?.kind !== kind || cursorAt.k !== k) return;
+    box(g, x + O.cursor.mx, cy - O.cursor.h / 2, O.cursor.w, O.cursor.h, O.cursor.radius, { fill: P.ink });
+    x += cursorW;
   };
 
   /** 토큰 하나를 한 덩어리로 그려요. fade가 있으면 덩어리째 흐려요 (CSS opacity) */
@@ -189,6 +206,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     const bw = list.length ? bundleWidth(list.length) : 0;
     line(cellW - bw);
     if (!bw) return;
+    cursor("cell", k);
     const d = O.allyFace;
     const h = d + O.bundle.pad * 2;
     box(g, x, cy - h / 2, bw, h, h / 2, { fill: P.glass, ring: { width: O.bundle.ring, color: P.manaLine } });
@@ -223,6 +241,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   x += dividerW;
   for (const [k, s] of vm.slots.entries()) {
     cell(k);
+    cursor("slot", k);
     line(O.line.w);
     const nx = x + O.enemy.padX;
     const fx = nx + O.enemy.numW + O.enemy.gap + O.face / 2;

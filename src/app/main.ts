@@ -10,6 +10,7 @@ import { C, SPIRITS } from "../core/data";
 import { getPlatform } from "../platform";
 import { startGame } from "../presentation/game";
 import { GameSession } from "../session/game";
+import { PLAYBACK_SPEED } from "../presentation/battle/BattleScene";
 
 async function start() {
   const platform = getPlatform();
@@ -26,6 +27,8 @@ async function start() {
     hover: get("hover"), scene: get("scene"), lift: get("lift"), select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
   });
   Object.assign(window, { game });
+  // 개발용: 재생 속도 후보 (?speed=fast|mid|slow)
+  if (params.has("speed")) game.registry.set(PLAYBACK_SPEED, params.get("speed"));
   if (platform.kind === "web") mountDevWindow(platform);
 }
 

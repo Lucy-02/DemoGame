@@ -115,7 +115,11 @@ export interface EnemyTipVM {
 
 export interface BattleVM {
   /** bundles: 적 칸마다 그 앞에 묶인 아군 토큰, 마지막은 꼬리 묶음 (길이 = slots + 1, 0038). 없으면 적 칸만 */
-  order: { slots: OrderSlotVM[]; bundles?: AllyTokenVM[][]; head?: OrderHeadVM };
+  order: {
+    slots: OrderSlotVM[]; bundles?: AllyTokenVM[][]; head?: OrderHeadVM;
+    /** 턴 재생 중: 머리가 "재생 중"(빈 점), 지나가지 않은 첫 칸 앞에 흰 재생 위치 선 (0074) */
+    playing?: boolean;
+  };
   allies: AllyVM[];
   enemies: EnemyVM[];
   mana: { n: number; max: number };

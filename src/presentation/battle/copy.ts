@@ -8,6 +8,7 @@ const CIRCLED_ONE = 0x2460;
 export const COPY = {
   turn: "턴",
   myTurn: "내 차례",
+  playing: "재생 중",
   maxPrefix: "/",
   endTurn: "턴 종료",
   // 기호 풀이 (TEXT_RULES 4절 라벨: 명사구). 상태 풀이는 이름 + 수만: 효과 문장은 정본 문구가 생기면 붙여요
