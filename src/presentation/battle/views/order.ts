@@ -76,23 +76,21 @@ const NUM = NUM_SIZE;
 export type OrderHit = { x: number; y: number; w: number; h: number } & ({ kind: "ally"; bundle: number; i: number } | { kind: "enemy"; slot: number });
 
 /**
- * 순서표 (0038): [머리] │ [묶음] ─ ①적 ─ [묶음] ─ ②적 ─ … ─ [꼬리 묶음] │ 턴 N+1.
+ * 순서표 (0038): [머리] │ [묶음] ─ ①적 ─ [묶음] ─ ②적 ─ … ─ [꼬리 묶음]. 오른쪽 끝이 이번 턴의 끝이에요 (0074).
  * 묶음 칸은 모두 같은 폭(가장 긴 묶음)이고, 묶음은 칸 안에서 다음 적 쪽에 붙어요. 빈 칸은 연결선만.
  */
 export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phaser.GameObjects.Graphics; hits: OrderHit[] } {
   const hits: OrderHit[] = [];
   const phaseText = COPY.myTurn;
   const turnText = vm.head ? `${COPY.turn} ${vm.head.turn}${COPY.sep}` : "";
-  const nextText = `${COPY.turn} ${vm.nextTurn}`;
   const lineH = px(LABEL) * LINE_HEIGHT;
   const stateW = measure(turnText, LABEL) + O.meDot + O.meGap + measure(phaseText, LABEL);
   const headW = Math.max(stateW, vm.head?.place ? measure(vm.head.place, LABEL) : 0);
-  const nextW = measure(nextText, LABEL);
   const bundles = vm.bundles ?? [];
   const cellW = Math.max(0, ...bundles.map((b) => (b.length ? bundleWidth(b.length) : 0)));
   const gaps = vm.slots.length + 1;
   const dividerW = O.divider.w + O.line.mx * 2;
-  const innerW = headW + dividerW + vm.slots.length * slotW + gaps * (lineW + cellW) + dividerW + nextW;
+  const innerW = headW + dividerW + vm.slots.length * slotW + gaps * (lineW + cellW);
   const w = innerW + O.padX * 2;
   const x0 = O.cx - w / 2;
   const cy = O.top + O.h / 2;
@@ -178,9 +176,8 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     if (s.cut) cutMark(scene, x, top);
     x += slotW;
   }
+  // 판의 오른쪽 끝이 이번 턴의 끝이에요. 다음 턴 구간은 없어요 (0074)
   cell(vm.slots.length);
-  divider();
-  scene.add.text(x, labelTop(cy), nextText, textStyle(LABEL, P.ink3));
   return { g, hits };
 }
 

@@ -97,7 +97,7 @@ export interface EnemyTipVM {
 
 export interface BattleVM {
   /** bundles: 적 칸마다 그 앞에 묶인 아군 토큰, 마지막은 꼬리 묶음 (길이 = slots + 1, 0038). 없으면 적 칸만 */
-  order: { slots: OrderSlotVM[]; nextTurn: number; bundles?: AllyTokenVM[][]; head?: OrderHeadVM };
+  order: { slots: OrderSlotVM[]; bundles?: AllyTokenVM[][]; head?: OrderHeadVM };
   allies: AllyVM[];
   enemies: EnemyVM[];
   mana: { n: number; max: number };

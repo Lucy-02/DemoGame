@@ -35,7 +35,7 @@ export function battleVM(b: Battle, place?: string): BattleVM {
   const plays: Record<string, PlayVM> = {};
   for (const c of b.hand) if (b.canPlay(c).ok) plays[cardKey(c)] = { target: targetRule(b, c) };
   return {
-    order: { slots: order.map((o) => o.slot), nextTurn: b.turn + 1, bundles: bundlesOf(b).map((l) => l.map((t) => t.token)), head: { place, turn: b.turn } },
+    order: { slots: order.map((o) => o.slot), bundles: bundlesOf(b).map((l) => l.map((t) => t.token)), head: { place, turn: b.turn } },
     allies, enemies,
     mana: { n: b.mana, max: C.mana_per_turn },
     hand,
