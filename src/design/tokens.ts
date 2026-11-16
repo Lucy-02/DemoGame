@@ -317,6 +317,7 @@ export const tokens = {
       "runScreen": {
         "record": "14px",
         "story": "18px",
+        "eventName": "20px",
         "optLabel": "17px",
         "optText": "14px",
         "keep": "15px",

@@ -74,7 +74,7 @@ export function cardVM(cardId: string, ownerId?: string, st?: Record<StatId, num
     illustration: cardArtOf(baseCardId(cardId)),
     rarity: def.rarity === "basic" ? undefined : (def.rarity as CardRarity),
     values: valuesOf(def, st),
-    detail: { text: richText(describeCard(def, st ?? null)), owner: [who, ELEMENT_NAME[def.element], MATERIAL_NAME[material]].filter(Boolean).join(COPY.sep) },
+    detail: { text: richText(describeCard(def, st ?? null)), owner: [who, ELEMENT_NAME[def.element], MATERIAL_NAME[material], isUpgradedId(cardId) ? COPY.upgraded : undefined].filter(Boolean).join(COPY.sep) },
   };
 }
 

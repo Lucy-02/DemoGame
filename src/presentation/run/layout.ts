@@ -119,18 +119,19 @@ export const DECK_PICK = {
  *  padding 16 20 radius 12, 이름 · 효과문 gap 6 (효과문 줄 높이 1.5) · .opt.hov 테 accHi + 바깥 4px accHi .14 · 고를 수 없으면 .4 */
 export const CHOICE = {
   x: GRID.gutter, w: GRID.colW, top: 316, gap: 14, pad: [16, 20, 16, 20] as [number, number, number, number],
-  radius: 12, inner: 6, textLh: 1.5, hot: { outer: 4, alpha: 0.14 }, offAlpha: 0.4, belowStory: 24,
+  radius: 12, inner: 6, textLh: 1.5, hot: { outer: 4, alpha: 0.14 }, offAlpha: 0.4,
 };
 
 /** 이벤트 이름 줄 · 상황 글 (정리안 .evt · .evx): 상황 글 top 206 폭 564 줄 높이 1.6, 이름 줄은 그 위 gap 14 (A1 .event) */
 export const STORY = { x: GRID.gutter, w: GRID.colW, top: 206, gap: 14, lh: 1.6, titleLh: 1.35 };
 
 /** 판 결과 왼쪽 열 (정리안 .runleft · .rec · .keep · .onlybox): top 84, 줄 사이 22
- *  "이번 판에서만" 점선 상자: 테 1.5 dashed veil .22, padding 22 20 18, 줄 사이 12, radius 12 · 줄 높이 28 · 기호 18 gap 10
+ *  "이번 판에서만" 점선 상자: 내용을 감싸요. 테 1.5 dashed veil .22, padding 사방 20 (디렉터 2026-11-16: 사방 같게), 줄 사이 12, radius 12 · 줄 높이 28 · 기호 18 gap 10
  *  배운 카드 썸네일 .tcard 46×65 (카드 .5배) gap 6, 넘치면 겹쳐요 · 버튼 두 개 166×48 gap 16, 버튼 줄(660) */
 export const RUN_END = {
-  x: GRID.gutter, top: 84, w: GRID.colW, gap: 22, recordLh: 1.35, keepGap: 8, keepIcon: 16,
-  only: { ring: 1.5, dash: 6, lineAlpha: 0.22, pad: [22, 20, 18, 20] as [number, number, number, number], gap: 12, radius: 12, rowH: 28, icon: 18, iconGap: 10 },
+  x: GRID.gutter, top: LANE.y, w: GRID.colW, gap: 22, recordLh: 1.35, keepGap: 8, keepIcon: 16,
+  only: { ring: 1.5, dash: 6, lineAlpha: 0.22, pad: [20, 20, 20, 20] as [number, number, number, number], gap: 12, radius: 12, rowH: 28, icon: 18, iconGap: 10 },
   thumb: { w: 46, gap: 6 },
-  button: { w: 166, h: GRID.buttonH, gap: 16, radius: 12, y: GRID.buttonY },
+  /** 버튼 아랫선 = 마지막 정령 줄 아랫선 (LANE.y + 3·h + 2·gap) */
+  button: { w: 166, h: GRID.buttonH, gap: 16, radius: 12, y: LANE.y + LANE.h * 3 + LANE.gap * 2 - GRID.buttonH },
 };

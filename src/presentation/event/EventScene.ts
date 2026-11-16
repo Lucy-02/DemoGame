@@ -125,14 +125,14 @@ export class EventScene extends Phaser.Scene {
     const story: Node = {
       t: "col", w: STORY.w, gap: STORY.gap,
       children: [
-        text(s.event.title, T.record, P.ink3Spirit, { lh: STORY.titleLh }),
+        text(s.event.title, T.eventName, P.ink, { lh: STORY.titleLh }),
         text(s.event.text, T.story, P.ink, { lh: STORY.lh, wrap: STORY.w, keepAll: true }),
       ],
     };
     const titleH = size(story.children[0]).h + STORY.gap;
     const top = STORY.top - titleH;
     render(this, story, STORY.x, top);
-    const choicesTop = Math.max(CHOICE.top, top + size(story).h + CHOICE.belowStory);
+    const choicesTop = top + size(story).h + CHOICE.gap;
     drawChoices(this, s.event.options.map((o, i) => ({ label: o.label, text: o.desc, enabled: s.canChoose(i) })), choicesTop, this.hover, {
       click: (i) => { if (this.session.choose(i)) { this.hover = undefined; this.advance(); } },
       over: (i) => { this.hover = i; this.redraw(); },

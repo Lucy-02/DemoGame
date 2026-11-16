@@ -5,7 +5,7 @@ import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { createHandCard } from "../card/HandCard";
 import { HAND_CARD } from "../card/layout";
-import { P, text } from "../spirits/views/parts";
+import { P, plateStyle, text } from "../spirits/views/parts";
 import { box, circle } from "../style/draw";
 import { render, size, type Node } from "../style/flex";
 import { adjustColor } from "../style/opacity";
@@ -22,7 +22,7 @@ export const DECK_PICK_ICONS = [
   ["g-close", C.icon], ["fx-discard", C.icon], ["g-up", C.icon], ["g-cardnew", C.icon], ["i-coin", C.coin], ["g-back", LEAVE.icon], ["g-close", LEAVE.icon],
 ] as const;
 
-/** 고른 뒤 확인 버튼. danger = 되돌릴 수 없는 빼기(위험색 채움), 아니면 강조 채움 */
+/** 고른 뒤 확인 버튼. danger = 되돌릴 수 없는 빼기(위험색 채움), 아니면 주 버튼 판(plateStyle) */
 export interface PickConfirm {
   label: string;
   icon: string;
@@ -119,17 +119,17 @@ export function drawDeckPick(scene: Phaser.Scene, o: DeckPickOptions) {
           upView.setLifted(true);
           drawCardTip(scene, up, ax, top, HAND_CARD.w);
         }
-        if (o.pick === c.uid) drawPickConfirm(scene, y, o.confirm, { cancel: o.on.clear, ok: () => o.on.ok(c.uid) });
       };
       if (on) late.push(draw);
       else draw();
     });
   });
   for (const f of late) f();
-  // 돌아가기는 덱 줄에 가려지지 않게 마지막 줄의 확인 줄 자리에 둬요
-  if (o.pick === undefined && o.on.back && o.cancelLabel) {
-    drawQuietButton(scene, "g-close", o.cancelLabel, o.on.back, laneY(o.lanes.length - 1) + D.dy + C.dy);
-  }
+  // 버튼은 진열 밖 정해진 자리(왼쪽 열 맨 아래, 마지막 덱 줄 아래)에만 둬요. 덱 줄 간격은 늘 같아요
+  const slotY = laneY(o.lanes.length - 1) + D.dy + C.dy;
+  const pick = o.pick;
+  if (pick !== undefined) drawPickConfirm(scene, slotY, o.confirm, { cancel: o.on.clear, ok: () => o.on.ok(pick) });
+  else if (o.on.back && o.cancelLabel) drawQuietButton(scene, "g-close", o.cancelLabel, o.on.back, slotY);
 }
 
 /** 카드(왼쪽 위 x, y) 오른쪽 위 모서리에 걸친 − 표식 */
@@ -142,10 +142,9 @@ function drawRemoveMark(scene: Phaser.Scene, x: number, y: number) {
   box(g, cx - M.bar.w / 2, cy - M.bar.h / 2, M.bar.w, M.bar.h, M.bar.h / 2, { fill: P.onDanger });
 }
 
-/** rowY = 덱 줄의 카드 윗선. 확인 줄(취소 · 확인)은 왼쪽 열 오른쪽 끝에 맞춰요 */
-function drawPickConfirm(scene: Phaser.Scene, rowY: number, c: PickConfirm, on: { cancel: () => void; ok: () => void }) {
-  const fill = c.danger ? P.danger : P.acc;
-  const ink = c.danger ? P.onDanger : P.onAcc;
+/** y = 버튼 줄 윗선. 확인 줄(취소 · 확인)은 왼쪽 열 오른쪽 끝에 맞춰요 */
+function drawPickConfirm(scene: Phaser.Scene, y: number, c: PickConfirm, on: { cancel: () => void; ok: () => void }) {
+  const ink = c.danger ? P.onDanger : P.ink;
   const node: Node = {
     t: "row", gap: C.gap, align: "center",
     children: [
@@ -156,7 +155,7 @@ function drawPickConfirm(scene: Phaser.Scene, rowY: number, c: PickConfirm, on: 
       },
       {
         t: "row", w: C.okW, h: C.h, radius: C.radius, gap: C.inner, justify: "center", align: "center",
-        style: { fill }, onClick: on.ok,
+        style: c.danger ? { fill: P.danger } : plateStyle(true), onClick: on.ok,
         children: [
           { t: "icon", id: c.icon, w: C.icon, h: C.icon, tint: ink },
           text(c.label, T.was, ink),
@@ -168,7 +167,7 @@ function drawPickConfirm(scene: Phaser.Scene, rowY: number, c: PickConfirm, on: 
       },
     ],
   };
-  render(scene, node, DECK_PICK.x + DECK_PICK.w - C.cancelW - C.gap - C.okW, rowY + C.dy);
+  render(scene, node, DECK_PICK.x + DECK_PICK.w - C.cancelW - C.gap - C.okW, y);
 }
 
 /** 왼쪽 아래 조용한 버튼 (떠나기 · 돌아가기) */

@@ -14,6 +14,8 @@ export const COPY = {
   dropped: "사라짐",
   /** 버튼 동사 (0046 · 0076 17번) */
   leave: "떠나기",
+  /** 강화한 카드의 말풍선 주인 줄 꼬리 (TEXT_RULES 5절 명사형, 0080) */
+  upgraded: "강화됨",
   cancel: "취소",
   /** 안내 (TEXT_RULES 8절 해요체) */
   noBranch: "갈래를 고르면 대표 카드가 기술로 바뀌어요",
