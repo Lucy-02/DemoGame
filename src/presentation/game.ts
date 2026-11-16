@@ -13,6 +13,7 @@ import { HOME_SCENE, HomeScene, type HomeSceneData } from "./home/HomeScene";
 import { RESULT_SCENE, ResultScene, type ResultSceneData } from "./result/ResultScene";
 import { SHOP_SCENE, ShopScene, type ShopSceneData } from "./shop/ShopScene";
 import { DECK_SCENE, DeckScene, type DeckSceneData } from "./deck/DeckScene";
+import { MAP_SCENE, MapScene, type MapSceneData } from "./map/MapScene";
 import { EVOLUTION_SCENE, EvolutionScene } from "./evolution/EvolutionScene";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
 import type { TabId } from "./spirits/viewmodel";
@@ -21,7 +22,7 @@ import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
   /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
-  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "deck";
+  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "deck" | "map";
   /** 저장에 이어진 게임의 세션 (screen이 없을 때) */
   session?: GameSession;
   /** 시험 판: 메인 화면 없이 바로 떠나요 (?screen=legacy) */
@@ -61,7 +62,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
         if (live) {
-          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene]] as const) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
@@ -98,6 +99,10 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           game.scene.add(SPIRITS_SCENE, SpiritsScene, false);
           game.scene.add(EVOLUTION_SCENE, EvolutionScene, false);
           game.scene.add(HOME_SCENE, HomeScene, true, home);
+          return;
+        }
+        if (opts.screen === "map") {
+          game.scene.add(MAP_SCENE, MapScene, true, { scene: opts.scene, select: opts.select } satisfies MapSceneData);
           return;
         }
         if (opts.screen === "deck") {

@@ -122,7 +122,8 @@ src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오�
   fromCore.ts                  cardVM(cardId, owner?), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 임시 표)
 src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 게임 흐름(flow.ts)이 전투 위에 띄움. 고정 장면 RESULTS
 src/presentation/home/         타이틀 겸 메인 화면 (0054). 기본 진입점, 정원·판 저장에 연결(fromGame.ts). 고정 장면 ?screen=home&scene=first|full|running
-src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=remove[:카드], P1 f3 · f4). 레거시 지도에서 열림. 빼기 = 덱 펼침 → 고르기 → 확인
+src/presentation/map/          지도 (?screen=map&scene=start|mid|boss, &select=<정령 id>, LEDGER §2 R2 지도 C · 0076 18번). 가까운 길 여섯 층 + 미니맵 + 슬림 파티 줄(run/slimLane.ts), 줄을 누르면 정령 줄로 펼침
+src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=remove[:카드], P1 f3 · f4). 지도에서 열림. 빼기 = 덱 펼침 → 고르기 → 확인
 src/session/shop.ts            상점 세션: buy·heal·remove 명령 → Run, onChange. 진열·값·치료량은 constants.json shop
 src/session/garden.ts          정원 세션: 명령 → core/garden → onChange. snapshot/restore
 src/session/run.ts             판 세션: 판의 자리(phase) + enter·leave·finishBattle·finishReward. 칸 사이 저장 save/restore

@@ -16,7 +16,7 @@ export function cloneBattle(src: Battle, rng?: Rng): Battle {
   b.spirits = s.spirits.map((x: any) => ({ ...x, status: cloneStatus(x.status), auras: new Map(x.auras) }));
   b.enemies = s.enemies.map((e: any) => ({ ...e, status: cloneStatus(e.status) }));
   for (const k of ["draw", "hand", "discard", "exhaust", "sealed", "playedThisTurn"]) b[k] = s[k].map(cc);
-  b.planned = s.planned.map((p: any) => ({ ...p, card: cc(p.card) }));
+  b.planned = s.planned.map((p: any) => ({ ...p, card: p.card ? cc(p.card) : null }));
   // 재생 중에는 복제하지 않아요
   b.resolving = null;
   b.slots = s.slots.map((x: any) => ({ ...x }));

@@ -48,6 +48,8 @@ export interface LaneState {
   noSocket?: boolean;
   /** 지금 고를 수 없는 줄: 내용이 흐려져요 (전용 무기의 주인이 아닌 정령) */
   dim?: boolean;
+  /** 줄을 놓을 세로 자리. 없으면 i번째 줄 자리 (지도의 펼친 줄은 접힌 줄 사이에 놓여요) */
+  y?: number;
   /** 줄을 누르면 / 올리면 / 벗어나면 */
   on?: { click?: () => void; over?: () => void; out?: () => void };
 }
@@ -66,10 +68,10 @@ export interface LaneEquipState {
 }
 
 /** 줄 i의 장비 칸 n개 중 k번째 칸의 왼쪽 위 (세로 가운데로 쌓아요) */
-export function slotAt(i: number, n: number, k: number) {
+export function slotAt(i: number, n: number, k: number, y = laneY(i)) {
   const K = EQUIP_SLOT;
   const total = n * K.size + (n - 1) * K.gap;
-  return { x: LANE.x + K.x, y: laneY(i) + (LANE.h - total) / 2 + k * (K.size + K.gap) };
+  return { x: LANE.x + K.x, y: y + (LANE.h - total) / 2 + k * (K.size + K.gap) };
 }
 
 export const laneY = (i: number) => LANE.y + i * (LANE.h + LANE.gap);
@@ -211,7 +213,7 @@ function drawSocket(scene: Phaser.Scene, x: number, y: number, card?: LaneState[
 
 export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneState = {}) {
   const { x, w, h, radius } = LANE;
-  const y = laneY(i);
+  const y = st.y ?? laneY(i);
   const sh = shadowTexture(scene, w, h, radius, { y: LANE.shadow.y, blur: LANE.shadow.blur, color: withAlpha(P.tipShadow, LANE.shadow.alpha) });
   scene.add.image(x - sh.margin, y - sh.margin, sh.key).setOrigin(0, 0);
   const g = scene.add.graphics();
@@ -229,7 +231,7 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
     const node = info(l, st.stat, st.heal, st.equip);
     render(scene, node, x + INFO.x, y + (h - size(node).h) / 2);
     l.slots.forEach((item, k) => {
-      const at = slotAt(i, l.slots.length, k);
+      const at = slotAt(i, l.slots.length, k, y);
       const ghost = st.equip?.ghost?.slot === k ? st.equip.ghost : undefined;
       const slot: SlotDraw = ghost
         ? { item: ghost.item, state: "ghost", drop: ghost.drop, hot: ghost.hot }
@@ -260,7 +262,7 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
   }
   // 칸 입력은 줄 입력 위에 놓여요
   for (const [k, on] of Object.entries(st.equip?.slots ?? {})) {
-    const at = slotAt(i, l.slots.length, Number(k));
+    const at = slotAt(i, l.slots.length, Number(k), y);
     const zone = hitArea(scene, at.x, at.y, EQUIP_SLOT.size, EQUIP_SLOT.size, on.click ?? (() => {}));
     if (on.over) zone.on("pointerover", on.over);
     if (on.out) zone.on("pointerout", on.out);

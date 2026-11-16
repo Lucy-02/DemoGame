@@ -213,7 +213,7 @@ export class Battle implements Engine {
   }
 
   holdsHeldCard(s: BSpirit): boolean {
-    return this.hand.some((c) => c.held && c.owner === s.id) || this.planned.some((p) => p.card.held && p.owner === s.id);
+    return this.hand.some((c) => c.held && c.owner === s.id) || this.planned.some((p) => p.card?.held && p.owner === s.id);
   }
 
   private hookEach<K extends "turnStart" | "firstHand" | "afterHand" | "turnEnd" | "beforeDiscard">(s: BSpirit, hook: K) {
@@ -606,7 +606,7 @@ export class Battle implements Engine {
       if (this.checkEnd()) return;
     }
     // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
-    for (const p of allies.slice(ai)) this.discard.push(p.card);
+    for (const p of allies.slice(ai)) if (p.card) this.discard.push(p.card);
     this.planned = [];
     this.finishTurn(0);
   }
@@ -624,7 +624,8 @@ export class Battle implements Engine {
       c.locked = false;
       c.held = false;
       c.heldFast = false;
-      (c.isCopy ? this.exhaust : this.discard).push(c);
+      // 고르고 안 쓴 낙하는 덱에 쌓이지 않고 사라져요 (0076)
+      (c.isCopy || C.star_falls.includes(c.cardId) ? this.exhaust : this.discard).push(c);
     }
     this.hand = [];
     this.runSteps(this.roundEndSteps);
@@ -737,6 +738,10 @@ export class Battle implements Engine {
   /** 재생: 계획한 카드 하나가 끝나는 시각에 들어가요. 주인이 쓰러졌으면 봉인돼요.
    *  효과 배율 = 품었다 돌아온 카드 × hold_mult, 받아칠 기회를 쓰면 × ready_mult */
   private resolvePlanned(p: Planned) {
+    if (!p.card) {
+      this.resolveRelease(p.owner);
+      return;
+    }
     const c = p.card;
     const def = cardDef(c.cardId);
     const owner = this.spirit(p.owner);
@@ -833,6 +838,9 @@ export class Battle implements Engine {
     }
     let picks = 1;
     for (const [p, v] of allPassives(this)) picks += p.fallPicksAny?.(v) ?? 0;
+    // 손패에 남은 칸만큼만 골라요. 칸이 없으면 이 낙하는 사라져요 (0076)
+    picks = Math.min(picks, C.hand_max - this.hand.length);
+    if (picks <= 0) return;
     this.stars.choice = { options: C.star_falls.slice(), picks, owner: owner.id };
     this.emit({ k: "fallOffer", owner: owner.id, picks });
   }
@@ -1098,20 +1106,35 @@ export class Battle implements Engine {
     this.emit({ k: "heal", ref: refOf(s), amount: amt });
   }
 
-  /** 해방할 수 있는지: 각성체만, 전투마다 한 번, 내 턴에. 놓는 즉시 켜져요. 칸 비용은 정령마다 다르게 정할 예정(0036 4절, `TODO_TOKEN`). */
+  /** 해방할 수 있는지: 각성체만, 전투마다 한 번, 내 턴에. 칸과 시간은 정령 공통 임시 값이에요 (0076, 정령별 값은 0036 4절). */
   canRelease(id: string): boolean {
     const s = this.spirit(id);
-    return this.result === "ongoing" && !this.replaying && !s.downed && !s.releaseUsed && s.run.stage === "awakened";
+    return this.result === "ongoing" && !this.replaying && !s.downed && !s.releaseUsed && s.run.stage === "awakened" && this.mana >= C.release_cost;
   }
 
+  /** 해방이 끝나는 시각 (미리보기) */
+  releaseEnd(id: string): number {
+    return this.laneEnd(id) + C.release_ms;
+  }
+
+  /** 해방을 그 정령 줄 끝에 계획해요. 끝나는 시각에 켜지고, 끊기지 않아요 (0036 4절). */
   release(id: string): boolean {
     if (!this.canRelease(id)) return false;
     const s = this.spirit(id);
     s.releaseUsed = true;
+    this.mana -= C.release_cost;
+    const start = this.laneEnd(id);
+    this.planned.push({ card: null, owner: id, start, end: start + C.release_ms, comboCount: this.playedThisTurn.length, repeat: false });
+    return true;
+  }
+
+  private resolveRelease(id: string) {
+    const s = this.spirit(id);
+    if (s.downed) return;
     s.release = C.release_duration;
+    this.emit({ k: "spiritAct", id: s.id, card: s.def.release.name });
     this.emit({ k: "release", id: s.id });
     this.log(`✦ ${s.def.name} 해방: ${s.def.release.name}`);
-    return true;
   }
 
   drawCards(n: number) {

@@ -114,7 +114,8 @@ export interface BCard extends DeckCard {
 
 /** 계획된 아군 카드. 턴 종료 때 끝나는 시각 순서로 재생돼요 (0036). */
 export interface Planned {
-  card: BCard;
+  /** 카드. 해방은 카드가 없어요 (null) */
+  card: BCard | null;
   owner: string;
   target?: Ref;
   start: number;

@@ -57,6 +57,28 @@ describe("별과 낙하 (별의 정령)", () => {
     expect(b.stars.choice).toBeNull();
   });
 
+  it("고르고 안 쓴 낙하는 턴 끝에 사라져요 (0076)", () => {
+    const b = battleWith(PARTY, []);
+    b.offerFall();
+    b.chooseFall(["meteor"]);
+    b.endTurn();
+    expect(b.exhaust.some((c) => c.cardId === "meteor")).toBe(true);
+    expect([...b.hand, ...b.draw, ...b.discard].some((c) => c.cardId === "meteor")).toBe(false);
+  });
+
+  it("손패가 차면 남은 칸만큼만 고르고, 칸이 없으면 낙하가 사라져요 (0076)", () => {
+    const max = C.hand_max as number;
+    const fill = (n: number) => Array.from({ length: n }, () => ["stardust", "star_spirit"] as [string, string]);
+    const b = battleWith(PARTY, fill(max - 1));
+    b.addAura(b.spirit("star_spirit"), "astraea", 2);
+    b.offerFall();
+    expect(b.stars.choice?.picks).toBe(1);
+    const full = battleWith(PARTY, fill(max));
+    full.offerFall();
+    expect(full.stars.choice).toBeNull();
+    expect(full.drain().some((e) => e.k === "fallOffer")).toBe(false);
+  });
+
   it("유성은 대상의 별마다 세지고 별을 지워요", () => {
     const b = battleWith(PARTY, [["meteor", "star_spirit"]]);
     const star = b.spirit("star_spirit");

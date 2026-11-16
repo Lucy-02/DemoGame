@@ -73,7 +73,7 @@ export function cardVM(cardId: string, ownerId?: string, st?: Record<StatId, num
   };
 }
 
-/** 해방 카드 (0075): 각성체 손패 묶음 끝에 붙는 한 장. 비용 동전 = 쓰는 칸. 이름 띠는 "해방" (정령별 해방 이름은 아직 TODO_NAME) */
+/** 해방 카드 (0075 · 0076 3번): 각성체 손패 묶음 끝에 붙는 한 장. 비용 동전 = 쓰는 칸. 이름 띠는 "해방" (정령별 해방 이름은 아직 TODO_NAME) */
 export function releaseVM(spiritId: string, slots: number): CardVM {
   const def = spiritDef(spiritId);
   return {

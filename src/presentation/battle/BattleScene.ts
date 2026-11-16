@@ -33,6 +33,8 @@ export interface BattleSceneData {
   session?: BattleSession;
   /** 전투가 끝났어요 (session이 있을 때) */
   onOver?: (scene: Phaser.Scene) => void;
+  /** 덱 보기 열기 (오른쪽 위 덱 버튼) */
+  onDeck?: (scene: Phaser.Scene) => void;
   /** 순서표 머리의 장소 글 (session이 있을 때) */
   place?: string;
   hover?: string;
@@ -58,10 +60,12 @@ export class BattleScene extends Phaser.Scene {
   private playback?: BattleVM[];
   private place?: string;
   private onOver?: (scene: Phaser.Scene) => void;
+  private onDeck?: (scene: Phaser.Scene) => void;
 
   init(data: BattleSceneData) {
     this.session = data.session;
     this.onOver = data.onOver;
+    this.onDeck = data.onDeck;
     this.place = data.place;
     this.playback = data.playback;
     this.vm = data.playback?.[0] ?? (data.session ? battleVM(data.session.battle, data.place) : data.vm ?? canonRest);
@@ -116,7 +120,7 @@ export class BattleScene extends Phaser.Scene {
     // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
     for (const s of this.session?.battle.spirits ?? []) bakeSpiritFace(this, s.id, s.run.stage);
     drawBackdrop(this);
-    drawSys(this);
+    drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) });
     this.fieldLayer = this.add.container(0, 0);
     this.rest = this.drawField(null);
     this.shown = this.rest;
@@ -416,14 +420,14 @@ export class BattleScene extends Phaser.Scene {
     if (!s || this.dragging || this.playback || this.pick) return;
     const cast = { allies: s.battle.spirits.map((x) => x.id), enemies: s.battle.enemies.filter((e) => !e.dead).map((e) => e.uid) };
     const frames = playbackFrames(this.vm, cast, s.dispatch({ kind: "endTurn" }));
-    this.scene.restart({ session: s, onOver: this.onOver, place: this.place, playback: frames } satisfies BattleSceneData);
+    this.scene.restart({ session: s, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: frames } satisfies BattleSceneData);
   }
 
   /** 재생: 다음 장면으로. 남은 장면이 없으면 확정된 상태로 */
   private step() {
     const rest = this.playback?.slice(1) ?? [];
     if (!rest.length) return this.settle();
-    this.scene.restart({ session: this.session, onOver: this.onOver, place: this.place, playback: rest } satisfies BattleSceneData);
+    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: rest } satisfies BattleSceneData);
   }
 
   /**
@@ -432,7 +436,7 @@ export class BattleScene extends Phaser.Scene {
    */
   private settle() {
     if (this.session?.over) return this.onOver?.(this);
-    this.scene.restart({ session: this.session, onOver: this.onOver, place: this.place } satisfies BattleSceneData);
+    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place } satisfies BattleSceneData);
   }
 
   // ── 대상 강조 ──────────────────────────────────────────
