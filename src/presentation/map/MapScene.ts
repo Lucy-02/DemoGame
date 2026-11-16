@@ -6,24 +6,29 @@ import { tokens } from "../../design/tokens";
 import type { Run } from "../../core/run";
 import { SYS_ICONS, drawSys } from "../battle/views/topbar";
 import { SYS } from "../battle/layout";
+import { createHandCard, preloadHandCard } from "../card/HandCard";
+import { HAND_CARD } from "../card/layout";
 import { drawBackdrop } from "../run/backdrop";
+import { cardWithFace, drawCardTip } from "../run/cards";
+import { EQUIP_STAT_ICON } from "../run/equipTip";
+import type { LaneVM } from "../run/viewmodel";
 import { GOLD_ICONS, drawGold } from "../run/gold";
 import { LANE_ICONS, drawLane } from "../run/lanes";
 import { LANE } from "../run/layout";
 import { drawSlimLane } from "../run/slimLane";
 import { preloadSpiritArt } from "../spiritArt";
-import { button } from "../spirits/views/parts";
+import { personalityPill } from "../spirits/views/idCard";
 import { rgba, withAlpha } from "../style/color";
 import { box, circle } from "../style/draw";
-import { render, size } from "../style/flex";
+import { render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
 import { icon, loadIcon } from "../style/icons";
 import { GLASS } from "../tooltip/skins";
 import { clampLeft, drawTooltip } from "../tooltip/Tooltip";
 import { COPY, KIND_ICON } from "./copy";
 import { DEFAULT_MAP, mapRun } from "./fixtures";
-import { mapVM } from "./fromRun";
-import { FRAME, MINI, PATH, SLIM } from "./layout";
+import { mapVM, sheetVM } from "./fromRun";
+import { FRAME, GOLD_AT, MINI, PATH, SHEET, SLIM } from "./layout";
 import type { MapNodeVM, MapVM } from "./viewmodel";
 
 const P = tokens.provisional.palette;
@@ -86,6 +91,9 @@ export class MapScene extends Phaser.Scene {
     for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS]) loadIcon(this, id, w);
     for (const id of SYS_ICONS) loadIcon(this, id, SYS.icon);
     for (const id of Object.values(KIND_ICON)) loadIcon(this, id, PATH.node.icon);
+    for (const id of Object.values(EQUIP_STAT_ICON)) loadIcon(this, id, SHEET.stat.icon);
+    loadIcon(this, "g-close", SLIM.close.icon);
+    for (const l of this.vm.party) for (const c of sheetVM(this.run, l.id)?.cards ?? []) preloadHandCard(this, c, { showRarity: true });
     preloadSpiritArt(this, this.vm.party.map((l) => l.id));
   }
 
@@ -100,7 +108,7 @@ export class MapScene extends Phaser.Scene {
     this.hover = null;
     this.vm = mapVM(this.run);
     drawBackdrop(this);
-    drawGold(this, this.vm.gold);
+    drawGold(this, this.vm.gold, {}, GOLD_AT);
     drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) });
     this.drawPath();
     this.drawMini();
@@ -113,7 +121,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private at(n: MapNodeVM): Pt {
-    return { x: PATH.x + n.col * PATH.colStep, y: PATH.bottom - (n.floor - this.low) * PATH.rowStep };
+    return { x: PATH.cx + (n.col - (this.vm.cols - 1) / 2) * PATH.colStep, y: PATH.bottom - (n.floor - this.low) * PATH.rowStep };
   }
 
   private drawPath() {
@@ -176,14 +184,14 @@ export class MapScene extends Phaser.Scene {
     const g = this.add.graphics();
     box(g, M.x, M.y, M.w, M.h, M.radius, { fill: P.glass, ring: { width: 1, color: P.glassLine } });
     const iw = M.w - M.pad * 2, ih = M.h - M.pad * 2;
+    // 눕힌 지도: 왼쪽이 출발, 오른쪽이 보스
     const at = (n: MapNodeVM): Pt => ({
-      x: M.x + M.pad + (cols > 1 ? n.col / (cols - 1) : 0.5) * iw,
-      y: M.y + M.pad + (1 - n.floor / top) * ih,
+      x: M.x + M.pad + (n.floor / top) * iw,
+      y: M.y + M.pad + (cols > 1 ? n.col / (cols - 1) : 0.5) * ih,
     });
     // 왼쪽에 크게 보이는 구간
-    const step = ih / top;
-    const bandTop = M.y + M.pad + (1 - (this.low + PATH.rows - 1) / top) * ih - M.band.pad;
-    box(g, M.x + M.pad - M.band.pad, bandTop, iw + M.band.pad * 2, step * (PATH.rows - 1) + M.band.pad * 2, M.band.radius, { fill: withAlpha(P.ink, M.band.alpha) });
+    const step = iw / top;
+    box(g, M.x + M.pad + this.low * step - M.band.pad, M.y + M.pad - M.band.pad, step * (PATH.rows - 1) + M.band.pad * 2, ih + M.band.pad * 2, M.band.radius, { fill: withAlpha(P.ink, M.band.alpha) });
     const byId = new Map(nodes.map((n) => [n.id, n]));
     for (const l of links) {
       const a = at(byId.get(l.from)!), b = at(byId.get(l.to)!);
@@ -199,17 +207,104 @@ export class MapScene extends Phaser.Scene {
   private drawParty() {
     let y = SLIM.y;
     this.vm.party.forEach((l, i) => {
-      if (l.id === this.open) {
-        drawLane(this, l, i, { y, noSocket: true, on: { click: () => this.toggle(l.id) } });
-        const C = SLIM.close;
-        const close = button(COPY.close, { size: T.button, h: C.h, radius: C.radius, padX: C.padX, onClick: () => this.toggle(l.id) });
-        render(this, close, SLIM.x + SLIM.w - C.right - size(close).w, y + C.top);
-        y += LANE.h + SLIM.gap;
-      } else {
+      if (l.id !== this.open) {
         drawSlimLane(this, l, y, SLIM, () => this.toggle(l.id));
         y += SLIM.h + SLIM.gap;
+        return;
       }
+      drawLane(this, l, i, { y, noSocket: true, on: { click: () => this.toggle(l.id) } });
+      const C = SLIM.close;
+      const close: Node = {
+        t: "row", align: "center", gap: C.gap, h: C.h, onClick: () => this.toggle(l.id),
+        children: [{ t: "icon", id: "g-close", w: C.icon, h: C.icon, tint: P.ink3Spirit }, { t: "text", text: COPY.close, size: T.button, color: P.ink2 }],
+      };
+      render(this, close, SLIM.x + SLIM.w - C.right - size(close).w, y + C.top);
+      y += LANE.h + SHEET.gap;
+      y += this.drawSheet(l, y) + SLIM.gap;
     });
+  }
+
+  /** 펼친 줄 아래 판: 능력치 출처 막대(기본 · 단계 · 그 밖), 성격, 이번 판에 받은 카드. 풀이는 올렸을 때만 나와요 (0050). 그린 높이를 돌려줘요 */
+  private drawSheet(l: LaneVM, y: number): number {
+    const sheet = sheetVM(this.run, l.id);
+    if (!sheet) return 0;
+    const S = SHEET, R = S.stat;
+    const cards = sheet.cards.slice(0, S.cards.max);
+    const leftH = sheet.stats.length * R.rowH + (sheet.personality ? S.per.gap + R.rowH : 0);
+    const h = S.pad * 2 + Math.max(leftH, cards.length ? HAND_CARD.h : 0);
+    const x = SLIM.x;
+    box(this.add.graphics(), x, y, SLIM.w, h, SLIM.radius, { fill: P.glass, ring: { width: 1, color: P.glassLine } });
+    const tip = (zx: number, zy: number, zw: number, zh: number, title: string, text: string) => {
+      this.add.zone(zx, zy, zw, zh).setOrigin(0, 0).setInteractive()
+        .on("pointerover", () => {
+          this.hover?.destroy();
+          const left = clampLeft(zx, GLASS.w, FRAME.w, SYS.right);
+          this.hover = drawTooltip(this, { skin: GLASS, at: { left, bottom: zy - S.tipGap }, content: [{ kind: "title", text: title }, { kind: "text", role: "body", text: [{ text }] }] });
+        })
+        .on("pointerout", () => {
+          this.hover?.destroy();
+          this.hover = null;
+        });
+    };
+    const lx = x + S.pad;
+    let ry = y + S.pad;
+    for (const st of sheet.stats) {
+      const row: Node = {
+        t: "row", h: R.rowH, gap: R.gap, align: "center",
+        children: [
+          { t: "icon", id: EQUIP_STAT_ICON[st.id], w: R.icon, h: R.icon, tint: st.id === "hp" ? P.ink3 : P.stat[st.id] },
+          { t: "text", text: String(st.total), size: T.was, color: P.ink, w: R.valueW },
+          {
+            t: "block", w: R.bar.w, h: R.bar.h,
+            draw: (g, bx, by, bw, bh) => {
+              const parts: [number, string][] = [[st.base, withAlpha(P.ink2, R.baseAlpha)], [st.stage, P.ink], [st.rest, P.accHi]];
+              const live = parts.filter(([v]) => v > 0);
+              const sum = live.reduce((a, [v]) => a + v, 0);
+              const room = bw - (live.length - 1) * R.bar.gap;
+              let px = bx;
+              for (const [v, color] of live) {
+                const w = (room * v) / sum;
+                box(g, px, by, w, bh, bh / 2, { fill: color });
+                px += w + R.bar.gap;
+              }
+            },
+          },
+        ],
+      };
+      render(this, row, lx, ry);
+      tip(lx, ry, size(row).w, R.rowH, st.name, st.detail);
+      ry += R.rowH;
+    }
+    if (sheet.personality) {
+      ry += S.per.gap;
+      const pill = personalityPill(sheet.personality.name);
+      render(this, pill, lx, ry + (R.rowH - size(pill).h) / 2);
+      tip(lx, ry, size(pill).w, R.rowH, sheet.personality.name, sheet.personality.desc);
+    }
+    // 이번 판에 받은 카드: 오른쪽 끝부터, 넘치면 +n
+    const more = sheet.cards.length - cards.length;
+    let cx = x + SLIM.w - S.pad - cards.length * HAND_CARD.w - (cards.length - 1) * S.cards.gap;
+    const cy = y + S.pad;
+    if (more > 0) {
+      const n: Node = { t: "text", text: COPY.more(more), size: T.was, color: P.ink2 };
+      render(this, n, cx - S.cards.gap - size(n).w, cy + (HAND_CARD.h - size(n).h) / 2);
+    }
+    for (const c of cards) {
+      const card = cardWithFace(this, c, l);
+      const at = cx;
+      createHandCard(this, card, at, cy, { showRarity: true });
+      this.add.zone(at, cy, HAND_CARD.w, HAND_CARD.h).setOrigin(0, 0).setInteractive()
+        .on("pointerover", () => {
+          this.hover?.destroy();
+          this.hover = drawCardTip(this, card, at, cy, HAND_CARD.w);
+        })
+        .on("pointerout", () => {
+          this.hover?.destroy();
+          this.hover = null;
+        });
+      cx += HAND_CARD.w + S.cards.gap;
+    }
+    return h;
   }
 
   private toggle(id: string) {
