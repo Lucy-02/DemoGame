@@ -12,6 +12,7 @@ import { FRAME } from "./battle/layout";
 import { HOME_SCENE, HomeScene, type HomeSceneData } from "./home/HomeScene";
 import { RESULT_SCENE, ResultScene, type ResultSceneData } from "./result/ResultScene";
 import { SHOP_SCENE, ShopScene, type ShopSceneData } from "./shop/ShopScene";
+import { EVOLUTION_SCENE, EvolutionScene } from "./evolution/EvolutionScene";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
 import type { TabId } from "./spirits/viewmodel";
 import { installCursor } from "./style/cursor";
@@ -59,7 +60,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
         if (live) {
-          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene]] as const) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
@@ -68,6 +69,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         }
         if (opts.screen === "spirits") {
           const data: SpiritsSceneData = { scene: opts.scene, select: opts.select, tab: opts.tab as TabId | undefined, closed: opts.closed, pick: opts.pick };
+          game.scene.add(EVOLUTION_SCENE, EvolutionScene, false);
           game.scene.add(SPIRITS_SCENE, SpiritsScene, true, data);
           return;
         }
@@ -93,6 +95,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
             },
           };
           game.scene.add(SPIRITS_SCENE, SpiritsScene, false);
+          game.scene.add(EVOLUTION_SCENE, EvolutionScene, false);
           game.scene.add(HOME_SCENE, HomeScene, true, home);
           return;
         }
