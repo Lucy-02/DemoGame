@@ -27,7 +27,7 @@ for (const n of [...byNumber.keys()].sort()) if (!indexed.has(n)) warnings.push(
 const SUMMARY = "docs/handoff/DECISIONS.md";
 const summary = readFileSync(SUMMARY, "utf8");
 const summaryLines = summary.trimEnd().split("\n").length;
-if (summaryLines > 150) warnings.push(`${SUMMARY}가 ${summaryLines}줄이에요(상한 150). 대체된 줄을 지우고 같은 주제를 합쳐요`);
+if (summaryLines > 70) warnings.push(`${SUMMARY}가 ${summaryLines}줄이에요(상한 70). 대체된 줄을 지우고 같은 주제를 합쳐요`);
 const squashed = summary.match(/정리: \*\*(\d{4})까지 반영\*\*/)?.[1];
 const newest = [...byNumber.keys()].sort().at(-1);
 if (!squashed) warnings.push(`${SUMMARY} 맨 위에 "정리: **NNNN까지 반영**" 줄이 없어요`);
