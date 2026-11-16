@@ -23,7 +23,8 @@ const CHARGE_ICON = "kw-charge";
 export const cardKey = (c: BCard) => `c${c.uid}`;
 export const cardUid = (key: string) => Number(key.slice(1));
 
-export function battleVM(b: Battle): BattleVM {
+/** place: 순서표 머리의 장소 글 (판이 알려 줘요) */
+export function battleVM(b: Battle, place?: string): BattleVM {
   const alive = b.spirits;
   const order = orderOf(b);
   const allies = alive.map((s) => allyVM(b, s));
@@ -34,7 +35,7 @@ export function battleVM(b: Battle): BattleVM {
   const plays: Record<string, PlayVM> = {};
   for (const c of b.hand) if (b.canPlay(c).ok) plays[cardKey(c)] = { target: targetRule(b, c) };
   return {
-    order: { slots: order.map((o) => o.slot), nextTurn: b.turn + 1, bundles: bundlesOf(b) },
+    order: { slots: order.map((o) => o.slot), nextTurn: b.turn + 1, bundles: bundlesOf(b).map((l) => l.map((t) => t.token)), head: { place, turn: b.turn } },
     allies, enemies,
     mana: { n: b.mana, max: C.mana_per_turn },
     hand,
@@ -63,25 +64,42 @@ interface OrderEntry {
 }
 
 function orderOf(b: Battle): OrderEntry[] {
-  const slots = b.slots.filter((x) => !x.done).sort((x, y) => x.at - y.at);
+  const slots = openSlots(b);
   return slots.map((x, i) => {
     const e = b.enemy(x.uid);
     const move = b.moveQueue(e).find((m) => m.at === x.at)?.move ?? b.currentMove(e);
     const main = move.actions[0];
-    return { uid: x.uid, slot: { n: i + 1, art: "", action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON } };
+    const enemy = b.enemies.filter((q) => !q.dead).findIndex((q) => q.uid === x.uid);
+    return { uid: x.uid, slot: { n: i + 1, art: "", action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, enemy: enemy < 0 ? undefined : enemy } };
   });
 }
 
-/** 놓은 카드를 끝나는 시각으로 적 칸 사이에 묶어요. 같은 시각이면 아군이 먼저 (0038 정렬) */
-function bundlesOf(b: Battle): AllyTokenVM[][] {
-  const ats = b.slots.filter((x) => !x.done).sort((x, y) => x.at - y.at).map((x) => x.at);
-  const out: AllyTokenVM[][] = ats.map(() => []);
+/** 이번 턴 남은 적 행동. 같은 시각이면 왼쪽 적이 먼저 (0038 정렬) */
+const openSlots = (b: Battle) => b.slots.filter((x) => !x.done).sort((x, y) => x.at - y.at || x.uid - y.uid);
+
+export interface PlannedToken {
+  token: AllyTokenVM;
+  /** 놓은 카드 (호버 풀이) */
+  cardId: string;
+  owner: string;
+}
+
+/**
+ * 놓은 카드를 끝나는 시각으로 적 칸 사이에 묶어요 (0038 정렬).
+ * 같은 시각이면 아군이 적보다 먼저, 아군끼리는 스피드가 높은 정령 → 앞열에 가까운 정령 순서예요.
+ */
+export function bundlesOf(b: Battle): PlannedToken[][] {
+  const ats = openSlots(b).map((x) => x.at);
+  const out: PlannedToken[][] = ats.map(() => []);
   out.push([]);
-  const planned = [...b.planned].sort((x, y) => x.end - y.end);
+  const rank = (id: string) => (id === b.frontId ? -1 : b.spirits.findIndex((s) => s.id === id));
+  const speed = (id: string) => b.stat(b.spirit(id), "speed");
+  const planned = [...b.planned].sort((x, y) => x.end - y.end || speed(y.owner) - speed(x.owner) || rank(x.owner) - rank(y.owner));
   for (const p of planned) {
     const k = ats.findIndex((at) => p.end <= at);
     const icon = cardVM(p.card.cardId, p.owner).values[0]?.icon ?? CHARGE_ICON;
-    out[k < 0 ? ats.length : k].push({ face: p.owner, icon });
+    const vm = handCard(b, p.card);
+    out[k < 0 ? ats.length : k].push({ token: { face: p.owner, icon, tip: { title: vm.name, text: vm.detail.text } }, cardId: p.card.cardId, owner: p.owner });
   }
   return out;
 }
@@ -99,7 +117,7 @@ function allyVM(b: Battle, s: BSpirit): AllyVM {
   };
 }
 
-/** 이번 적 차례에 이 아군이 받을 공격 피해 합계 (앞열 · 최저 · 전체만. 무작위는 누가 맞을지 몰라 세지 않아요) */
+/** 이번 적 차례에 이 아군이 받을 공격 피해 합계: 이번 턴 적 행동 전부 (0038 정보판 연동) */
 function incomingTo(b: Battle, s: BSpirit): number {
   if (s.downed) return 0;
   let sum = 0;
@@ -123,7 +141,8 @@ function aims(b: Battle, rule: EnemyTargetRule): string[] {
     const low = alive.reduce<BSpirit | undefined>((m, s) => (!m || s.hp < m.hp ? s : m), undefined);
     return low ? [low.id] : [];
   }
-  return [];
+  // 무작위: 아군이 하나뿐이면 그 아군이 맞아요. 여럿이면 누가 맞을지 몰라 세지 않아요
+  return alive.length === 1 ? [alive[0].id] : [];
 }
 
 function statusesOf(h: BSpirit | BEnemy): StatusVM[] {

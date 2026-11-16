@@ -17,6 +17,14 @@ export interface OrderSlotVM {
   state?: "now";
   /** 미리보기에서 끊김 (사선, .rs-slot.cut). now와 함께 올 수 있어요 */
   cut?: boolean;
+  /** 이 행동을 하는 적 (enemies 인덱스). 가리키면 그 적의 풀이와 맞는 아군 강조 */
+  enemy?: number;
+}
+
+/** 순서표 머리: 장소 위, 턴 + 단계 아래 (0038). 없으면 단계만 (고정 장면) */
+export interface OrderHeadVM {
+  place?: string;
+  turn: number;
 }
 
 /** 순서표의 아군 토큰: 놓은 카드 한 장 (0038). 주인 얼굴 + 카드 기호, 번호 없음 */
@@ -24,6 +32,8 @@ export interface AllyTokenVM {
   face: UnitFace;
   /** 카드 그림 창의 효과 기호 */
   icon: IconId;
+  /** 가리키면 뜨는 풀이: 카드 이름 + 효과문 */
+  tip?: { title: string; text: RichText };
 }
 
 export interface StatusVM {
@@ -87,7 +97,7 @@ export interface EnemyTipVM {
 
 export interface BattleVM {
   /** bundles: 적 칸마다 그 앞에 묶인 아군 토큰, 마지막은 꼬리 묶음 (길이 = slots + 1, 0038). 없으면 적 칸만 */
-  order: { slots: OrderSlotVM[]; nextTurn: number; bundles?: AllyTokenVM[][] };
+  order: { slots: OrderSlotVM[]; nextTurn: number; bundles?: AllyTokenVM[][]; head?: OrderHeadVM };
   allies: AllyVM[];
   enemies: EnemyVM[];
   mana: { n: number; max: number };

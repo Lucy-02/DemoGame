@@ -7,7 +7,7 @@ import { placeholderArt } from "../../style/placeholder";
 import { faceKey } from "../../faces";
 import { LINE_HEIGHT, fontBox, measure, px, textStyle } from "../../style/text";
 import { COPY } from "../copy";
-import { ORDER as O, PREVIEW } from "../layout";
+import { ORDER as O, ORDER_SCALE, PREVIEW } from "../layout";
 import type { BattleVM } from "../viewmodel";
 
 const P = tokens.provisional.palette;
@@ -20,6 +20,7 @@ const slotW = O.slot.padX * 2 + O.numW + O.slot.gap + O.face + O.slot.gap + (O.a
 const tokenW = O.face + O.slot.gap + O.action.ml + O.action.size + O.slot.gap;
 const bundleWidth = (n: number) => O.slot.padX * 2 + n * tokenW - O.slot.gap;
 const lineW = O.line.w + O.line.mx * 2;
+
 
 export function preloadOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   for (const s of vm.slots) {
@@ -52,15 +53,32 @@ function textTopInLine(size: string) {
   return (px(size) * LINE_HEIGHT - (b.ascent + b.descent)) / 2;
 }
 
-export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
-  const meText = COPY.myTurn;
+/** 순서표 글자: 정본 크기의 1.4배 (0038) */
+const scaled = (size: string) => `${px(size) * ORDER_SCALE}px`;
+const LABEL = scaled(T.orderLabel);
+const NUM = scaled(T.orderNum);
+
+/** 그린 토큰의 자리 (호버 판정). bundle = 몇 번째 묶음, i = 그 안의 순서 / slot = 적 칸 번호(0부터) */
+export type OrderHit = { x: number; y: number; w: number; h: number } & ({ kind: "ally"; bundle: number; i: number } | { kind: "enemy"; slot: number });
+
+/**
+ * 순서표 (0038): [머리] │ [묶음] ─ ①적 ─ [묶음] ─ ②적 ─ … ─ [꼬리 묶음] │ 턴 N+1.
+ * 묶음 칸은 모두 같은 폭(가장 긴 묶음)이고, 묶음은 칸 안에서 다음 적 쪽에 붙어요. 빈 칸은 연결선만.
+ */
+export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phaser.GameObjects.Graphics; hits: OrderHit[] } {
+  const hits: OrderHit[] = [];
+  const phaseText = COPY.myTurn;
+  const turnText = vm.head ? `${COPY.turn} ${vm.head.turn}${COPY.sep}` : "";
   const nextText = `${COPY.turn} ${vm.nextTurn}`;
-  const meW = O.meDot + O.meGap + measure(meText, T.orderLabel);
-  const nextW = measure(nextText, T.orderLabel);
+  const lineH = px(LABEL) * LINE_HEIGHT;
+  const stateW = measure(turnText, LABEL) + O.meDot + O.meGap + measure(phaseText, LABEL);
+  const headW = Math.max(stateW, vm.head?.place ? measure(vm.head.place, LABEL) : 0);
+  const nextW = measure(nextText, LABEL);
   const bundles = vm.bundles ?? [];
-  const bundleW = (i: number) => (bundles[i]?.length ? bundleWidth(bundles[i].length) + lineW : 0);
-  const bundlesW = bundles.reduce((a, _, i) => a + bundleW(i), 0);
-  const innerW = meW + vm.slots.length * (lineW + slotW) + lineW + nextW + bundlesW;
+  const cellW = Math.max(0, ...bundles.map((b) => (b.length ? bundleWidth(b.length) : 0)));
+  const gaps = vm.slots.length + 1;
+  const dividerW = O.divider.w + O.line.mx * 2;
+  const innerW = headW + dividerW + vm.slots.length * slotW + gaps * (lineW + cellW) + dividerW + nextW;
   const w = innerW + O.padX * 2;
   const x0 = O.cx - w / 2;
   const cy = O.top + O.h / 2;
@@ -68,29 +86,41 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   const g = scene.add.graphics();
   box(g, x0, O.top, w, O.h, O.radius, { fill: P.glassThin, ring: { width: 1, color: P.glassLine } });
 
-  const labelH = px(T.orderLabel) * LINE_HEIGHT;
-  const labelTop = cy - labelH / 2 + textTopInLine(T.orderLabel);
+  const labelTop = (lineCy: number) => lineCy - lineH / 2 + textTopInLine(LABEL);
   let x = x0 + O.padX;
 
-  // 내 차례: 점 + 글
-  circle(g, x + O.meDot / 2, cy, O.meDot, { fill: P.ink });
-  scene.add.text(x + O.meDot + O.meGap, labelTop, meText, textStyle(T.orderLabel, P.ink));
-  x += meW;
+  // 머리: 장소(위) · 턴 + 단계(아래). 장소가 없으면 단계 한 줄을 가운데
+  const stateCy = vm.head?.place ? cy + lineH / 2 : cy;
+  if (vm.head?.place) scene.add.text(x, labelTop(cy - lineH / 2), vm.head.place, textStyle(LABEL, P.ink3));
+  let hx = x;
+  if (turnText) {
+    scene.add.text(hx, labelTop(stateCy), turnText, textStyle(LABEL, P.ink2));
+    hx += measure(turnText, LABEL);
+  }
+  circle(g, hx + O.meDot / 2, stateCy, O.meDot, { fill: P.ink });
+  scene.add.text(hx + O.meDot + O.meGap, labelTop(stateCy), phaseText, textStyle(LABEL, P.ink));
+  x += headW;
 
-  const line = () => {
-    box(g, x + O.line.mx, cy - O.line.h / 2, O.line.w, O.line.h, 0, { fill: P.glassLine });
-    x += lineW;
+  const divider = () => {
+    box(g, x + O.line.mx, cy - O.slot.h / 2, O.divider.w, O.slot.h, 0, { fill: P.glassLine });
+    x += dividerW;
+  };
+  const line = (len: number) => {
+    if (len > 0) box(g, x, cy - O.line.h / 2, len, O.line.h, 0, { fill: P.glassLine });
+    x += len;
   };
 
-  /** 아군 묶음: 둥근 테 안에 얼굴 + 카드 기호 (0038). 크기는 적 칸 값을 임시로 써요 (아군 토큰 크기 TODO_TOKEN) */
-  const bundle = (i: number) => {
-    const list = bundles[i];
-    if (!list?.length) return;
-    line();
+  /** 묶음 칸: 연결선 + (있으면) 다음 적 쪽에 붙은 둥근 테 묶음. 아군 토큰 크기는 적 칸 값을 임시로 써요 (TODO_TOKEN) */
+  const cell = (k: number) => {
+    const list = bundles[k] ?? [];
+    const bw = list.length ? bundleWidth(list.length) : 0;
+    line(lineW + cellW - bw - (bw ? O.line.mx : 0));
+    if (!bw) return;
     const top = cy - O.slot.h / 2;
-    box(g, x, top, bundleWidth(list.length), O.slot.h, O.slot.radius, { ring: { width: 1, color: P.glassLine } });
+    box(g, x, top, bw, O.slot.h, O.slot.radius, { ring: { width: 1, color: P.glassLine } });
     let sx = x + O.slot.padX;
-    for (const t of list) {
+    list.forEach((t, i) => {
+      hits.push({ kind: "ally", bundle: k, i, x: sx, y: top, w: O.face, h: O.slot.h });
       circle(g, sx + O.face / 2, cy, O.face, { fill: P.face });
       scene.add.image(sx, cy - O.face / 2, faceKey(t.face)).setOrigin(0, 0).setDisplaySize(O.face, O.face);
       sx += O.face + O.slot.gap + O.action.ml;
@@ -99,22 +129,24 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
       const inner = O.action.size - O.action.pad * 2;
       icon(scene, sx + O.action.pad, aTop + O.action.pad, t.icon, inner, inner, P.ink2);
       sx += O.action.size + O.slot.gap;
-    }
-    x += bundleWidth(list.length);
+    });
+    x += bw;
+    line(O.line.mx);
   };
 
-  for (const [i, s] of vm.slots.entries()) {
-    bundle(i);
-    line();
+  divider();
+  for (const [k, s] of vm.slots.entries()) {
+    cell(k);
     const top = cy - O.slot.h / 2;
+    hits.push({ kind: "enemy", slot: k, x, y: top, w: slotW, h: O.slot.h });
     if (s.state === "now") box(g, x, top, slotW, O.slot.h, O.slot.radius, { ring: { width: O.slot.nowRing, color: P.warn } });
     let sx = x + O.slot.padX;
-    const numH = px(T.orderNum) * LINE_HEIGHT;
+    const numH = px(NUM) * LINE_HEIGHT;
     const numText = String(s.n);
     scene.add.text(
-      sx + (O.numW - measure(numText, T.orderNum)) / 2,
-      cy - numH / 2 + textTopInLine(T.orderNum),
-      numText, textStyle(T.orderNum, P.ink3),
+      sx + (O.numW - measure(numText, NUM)) / 2,
+      cy - numH / 2 + textTopInLine(NUM),
+      numText, textStyle(NUM, P.ink3),
     );
     sx += O.numW + O.slot.gap;
     circle(g, sx + O.face / 2, cy, O.face, { fill: P.face });
@@ -128,8 +160,16 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
     if (s.cut) cutMark(scene, x, top);
     x += slotW;
   }
-  bundle(vm.slots.length);
-  line();
-  scene.add.text(x, labelTop, nextText, textStyle(T.orderLabel, P.ink3));
-  return g;
+  cell(vm.slots.length);
+  divider();
+  scene.add.text(x, labelTop(cy), nextText, textStyle(LABEL, P.ink3));
+  return { g, hits };
+}
+
+/** 가리킨 토큰: 얼굴 원에 흰 테 (0038 호버) */
+export function drawOrderRing(scene: Phaser.Scene, hit: OrderHit) {
+  const g = scene.add.graphics();
+  const cx = hit.kind === "ally" ? hit.x + O.face / 2 : hit.x + O.slot.padX + O.numW + O.slot.gap + O.face / 2;
+  circle(g, cx, hit.y + hit.h / 2, O.face, { ring: { width: O.slot.nowRing, color: P.ink } });
+  return { g, cx, bottom: O.top + O.h };
 }

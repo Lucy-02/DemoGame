@@ -12,8 +12,10 @@ import { battleVM, cardUid, refOf } from "./fromBattle";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
-import { drawOrder, preloadOrder } from "./views/order";
-import { ALLY, BAND, DRAG, ENEMY, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { drawOrder, drawOrderRing, preloadOrder, type OrderHit } from "./views/order";
+import { drawTooltip } from "../tooltip/Tooltip";
+import { GLASS } from "../tooltip/skins";
+import { ALLY, BAND, DRAG, ENEMY, FRAME, LIFT_STYLES, SYS, TARGETING } from "./layout";
 import { SYS_ICONS, drawSys } from "./views/topbar";
 import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
@@ -27,6 +29,8 @@ export interface BattleSceneData {
   session?: BattleSession;
   /** 전투가 끝났어요 (session이 있을 때) */
   onOver?: (scene: Phaser.Scene) => void;
+  /** 순서표 머리의 장소 글 (session이 있을 때) */
+  place?: string;
   hover?: string;
   lift?: string;
 }
@@ -45,12 +49,14 @@ export class BattleScene extends Phaser.Scene {
   private lift?: string;
 
   private session?: BattleSession;
+  private place?: string;
   private onOver?: (scene: Phaser.Scene) => void;
 
   init(data: BattleSceneData) {
     this.session = data.session;
     this.onOver = data.onOver;
-    this.vm = data.session ? battleVM(data.session.battle) : data.vm ?? canonRest;
+    this.place = data.place;
+    this.vm = data.session ? battleVM(data.session.battle, data.place) : data.vm ?? canonRest;
     this.previews.clear();
     this.bounds = [];
     this.units = [];
@@ -62,6 +68,9 @@ export class BattleScene extends Phaser.Scene {
     this.hoverMark = undefined;
     this.hoverFx = null;
     this.hoverTip = null;
+    this.orderHits = [];
+    this.orderHover = null;
+    this.orderFx = null;
     this.hover = data.hover;
     this.lift = data.lift;
   }
@@ -190,8 +199,43 @@ export class BattleScene extends Phaser.Scene {
     return this.bounds.find(({ box: b }) => inside(b, x, y))?.ref ?? null;
   }
 
+  // ── 순서표 토큰 가리킴 (0038): 얼굴 원에 흰 테 + 토큰 아래 유리 말풍선. 적 토큰이면 그 적을 가리킨 것과 같은 강조 ──
+  private orderHits: OrderHit[] = [];
+  private orderHover: OrderHit | null = null;
+  private orderFx: Phaser.GameObjects.Container | null = null;
+
+  private hoverOrder(x: number, y: number): boolean {
+    const hit = this.orderHits.find((h) => inside(h, x, y)) ?? null;
+    if (hit === this.orderHover) return !!hit;
+    this.orderFx?.destroy();
+    this.orderFx = null;
+    this.orderHover = hit;
+    if (!hit) return false;
+    const slot = hit.kind === "enemy" ? this.vm.order.slots[hit.slot] : undefined;
+    const token = hit.kind === "ally" ? this.vm.order.bundles?.[hit.bundle]?.[hit.i] : undefined;
+    this.showHover(slot?.enemy === undefined ? null : { side: "enemy", i: slot.enemy });
+    // 풀이는 토큰 아래 말풍선 하나만: 유닛 아래 풀이는 지우고 강조만 남겨요
+    this.hoverTip?.destroy();
+    this.hoverTip = null;
+    const enemyTip = slot?.enemy === undefined ? undefined : this.vm.enemies[slot.enemy]?.tip;
+    const tip = token?.tip ?? (enemyTip && { title: enemyTip.name, text: enemyTip.lines[0] ?? [] });
+    this.orderFx = gather(this, 0, 0, () => {
+      const ring = drawOrderRing(this, hit);
+      if (!tip) return;
+      // 화면 밖으로 나가면 말풍선만 안쪽으로 밀어요
+      const left = Math.max(SYS.right, Math.min(FRAME.w - SYS.right - GLASS.w, ring.cx - GLASS.w / 2));
+      drawTooltip(this, {
+        skin: GLASS, at: { left, top: ring.bottom + SYS.gap },
+        content: [{ kind: "title", text: tip.title }, { kind: "text", role: "body", text: tip.text }],
+      });
+    });
+    this.fieldLayer.add(this.orderFx);
+    return true;
+  }
+
   private hoverUnit(x: number, y: number) {
     if (this.dragging || this.held || this.press) return;
+    if (this.hoverOrder(x, y)) return;
     // 기호가 먼저: 깃발처럼 판정 영역 밖으로 나온 기호도 있어요
     for (const u of this.units) {
       const k = u.view.marks.findIndex((m) => inside(m, x, y));
@@ -335,7 +379,7 @@ export class BattleScene extends Phaser.Scene {
    */
   private settle() {
     if (this.session?.over) return this.onOver?.(this);
-    this.scene.restart({ session: this.session, onOver: this.onOver } satisfies BattleSceneData);
+    this.scene.restart({ session: this.session, onOver: this.onOver, place: this.place } satisfies BattleSceneData);
   }
 
   // ── 대상 강조 ──────────────────────────────────────────
@@ -391,7 +435,8 @@ export class BattleScene extends Phaser.Scene {
     };
     const cutOrders = new Set(this.vm.enemies.filter((_, i) => o?.enemies[i]?.cut).flatMap((e) => (e.intent?.order !== undefined ? [e.intent.order] : [])));
     const root = gather(this, 0, 0, () => {
-      drawOrder(this, { ...this.vm.order, slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: true } : s)) });
+      const order = drawOrder(this, { ...this.vm.order, slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: true } : s)) });
+      if (!f) this.orderHits = order.hits;
       this.vm.allies.forEach((a, i) => {
         const ref = { side: "ally", i } as const;
         unit(ref, () => {

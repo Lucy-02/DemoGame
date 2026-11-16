@@ -14,6 +14,10 @@ export const COPY = {
   incomingSub: "이번 적 차례에 받는 피해 합계",
   weak: "약점",
   front: "앞열",
+  /** 가운뎃점 (앞뒤 띄움, 문구 규칙) */
+  sep: " · ",
+  /** 순서표 머리의 장소: 지금 층 (지역 이름이 정해지면 바꿔요) */
+  floor: (n: number) => `${n}층`,
   /** 적 이름 옆 등급 꼬리표 */
   rank: { elite: "정예", boss: "보스" } as Record<string, string | undefined>,
 };

@@ -9,6 +9,7 @@ import { RewardSession } from "../session/reward";
 import type { BattleOutcome, RunSession } from "../session/run";
 import { ShopSession } from "../session/shop";
 import { BATTLE_SCENE, type BattleSceneData } from "./battle/BattleScene";
+import { COPY as BATTLE_COPY } from "./battle/copy";
 import { homeVM } from "./home/fromGame";
 import { HOME_SCENE, type HomeSceneData } from "./home/HomeScene";
 import { LEGACY, LEGACY_FLOW, type LegacyFlow } from "./placeholder";
@@ -82,7 +83,11 @@ export class GameFlow implements LegacyFlow {
         // 시험 판은 아직 임시 전투 장면이에요: 새 전투 화면에 없는 해방 · 품기 · 낙하 고르기를 카드 엔진 시험에 써요
         if (this.opts.trial) return this.go(LEGACY.battle, { enemies: phase.enemies, kind: phase.tier === "normal" ? "battle" : phase.tier });
         const session = new BattleSession(run.run, phase.enemies);
-        const data: BattleSceneData = { session, onOver: (scene) => this.battleOver(scene, session.outcome()) };
+        const floor = run.run.current?.floor;
+        const data: BattleSceneData = {
+          session, onOver: (scene) => this.battleOver(scene, session.outcome()),
+          place: floor === undefined ? undefined : BATTLE_COPY.floor(floor),
+        };
         return this.go(BATTLE_SCENE, data);
       }
       case "event": return this.go(LEGACY.event);

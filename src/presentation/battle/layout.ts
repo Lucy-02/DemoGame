@@ -12,21 +12,27 @@ export const FLOOR = { top: 330, stops: [[0, 0], [0.3, 0.55], [1, 0.9]] as const
 /** .sys right:16px top:10px gap:6px; .ib 34px; .ic 16px */
 export const SYS = { right: 16, top: 10, gap: 6, button: 34, icon: 16 };
 
-/** .rs top:10 left:941 translateX(-50%) height:40 padding 0 12 radius 18 */
+/** 순서표 배율: 정본 R5 크기의 1.4배 (0038) */
+export const ORDER_SCALE = 1.4;
+const os = (n: number) => n * ORDER_SCALE;
+
+/** 정본 .rs(top:10 height:40 padding 0 12 radius 18)의 1.4배를 화면 가운데 위에 (0038: 가운데 위 한 줄 판) */
 export const ORDER = {
-  cx: 941, top: 10, h: 40, padX: 12, radius: 18,
+  cx: FRAME.w / 2, top: 10, h: os(40), padX: os(12), radius: os(18),
   /** .rs-me gap 6, ::before 6px 점 */
-  meGap: 6, meDot: 6,
-  /** .rs-ln 12×1, margin 0 4 */
-  line: { w: 12, h: 1, mx: 4 },
+  meGap: os(6), meDot: os(6),
+  /** .rs-ln 12×1, margin 0 4. 선 두께는 그대로 1 */
+  line: { w: os(12), h: 1, mx: os(4) },
   /** .rs-slot height 32 padding 0 4 radius 14 gap 3 */
-  slot: { h: 32, padX: 4, radius: 14, gap: 3, nowRing: 1.5 },
+  slot: { h: os(32), padX: os(4), radius: os(14), gap: os(3), nowRing: 1.5 },
   /** .rs-n width 9 */
-  numW: 9,
+  numW: os(9),
   /** .rs-face 28, .rsf 24×20 */
-  face: 28, art: { w: 24, h: 20 },
+  face: os(28), art: { w: os(24), h: os(20) },
   /** .rsa 13px padding 1 margin-left -8 margin-top 12 */
-  action: { size: 13, pad: 1, ml: -8, mt: 12 },
+  action: { size: os(13), pad: os(1), ml: os(-8), mt: os(12) },
+  /** 머리 오른쪽 · 다음 턴 앞 세로 구분선: 연결선과 같은 두께, 칸 높이 (0038 규격) */
+  divider: { w: 1 },
 };
 
 // ── 필드 줄: 유닛 85%, 간격 72% (Lucy 2026-11-13, 정본 R5 값을 줄인 임시 값).
