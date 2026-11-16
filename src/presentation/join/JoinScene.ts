@@ -8,7 +8,7 @@ import { createHandCard, preloadHandCard } from "../card/HandCard";
 import { HAND_CARD } from "../card/layout";
 import { cardWithFace } from "../run/cards";
 import { drawBackdrop } from "../run/backdrop";
-import { FRAME } from "../run/layout";
+import { FRAME, GRID } from "../run/layout";
 import { faceTexture, preloadSpiritArt } from "../spiritArt";
 import { P, text } from "../spirits/views/parts";
 import { withAlpha } from "../style/color";
@@ -18,7 +18,7 @@ import { render, size, type BoxNode } from "../style/flex";
 import { gather } from "../style/gather";
 import { canvasTexture, ellipse } from "../style/gradient";
 import { loadIcon } from "../style/icons";
-import { drawTooltip } from "../tooltip/Tooltip";
+import { clampLeft, drawTooltip } from "../tooltip/Tooltip";
 import { GLASS } from "../tooltip/skins";
 import { COPY } from "./copy";
 import { DEFAULT_JOIN, JOINS } from "./fixtures";
@@ -151,7 +151,8 @@ export class JoinScene extends Phaser.Scene {
           .on("pointerup", () => this.select(i));
         if (this.chipHot === i) tip = () => drawPersonalityTip(this, c, r);
       });
-      if (on) box(this.add.graphics(), x, CAND.y, CAND.w, CAND.h, CAND.radius, { ring: { width: CAND.ring, color: P.accHi } });
+      // 두 후보 모두 같은 틀. 고르면 테만 밝아져요
+      box(this.add.graphics(), x, CAND.y, CAND.w, CAND.h, CAND.radius, { ring: { width: CAND.ring, color: on ? P.accHi : P.glassLine } });
       if (this.selected !== undefined && !on) {
         view.setAlpha(CAND.dim);
         info.setAlpha(CAND.dim);
@@ -181,6 +182,7 @@ export class JoinScene extends Phaser.Scene {
         const ox = CAND.xs[j];
         const other = gather(this, 0, 0, () => {
           drawSpot(this, ox, false);
+          box(this.add.graphics(), ox, CAND.y, CAND.w, CAND.h, CAND.radius, { ring: { width: CAND.ring, color: P.glassLine } });
           drawSpiritArt(this, o.art, ox + CAND.w / 2, CAND.y + CAND.art.bottom, CAND.sil);
           drawInfo(this, o, ox, false);
         });
@@ -280,7 +282,8 @@ function drawPersonalityTip(scene: Phaser.Scene, c: JoinCandVM, r: Rect) {
       { kind: "text", role: "body", text: [{ text: p.desc }] },
       ...(p.note ? [{ kind: "text" as const, role: "body" as const, text: [{ text: p.note }] }] : []),
     ],
-    at: { left: r.x, top: r.y + r.h + TIP.gap },
+    // 칩 오른쪽 끝에 맞춰 왼쪽 아래로 (오른쪽 대표 카드를 덮지 않게)
+    at: { left: clampLeft(r.x + r.w - GLASS.w, GLASS.w, FRAME.w, GRID.gutter), top: r.y + r.h + TIP.gap },
   });
 }
 

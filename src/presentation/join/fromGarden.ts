@@ -4,7 +4,7 @@ import { joinCandidates, type Garden } from "../../core/garden";
 import { ELEMENT_ICON } from "../faces";
 import { cardVM } from "../run/fromCore";
 import { spiritArt } from "../spiritArt";
-import { COPY as SPIRITS_COPY } from "../spirits/copy";
+import { COPY } from "./copy";
 import { ROLE_ICON } from "../spirits/fromGarden";
 import type { FaceVM, JoinCandVM, JoinVM } from "./viewmodel";
 
@@ -26,7 +26,7 @@ export function joinCandVM(id: string, personality: string): JoinCandVM {
   const art = spiritArt(id, "baby");
   return {
     id, name: def.name, element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, role: ROLE_ICON[def.role],
-    personality: { name: per.name, desc: per.desc, note: SPIRITS_COPY.personalityLater },
+    personality: { name: per.name, desc: per.desc, note: COPY.personalityFrom },
     card: cardVM(signatureCard(id), id), art, face: faceOf(id) ?? undefined,
   };
 }
