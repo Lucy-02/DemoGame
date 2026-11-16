@@ -73,6 +73,16 @@ export function cardVM(cardId: string, ownerId?: string, st?: Record<StatId, num
   };
 }
 
+/** 해방 카드 (0075): 각성체 손패 묶음 끝에 붙는 한 장. 비용 동전 = 쓰는 칸. 이름 띠는 "해방" (정령별 해방 이름은 아직 TODO_NAME) */
+export function releaseVM(spiritId: string, slots: number): CardVM {
+  const def = spiritDef(spiritId);
+  return {
+    key: spiritId, name: COPY.release, cost: slots, owner: windowOf(spiritId), material: materialOf(def.element),
+    element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, art: "i-spark", values: [],
+    detail: { text: richText(def.release.desc), owner: [def.name, COPY.release].join(COPY.sep) },
+  };
+}
+
 /** 장비 하나. 공명 점 수는 이 단계의 상한과 장비의 단계 수 중 작은 쪽이에요 */
 export function equipVM(e: RunEquip, stage: Stage): EquipVM {
   const def = equipDef(e.id);

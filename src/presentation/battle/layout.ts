@@ -187,3 +187,11 @@ export const LIFT_STYLES: Record<string, LiftStyle> = {
   b: { lift: 30, scale: 1.4, shiftIn: 10, shiftGroup: 10 },
 };
 export const LIFT: LiftStyle = LIFT_STYLES.b;
+
+/** 가운데 고르기 창 (0075, 낙하 · 품기 공용). 크기 · 간격 값은 아직 정해지지 않아서(TODO_TOKEN) 이미 있는 값을 빌려 써요:
+ *  카드 = 든 카드 크기(0013 LIFT), 카드 사이 = 손패 카드 사이 × 그 배율, 제목 · 카드 · 버튼 사이 = 전투 위 창 안쪽 여백(result WINDOW.pad),
+ *  버튼 = 턴 종료 버튼, 말풍선 거리 = 보상 카드 말풍선. 필드(손패 띠 위) 가운데에 놓아요 */
+export const PICK = {
+  scale: LIFT.scale, gap: HAND.group.gap * LIFT.scale, pad: 24, tipGap: 20,
+  cx: FRAME.w / 2, cy: BAND.top / 2, button: { w: END.w, ...END.button }, depth: DRAG.depth - 1,
+};

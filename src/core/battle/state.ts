@@ -166,6 +166,18 @@ export interface HoldState {
   nextTurnDraw: number;
 }
 
+/** 턴 끝 품기 고르기: 화면이 물을 때만 열려요 */
+export interface HoldChoice {
+  /** 품을 장 수 */
+  n: number;
+  /** 품을 수 있는 카드 uid (자동 규칙 순서) */
+  cards: number[];
+  /** 자동 규칙이 고른 카드 uid */
+  auto: number[];
+  /** 멈춘 턴 끝 처리 자리 */
+  at: number;
+}
+
 export type Ref = { side: "s"; id: string } | { side: "e"; uid: number };
 export const refOf = (h: BSpirit | BEnemy): Ref => (isEnemy(h) ? { side: "e", uid: h.uid } : { side: "s", id: h.id });
 

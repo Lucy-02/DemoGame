@@ -4,10 +4,10 @@ import { C, cardDef } from "../../core/data";
 import type { BCard, BEnemy, BSpirit, Battle, Ref, StatusId } from "../../core/battle";
 import type { EnemyAction, EnemyTargetRule } from "../../core/types";
 import { ELEMENT_ICON, faceKey } from "../faces";
-import { cardVM, equipVM } from "../run/fromCore";
+import { cardVM, equipVM, releaseVM } from "../run/fromCore";
 import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
-import type { AllyTokenVM, AllyVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
+import type { AllyTokenVM, AllyVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
 
 /** 상태 → 정본 기호. 기호가 아직 없는 상태(벽·늦춤·별 등)는 그리지 않아요 (기호는 Lucy 확인 대기) */
 const STATUS_ICON: Partial<Record<StatusId, string>> = {
@@ -23,6 +23,12 @@ export const BREAK_ICON = "kw-break";
 
 export const cardKey = (c: BCard) => `c${c.uid}`;
 export const cardUid = (key: string) => Number(key.slice(1));
+/** 해방 카드 key (`r:<정령 id>`) */
+const RELEASE = "r:";
+export const releaseKey = (spiritId: string) => RELEASE + spiritId;
+export const releaseId = (key: string) => (key.startsWith(RELEASE) ? key.slice(RELEASE.length) : undefined);
+/** 해방이 쓰는 칸. 지금 규칙은 0칸 · 즉시예요 (칸 수는 0036 4절에서 정령마다 정할 예정) */
+const RELEASE_SLOTS = 0;
 
 /** place: 순서표 머리의 장소 글 (판이 알려 줘요) */
 export function battleVM(b: Battle, place?: string): BattleVM {
@@ -30,20 +36,52 @@ export function battleVM(b: Battle, place?: string): BattleVM {
   const order = orderOf(b);
   const allies = alive.map((s) => allyVM(b, s));
   const enemies = b.enemies.filter((e) => !e.dead).map((e) => enemyVM(b, e, order));
+  const pick = pickOf(b);
+  // 해방 카드: 아직 안 쓴 각성체 묶음 끝에 늘 붙어 있어요. 뽑지 않고 손패 장수에 세지 않아요 (0075)
+  const releases = alive.filter((s) => !s.downed && !s.releaseUsed && s.run.stage === "awakened");
+  const releaseCard = (s: BSpirit) => ({ ...releaseVM(s.id, RELEASE_SLOTS), key: releaseKey(s.id), face: faceKey(s.id), off: !b.canRelease(s.id) || undefined });
   const hand = alive
-    .map((s) => ({ owner: s.id, cards: b.hand.filter((c) => c.owner === s.id).map((c) => handCard(b, c)) }))
+    .map((s) => ({
+      owner: s.id,
+      cards: [...b.hand.filter((c) => c.owner === s.id).map((c) => handCard(b, c)), ...(releases.includes(s) ? [releaseCard(s)] : [])],
+    }))
     .filter((g) => g.cards.length > 0);
   const plays: Record<string, PlayVM> = {};
-  for (const c of b.hand) if (b.canPlay(c).ok) plays[cardKey(c)] = { target: targetRule(b, c), slot: slotOf(b, c) };
+  if (!pick) {
+    for (const c of b.hand) if (b.canPlay(c).ok) plays[cardKey(c)] = { target: targetRule(b, c), slot: slotOf(b, c) };
+  }
+  const playable = Object.keys(plays).length;
+  if (!pick) {
+    for (const s of releases) if (b.canRelease(s.id)) plays[releaseKey(s.id)] = { target: { kind: "pick", side: "ally", only: alive.indexOf(s) } };
+  }
   return {
     order: { slots: order.map((o) => o.slot), bundles: bundlesOf(b).map((l) => l.map((t) => t.token)), head: { place, turn: b.turn } },
     allies, enemies,
     mana: { n: b.mana, max: C.mana_per_turn },
     hand,
-    playable: Object.keys(plays).length,
+    playable,
     piles: { draw: b.draw.length, discard: b.discard.length, exhaust: b.exhaust.length },
-    plays,
+    plays, pick,
   };
+}
+
+/** 열린 고르기: 턴 끝 품기가 먼저, 없으면 낙하 */
+function pickOf(b: Battle): PickVM | undefined {
+  const hold = b.holdChoice;
+  if (hold) {
+    const cards = hold.cards.flatMap((uid) => b.hand.filter((c) => c.uid === uid));
+    return {
+      kind: "hold", n: hold.n, picked: hold.auto.map((uid) => `c${uid}`),
+      cards: cards.map((c) => ({ ...handCard(b, c), off: undefined, costShort: undefined })),
+    };
+  }
+  const fall = b.stars.choice;
+  if (fall && b.result === "ongoing") {
+    const s = b.spirit(fall.owner);
+    const st = Object.fromEntries(STAT_IDS.map((k) => [k, b.stat(s, k)])) as Record<StatId, number>;
+    return { kind: "fall", n: Math.min(fall.picks, fall.options.length), picked: [], cards: fall.options.map((id) => ({ ...cardVM(id, fall.owner, st), face: faceKey(fall.owner) })) };
+  }
+  return undefined;
 }
 
 /** 화면이 고른 대상(편 + 인덱스)을 전투의 대상으로 */

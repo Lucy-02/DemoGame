@@ -13,7 +13,7 @@ import {
 } from "./pipelines";
 import {
   STATUS_IDS, refOf, spendStatus, stackOf, statusN, statusStrength,
-  type BCard, type BEnemy, type BSpirit, type BattleEvent, type BattleResult, type EnemySlot, type HoldState, type Intent,
+  type BCard, type BEnemy, type BSpirit, type BattleEvent, type BattleResult, type EnemySlot, type HoldChoice, type HoldState, type Intent,
   type Planned, type Ref, type StarState, type StatusId,
 } from "./state";
 import { STATUSES, clearStatuses, readyMult, tickStatuses, vulnMult } from "./statuses";
@@ -54,6 +54,10 @@ export class Battle implements Engine {
   now = 0;
   stars: StarState = { count: 0, thresholdCut: 0, pendingFalls: 0, choice: null };
   hold: HoldState = { thisTurn: 0, picks: [], held: [], highTide: false, nextTurnDraw: 0 };
+  /** 품을 카드를 화면이 물어요 (전투 세션이 켜요, 0075). 켜면 턴 종료가 품기 직전에 멈추고 confirmHold를 기다려요. 꺼져 있으면 자동 규칙대로 품어요 */
+  askHold = false;
+  /** 턴 끝에 열린 품기 고르기 (askHold) */
+  holdChoice: HoldChoice | null = null;
   /** 적이 걸어 둔 다음 턴 손패 효과 */
   private pendingCostUp = 0;
   private pendingSeal = 0;
@@ -604,7 +608,16 @@ export class Battle implements Engine {
     // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
     for (const p of allies.slice(ai)) this.discard.push(p.card);
     this.planned = [];
-    this.runSteps(this.turnEndSteps);
+    this.finishTurn(0);
+  }
+
+  /** 턴 끝 처리(from번째부터) → 손 버리기 → 라운드 끝 → 다음 턴. 품을 카드를 물어야 하면 품기 직전에 멈춰요 */
+  private finishTurn(from: number) {
+    for (let i = from; i < this.turnEndSteps.length; i++) {
+      const st = this.turnEndSteps[i];
+      if (st.id === "hold" && this.openHoldChoice(i)) return;
+      st.run();
+    }
     if (this.checkEnd()) return;
     for (const c of this.hand) {
       c.tempCostDelta = 0;
@@ -863,6 +876,37 @@ export class Battle implements Engine {
     return true;
   }
 
+  /** 품을 순서: 골라 둔 카드부터, 모자라면 비싸고 긴 카드부터 */
+  private holdOrder(picks: number[]): BCard[] {
+    const eligible = this.hand.filter((c) => this.canHold(c));
+    const chosen = picks.map((uid) => eligible.find((c) => c.uid === uid)).filter((c): c is BCard => !!c);
+    const rest = eligible
+      .filter((c) => !chosen.includes(c))
+      .sort((a, b) => cardDef(b.cardId).cost - cardDef(a.cardId).cost || cardDef(b.cardId).ms - cardDef(a.cardId).ms);
+    return [...chosen, ...rest];
+  }
+
+  /** 품을 카드를 물어야 하면 고르기를 열어요. 고를 것이 없으면(품을 장 수가 0이거나 남은 카드를 다 품으면) 열지 않아요 */
+  private openHoldChoice(at: number): boolean {
+    const n = this.hold.thisTurn;
+    if (!this.askHold || n <= 0) return false;
+    const order = this.holdOrder([]);
+    if (order.length <= n) return false;
+    this.holdChoice = { n, cards: order.map((c) => c.uid), auto: order.slice(0, n).map((c) => c.uid), at };
+    return true;
+  }
+
+  /** 열린 품기 고르기를 닫고 턴 끝 처리를 이어 가요. 모자라게 고르면 자동 규칙이 채워요 */
+  confirmHold(uids: number[]): boolean {
+    const ch = this.holdChoice;
+    if (!ch) return false;
+    this.holdChoice = null;
+    this.hold.picks = [...new Set(uids)].filter((uid) => ch.cards.includes(uid)).slice(0, ch.n);
+    this.holdCards();
+    this.finishTurn(ch.at + 1);
+    return true;
+  }
+
   /** 턴 끝: 골라 둔 카드부터, 모자라면 비싸고 긴 카드부터 품어요 */
   private holdCards() {
     const n = this.hold.thisTurn;
@@ -870,12 +914,7 @@ export class Battle implements Engine {
     const picks = this.hold.picks;
     this.hold.picks = [];
     if (n <= 0) return;
-    const eligible = this.hand.filter((c) => this.canHold(c));
-    const chosen = picks.map((uid) => eligible.find((c) => c.uid === uid)).filter((c): c is BCard => !!c);
-    const rest = eligible
-      .filter((c) => !chosen.includes(c))
-      .sort((a, b) => cardDef(b.cardId).cost - cardDef(a.cardId).cost || cardDef(b.cardId).ms - cardDef(a.cardId).ms);
-    for (const c of [...chosen, ...rest].slice(0, n)) {
+    for (const c of this.holdOrder(picks).slice(0, n)) {
       this.hand.splice(this.hand.indexOf(c), 1);
       for (const op of cardDef(c.cardId).effects) if (op.op === "growOnHold") c.grow += op.value;
       this.hold.held.push(c);

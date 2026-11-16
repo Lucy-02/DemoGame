@@ -144,6 +144,21 @@ describe("품기 (진주조개)", () => {
     expect(d.amount).toBe(Math.round(6 * (C.hold_mult as number) * power));
   });
 
+  it("화면이 물으면 품기 직전에 멈추고, 고른 카드를 품은 뒤 다음 턴으로 넘어가요 (0075)", () => {
+    const b = battleWith(PARTY, [["embrace", "pearl_oyster"], ["current", "pearl_oyster"], ["glare", "pearl_oyster"]]);
+    b.askHold = true;
+    b.play(100);
+    b.endTurn();
+    expect(b.turn).toBe(1);
+    expect(b.holdChoice?.n).toBe(1);
+    expect(b.holdChoice?.cards.slice().sort()).toEqual([101, 102]);
+    const other = b.holdChoice!.cards.find((uid) => uid !== b.holdChoice!.auto[0])!;
+    expect(b.confirmHold([other])).toBe(true);
+    expect(b.holdChoice).toBeNull();
+    expect(b.turn).toBe(2);
+    expect(b.hand.filter((c) => c.held).map((c) => c.uid)).toEqual([other]);
+  });
+
   it("복사본과 쓰러진 정령의 카드는 못 품어요", () => {
     const b = battleWith(PARTY, [["current", "pearl_oyster"], ["basic_claw", "fire_fox"]]);
     b.hand[0].isCopy = true;
