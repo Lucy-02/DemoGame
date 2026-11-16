@@ -22,6 +22,23 @@ const indexed = new Set([...index.matchAll(/^\| (\d{4}) \|/gm)].map((m) => m[1])
 for (const n of indexed) if (!byNumber.has(n)) errors.push(`색인 표의 ${n}에 해당하는 결정 기록 파일이 없어요`);
 for (const n of [...byNumber.keys()].sort()) if (!indexed.has(n)) warnings.push(`색인 표(${DECISIONS}/README.md)에 ${n}이 빠졌어요`);
 
+// ───────────────────────── 정리 알림 (docs/handoff/DECISIONS.md "정리하는 법") ─────────────────────────
+
+const SUMMARY = "docs/handoff/DECISIONS.md";
+const summary = readFileSync(SUMMARY, "utf8");
+const summaryLines = summary.trimEnd().split("\n").length;
+if (summaryLines > 150) warnings.push(`${SUMMARY}가 ${summaryLines}줄이에요(상한 150). 대체된 줄을 지우고 같은 주제를 합쳐요`);
+const squashed = summary.match(/정리: \*\*(\d{4})까지 반영\*\*/)?.[1];
+const newest = [...byNumber.keys()].sort().at(-1);
+if (!squashed) warnings.push(`${SUMMARY} 맨 위에 "정리: **NNNN까지 반영**" 줄이 없어요`);
+else if (newest && Number(newest) - Number(squashed) >= 10)
+  warnings.push(`결정 기록이 ${newest}까지 쌓였는데 ${SUMMARY}는 ${squashed}까지만 정리됐어요. 정기 정리할 때예요`);
+
+const claude = readFileSync("CLAUDE.md", "utf8");
+const mustKeep = claude.match(/## 꼭 지킬 표현 규칙[^\n]*\n([\s\S]*?)(?=\n## )/)?.[1] ?? "";
+const mustKeepRules = mustKeep.split("\n").filter((l) => l.startsWith("- ")).length;
+if (mustKeepRules > 12) warnings.push(`CLAUDE.md "꼭 지킬 표현 규칙"이 ${mustKeepRules}줄이에요(상한 12). 합치거나 DECISIONS.md로 내려요`);
+
 // ───────────────────────── 현행 문서의 경로 ─────────────────────────
 
 /** 보관함과 수락된 결정 기록은 그때의 기록이라 검사하지 않아요 */

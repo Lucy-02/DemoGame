@@ -6,7 +6,7 @@
 
 | 하려는 일 | 먼저 읽기 | 그다음 |
 | --- | --- | --- |
-| 지금까지 정해진 것 훑기 | `docs/handoff/DECISIONS.md` (한 줄 요약) | `docs/design-decisions/README.md` (색인) → 해당 번호 |
+| 지금까지 정해진 것 훑기 | `docs/handoff/DECISIONS.md` (지금 유효한 것, 주제별) | `docs/design-decisions/README.md` (색인) → 해당 번호 |
 | 게임 방향·규칙 이해 | `docs/design/` (비전·필러·세계) | `docs/handoff/01_기획서_v0.2.md` (규칙 상세. 낡은 문장은 결정 기록이 우선) |
 | 화면 시안 만들기 | `design/concepts/LEDGER.md` (장부), `LUCY_CRITERIA.md` | `BRIEF.md` (브리프 형식), `LINKS.md` (시안 링크), `design/canon/` (정본) |
 | 화면 구현 | `docs/handoff/CLIENT_HANDOFF.md` | `docs/architecture/0001-client-architecture.md`, `design/DESIGN_SYSTEM.md` |
@@ -20,7 +20,7 @@
 | 폴더 | 맡는 일 | 고치는 법 |
 | --- | --- | --- |
 | `docs/design-decisions/` | 결정의 정본. 번호 하나에 결정 하나 | 수락된 기록은 고치지 않고, 바꿀 때 새 번호를 써요. 색인은 같은 폴더 `README.md` |
-| `docs/handoff/DECISIONS.md` | 지금 유효한 결정의 한 줄 요약 | 결정 기록을 쓸 때 한 줄 더해요 |
+| `docs/handoff/DECISIONS.md` | 지금 유효한 결정만 주제별로 (이력은 결정 기록) | 결정 기록을 쓸 때 해당 주제 줄을 고쳐 써요. 0080, 0090 …마다 정리 (문서 안 "정리하는 법") |
 | `docs/design/` | 살아 있는 기획 문서 (짧게, 근거는 결정 기록에) | 결정이 바뀌면 같이 고쳐요 |
 | `docs/architecture/` | 코드 구조 결정 | 구조가 바뀌면 고쳐요 |
 | `docs/handoff/` | 스레드 인수인계, 기획서, 열린 질문(`OPEN_QUESTIONS.md`) | 인수인계는 일을 넘길 때 써요. 질문은 정해지면 지워요 |
