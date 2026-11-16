@@ -21,6 +21,8 @@ const T = tokens.provisional.text.battle;
 const scaled = (size: string) => `${px(size) * ORDER_SCALE}px`;
 const LABEL = scaled(T.orderLabel);
 const NUM = scaled(T.orderNum);
+/** 머리 글자: 장소(위) · 턴 + 단계(아래) */
+const HEAD = { place: LABEL, state: LABEL };
 
 /** 끊긴 적 · 끊을 예정인 적의 배지 기호 (0074 10번) */
 const BREAK_ICON = "kw-break";
@@ -141,9 +143,9 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   const hits: OrderHit[] = [];
   const phaseText = COPY.myTurn;
   const turnText = vm.head ? `${COPY.turn} ${vm.head.turn}${COPY.sep}` : "";
-  const lineH = px(LABEL) * LINE_HEIGHT;
-  const stateW = measure(turnText, LABEL) + O.meDot + O.meGap + measure(phaseText, LABEL);
-  const headW = Math.max(stateW, vm.head?.place ? measure(vm.head.place, LABEL) : 0);
+  const placeH = px(HEAD.place) * LINE_HEIGHT, stateH = px(HEAD.state) * LINE_HEIGHT;
+  const stateW = measure(turnText, HEAD.state) + O.meDot + O.meGap + measure(phaseText, HEAD.state);
+  const headW = Math.max(stateW, vm.head?.place ? measure(vm.head.place, HEAD.place) : 0);
   const bundles = vm.bundles ?? [];
   const cellW = Math.max(0, ...bundles.map((b) => (b.length ? bundleWidth(b.length) : 0)));
   const gaps = vm.slots.length + 1;
@@ -156,20 +158,21 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   const g = scene.add.graphics();
   box(g, x0, O.top, w, O.h, O.radius, { fill: P.glassThin, ring: { width: 1, color: P.glassLine } });
 
-  const labelTop = (lineCy: number) => lineCy - lineH / 2 + textTopInLine(LABEL);
   const numTop = cy - (px(NUM) * LINE_HEIGHT) / 2 + textTopInLine(NUM);
   let x = x0 + O.padX;
 
   // 머리: 장소(위) · 턴 + 단계(아래). 장소가 없으면 단계 한 줄을 가운데
-  const stateCy = vm.head?.place ? cy + lineH / 2 : cy;
-  if (vm.head?.place) scene.add.text(x, labelTop(cy - lineH / 2), vm.head.place, textStyle(LABEL, P.ink3));
+  const headTop = cy - (vm.head?.place ? placeH + stateH : stateH) / 2;
+  const stateTop = (vm.head?.place ? headTop + placeH : headTop) + textTopInLine(HEAD.state);
+  const stateCy = (vm.head?.place ? headTop + placeH : headTop) + stateH / 2;
+  if (vm.head?.place) scene.add.text(x, headTop + textTopInLine(HEAD.place), vm.head.place, textStyle(HEAD.place, P.ink3));
   let hx = x;
   if (turnText) {
-    scene.add.text(hx, labelTop(stateCy), turnText, textStyle(LABEL, P.ink2));
-    hx += measure(turnText, LABEL);
+    scene.add.text(hx, stateTop, turnText, textStyle(HEAD.state, P.ink2));
+    hx += measure(turnText, HEAD.state);
   }
   circle(g, hx + O.meDot / 2, stateCy, O.meDot, { fill: P.ink });
-  scene.add.text(hx + O.meDot + O.meGap, labelTop(stateCy), phaseText, textStyle(LABEL, P.ink));
+  scene.add.text(hx + O.meDot + O.meGap, stateTop, phaseText, textStyle(HEAD.state, P.ink));
   x += headW;
 
   const line = (len: number) => {
