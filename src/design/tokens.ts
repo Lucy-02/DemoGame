@@ -179,6 +179,7 @@ export const tokens = {
       "cardLiftShine": "rgba(255,255,255,.6)",
       "pvFill": "rgba(122,69,119,.26)",
       "aimGlow": "rgba(201,155,196,.45)",
+      "scrimDeep": "rgba(22,20,19,.82)",
       "scrim": "rgba(22,20,19,.55)",
       "glassSel": "rgba(246,241,233,.09)",
       "ink3Spirit": "#a39c92",

@@ -18,7 +18,7 @@ const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
 
 export function preloadPick(scene: Phaser.Scene, vm: PickVM) {
-  for (const c of vm.cards) preloadHandCard(scene, c, { scale: PICK.scale });
+  for (const c of vm.cards) preloadHandCard(scene, c, { scale: PICK.cardW / HAND_CARD.w });
 }
 
 export interface PickView {
@@ -30,7 +30,8 @@ export interface PickView {
 
 /** onDone: 고른 카드 key들 (고른 순서) */
 export function createPick(scene: Phaser.Scene, vm: PickVM, onDone: (keys: string[]) => void): PickView {
-  const W = HAND_CARD.w * PICK.scale, H = HAND_CARD.h * PICK.scale;
+  const SCALE = PICK.cardW / HAND_CARD.w;
+  const W = HAND_CARD.w * SCALE, H = HAND_CARD.h * SCALE;
   const B = PICK.button;
   const title: Node = { t: "text", text: COPY.pick[vm.kind](vm.n), size: T.endTurn, color: P.ink } as Node;
   const ts = size(title);
@@ -62,12 +63,12 @@ export function createPick(scene: Phaser.Scene, vm: PickVM, onDone: (keys: strin
 
   const root = gather(scene, 0, 0, () => {
     // 막: 아래 화면의 조작을 모두 막아요
-    box(scene.add.graphics(), 0, 0, FRAME.w, FRAME.h, 0, { fill: P.scrim });
+    box(scene.add.graphics(), 0, 0, FRAME.w, FRAME.h, 0, { fill: P.scrimDeep });
     scene.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive();
     render(scene, title, Math.round(PICK.cx - ts.w / 2), top);
     vm.cards.forEach((c, i) => {
       const x = left + i * (W + PICK.gap);
-      const view = createHandCard(scene, c, x + W / 2 - HAND_CARD.w / 2, cardsTop + H - HAND_CARD.h, { scale: PICK.scale });
+      const view = createHandCard(scene, c, x + W / 2 - HAND_CARD.w / 2, cardsTop + H - HAND_CARD.h, { scale: SCALE });
       views.push({ key: c.key, view });
       view.root.setInteractive(new Phaser.Geom.Rectangle(-HAND_CARD.w / 2, -HAND_CARD.h, HAND_CARD.w, HAND_CARD.h), Phaser.Geom.Rectangle.Contains);
       if (view.root.input) view.root.input.cursor = "pointer";
