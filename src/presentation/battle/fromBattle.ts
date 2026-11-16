@@ -14,9 +14,9 @@ const STATUS_ICON: Partial<Record<StatusId, string>> = {
   burn: "kw-burn", chill: "kw-chill", vuln: "kw-vuln", weak: "kw-weak", thorns: "kw-thorns", taunt: "kw-taunt", empower: "kw-strength",
 };
 
-/** 적 행동 → 의도 기호 (정본 임시 기호. 공격 의도 기호는 0024에서 Lucy 선택 대기) */
+/** 적 행동 → 의도 기호. 공격 의도 = fx-damage (0072) */
 const ACTION_ICON: Partial<Record<EnemyAction["type"], string>> = {
-  attack: "i-claw", block: "fx-block", weak: "kw-weak", vulnerable: "kw-vuln", burn: "kw-burn", burnRamp: "kw-burn", buffMinions: "kw-strength",
+  attack: "fx-damage", block: "fx-block", weak: "kw-weak", vulnerable: "kw-vuln", burn: "kw-burn", burnRamp: "kw-burn", buffMinions: "kw-strength",
 };
 const CHARGE_ICON = "kw-charge";
 
