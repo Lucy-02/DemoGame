@@ -116,7 +116,7 @@ export class RestScene extends Phaser.Scene {
   private choose(i: number) {
     if (i === Pick.Rest) {
       if (this.rested || !this.session.dispatch({ kind: "rest" })) return;
-      // 찬 HP를 한 박자 보고 넘어가요 (0088)
+      // 찬 HP를 한 박자 보고 넘어가요 (0089)
       this.rested = true;
       this.hover = undefined;
       this.redraw();

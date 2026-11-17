@@ -153,7 +153,7 @@ export class ResultScene extends Phaser.Scene {
     this.hover = undefined;
     this.held = undefined;
     this.dirty = true;
-    // 받은 카드는 진열에서 흐려져 빠지고 정령 줄 칸에 놓여요. 그 한 박자를 보고 넘어가요 (0088)
+    // 받은 카드는 진열에서 흐려져 빠지고 정령 줄 칸에 놓여요. 그 한 박자를 보고 넘어가요 (0089)
     this.leaving = choice === "skip" ? undefined : choice.card;
     if (this.phase !== "done") return;
     if (this.leaving === undefined || reducedMotion()) return this.onDone?.(this);

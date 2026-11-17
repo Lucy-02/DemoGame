@@ -120,7 +120,7 @@ export class ShopScene extends Phaser.Scene {
     if (!this.session.canBuy(slot)) return;
     this.held = undefined;
     this.hover = undefined;
-    // 산 카드는 진열에서 흐려져 빠져요 (0088)
+    // 산 카드는 진열에서 흐려져 빠져요 (0089)
     const sold = shopVM(this.session).cards[slot];
     this.leaving = sold ? { slot, card: sold.card } : undefined;
     this.session.dispatch({ kind: "buy", slot, spirit });
