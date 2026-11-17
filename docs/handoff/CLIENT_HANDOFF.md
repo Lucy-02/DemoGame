@@ -120,8 +120,11 @@ src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오�
   gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경
   cards.ts                     cardWithFace(초상 홈 얼굴 굽기), drawCardTip(카드 위 말풍선)
   fromCore.ts                  cardVM(cardId, owner?), deckCardVM(DeckCard), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 인쇄값보다 오르면 ▲)
-  deckPick.ts                  drawDeckPick: 정령 줄마다 덱 한 줄, 고르기 → 확인 (상점 빼기 · 휴식 강화 · 이벤트 빼기·강화·복제). drawQuietButton(떠나기 · 돌아가기)
-  choices.ts                   drawChoices: 왼쪽 열 선택지 판(이름 + 효과문), 휴식 · 이벤트가 같이 씀
+  deckPick.ts                  drawDeckPick: 덱 보기 창 틀(얼굴 머리 + 카드 줄)에서 고르기 → 확인 (상점 빼기 · 휴식 강화 · 이벤트 빼기·강화·복제, 0082). drawQuietButton
+  panel.ts                     drawStoryPanel: 이벤트 · 휴식 왼쪽 판(이름 줄 · 상황 글 · 선택지), 가운데 높이
+  slimLane.ts                  얇은 정령 줄(지도 · 이벤트 · 휴식), 미리보기 SlimState(HP a→b · 최대 HP · 밝은 테), drawSlimParty
+  topbar.ts                    판 안 위 띠: 골드 왼쪽 위 + 덱 · 기록 · 설정 오른쪽 위
+  choices.ts                   drawChoices: 선택지 판(이름 + 칩: HP는 정령 얼굴 + a→b, 나머지는 기호 + 짧은 명사구)
 src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 게임 흐름(flow.ts)이 전투 위에 띄움. 고정 장면 RESULTS
 src/presentation/home/         타이틀 겸 메인 화면 (0054). 기본 진입점, 정원·판 저장에 연결(fromGame.ts). 고정 장면 ?screen=home&scene=first|full|running
 src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=remove[:카드], P1 f3 · f4). 레거시 지도에서 열림. 빼기 = 덱 펼침 → 고르기 → 확인

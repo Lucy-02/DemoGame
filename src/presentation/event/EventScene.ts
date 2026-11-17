@@ -1,6 +1,6 @@
 // 이벤트 화면 (Lucy 2026-11-17, 공용 UI 기획 r5): 배경 위 왼쪽 판(이름 줄 · 상황 글 · 선택지) + 오른쪽 얇은 정령 줄, 둘 다 가운데 높이. 장면 그림은 없어요.
 // 선택지의 HP 효과는 영향받는 정령 얼굴 + a→b. 올리면 대가가 전부 미리 보여요: 위 골드 a→b, 얇은 줄의 HP a→b와 밝은 테.
-// 덱에서 카드를 고르는 선택지(빼기 · 강화 · 복제)는 왼쪽이 덱으로 바뀌고, 고르고 확인해야 선택지 전체가 적용돼요. 고르기 전엔 돌아갈 수 있어요.
+// 덱에서 카드를 고르는 선택지(빼기 · 강화 · 복제)는 덱 고르기 창(run/deckPick)이 뜨고, 고르고 확인해야 선택지 전체가 적용돼요. 고르기 전엔 돌아갈 수 있어요.
 // 카드 보상은 결과를 적용한 뒤 onCards로 넘겨요 (보상 화면은 게임 흐름이 띄워요).
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
@@ -11,8 +11,7 @@ import { CHOICE_ICONS, type ChoiceVM, type FaceFx } from "../run/choices";
 import { COPY as RUN_COPY } from "../run/copy";
 import { DECK_PICK_ICONS, drawDeckPick } from "../run/deckPick";
 import { cardVM, deckCardVM, lane } from "../run/fromCore";
-import { GOLD_ICONS, drawGold } from "../run/gold";
-import { LANE_ICONS, drawLane, type LaneState } from "../run/lanes";
+import { RUN_TOP_ICONS, drawRunTop } from "../run/topbar";
 import { outcomesFx } from "../run/outcomes";
 import { drawStoryPanel } from "../run/panel";
 import { drawSlimParty } from "../run/slimLane";
@@ -35,6 +34,8 @@ export interface EventSceneData {
   hover?: string;
   /** 이벤트를 마쳤어요 */
   onDone?: (scene: Phaser.Scene) => void;
+  /** 위 띠의 덱 보기 */
+  onDeck?: (scene: Phaser.Scene) => void;
   /** 카드 보상을 고를 차례예요 (결과는 이미 적용됐어요) */
   onCards?: (scene: Phaser.Scene, cardIds: string[]) => void;
 }
@@ -63,7 +64,7 @@ export class EventScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...DECK_PICK_ICONS, ...CHOICE_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...RUN_TOP_ICONS, ...DECK_PICK_ICONS, ...CHOICE_ICONS]) loadIcon(this, id, w);
     for (const c of this.session.run.deck) {
       preloadHandCard(this, deckCardVM(c), { showRarity: true });
       if (this.session.run.canUpgrade(c.uid)) preloadHandCard(this, cardVM(upgradedId(c.cardId), c.owner), { showRarity: true });
@@ -107,7 +108,7 @@ export class EventScene extends Phaser.Scene {
     if (st.kind !== "choose") return;
     const s = this.session;
     const pv = this.hover === undefined ? undefined : s.preview(this.hover);
-    drawGold(this, pv?.gold?.to ?? s.run.gold, pv?.gold ? { was: pv.gold.from } : {});
+    drawRunTop(this, pv?.gold?.to ?? s.run.gold, pv?.gold ? { was: pv.gold.from } : {}, this.data_?.onDeck);
     const lanes = this.lanes();
     drawSlimParty(this, lanes, (l) => {
       const hp = pv?.hp[l.id], max = pv?.maxHp[l.id];
@@ -136,7 +137,7 @@ export class EventScene extends Phaser.Scene {
   private paintPick(mode: "removeCard" | "upgradeCard" | "duplicateCard") {
     const run = this.session.run;
     const ok = new Set(this.session.candidates(mode));
-    drawGold(this, run.gold);
+    drawRunTop(this, run.gold, {}, this.data_?.onDeck);
     const rows: Record<string, DeckCardVM[]> = Object.fromEntries(run.spirits.map((rs) => [rs.id, run.deck.filter((c) => c.owner === rs.id).map((c): DeckCardVM => ({
       uid: c.uid, card: deckCardVM(c),
       // 강화는 강화한 모습, 복제는 같은 카드 한 장이 옆에 끼어요
@@ -145,9 +146,7 @@ export class EventScene extends Phaser.Scene {
     drawDeckPick(this, {
       lanes: this.lanes(), rows, mode: mode === "removeCard" ? "remove" : "upgrade", hover: this.deckHover, pick: this.pick,
       off: (uid) => !ok.has(uid),
-      lane: (l, mine) => (!mine ? { noSocket: true }
-        : mode === "upgradeCard" ? { hot: true, noSocket: true }
-        : { hot: true, noSocket: true, deckTo: (l.deck ?? 0) + (mode === "removeCard" ? -1 : 1) }),
+      deckDelta: mode === "removeCard" ? -1 : mode === "duplicateCard" ? 1 : undefined,
       confirm: { label: PICK_CONFIRM[mode], icon: mode === "removeCard" ? "fx-discard" : mode === "upgradeCard" ? "g-up" : "g-cardnew", danger: mode === "removeCard" },
       cancelLabel: RUN_COPY.cancel,
       on: {

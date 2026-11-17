@@ -12,6 +12,7 @@ import { drawBackdrop } from "../run/backdrop";
 import { cardWithFace, drawCardTip } from "../run/cards";
 import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
 import { GOLD_ICONS, drawGold } from "../run/gold";
+import { RUN_TOP_ICONS, drawRunTop } from "../run/topbar";
 import { LANE_ICONS, drawLane, type LaneState } from "../run/lanes";
 import { CARD_FOCUS, FRAME } from "../run/layout";
 import { preloadSpiritArt } from "../spiritArt";
@@ -69,7 +70,7 @@ export class ShopScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...SERVICE_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...RUN_TOP_ICONS, ...SERVICE_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
     const vm = shopVM(this.session);
     for (const c of vm.cards) if (c) preloadHandCard(this, c.card, { showRarity: true, scale: STOCK.scale });
     for (const row of Object.values(vm.deck)) for (const c of row) preloadHandCard(this, c.card, { showRarity: true });
@@ -235,11 +236,11 @@ export class ShopScene extends Phaser.Scene {
   private paintRemove(vm: ShopVM) {
     const { hover, pick } = this;
     drawBackdrop(this);
-    drawGold(this, vm.gold - (pick === undefined ? 0 : vm.remove.price), pick === undefined ? {} : { was: vm.gold });
+    drawRunTop(this, vm.gold - (pick === undefined ? 0 : vm.remove.price), pick === undefined ? {} : { was: vm.gold });
     drawDeckPick(this, {
       lanes: vm.lanes, rows: vm.deck, mode: "remove", pick,
       hover: hover?.kind === "deck" ? hover.uid : undefined,
-      lane: (l, mine) => (mine ? { hot: true, deckTo: (l.deck ?? 0) - 1 } : {}),
+      deckDelta: -1,
       confirm: { label: COPY.remove, icon: "fx-discard", danger: true, price: vm.remove.price },
       cancelLabel: COPY.cancel,
       on: {

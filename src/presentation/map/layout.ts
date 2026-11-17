@@ -1,8 +1,8 @@
 // 지도 화면 배치 (LEDGER §2 R2 지도 C: 가까운 길 + 전체 미니맵 + 슬림 파티 패널). 값은 묶음 A 정리안 f9(0046)에서 잰 임시 값이에요 (TODO_TOKEN).
 import { SYS } from "../battle/layout";
-import { FRAME, GOLD, GRID, LANE, SLIM_LANE } from "../run/layout";
+import { FRAME, GOLD_AT, GRID, LANE, SLIM_LANE } from "../run/layout";
 
-export { FRAME };
+export { FRAME, GOLD_AT };
 
 /** 가까운 길: 지금 층 둘레의 여섯 층만 크게. 아래가 지나온 길, 위가 갈 길 */
 export const PATH = {
@@ -18,8 +18,6 @@ export const PATH = {
   tipGap: 8,
 };
 
-/** 골드: 오른쪽 위 버튼 줄과 같은 높이 */
-export const GOLD_AT = { x: GRID.gutter, y: SYS.top + (SYS.button - GOLD.h) / 2 };
 
 /** 전체 미니맵: 오른쪽 열 맨 위, 정령 줄과 같은 왼쪽 끝 · 폭으로 눕힌 판 (왼쪽이 출발, 오른쪽이 보스). 보이는 여섯 층 구간에 옅은 띠 */
 export const MINI = {

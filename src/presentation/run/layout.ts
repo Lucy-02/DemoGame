@@ -1,5 +1,7 @@
 // 런 화면 공용 뼈대(0046: 왼쪽 열 + 오른쪽 정령 세 줄)의 배치 수치. 보상 라운드 E1 시안(0051)과 폴리싱 P1(0050)에서 잰 값이에요.
 // 전투 결과·상점이 함께 써요. 시안 값은 임시예요(TODO_TOKEN). 색·글자 크기는 토큰(tokens.provisional.palette, tokens.provisional.text.result)에서 가져와요.
+import { SYS } from "../battle/layout";
+
 export const FRAME = { w: 1280, h: 800 };
 
 /** 0050 격자: 바깥 여백 48, 왼쪽 열 48~612, 정령 줄 664~1232, 버튼 줄 660~708 */
@@ -102,17 +104,19 @@ export const EQUIP_TIP = {
 };
 
 /** .btn2.quiet.b3 떠나기: 166×48 radius 12 gap 10 기호 18 */
+/** 런 화면 위 띠의 골드: 오른쪽 위 기호 버튼 줄(SYS)과 같은 높이 (지도 · 이벤트 · 휴식 · 덱 고르기) */
+export const GOLD_AT = { x: GRID.gutter, y: SYS.top + (SYS.button - GOLD.h) / 2 };
+
 export const LEAVE = { x: GRID.gutter, y: GRID.buttonY, w: 166, h: GRID.buttonH, radius: 12, gap: 10, icon: 18 };
 
-/** 덱에서 고르기 (P1 f4, 상점 빼기 · 휴식 강화 · 이벤트, 0046): 정령 줄마다 그 정령의 덱 한 줄. 줄 위에서 40 내려온 곳, 카드 92 간격 26. 장수가 많으면 간격을 좁혀 폭 564에 맞춰요
+/** 덱에서 고르기 (상점 빼기 · 휴식 강화 · 이벤트, Lucy 2026-11-17 공용 UI 기획 r6): 덱 보기 창 틀(DECK_VIEW)에서 골라요.
  *  .rmmark 고른 카드 오른쪽 위 − 표식: 원 26 (바깥 테 3), 카드 밖으로 12 · 22
- *  확인 줄: 카드 줄 아래 22, 높이 44 · 취소 132 + 12 + 빼기 168, 오른쪽 끝 맞춤 */
+ *  확인 줄: 마지막 줄 아래(줄 사이와 같은 간격), 높이 44 · 취소 132 + 12 + 확인 168, 오른쪽 끝 맞춤 */
 export const DECK_PICK = {
-  x: GRID.gutter, w: 564, dy: 40, step: 118, lift: 10,
   mark: { d: 26, ring: 3, dx: 12, dy: 22, bar: { w: 10, h: 2 } },
   /** 강화 미리보기 (정리안 f7): 고른 카드 오른쪽에 화살표 칸을 두고 강화한 카드를 끼워요. 뒤 카드는 그만큼 밀려요 */
   upgrade: { arrow: 22 },
-  confirm: { dy: 151, h: 44, radius: 12, gap: 12, cancelW: 132, okW: 168, icon: 18, inner: 10, coin: 14, coinGap: 5 },
+  confirm: { h: 44, radius: 12, gap: 12, cancelW: 132, okW: 168, icon: 18, inner: 10, coin: 14, coinGap: 5 },
 };
 
 /** 얇은 정령 줄 (0046 f9 슬림 파티 패널): 지도 · 이벤트 · 휴식이 같이 써요. 높이 52, 얼굴 고리 40, HP 막대 132

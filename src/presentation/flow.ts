@@ -95,7 +95,7 @@ export class GameFlow implements LegacyFlow {
       case "event": {
         const data: EventSceneData = {
           session: new EventSession(run.run, phase.eventId),
-          onDone: () => this.leave(),
+          onDone: () => this.leave(), onDeck: (scene) => this.deck(scene),
           // 카드 보상은 결과를 적용한 뒤 보상 창으로 받아요 (주인이 정해지지 않은 카드 묶음)
           onCards: (_scene, cardIds) => this.go(RESULT_SCENE, {
             session: new RewardSession(run.run, { kind: "cards", cardIds }), onDone: () => this.leave(),
@@ -104,7 +104,7 @@ export class GameFlow implements LegacyFlow {
         return this.go(EVENT_SCENE, data);
       }
       case "rest": {
-        const data: RestSceneData = { session: new RestSession(run.run), onLeave: () => this.leave() };
+        const data: RestSceneData = { session: new RestSession(run.run), onLeave: () => this.leave(), onDeck: (scene) => this.deck(scene) };
         return this.go(REST_SCENE, data);
       }
       case "shop": {
