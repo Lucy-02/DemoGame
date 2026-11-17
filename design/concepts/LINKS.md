@@ -211,5 +211,5 @@
 - J3 싸울 자리 미리보기: https://claude.ai/artifact/GQWVZNE6uFn4ae3KEXGDS3
 - 프레임: /mnt/project-files/design/round-j/J1~J3/ (f1 후보 둘 · f2 고름 + 성격 말풍선 · f3 깃듦 박자 · f4 둘째 깃들기 · f5 출전 준비 셋 · f6 출전 준비 둘, 앞열 바꾸는 중), 바탕 캡처 /mnt/project-files/design/round-j/assets/
 
-## 설정 · 판 안 메뉴 (2026-11-17, 0089)
+## 설정 · 판 안 메뉴 (2026-11-17, 0090)
 - 캡처: /mnt/project-files/settings-menu/ (A 가운데 창 = 채택, B 왼쪽 세로 메뉴 · C 메뉴와 설정 나란히 = 기각). 디렉터 판단, Lucy 확인 대기

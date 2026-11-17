@@ -1082,7 +1082,7 @@
    "scale": 6,
    "cfg_rescale": 0.1,
    "skip_cfg_above_sigma": null,
-   "source_png": "runs/card-art-r7-20261108-20261108T001300Z-caf741ce/images/req_000089_71a85f3ff4c3.png",
+   "source_png": "runs/card-art-r7-20261108-20261108T001300Z-caf741ce/images/req_000090_71a85f3ff4c3.png",
    "image_sha256": "c94bc99bc3435fad79741c9a5523412e773e340cbbad2757c757244f995e5f83"
   },
   "nacre_glow-B-o-s3701": {

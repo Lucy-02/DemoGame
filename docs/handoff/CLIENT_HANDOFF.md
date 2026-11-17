@@ -18,7 +18,7 @@
 - **정본 값은 확정 토큰이 아니에요.** "정본을 따른다"와 "그 값을 확정한다"는 다른 일이라, 정본 값은 `provisional` 구역에만 둬요.
 - **정본 CSS는 실제로 적용되는 값만 옮겨요.** 정의 안 된 변수, 덮어쓰기, 무효 선언은 브라우저에서 그려지지 않아요(예: `.calc`의 `border-top`은 `--me`가 없어 선이 없음). 판단 기준은 CSS 원문이 아니라 정본 캡처(frame-*.png)예요.
 - 개발 서버 기본 화면은 저장에 이어진 게임(메인 화면)이에요. 새 전투 화면 고정 장면은 `?screen=battle`, 정원·저장 없는 시험 판은 `?screen=legacy`.
-- 1280×800으로 그리고 창에 맞춰 비율을 지키며 늘여요(0084 4번 · 0089). 브라우저에서는 개발용 창 틀(제목줄·전체 화면·닫기)을 1280×800으로 씌워요.
+- 1280×800으로 그리고 창에 맞춰 비율을 지키며 늘여요(0084 4번 · 0090). 브라우저에서는 개발용 창 틀(제목줄·전체 화면·닫기)을 1280×800으로 씌워요.
 
 ### 결정이 필요한 것은 묻기
 - 새 레이아웃, 새 색, 새 모션 값, 새 그림, 네이밍은 만들지 않고 2~3개 선택지와 근거를 들고 Lucy에게 물어요. 결정 카드 하나에 추천 하나.
@@ -139,7 +139,7 @@ src/session/run.ts             판 세션: 판의 자리(phase) + enter·leave·
 src/session/game.ts            게임 세션: 정원 + 판 + platform 저장. 판 떠나기·경험(grantBattle)·판 닫기(endRun)
 src/presentation/flow.ts       게임 흐름: phase를 보고 그 칸을 맡은 화면을 열어요. 새 화면이 없는 칸은 임시 장면
 src/core/garden.ts             판 밖 정령 상태와 성장 규칙 (0021), 수치는 src/data/growth.json
-src/presentation/menu/         판 안 메뉴 · 포기 확인(MenuScene) · 설정 창(SettingsScene), 0089. hooks.ts: 톱니 · Esc로 메뉴 열기(openRunMenu · bindMenuKey), settingsOf(scene), playbackScale. 고정 장면 ?screen=menu|settings
+src/presentation/menu/         판 안 메뉴 · 포기 확인(MenuScene) · 설정 창(SettingsScene), 0090. hooks.ts: 톱니 · Esc로 메뉴 열기(openRunMenu · bindMenuKey), settingsOf(scene), playbackScale. 고정 장면 ?screen=menu|settings
 src/session/settings.ts        설정 값(볼륨 셋 · 전체화면 · 속도 · 흔들림)과 저장(키 settings). SettingsSession: state · set(patch) · onChange
 src/presentation/style/        CSS 재현 도우미 (6절). flex 노드에 onClick(클릭 영역)·wrap(줄바꿈 글자)
 src/presentation/placeholder/  예전 임시 장면. flow.ts에서 새 화면이 없는 칸만 맡아요. 새 화면이 규칙에 연결될 때마다 해당 화면을 지움

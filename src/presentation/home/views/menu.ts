@@ -40,7 +40,7 @@ function badgeNode(b: HomeBadge): Node {
 
 export const rowY = (i: number) => MENU.y + PRIMARY.h + PRIMARY.below + i * (MENU.row.h + MENU.gap);
 
-/** 메뉴 줄 판: 기호 + 낱말, 줄 끝에 숫자 또는 `N`. 판 안 메뉴도 같은 줄을 써요 (0089) */
+/** 메뉴 줄 판: 기호 + 낱말, 줄 끝에 숫자 또는 `N`. 판 안 메뉴도 같은 줄을 써요 (0090) */
 export function itemNode(item: Pick<HomeItemVM, "label" | "icon" | "badge">, hover: boolean, w: number = MENU.w): BoxNode {
   const R = MENU.row;
   return {
