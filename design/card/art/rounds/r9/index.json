@@ -1322,7 +1322,7 @@
    "scale": 6,
    "cfg_rescale": 0.1,
    "skip_cfg_above_sigma": null,
-   "source_png": "runs/card-art-r9-20261108-20261108T004208Z-cf9c5383/images/req_000110_b11ad7fd5e68.png",
+   "source_png": "runs/card-art-r9-20261108-20261108T004208Z-cf9c5383/images/req_000109_b11ad7fd5e68.png",
    "image_sha256": "2906998446efa8459e5a71d09a407b39739d748801d2b0f1b505c809366c43e3"
   },
   "baroque_pearl-M-o-s3901": {
