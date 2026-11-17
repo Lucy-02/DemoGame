@@ -14,6 +14,14 @@ import { COPY } from "./copy";
 import { drawLane, laneY, type LaneState } from "./lanes";
 import { CARD_FOCUS, DECK_PICK, FRAME, LEAVE } from "./layout";
 import type { DeckCardVM, LaneVM } from "./viewmodel";
+import { protoLayout } from "./proto";
+import { DECK_VIEW } from "../deck/layout";
+import { WINDOW } from "../result/layout";
+import { faceTexture } from "../spiritArt";
+import { shadowTexture } from "../style/shadow";
+import { drawSys } from "../battle/views/topbar";
+import { drawGold } from "./gold";
+import { GOLD_AT } from "../map/layout";
 
 const T = tokens.provisional.text.result;
 const C = DECK_PICK.confirm;
@@ -60,6 +68,7 @@ export interface DeckPickOptions {
 }
 
 export function drawDeckPick(scene: Phaser.Scene, o: DeckPickOptions) {
+  if (protoLayout()) return drawDeckPickWindow(scene, o);
   const D = DECK_PICK;
   const focus = o.pick ?? o.hover;
   // 빈 곳을 누르면 고른 카드를 내려놓아요 (맨 아래에 깔아서 다른 입력이 먼저 받아요)
@@ -143,7 +152,7 @@ function drawRemoveMark(scene: Phaser.Scene, x: number, y: number) {
 }
 
 /** y = 버튼 줄 윗선. 확인 줄(취소 · 확인)은 왼쪽 열 오른쪽 끝에 맞춰요 */
-function drawPickConfirm(scene: Phaser.Scene, y: number, c: PickConfirm, on: { cancel: () => void; ok: () => void }) {
+function drawPickConfirm(scene: Phaser.Scene, y: number, c: PickConfirm, on: { cancel: () => void; ok: () => void }, right = DECK_PICK.x + DECK_PICK.w) {
   const ink = c.danger ? P.onDanger : P.ink;
   const node: Node = {
     t: "row", gap: C.gap, align: "center",
@@ -167,16 +176,108 @@ function drawPickConfirm(scene: Phaser.Scene, y: number, c: PickConfirm, on: { c
       },
     ],
   };
-  render(scene, node, DECK_PICK.x + DECK_PICK.w - C.cancelW - C.gap - C.okW, y);
+  render(scene, node, right - C.cancelW - C.gap - C.okW, y);
 }
 
 /** 왼쪽 아래 조용한 버튼 (떠나기 · 돌아가기) */
-export function drawQuietButton(scene: Phaser.Scene, icon: string, label: string, onClick: () => void, y: number = LEAVE.y) {
+export function drawQuietButton(scene: Phaser.Scene, icon: string, label: string, onClick: () => void, y: number = LEAVE.y, x: number = LEAVE.x) {
   const B = LEAVE;
   const node: Node = {
     t: "row", w: B.w, h: B.h, radius: B.radius, gap: B.gap, justify: "center", align: "center",
     style: { ring: { width: 1, color: P.glassLine } }, onClick,
     children: [{ t: "icon", id: icon, w: B.icon, h: B.icon, tint: P.ink3Spirit }, text(label, T.button, P.ink2)],
   };
-  render(scene, node, B.x, y);
+  render(scene, node, x, y);
+}
+
+/** ⚠ 시안: 덱 보기 창 틀(얼굴 머리 + 카드 줄)에서 고르기. 큰 정령 줄이 없어요. 한 줄 9장을 넘는 덱의 접기는 아직 없어요 */
+function drawDeckPickWindow(scene: Phaser.Scene, o: DeckPickOptions) {
+  const V = DECK_VIEW, W = WINDOW;
+  const focus = o.pick ?? o.hover;
+  const gold = (scene as unknown as { session?: { run?: { gold?: number } } }).session?.run?.gold;
+  if (gold !== undefined) drawGold(scene, gold, {}, GOLD_AT);
+  drawSys(scene);
+  scene.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive().on("pointerup", () => {
+    if (o.pick !== undefined) o.on.clear();
+  });
+  const step = HAND_CARD.w + V.cardGap;
+  const arrow = DECK_PICK.upgrade.arrow;
+  // 창 폭은 가장 긴 줄 + 강화 미리보기 한 칸(늘 비워 둬서 고를 때 창이 출렁이지 않아요)
+  const most = Math.max(...o.lanes.map((l) => (o.rows[l.id] ?? []).length));
+  const extraW = o.mode === "upgrade" ? step + arrow : 0;
+  const innerW = Math.max(most * HAND_CARD.w + (most - 1) * V.cardGap + extraW, C.cancelW + C.gap + C.okW);
+  const rowH = V.head.h + V.head.below + HAND_CARD.h;
+  const innerH = o.lanes.length * rowH + (o.lanes.length - 1) * V.rowGap + V.rowGap + C.h;
+  const win = { w: innerW + V.pad * 2, h: innerH + V.pad * 2, x: 0, y: 0 };
+  win.x = Math.round((FRAME.w - win.w) / 2);
+  win.y = Math.round((FRAME.h - win.h) / 2);
+  const sh = shadowTexture(scene, win.w, win.h, W.radius, { y: W.shadow.y, blur: W.shadow.blur, color: P.tipShadow });
+  scene.add.image(win.x - sh.margin, win.y - sh.margin, sh.key).setOrigin(0, 0);
+  box(scene.add.graphics(), win.x, win.y, win.w, win.h, W.radius, { fill: P.floor, ring: { width: W.ring, color: P.glassLine } });
+  const x0 = win.x + V.pad;
+  let y = win.y + V.pad;
+  const late: (() => void)[] = [];
+  o.lanes.forEach((l) => {
+    const row = o.rows[l.id] ?? [];
+    const mineCard = focus === undefined ? undefined : row.find((c) => c.uid === focus);
+    const H = V.head;
+    const head: Node = {
+      t: "row", align: "center", gap: H.gap, h: H.h,
+      children: [
+        ...(l.face && scene.textures.exists(l.face.key) ? [{ t: "image", key: faceTexture(scene, l.face, H.face), w: H.face, h: H.face } as Node] : []),
+        text(l.name, T.name, mineCard ? P.ink : focus === undefined ? P.ink : P.ink3Spirit),
+        { t: "row", align: "center", gap: H.iconGap, children: [{ t: "icon", id: "i-deck", w: H.icon, h: H.icon, tint: P.ink3Spirit }, text(String(row.length), T.was, P.ink2)] },
+      ],
+    };
+    render(scene, head, x0, y);
+    const top0 = y + H.h + H.below;
+    let x = x0;
+    row.forEach((c) => {
+      const cx = x;
+      const on = focus === c.uid;
+      const off = !!o.off?.(c.uid);
+      x += step;
+      if (on && o.mode === "upgrade" && c.after) x += step + arrow;
+      const draw = () => {
+        const top = top0;
+        const card = cardWithFace(scene, c.card, l);
+        const view = createHandCard(scene, card, cx, top, { showRarity: true });
+        view.setHeld(on);
+        if (off) adjustColor(view.root, { grayscale: 1, opacity: CARD_FOCUS.dim });
+        else if (focus !== undefined && !on) view.opacity = CARD_FOCUS.dim;
+        if (!off) {
+          scene.add.zone(cx, top, HAND_CARD.w, HAND_CARD.h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+            .on("pointerover", () => o.on.hover(c.uid))
+            .on("pointerout", () => o.on.hover(undefined))
+            .on("pointerup", (_p: unknown, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
+              e.stopPropagation();
+              o.on.toggle(c.uid);
+            });
+        }
+        if (!on) return;
+        if (o.mode === "remove") {
+          drawRemoveMark(scene, cx, top);
+          drawCardTip(scene, card, cx, top, HAND_CARD.w);
+        } else if (c.after) {
+          const ax = cx + step + arrow;
+          const arrowNode = text(COPY.arrow, T.was, P.accHi, { lh: 1 });
+          const a = size(arrowNode);
+          render(scene, arrowNode, cx + HAND_CARD.w + (ax - cx - HAND_CARD.w - a.w) / 2, top + (HAND_CARD.h - a.h) / 2);
+          const up = cardWithFace(scene, c.after, l);
+          createHandCard(scene, up, ax, top, { showRarity: true });
+          drawCardTip(scene, up, ax, top, HAND_CARD.w);
+        }
+      };
+      if (on) late.push(draw);
+      else draw();
+    });
+    y += rowH + V.rowGap;
+  });
+  for (const f of late) f();
+  const pick = o.pick;
+  if (pick !== undefined) drawPickConfirm(scene, y, o.confirm, { cancel: o.on.clear, ok: () => o.on.ok(pick) }, x0 + innerW);
+  else if (o.on.back && o.cancelLabel) {
+    const B = { ...LEAVE };
+    drawQuietButton(scene, "g-close", o.cancelLabel, o.on.back, y + (C.h - B.h) / 2, x0);
+  }
 }
