@@ -28,8 +28,9 @@
 | 10 | 판 결과 | 기록 → 남는 것 → 이번 판에서만 → 정령 줄 → 버튼 순서로 차례로 나타나요(간격 60ms). 숫자 세어 올리기 없음 |
 | 11 | 턴 종료 버튼 (0084 8번) | 낼 수 있는 카드가 남아 있으면 차분한 판, 하나도 없으면 밝은 유리 판(0054 주 버튼과 같은 판, 보라 채움 없음)으로 흐려지며 바뀌어요(160ms). 깜빡이지 않아요 |
 
-## 소리가 붙을 사건 이름 (소리 스레드와 같이 써요)
-`screen.out` · `screen.in` · `window.open` · `card.hold` · `card.place` · `card.undo` · `hand.deal` · `turn.end` · `act.spirit` · `act.enemy` · `hit.light` · `hit.mid` · `hit.heavy` · `block.gain` · `heal` · `status.apply` · `charge.start` · `break` · `down.enemy` · `down.ally` · `release` · `reward.take` · `equip.take` · `map.move` · `run.win` · `run.lose`
+## 소리와 맞추기
+- 소리 사건 이름은 `src/presentation/audio/sounds.ts`(0087)를 그대로 써요. 재생 중 타격 · 방어 · 상태 소리는 유닛이 밀리는 때(110ms)에 맞춰 나요.
+- 모션에는 있고 소리 목록에 아직 없는 사건: 화면 전환, 창 뜸, 새 손패, 쓰러짐(적 · 아군), 회복, 해방.
 
 ## 남은 빈 곳 (다음 차례 순)
 1. 호버 · 누름: 지도 칸, 선택지, 보상 카드, 상점 진열, 메뉴 줄은 지금 바로 바뀌어요. 화면을 통째로 다시 그리는 구조라 흐려짐을 넣으려면 부품을 남겨 두는 손질이 필요해요.

@@ -1,4 +1,5 @@
 // 손패 띠: 유리 띠, 마력 동전, 정령별 카드 묶음, 턴 종료·더미. 정본 .band, .mana, .hand, .grp, .endw
+import { SFX_DATA } from "../../audio";
 import * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { box, circle } from "../../style/draw";
@@ -207,6 +208,8 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
   for (const g of groups) {
     for (const c of g.cards) {
       c.view.root.setInteractive(new Phaser.Geom.Rectangle(-HAND_CARD.w / 2, -HAND_CARD.h, HAND_CARD.w, HAND_CARD.h), Phaser.Geom.Rectangle.Contains);
+      // 누르는 소리는 집었을 때 전투 화면이 내요
+      c.view.root.setData(SFX_DATA, false);
       c.view.root.on("pointerover", () => { leave?.remove(); leave = null; setHover(c.vm.key); });
       c.view.root.on("pointerdown", (p: Phaser.Input.Pointer) => opts.onPress?.(c.vm.key, p));
       c.view.root.on("pointerout", () => { leave?.remove(); leave = scene.time.delayedCall(1, () => setHover(null)); });

@@ -671,6 +671,9 @@ export const tokens = {
       },
       "reveal": {
         "stagger": "60ms"
+      },
+      "musicFade": {
+        "duration": "600ms"
       }
     },
     "effect": {

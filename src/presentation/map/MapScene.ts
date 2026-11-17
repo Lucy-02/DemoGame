@@ -28,6 +28,7 @@ import { icon, loadIcon } from "../style/icons";
 import { GLASS } from "../tooltip/skins";
 import { clampLeft, drawTooltip } from "../tooltip/Tooltip";
 import { COPY, KIND_ICON } from "./copy";
+import { SFX_DATA, type SfxId } from "../audio";
 import { DEFAULT_MAP, mapRun } from "./fixtures";
 import { mapVM, sheetVM } from "./fromRun";
 import { FRAME, GOLD_AT, PATH, SHEET, SLIM } from "./layout";
@@ -184,6 +185,7 @@ export class MapScene extends Phaser.Scene {
     const zone = this.add.zone(x - N.d / 2, y - N.d / 2, N.d, N.d).setOrigin(0, 0);
     const can = n.state === "open" && !!this.onEnter;
     zone.setInteractive({ useHandCursor: can });
+    if (can) zone.setData(SFX_DATA, "map.move" satisfies SfxId);
     zone.on("pointerover", () => {
       this.hover?.destroy();
       this.hover = gather(this, 0, 0, () => {
