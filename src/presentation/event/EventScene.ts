@@ -1,5 +1,5 @@
-// 이벤트 화면 (0046 · 정리안 f8 · 0076 17번): 왼쪽에 골드, 이벤트 이름 줄, 상황 두세 문장, 선택지 판. 오른쪽 정령 세 줄. 장면 그림은 없어요.
-// 선택지에 올리면 대가가 전부 미리 보여요: 골드 a→b, 영향 받는 줄의 HP a→b와 테, 카드를 받으면 줄마다 받을 자리.
+// 이벤트 화면 (Lucy 2026-11-17, 공용 UI 기획 r5): 배경 위 왼쪽 판(이름 줄 · 상황 글 · 선택지) + 오른쪽 얇은 정령 줄, 둘 다 가운데 높이. 장면 그림은 없어요.
+// 선택지의 HP 효과는 영향받는 정령 얼굴 + a→b. 올리면 대가가 전부 미리 보여요: 위 골드 a→b, 얇은 줄의 HP a→b와 밝은 테.
 // 덱에서 카드를 고르는 선택지(빼기 · 강화 · 복제)는 왼쪽이 덱으로 바뀌고, 고르고 확인해야 선택지 전체가 적용돼요. 고르기 전엔 돌아갈 수 있어요.
 // 카드 보상은 결과를 적용한 뒤 onCards로 넘겨요 (보상 화면은 게임 흐름이 띄워요).
 import * as Phaser from "phaser";
@@ -7,17 +7,16 @@ import { tokens } from "../../design/tokens";
 import type { EventSession } from "../../session/event";
 import { preloadHandCard } from "../card/HandCard";
 import { drawBackdrop } from "../run/backdrop";
-import { CHOICE_ICONS, drawChoices } from "../run/choices";
+import { CHOICE_ICONS, type ChoiceVM, type FaceFx } from "../run/choices";
 import { COPY as RUN_COPY } from "../run/copy";
 import { DECK_PICK_ICONS, drawDeckPick } from "../run/deckPick";
 import { cardVM, deckCardVM, lane } from "../run/fromCore";
 import { GOLD_ICONS, drawGold } from "../run/gold";
 import { LANE_ICONS, drawLane, type LaneState } from "../run/lanes";
-import { CHOICE, STORY } from "../run/layout";
 import { outcomesFx } from "../run/outcomes";
+import { drawStoryPanel } from "../run/panel";
+import { drawSlimParty } from "../run/slimLane";
 import type { DeckCardVM, LaneVM } from "../run/viewmodel";
-import { P, text } from "../spirits/views/parts";
-import { render, size, type Node } from "../style/flex";
 import { upgradedId } from "../../core/data";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
@@ -109,36 +108,29 @@ export class EventScene extends Phaser.Scene {
     const s = this.session;
     const pv = this.hover === undefined ? undefined : s.preview(this.hover);
     drawGold(this, pv?.gold?.to ?? s.run.gold, pv?.gold ? { was: pv.gold.from } : {});
-
-    this.lanes().forEach((l, i) => {
-      const lst: LaneState = { noSocket: !pv?.cards };
-      if (pv) {
-        const hp = pv.hp[l.id], max = pv.maxHp[l.id];
-        if (hp) lst.hpTo = hp.to;
-        if (max) lst.maxHpTo = max.to;
-        if (hp || max) lst.hot = true;
-        if (pv.cards) lst.open = true;
-      }
-      drawLane(this, l, i, lst);
+    const lanes = this.lanes();
+    drawSlimParty(this, lanes, (l) => {
+      const hp = pv?.hp[l.id], max = pv?.maxHp[l.id];
+      return { hpTo: hp?.to, maxTo: max?.to, hot: !!hp || !!max };
     });
-
-    // 이름 줄 + 상황 글. 글이 길면 선택지 판이 그만큼 내려가요
-    const story: Node = {
-      t: "col", w: STORY.w, gap: STORY.gap,
-      children: [
-        text(s.event.title, T.eventName, P.ink, { lh: STORY.titleLh }),
-        text(s.event.text, T.story, P.ink, { lh: STORY.lh, wrap: STORY.w, keepAll: true }),
-      ],
-    };
-    const titleH = size(story.children[0]).h + STORY.gap;
-    const top = STORY.top - titleH;
-    render(this, story, STORY.x, top);
-    const choicesTop = top + size(story).h + CHOICE.gap;
-    drawChoices(this, s.event.options.map((o, i) => ({ label: o.label, fx: outcomesFx(o.outcome), enabled: s.canChoose(i) })), choicesTop, this.hover, {
-      click: (i) => { if (this.session.choose(i)) { this.hover = undefined; this.advance(); } },
-      over: (i) => { this.hover = i; this.redraw(); },
-      out: (i) => { if (this.hover === i) { this.hover = undefined; this.redraw(); } },
-    }, RUN_COPY.fx.none);
+    const items = s.event.options.map((o, i): ChoiceVM => {
+      const v = s.preview(i);
+      // 최대 HP가 바뀌는 정령은 최대 HP 칩 하나로 (HP도 같이 오르면 줄 미리보기가 보여줘요)
+      const faces = lanes.flatMap((l): FaceFx[] => {
+        const max = v.maxHp[l.id], hp = v.hp[l.id];
+        if (max) return [{ face: l.face, from: max.from, to: max.to, max: true }];
+        return hp ? [{ face: l.face, from: hp.from, to: hp.to }] : [];
+      });
+      return { label: o.label, faces, fx: outcomesFx(o.outcome), enabled: s.canChoose(i) };
+    });
+    drawStoryPanel(this, {
+      title: s.event.title, story: s.event.text, items, hot: this.hover, none: RUN_COPY.fx.none,
+      on: {
+        click: (i) => { if (this.session.choose(i)) { this.hover = undefined; this.advance(); } },
+        over: (i) => { this.hover = i; this.redraw(); },
+        out: (i) => { if (this.hover === i) { this.hover = undefined; this.redraw(); } },
+      },
+    });
   }
 
   private paintPick(mode: "removeCard" | "upgradeCard" | "duplicateCard") {

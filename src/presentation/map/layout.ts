@@ -1,6 +1,6 @@
 // 지도 화면 배치 (LEDGER §2 R2 지도 C: 가까운 길 + 전체 미니맵 + 슬림 파티 패널). 값은 묶음 A 정리안 f9(0046)에서 잰 임시 값이에요 (TODO_TOKEN).
 import { SYS } from "../battle/layout";
-import { FRAME, GOLD, GRID, LANE } from "../run/layout";
+import { FRAME, GOLD, GRID, LANE, SLIM_LANE } from "../run/layout";
 
 export { FRAME };
 
@@ -29,10 +29,7 @@ export const MINI = {
 
 /** 슬림 파티 줄: 정령 줄(0046)의 접힌 상태. 고른 줄만 같은 자리에서 정령 줄 높이로 펼쳐요 */
 export const SLIM = {
-  x: GRID.lanesX, y: LANE.y + MINI.h + LANE.gap, w: GRID.lanesW, h: 52, gap: LANE.gap, radius: LANE.radius,
-  ring: { x: 16, d: 40, r: 18, stroke: 3, faceInset: 5 },
-  name: { x: 73, gap: 10 },
-  hp: { x: 301, w: 132, h: 8, numX: 443, numGap: 2 },
+  ...SLIM_LANE, y: LANE.y + MINI.h + LANE.gap,
   /** 펼친 줄의 닫기: 오른쪽 위, 덱 보기와 같은 기호 버튼 */
   close: { right: 18, top: 14, h: 26, icon: 18, gap: 6 },
 };

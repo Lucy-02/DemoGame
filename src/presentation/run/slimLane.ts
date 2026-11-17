@@ -2,12 +2,15 @@
 import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { faceTexture } from "../spiritArt";
-import { P, bar, text } from "../spirits/views/parts";
+import { P, text } from "../spirits/views/parts";
+import { withAlpha } from "../style/color";
 import { box, circle } from "../style/draw";
 import { hitArea, render, size, type Node } from "../style/flex";
 import { placeholderArt } from "../style/placeholder";
 import { ringTexture } from "../style/ring";
 import { COPY } from "./copy";
+import { hpBarNode } from "./lanes";
+import { FRAME, SLIM_LANE } from "./layout";
 import type { LaneVM } from "./viewmodel";
 
 const T = tokens.provisional.text.result;
@@ -19,9 +22,18 @@ export interface SlimLook {
   hp: { x: number; w: number; h: number; numX: number; numGap: number };
 }
 
-export function drawSlimLane(scene: Phaser.Scene, l: LaneVM, y: number, S: SlimLook, onClick?: () => void) {
+/** 미리보기 (이벤트 · 휴식): 올린 선택지가 바꾸는 HP · 최대 HP와 밝은 테 */
+export interface SlimState {
+  hpTo?: number;
+  maxTo?: number;
+  hot?: boolean;
+}
+
+export function drawSlimLane(scene: Phaser.Scene, l: LaneVM, y: number, S: SlimLook, onClick?: () => void, st: SlimState = {}) {
   const g = scene.add.graphics();
-  box(g, S.x, y, S.w, S.h, S.radius, { fill: P.glass, ring: { width: 1, color: P.glassLine } });
+  const H = SLIM_LANE.hot;
+  if (st.hot) box(g, S.x - H.outer, y - H.outer, S.w + H.outer * 2, S.h + H.outer * 2, S.radius + H.outer, { fill: withAlpha(P.accHi, H.alpha) });
+  box(g, S.x, y, S.w, S.h, S.radius, { fill: P.glass, ring: { width: 1, color: st.hot ? P.accHi : P.glassLine } });
   const R = S.ring;
   const rx = S.x + R.x, ry = y + (S.h - R.d) / 2;
   const d = R.d - R.faceInset * 2;
@@ -33,10 +45,31 @@ export function drawSlimLane(scene: Phaser.Scene, l: LaneVM, y: number, S: SlimL
   const mid = (n: Node, x: number) => render(scene, n, x, y + (S.h - size(n).h) / 2);
   mid({ t: "row", gap: S.name.gap, align: "baseline", children: [text(l.name, T.name, P.ink), text(COPY.lv(l.level), T.level, P.ink3Spirit)] }, S.x + S.name.x);
   const low = !!l.down;
-  mid({ t: "row", children: [bar(S.hp.h, l.hp / l.maxHp, P.wallLo, low ? P.danger : P.ink2, { w: S.hp.w, grow: false })] }, S.x + S.hp.x);
-  mid({
+  const to = st.hpTo ?? l.hp, max = st.maxTo ?? l.maxHp;
+  const hpMoves = to !== l.hp, maxMoves = max !== l.maxHp;
+  mid({ t: "row", children: [hpBarNode(l, to, max, S.hp)] }, S.x + S.hp.x);
+  const num: Node = {
     t: "row", gap: S.hp.numGap, align: "baseline",
-    children: [text(String(l.hp), T.was, low ? P.danger : P.ink), text(`/${l.maxHp}`, T.level, P.ink3Spirit)],
-  }, S.x + S.hp.numX);
+    children: [
+      ...(hpMoves
+        ? [text(`${l.hp}${COPY.arrow}`, T.level, P.ink3Spirit), text(String(to), T.was, to > l.hp ? P.ok : P.danger)]
+        : [text(String(l.hp), T.was, low ? P.danger : P.ink)]),
+      ...(maxMoves
+        ? [text(`/${l.maxHp}${COPY.arrow}`, T.level, P.ink3Spirit), text(String(max), T.level, P.accHi)]
+        : [text(`/${l.maxHp}`, T.level, P.ink3Spirit)]),
+    ],
+  };
+  // a→b로 길어지면 오른쪽 끝(얼굴 고리와 같은 여백)에 맞춰요
+  mid(num, hpMoves || maxMoves ? S.x + S.w - R.x - size(num).w : S.x + S.hp.numX);
   if (onClick) hitArea(scene, S.x, y, S.w, S.h, onClick);
+}
+
+/** 얇은 줄 묶음을 화면 가운데 높이에 (이벤트 · 휴식, Lucy 2026-11-17 A) */
+export function drawSlimParty(scene: Phaser.Scene, lanes: LaneVM[], st: (l: LaneVM) => SlimState) {
+  const S = SLIM_LANE;
+  let y = Math.round((FRAME.h - (lanes.length * (S.h + S.gap) - S.gap)) / 2);
+  for (const l of lanes) {
+    drawSlimLane(scene, l, y, S, undefined, st(l));
+    y += S.h + S.gap;
+  }
 }

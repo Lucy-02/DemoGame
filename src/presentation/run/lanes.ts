@@ -42,9 +42,7 @@ export interface LaneState {
   deckTo?: number;
   /** HP가 이만큼 찰 예정 (치료 미리보기): 막대에 연두 구간 */
   heal?: number;
-  /** HP가 이 값이 될 예정 (이벤트 미리보기): 오르면 연두, 내리면 붉은 구간 (0046) */
-  hpTo?: number;
-  /** 최대 HP가 이 값이 될 예정 (이벤트 · 판 결과) */
+  /** 최대 HP가 이 값이 될 예정 (판 결과) */
   maxHpTo?: number;
   /** 지금 HP 대신 최대 HP만 보여요 (판 결과: 다음 판은 가득 찬 채로 떠나요). 바뀌면 a→b */
   maxOnly?: boolean;
@@ -195,7 +193,11 @@ function info(l: LaneVM, lit?: StatId, hpTo = l.hp, equip?: LaneEquipState, maxT
 
 /** HP 막대. 바뀔 HP(to)가 있으면 오르는 만큼은 연두(.hpbar3 i.gain), 깎이는 만큼은 붉게 깔아요 */
 function hpBar(l: LaneVM, to: number, max: number): Node {
-  const B = INFO.hp.bar;
+  return hpBarNode(l, to, max, INFO.hp.bar);
+}
+
+/** HP 막대 (정령 줄 · 얇은 줄 같이 씀). to · max가 지금과 다르면 오르는 만큼 연두, 깎이는 만큼 붉게 */
+export function hpBarNode(l: Pick<LaneVM, "hp" | "maxHp" | "down">, to: number, max: number, B: { w: number; h: number }): Node {
   const fill = (v: number) => Math.max(INFO.hp.minFill, Math.min(1, v / max));
   const now = fill(l.hp);
   const base = bar(B.h, now, P.wallLo, l.down ? P.danger : P.ink2, { w: B.w, grow: false });
@@ -251,7 +253,7 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
 
   const body = gather(scene, 0, 0, () => {
     drawFace(scene, l, x + RING.x, y + RING.y);
-    const hpTo = st.hpTo ?? (st.heal ? Math.min(l.maxHp, l.hp + st.heal) : l.hp);
+    const hpTo = st.heal ? Math.min(l.maxHp, l.hp + st.heal) : l.hp;
     const node = info(l, st.stat, hpTo, st.equip, st.equip?.maxHpTo ?? st.maxHpTo, st.maxOnly, st.noStats);
     render(scene, node, x + INFO.x, y + (h - size(node).h) / 2);
     l.slots.forEach((item, k) => {

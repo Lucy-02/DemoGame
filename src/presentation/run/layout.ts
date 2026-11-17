@@ -115,17 +115,33 @@ export const DECK_PICK = {
   confirm: { dy: 151, h: 44, radius: 12, gap: 12, cancelW: 132, okW: 168, icon: 18, inner: 10, coin: 14, coinGap: 5 },
 };
 
-/** 선택지 판 (정리안 .opts · .opt, 휴식 · 이벤트 같은 부품): 왼쪽 열 폭, 첫 판 top 316, 판 사이 14
+/** 얇은 정령 줄 (0046 f9 슬림 파티 패널): 지도 · 이벤트 · 휴식이 같이 써요. 높이 52, 얼굴 고리 40, HP 막대 132
+ *  hot = 올린 선택지가 바꾸는 줄: 테 accHi + 바깥 4px accHi .14 (선택지 판 .opt.hov와 같은 값) */
+export const SLIM_LANE = {
+  x: GRID.lanesX, w: GRID.lanesW, h: 52, gap: LANE.gap, radius: LANE.radius,
+  ring: { x: 16, d: 40, r: 18, stroke: 3, faceInset: 5 },
+  name: { x: 73, gap: 10 },
+  hp: { x: 301, w: 132, h: 8, numX: 443, numGap: 2 },
+  hot: { outer: 4, alpha: 0.14 },
+};
+
+/** 이벤트 · 휴식 (Lucy 2026-11-17, 공용 UI 기획 r5): 배경 위 왼쪽 판(이름 줄 · 상황 글 · 선택지) + 오른쪽 얇은 정령 줄.
+ *  판과 줄은 둘 다 화면 가운데 높이(A). 판 = 전투 결과 창과 같은 바탕 · 테 · 그림자 · padding 24, 폭은 왼쪽 열 */
+export const PANEL = { x: GRID.gutter, w: GRID.colW, pad: 24, radius: 18, ring: 1, shadow: { y: 18, blur: 48 } };
+
+/** 선택지 판 (정리안 .opts · .opt, 휴식 · 이벤트 같은 부품): 폭은 판(PANEL) 안쪽, 판 사이 14
  *  padding 16 20 radius 12, 이름 · 효과문 gap 6 (효과문 줄 높이 1.5) · .opt.hov 테 accHi + 바깥 4px accHi .14 · 고를 수 없으면 .4 */
 export const CHOICE = {
-  x: GRID.gutter, w: GRID.colW, top: 316, gap: 14, pad: [16, 20, 16, 20] as [number, number, number, number],
+  gap: 14, pad: [16, 20, 16, 20] as [number, number, number, number],
   radius: 12, inner: 8, textLh: 1.5, hot: { outer: 4, alpha: 0.14 }, offAlpha: 0.4,
   /** 효과 칩 (Lucy 2026-11-17): 기호 16 · 기호와 글 8 · 칩 사이 14 (판 결과 안내 줄 · 판 사이 간격과 같은 임시 값) */
   fx: { icon: 16, gap: 8, between: 14 },
+  /** HP · 최대 HP 효과 칩 = 영향받는 정령 얼굴 + a→b (Lucy 2026-11-17, 공용 UI 기획 r5 시안 값): 얼굴 30 · 얼굴과 숫자 7 · 칩 사이 18 */
+  face: { d: 30, inset: 2, gap: 7, between: 18 },
 };
 
-/** 이벤트 이름 줄 · 상황 글 (정리안 .evt · .evx): 상황 글 top 206 폭 564 줄 높이 1.6, 이름 줄은 그 위 gap 14 (A1 .event) */
-export const STORY = { x: GRID.gutter, w: GRID.colW, top: 206, gap: 14, lh: 1.6, titleLh: 1.35 };
+/** 이벤트 이름 줄 · 상황 글 (정리안 .evt · .evx): 줄 높이 1.6, 이름 줄과 gap 14 (A1 .event). 폭은 판(PANEL) 안쪽 */
+export const STORY = { gap: 14, lh: 1.6, titleLh: 1.35 };
 
 /** 판 결과 왼쪽 열 (정리안 .runleft · .rec · .keep · .onlybox): top 84, 줄 사이 22
  *  "이번 판에서만" 점선 상자: 내용을 감싸요. 테 1.5 dashed veil .22, padding 사방 20 (디렉터 2026-11-16: 사방 같게), 줄 사이 12, radius 12 · 줄 높이 28 · 기호 18 gap 10

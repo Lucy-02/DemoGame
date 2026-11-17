@@ -1,20 +1,22 @@
-// 휴식 화면 (0046 · 정리안 f6 · f7): 오른쪽 정령 세 줄은 그대로, 왼쪽에 선택지 판 둘(쉬기 · 카드 강화). 꼭 하나를 골라요 (0046 Lucy 2026-11-10 답).
-// 쉬기에 올리면 세 줄 HP 막대에 찰 만큼이 보이고, 누르면 회복하고 지도로 가요.
+// 휴식 화면 (Lucy 2026-11-17, 공용 UI 기획 r5): 배경 위 왼쪽 판(쉬기 · 카드 강화) + 오른쪽 얇은 정령 줄, 둘 다 가운데 높이. 꼭 하나를 골라요 (0046 Lucy 2026-11-10 답).
+// 쉬기 판에는 회복하는 정령 얼굴 + HP a→b, 올리면 얇은 줄에 찰 만큼과 밝은 테. 누르면 회복하고 지도로 가요.
 // 카드 강화를 누르면 왼쪽이 덱으로 바뀌어요(상점 빼기와 같은 덱 줄 · 두 단계). 고른 카드 오른쪽에 강화한 카드가 끼어 전→후가 보이고,
 // 주인 줄에서 그 카드가 쓰는 능력치만 밝아져요. 강화할 수 없는 카드는 회색이에요(0043).
 // 둘 다 할 것이 없을 때(모두 HP가 가득하고 강화할 카드도 없음)만 떠나기가 보여요.
 import * as Phaser from "phaser";
-import { C, cardDef, upgradedId } from "../../core/data";
+import { cardDef, upgradedId } from "../../core/data";
 import type { RestSession } from "../../session/rest";
 import { preloadHandCard } from "../card/HandCard";
 import { drawBackdrop } from "../run/backdrop";
-import { CHOICE_ICONS, drawChoices, type ChoiceVM } from "../run/choices";
+import { CHOICE_ICONS, type ChoiceVM } from "../run/choices";
 import { COPY as RUN_COPY } from "../run/copy";
 import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
 import { cardVM, deckCardVM, lane, statOf } from "../run/fromCore";
 import { LANE_ICONS, drawLane } from "../run/lanes";
-import { CHOICE } from "../run/layout";
+import { GOLD_ICONS, drawGold } from "../run/gold";
 import { outcomeFx } from "../run/outcomes";
+import { drawStoryPanel } from "../run/panel";
+import { drawSlimParty } from "../run/slimLane";
 import type { DeckCardVM, LaneVM } from "../run/viewmodel";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
@@ -62,7 +64,7 @@ export class RestScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const [id, w] of [...LANE_ICONS, ...DECK_PICK_ICONS, ...CHOICE_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...LANE_ICONS, ...DECK_PICK_ICONS, ...CHOICE_ICONS, ...GOLD_ICONS]) loadIcon(this, id, w);
     for (const row of Object.values(this.rows())) for (const c of row) {
       preloadHandCard(this, c.card, { showRarity: true });
       if (c.after) preloadHandCard(this, c.after, { showRarity: true });
@@ -120,16 +122,22 @@ export class RestScene extends Phaser.Scene {
     drawBackdrop(this);
     if (this.upgrading) return this.paintUpgrade();
     const s = this.session;
-    const gain = this.hover === Pick.Rest ? s.healPreview() : {};
-    this.lanes().forEach((l, i) => drawLane(this, l, i, { noSocket: true, heal: gain[l.id] }));
+    const heal = s.healPreview();
+    const lit = this.hover === Pick.Rest;
+    const lanes = this.lanes();
+    drawGold(this, s.run.gold);
+    drawSlimParty(this, lanes, (l) => (lit && heal[l.id] ? { hpTo: Math.min(l.maxHp, l.hp + heal[l.id]), hot: true } : {}));
     const items: ChoiceVM[] = [
-      { label: COPY.rest, fx: [outcomeFx({ type: "healPct", value: C.rest_heal_pct })!], enabled: s.canRest() },
+      { label: COPY.rest, faces: lanes.filter((l) => heal[l.id]).map((l) => ({ face: l.face, from: l.hp, to: Math.min(l.maxHp, l.hp + heal[l.id]) })), fx: [], enabled: s.canRest() },
       { label: COPY.upgrade, fx: [outcomeFx({ type: "upgradeCard" })!], enabled: s.canUpgrade() },
     ];
-    drawChoices(this, items, CHOICE.top, this.hover, {
-      click: (i) => this.choose(i),
-      over: (i) => { this.hover = i; this.redraw(); },
-      out: (i) => { if (this.hover === i) { this.hover = undefined; this.redraw(); } },
+    drawStoryPanel(this, {
+      items, hot: this.hover,
+      on: {
+        click: (i) => this.choose(i),
+        over: (i) => { this.hover = i; this.redraw(); },
+        out: (i) => { if (this.hover === i) { this.hover = undefined; this.redraw(); } },
+      },
     });
     if (s.canLeaveEmpty()) drawQuietButton(this, "g-back", RUN_COPY.leave, () => this.leave());
   }

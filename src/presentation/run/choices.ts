@@ -1,12 +1,15 @@
-// 선택지 판 (정리안 .opt, 휴식 · 이벤트가 같이 써요): 왼쪽 열 폭의 가로 판, 이름(선택지 이름) + 효과 칩 줄.
-// 효과는 문장 대신 기호 + 짧은 명사구 칩이에요 (Lucy 2026-11-17). 한 줄에 안 들어가면 칩마다 한 줄.
-// 올리면 테가 밝아지고, 고를 수 없는 판은 통째로 흐려져요.
+// 선택지 판 (정리안 .opt, 휴식 · 이벤트가 같이 써요): 판 폭의 가로 판, 이름(선택지 이름) + 효과 칩 줄.
+// 효과는 문장 대신 칩이에요 (Lucy 2026-11-17): HP · 최대 HP는 영향받는 정령 얼굴 + a→b, 나머지는 기호 + 짧은 명사구.
+// 한 줄에 안 들어가면 칩마다 한 줄. 올리면 테가 밝아지고, 고를 수 없는 판은 통째로 흐려져요.
 import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
+import { faceTexture } from "../spiritArt";
+import type { Crop } from "../spirits/artFit";
 import { P, text } from "../spirits/views/parts";
 import { withAlpha } from "../style/color";
-import { box } from "../style/draw";
+import { box, circle } from "../style/draw";
 import { render, size, type Node } from "../style/flex";
+import { COPY } from "./copy";
 import { CHOICE } from "./layout";
 import { FX_ICONS, type FxVM } from "./outcomes";
 
@@ -14,9 +17,20 @@ const T = tokens.provisional.text.runScreen;
 
 export const CHOICE_ICONS = FX_ICONS.map((id) => [id, CHOICE.fx.icon] as const);
 
+/** 정령 하나의 HP(또는 최대 HP) a→b */
+export interface FaceFx {
+  face?: { key: string; crop: Crop };
+  from: number;
+  to: number;
+  /** 최대 HP: `/a→b` 자두빛 */
+  max?: boolean;
+}
+
 export interface ChoiceVM {
   label: string;
-  /** 효과 칩. 비면 none 글(있을 때)만, 없으면 이름만 */
+  /** 영향받는 정령 얼굴 칩 (앞에 와요) */
+  faces?: FaceFx[];
+  /** 기호 칩. 칩이 하나도 없으면 none 글(있을 때)만, 없으면 이름만 */
   fx: FxVM[];
   enabled: boolean;
 }
@@ -27,38 +41,80 @@ export interface ChoicePointer {
   out: (i: number) => void;
 }
 
-function chips(fx: FxVM[], fade: (c: string) => string, width: number): Node {
-  const X = CHOICE.fx;
-  const one = (f: FxVM): Node => ({
-    t: "row", gap: X.gap, align: "center",
-    children: [{ t: "icon", id: f.icon, w: X.icon, h: X.icon, tint: fade(f.icon === "i-coin" ? P.gold : P.ink2) }, text(f.text, T.optText, fade(P.ink))],
-  });
-  const row: Node = { t: "row", gap: X.between, align: "center", children: fx.map(one) };
-  return size(row).w <= width ? row : { t: "col", gap: X.gap, children: fx.map(one) };
+type Fade = (c: string) => string;
+
+function faceChip(f: FaceFx, fade: Fade, on: boolean): Node {
+  const F = CHOICE.face;
+  const d = F.d - F.inset * 2;
+  return {
+    t: "row", gap: F.gap, align: "center",
+    children: [
+      {
+        t: "block", w: F.d, h: F.d,
+        draw: (g, x, y) => {
+          circle(g, x + F.d / 2, y + F.d / 2, F.d, { fill: P.wall, ring: { width: 1, color: P.glassLine } });
+          if (f.face && g.scene.textures.exists(f.face.key)) {
+            g.scene.add.image(x + F.inset, y + F.inset, faceTexture(g.scene, f.face, d)).setOrigin(0, 0).setAlpha(on ? 1 : CHOICE.offAlpha);
+          }
+        },
+      },
+      {
+        t: "row", gap: 0, align: "baseline",
+        children: [
+          text(`${f.max ? "/" : ""}${f.from}${COPY.arrow}`, T.optText, fade(P.ink3Spirit)),
+          text(String(f.to), T.optLabel, fade(f.max ? P.accHi : f.to > f.from ? P.ok : P.danger)),
+        ],
+      },
+    ],
+  };
 }
 
-/** 판 묶음. top부터 아래로 쌓고, 마지막 판 아래 끝 y를 돌려줘요 */
-export function drawChoices(scene: Phaser.Scene, items: ChoiceVM[], top: number, hot: number | undefined, on: ChoicePointer, none?: string): number {
+function iconChip(f: FxVM, fade: Fade): Node {
+  const X = CHOICE.fx;
+  return {
+    t: "row", gap: X.gap, align: "center",
+    children: [{ t: "icon", id: f.icon, w: X.icon, h: X.icon, tint: fade(f.icon === "i-coin" ? P.gold : P.ink2) }, text(f.text, T.optText, fade(P.ink))],
+  };
+}
+
+function chips(c: ChoiceVM, fade: Fade, width: number): Node {
+  const all = [...(c.faces ?? []).map((f) => faceChip(f, fade, c.enabled)), ...c.fx.map((f) => iconChip(f, fade))];
+  const row: Node = { t: "row", gap: c.faces?.length ? CHOICE.face.between : CHOICE.fx.between, align: "center", children: all };
+  return size(row).w <= width ? row : { t: "col", gap: CHOICE.fx.gap, children: all };
+}
+
+function plate(c: ChoiceVM, w: number, none?: string): Node {
   const K = CHOICE;
-  let y = top;
+  const fade: Fade = (color) => (c.enabled ? color : withAlpha(color, K.offAlpha));
+  const has = c.fx.length || c.faces?.length;
+  return {
+    t: "col", w, pad: K.pad, gap: K.inner,
+    children: [
+      text(c.label, T.optLabel, fade(P.ink)),
+      ...(has ? [chips(c, fade, w - K.pad[1] - K.pad[3])] : none ? [text(none, T.optText, fade(P.ink3Spirit))] : []),
+    ],
+  };
+}
+
+/** 판 묶음의 높이 (판이 내용을 감쌀 때) */
+export function choicesHeight(items: ChoiceVM[], w: number, none?: string): number {
+  return items.reduce((a, c) => a + size(plate(c, w, none)).h, 0) + (items.length - 1) * CHOICE.gap;
+}
+
+/** 판 묶음. (x, top)부터 아래로 쌓고, 마지막 판 아래 끝 y를 돌려줘요 */
+export function drawChoices(scene: Phaser.Scene, items: ChoiceVM[], at: { x: number; w: number; top: number }, hot: number | undefined, on: ChoicePointer, none?: string): number {
+  const K = CHOICE;
+  let y = at.top;
   items.forEach((c, i) => {
-    const fade = (color: string) => (c.enabled ? color : withAlpha(color, K.offAlpha));
-    const inner = K.w - K.pad[1] - K.pad[3];
-    const node: Node = {
-      t: "col", w: K.w, pad: K.pad, gap: K.inner,
-      children: [
-        text(c.label, T.optLabel, fade(P.ink)),
-        ...(c.fx.length ? [chips(c.fx, fade, inner)] : none ? [text(none, T.optText, fade(P.ink3Spirit))] : []),
-      ],
-    };
+    const node = plate(c, at.w, none);
     const h = size(node).h;
     const g = scene.add.graphics();
     const lit = hot === i && c.enabled;
-    if (lit) box(g, K.x - K.hot.outer, y - K.hot.outer, K.w + K.hot.outer * 2, h + K.hot.outer * 2, K.radius + K.hot.outer, { fill: withAlpha(P.accHi, K.hot.alpha) });
-    box(g, K.x, y, K.w, h, K.radius, { fill: P.glass, ring: { width: 1, color: lit ? P.accHi : fade(P.glassLine) } });
-    render(scene, node, K.x, y);
+    if (lit) box(g, at.x - K.hot.outer, y - K.hot.outer, at.w + K.hot.outer * 2, h + K.hot.outer * 2, K.radius + K.hot.outer, { fill: withAlpha(P.accHi, K.hot.alpha) });
+    box(g, at.x, y, at.w, h, K.radius, { fill: P.glass, ring: { width: 1, color: lit ? P.accHi : c.enabled ? P.glassLine : withAlpha(P.glassLine, K.offAlpha) } });
+    render(scene, node, at.x, y);
     if (c.enabled) {
-      scene.add.zone(K.x, y, K.w, h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+      scene.add.zone(at.x, y, at.w, h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
         .on("pointerover", () => on.over(i))
         .on("pointerout", () => on.out(i))
         .on("pointerup", () => on.click(i));
