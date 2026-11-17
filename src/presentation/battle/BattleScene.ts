@@ -157,6 +157,8 @@ export class BattleScene extends Phaser.Scene {
   create() {
     // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
     for (const s of this.session?.battle.spirits ?? []) bakeSpiritFace(this, s.id, s.run.stage);
+    // 고정 장면(세션 없음)도 단계가 있는 아군은 얼굴을 구워요 (예시 장면의 손패 얼굴 자리)
+    if (!this.session) for (const a of this.vm.allies) if (a.stage) bakeSpiritFace(this, a.face, a.stage);
     drawBackdrop(this, this.stage);
     drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) }, false);
     this.fieldLayer = this.add.container(0, 0);
