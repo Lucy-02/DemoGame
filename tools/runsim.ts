@@ -45,8 +45,12 @@ export const PATH_MODES: PathMode[] = ["fight", "default", "avoid"];
  *   start:N     시작할 때 보상을 N번 먼저 골라요 (혼자 판의 시작 덱 장수)
  *   winheal:P   전투를 이기면 모두 최대 HP의 P%를 회복해요
  *   join:N      혼자 떠난 판의 N층 칸을 마친 뒤 시작 풀의 다른 정령 하나가 시작 덱을 들고 합류해요 (0이면 처음부터 = 임시 동료). 적 세기는 그때부터 둘에 맞춰요
+ *   cards:M     보상으로 나오는 카드(시작 덱에 없는 일반 · 고급 · 희귀)의 숫자를 M배 해요 (올림)
+ *   foe:M       길 전투(잡몹 · 정예)의 적 피해를 M배 해요. 보스는 그대로
+ *   mate:N      join과 같은 때에 정령 풀 밖의 임시 동료가 붙어요: 능력치 모두 기준값(10) · HP 20 · 무속성, 할퀴기 2 · 막기 2, 보상 카드 없음.
+ *               코어에 없는 정령이라 안 쓰는 정령 정의 하나를 판 동안만 빌려 써요 (MATE_STAND_IN)
  */
-export interface WhatIf { join?: number; swap?: boolean; noskipgold?: boolean; earlyfights?: boolean; upgraded?: boolean; offer?: number; start?: number; winheal?: number }
+export interface WhatIf { cards?: number; foe?: number; mate?: number; join?: number; swap?: boolean; noskipgold?: boolean; earlyfights?: boolean; upgraded?: boolean; offer?: number; start?: number; winheal?: number }
 
 export interface SimOptions { reward?: RewardMode; path?: PathMode; whatif?: WhatIf }
 export const BOT_KINDS: BotKind[] = ["basic", "smart", "search"];
@@ -116,8 +120,10 @@ export interface RunSimResult {
 const hpPct = (run: Run) => run.spirits.reduce((a, s) => a + s.hp, 0) / run.spirits.reduce((a, s) => a + maxHpOf(s), 0);
 
 /** 전투 하나. 이기면 true. HP를 런에 되돌려요 (쓰러진 정령은 복귀 HP). */
-function fight(run: Run, enc: EncounterDef, rng: Rng, bot: Bot): { won: boolean; turns: number } {
-  const b = new Battle(run.spirits, run.battleDeck(), enc.enemies, run.frontId, rng, run.enemyScale(), run.battleTraits());
+function fight(run: Run, enc: EncounterDef, rng: Rng, bot: Bot, foe = 1): { won: boolean; turns: number } {
+  const base = run.enemyScale();
+  const scale = foe !== 1 && run.current?.type !== "boss" ? { hp: base?.hp ?? 1, dmg: (base?.dmg ?? 1) * foe } : base;
+  const b = new Battle(run.spirits, run.battleDeck(), enc.enemies, run.frontId, rng, scale, run.battleTraits());
   b.firstGapBonus = run.battleGapBonus();
   while (b.result === "ongoing" && b.turn < MAX_TURNS) {
     bot(b, rng);
@@ -153,7 +159,26 @@ function removeOne(run: Run, policy: Policy) {
 }
 
 /** branches: 정령 id → 갈래. 갈래 고르기가 들어오기 전까지 무기 기술을 재는 데 써요 (0056) */
+/** 임시 동료가 빌려 쓰는 정령 정의. 시작 풀 밖이라 혼자 판의 주인과 겹치지 않아요 */
+const MATE_STAND_IN = "pearl_oyster";
+const MATE = { element: "none", stats: { hp: 20, power: 10, guard: 10, focus: 10, speed: 10 } };
+
 export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false, branches: Record<string, string> = {}, strong?: Element, acts?: number, awakened = false, startAct?: number, sim: SimOptions = {}): RunSimResult {
+  const undo: (() => void)[] = [];
+  if (sim.whatif?.mate !== undefined && !party?.includes(MATE_STAND_IN)) {
+    const def = spiritDef(MATE_STAND_IN), kept = { element: def.element, stats: def.stats };
+    Object.assign(def, MATE);
+    undo.push(() => Object.assign(def, kept));
+  }
+  const m = sim.whatif?.cards;
+  if (m && m !== 1) for (const c of CARDS) {
+    if (c.start || c.startEach || c.rarity === "basic" || (c.obtain ?? "reward") !== "reward") continue;
+    for (const e of c.effects as { value?: number }[]) if (typeof e.value === "number") { const v = e.value; e.value = Math.ceil(v * m); undo.push(() => { e.value = v; }); }
+  }
+  try { return simulate(seed, kind, party, adult, branches, strong, acts, awakened, startAct, sim); } finally { for (const f of undo) f(); }
+}
+
+function simulate(seed: number, kind: BotKind, party: string[] | undefined, adult: boolean, branches: Record<string, string>, strong: Element | undefined, acts: number | undefined, awakened: boolean, startAct: number | undefined, sim: SimOptions): RunSimResult {
   const wi = sim.whatif ?? {};
   const ids = party ?? (C.default_party as string[]);
   // 앞열은 가장 튼튼한 정령(HP + 방어)에게 맡겨요. 앞열을 잘못 세우면 같은 파티도 보스를 못 넘어요.
@@ -186,6 +211,7 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
   const shapeMap = () => { if (wi.earlyfights) for (const n of run.map.values()) if (n.floor === 2 || n.floor === 3) n.type = "battle"; };
   shapeMap();
   const takeReward = (reward: ReturnType<Run["rollBattleReward"]>) => {
+    if (wi.mate !== undefined) { reward.cards = reward.cards.filter((c) => c.owner !== MATE_STAND_IN); reward.cardsDone ||= reward.cards.length === 0; }
     if (!reward.cardsDone) {
       for (let i = 1; i < (wi.offer ?? 1); i++) for (const c of run.rollSpiritCards(C.reward[reward.kind === "elite" ? "rarity_elite" : "rarity_normal"])) if (!reward.cards.some((o) => o.cardId === c.cardId)) reward.cards.push(c);
       offered.push(...reward.cards.map((c) => c.cardId));
@@ -218,28 +244,30 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
   for (let r = run.rollBundleReward(); r; r = run.rollBundleReward()) takeReward(r);
   for (let i = 0; i < (wi.start ?? 0); i++) { const r = run.rollBattleReward("battle"); run.gold -= r.gold; takeReward(r); }
   // 둘째 정령 합류 (whatif join): 시작 풀에서 하나를 뽑아 유체 · 시작 덱으로 더해요. 코어의 시작 덱 규칙(Run 생성자)과 같아요
-  let joined = wi.join === undefined || run.spirits.length !== 1;
+  const joinAt = wi.mate ?? wi.join;
+  let joined = joinAt === undefined || run.spirits.length !== 1;
   const join = () => {
     joined = true;
-    const def = spiritDef(new Rng(seed * 7 + 3).pick((C.start_pool as string[]).filter((id) => id !== run.spirits[0].id)));
+    const def = wi.mate !== undefined ? spiritDef(MATE_STAND_IN) : spiritDef(new Rng(seed * 7 + 3).pick((C.start_pool as string[]).filter((id) => id !== run.spirits[0].id)));
     const mate = { ...structuredClone(run.spirits[0]), id: def.id, maxHpBonus: 0, equipment: [], branch: undefined };
     mate.hp = maxHpOf(mate);
     run.spirits.push(mate);
+    if (wi.mate !== undefined) { for (const id of ["basic_claw", "basic_claw", "basic_block", "basic_block"]) run.addCard(id, def.id); return; }
     for (const card of CARDS) {
       for (let i = 0; i < (card.startEach ?? 0); i++) run.addCard(card.id, def.id);
       if (card.start && (card.startOwner ? card.startOwner === def.id : card.element === def.element)) for (let i = 0; i < card.start; i++) run.addCard(card.id, def.id);
     }
   };
-  if (!joined && wi.join === 0) join();
+  if (!joined && joinAt === 0) join();
   for (let guard = 0; guard < 30 * run.lastAct; guard++) {
-    if (!joined && run.act === 1 && (run.current?.floor ?? 0) >= wi.join!) join();
+    if (!joined && run.act === 1 && (run.current?.floor ?? 0) >= joinAt!) join();
     const node = pickNode(run, rng, sim.path);
     run.enter(node);
     nodes[node.type] = (nodes[node.type] ?? 0) + 1;
     if (node.type === "battle" || node.type === "elite" || node.type === "boss") {
       const enc = run.pickEncounter(node.type);
       const before = { bossDeck: run.deck.length, bossHpPct: hpPct(run) };
-      const { won, turns } = fight(run, enc, battleRng, bot);
+      const { won, turns } = fight(run, enc, battleRng, bot, wi.foe);
       battles++;
       if (node.type === "battle") mobTurns.push(turns);
       else if (node.type === "elite") eliteTurns.push(turns);
@@ -389,7 +417,7 @@ function parseWhatIf(arg: string): WhatIf {
   for (const part of arg.split(",").filter(Boolean)) {
     const [k, v] = part.split(":");
     if (k === "swap" || k === "noskipgold" || k === "earlyfights" || k === "upgraded") out[k] = true;
-    else if (k === "offer" || k === "start" || k === "winheal" || k === "join") out[k] = Number(v);
+    else if (k === "offer" || k === "start" || k === "winheal" || k === "join" || k === "mate" || k === "cards" || k === "foe") out[k] = Number(v);
     else throw new Error(`모르는 whatif: ${part}`);
   }
   return out;
