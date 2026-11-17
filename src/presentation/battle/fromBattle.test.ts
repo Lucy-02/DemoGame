@@ -30,7 +30,7 @@ describe("전투 화면 VM", () => {
       for (let turn = 1; turn <= 6 && b.result === "ongoing"; turn++) {
         // 아군이 여럿일 때의 무작위 공격은 누가 맞을지 몰라요
         const random = b.aliveSpirits().length > 1
-          && b.aliveEnemies().some((e) => b.moveQueue(e).some((q) => q.move.actions.some((a) => a.type === "attack" && a.target === "random")));
+          && b.aliveEnemies().some((e) => b.moveQueue(e).some((q) => q.move.actions.some((a) => (a.type === "attack" || a.type === "attackRamp") && a.target === "random")));
         const want = Object.fromEntries(battleVM(b).allies.map((a) => [a.face, a.incoming ?? 0]));
         // 실제 타격마다 그 순간의 피해 계산 값을 모아요 (카드는 놓지 않고 턴만 넘겨요)
         const got: Record<string, number> = {};

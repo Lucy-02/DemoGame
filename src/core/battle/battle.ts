@@ -296,6 +296,7 @@ export class Battle implements Engine {
     this.emit({ k: "status", ref: refOf(e), text: "틈" });
     this.log(`${e.def.name}: 틈이 열림 (${turns}턴)`);
     // 틈이 열리면 꺼지는 불: 끊으면 아군의 화상까지 걷혀요
+    if (this.patternOf(e).some((m) => m.big && m.onBreak === "resetRamp")) e.ramp = 0;
     if (this.patternOf(e).some((m) => m.big && m.onBreak === "clearBurn")) {
       e.ramp = 0;
       if (reason === "break") {

@@ -83,6 +83,7 @@ export interface RunSave {
   recentEncounters: string[];
   normalBattles: number;
   act?: number;
+  fights?: number;
   strongEliteMet?: boolean;
   bossPeeked?: boolean;
   bossGapBonus?: number;
@@ -104,6 +105,8 @@ export class Run {
   visited: string[] = [];
   /** 지금 막 (1부터) */
   act = 1;
+  /** 이 판에서 들어간 전투 칸 수 (모든 막) */
+  fights = 0;
   /** 오늘 센 기운: 이 막의 세 기운 중 하나. 그 기운의 편성이 자주 나오고 보스도 그 기운이에요 (0062) */
   strongElement: Element;
   /** 최근에 만난 편성 (같은 편성은 바로 다시 안 나와요) */
@@ -157,6 +160,11 @@ export class Run {
     for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
   }
 
+  /** 이 막의 보스 전 층 수. 보스는 그 다음 층 */
+  get floors(): number {
+    return (C.acts[this.act - 1] as { floors?: number }).floors ?? FLOORS;
+  }
+
   /** 이 판의 마지막 막 */
   get lastAct(): number {
     return Math.min(this.opts.acts ?? C.acts_enabled, C.acts.length);
@@ -191,7 +199,7 @@ export class Run {
       version: RUN_SAVE_VERSION, opts: copy(this.opts), rng: this.rng.state,
       spirits: copy(this.spirits), deck: copy(this.deck), received: copy(this.received), nextUid: this.nextUid,
       gold: this.gold, frontId: this.frontId, map: copy([...this.map.values()]), current: this.current?.id ?? null, visited: [...this.visited],
-      act: this.act, strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet, bossPeeked: this.bossPeeked, bossGapBonus: this.bossGapBonus,
+      act: this.act, fights: this.fights, strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet, bossPeeked: this.bossPeeked, bossGapBonus: this.bossGapBonus,
       removals: this.removals, bossDefeated: this.bossDefeated,
     };
   }
@@ -214,6 +222,8 @@ export class Run {
     run.recentEncounters = [...s.recentEncounters];
     run.normalBattles = s.normalBattles;
     run.act = s.act ?? 1;
+    // 예전 저장에는 없어요: 1막뿐이라 지나온 칸으로 세요
+    run.fights = s.fights ?? run.visited.filter((id) => ["battle", "elite", "boss"].includes(run.map.get(id)?.type ?? "")).length;
     run.strongEliteMet = s.strongEliteMet ?? false;
     run.bossPeeked = s.bossPeeked ?? false;
     run.bossGapBonus = s.bossGapBonus ?? 0;
@@ -266,6 +276,9 @@ export class Run {
 
   private generateMap() {
     const rng = this.rng;
+    const FLOORS = this.floors;
+    // 정예는 4층부터, 짧은 막은 휴식 바로 앞 층부터
+    const eliteFrom = Math.min(4, FLOORS - 1);
     const key = (f: number, c: number) => `${f}:${c}`;
     const ensure = (f: number, c: number) => {
       const k = key(f, c);
@@ -299,13 +312,13 @@ export class Run {
       else {
         const w: Record<string, number> = { battle: 45, event: 22, shop: 11 };
         if (n.floor >= 3) w.rest = 10;
-        if (n.floor >= 4) w.elite = 14;
+        if (n.floor >= eliteFrom) w.elite = 14;
         n.type = rng.weighted(w) as NodeType;
       }
     }
-    const mids = [...this.map.values()].filter((n) => n.floor >= 3 && n.floor <= 5);
-    if (!mids.some((n) => n.type === "shop")) rng.pick(mids).type = "shop";
-    const elites = [...this.map.values()].filter((n) => n.floor >= 4 && n.floor <= 6);
+    const mids = [...this.map.values()].filter((n) => n.floor >= 3 && n.floor <= 5 && n.floor < FLOORS);
+    if (mids.length && !mids.some((n) => n.type === "shop")) rng.pick(mids).type = "shop";
+    const elites = [...this.map.values()].filter((n) => n.floor >= eliteFrom && n.floor < FLOORS);
     if (!elites.some((n) => n.type === "elite")) rng.pick(elites).type = "elite";
   }
 
@@ -318,6 +331,7 @@ export class Run {
   enter(node: MapNode) {
     this.current = node;
     this.visited.push(node.id);
+    if (node.type === "battle" || node.type === "elite" || node.type === "boss") this.fights++;
   }
 
   pickEncounter(type: "battle" | "elite" | "boss"): EncounterDef {

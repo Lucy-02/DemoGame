@@ -233,6 +233,7 @@ function incomingAll(b: Battle): Map<string, number> {
   const sim = b.aliveSpirits().map((s) => ({ s, hp: s.hp, block: s.block }));
   const up = () => sim.filter((x) => x.hp > 0);
   let front = b.frontId;
+  const ramp = new Map<number, number>();
   const queue = b.aliveEnemies()
     .flatMap((e) => b.moveQueue(e).map((q) => ({ e, ...q })))
     .sort((x, y) => x.at - y.at);
@@ -242,7 +243,12 @@ function incomingAll(b: Battle): Map<string, number> {
         const others = up().filter((x) => x.s.id !== front).sort((x, y) => x.hp - y.hp);
         if (others.length) front = others[0].s.id;
       }
-      if (a.type !== "attack") continue;
+      // 쓸 때마다 세지는 행동은 이번 턴에 앞서 쓴 만큼 올려요
+      const used = ramp.get(e.uid) ?? e.ramp;
+      if (a.type === "attackRamp" || a.type === "burnRamp") ramp.set(e.uid, used + 1);
+      if (a.type !== "attack" && a.type !== "attackRamp") continue;
+      const base = a.type === "attackRamp" ? a.dmg + used * a.step : a.dmg;
+      const pierce = a.type === "attack" && !!a.pierce;
       const alive = up();
       const targets = a.target === "all" ? alive
         : a.target === "front" ? [alive.find((x) => x.s.id === front) ?? alive[0]]
@@ -251,9 +257,9 @@ function incomingAll(b: Battle): Map<string, number> {
       for (let h = 0; h < (a.hits ?? 1); h++) {
         for (const t of targets) {
           if (!t || t.hp <= 0) continue;
-          const dmg = b.enemyDmgPreview(e, a.dmg, t.s);
+          const dmg = b.enemyDmgPreview(e, base, t.s);
           sum.set(t.s.id, (sum.get(t.s.id) ?? 0) + dmg);
-          const blocked = a.pierce ? 0 : Math.min(t.block, dmg);
+          const blocked = pierce ? 0 : Math.min(t.block, dmg);
           t.block -= blocked;
           t.hp -= dmg - blocked;
         }
@@ -328,8 +334,9 @@ function targetOf(b: Battle, a: EnemyAction): IntentTarget {
 
 function amountOf(b: Battle, e: BEnemy, a: EnemyAction): string {
   switch (a.type) {
-    case "attack": {
-      const d = b.enemyDmgPreview(e, a.dmg);
+    case "attack":
+    case "attackRamp": {
+      const d = b.enemyDmgPreview(e, a.type === "attackRamp" ? a.dmg + e.ramp * a.step : a.dmg);
       return a.hits && a.hits > 1 ? `${d}×${a.hits}` : `${d}`;
     }
     case "weak":

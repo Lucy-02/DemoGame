@@ -49,7 +49,12 @@
   "affinity_beats": {
     "water": "fire",
     "fire": "forest",
-    "forest": "water"
+    "forest": "earth",
+    "earth": "electric",
+    "electric": "ice",
+    "ice": "water",
+    "light": "shadow",
+    "shadow": "light"
   },
   "crit_base": 0.05,
   "crit_mult": 1.5,
@@ -111,7 +116,13 @@
   "gap": { "dmg_mult": 1.25, "turns_break": 2, "turns_delay": 1, "turns_burst": 1, "burst_pct": 0.12 },
   "traits": { "burning_burn": 1, "sturdy_block": 4, "swift_ms": 250, "heavy_charge_mult": 1.3, "heavy_stagger": 2, "heavy_dmg": 1 },
   "run_pool": { "weak_battles": 2, "strong_weight": 3, "no_repeat": 2, "first_run_strong": "forest" },
-  "acts": [{ "elements": ["fire", "forest", "wind"] }, { "elements": ["earth", "electric", "light"] }],
+  "acts": [
+    { "elements": ["fire", "forest", "wind"] },
+    { "elements": ["earth", "electric", "light"] },
+    { "elements": ["ice", "water", "shadow"] },
+    { "elements": ["wind", "light", "shadow"] },
+    { "elements": ["none"], "floors": 4 }
+  ],
   "acts_enabled": 1,
   "act_heal_pct": 1
 }

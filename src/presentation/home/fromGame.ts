@@ -1,7 +1,6 @@
 // 게임 세션(정원 + 진행 중인 판) → 메인 화면 VM.
 // 뱃지 숫자는 눌러서 할 행동(키우기 · 갈래 고르기), N은 처음 보는 것(새 카드)이에요 (0054). 둘 다면 숫자만.
 import { isBranching, todos, type Garden } from "../../core/garden";
-import { FLOORS } from "../../core/run";
 import type { Run } from "../../core/run";
 import { spiritArt } from "../spiritArt";
 import { COPY } from "./copy";
@@ -24,7 +23,7 @@ function continueVM(run: Run): HomePrimaryVM {
     return a?.crop && { key: a.body, crop: a.crop };
   });
   // 지도에서 아직 칸에 들어가지 않았으면 1층이에요. 보스 칸은 마지막 층 다음
-  const floor = run.current ? Math.min(run.current.floor, FLOORS + 1) : 1;
+  const floor = run.current ? Math.min(run.current.floor, run.floors + 1) : 1;
   return { kind: "continue", label: COPY.continue, floor: COPY.floor(floor), faces, ids };
 }
 

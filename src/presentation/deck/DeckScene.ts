@@ -1,5 +1,6 @@
 // 덱 보기 (0012 A "정령별 세 줄"을 0069 전투 위 창에): 지금 화면 위에 창으로 떠서 이번 판 덱을 보여요. 보기만 하고, 빼기는 상점에 있어요.
 // 창은 내용을 감싸고 화면 한가운데에 놓여요. 넘치는 줄만 접어 내리고, 창이 화면보다 길면 창 안에서 세로로 스크롤해요 (가로 스크롤 없음).
+import { fadeInScene } from "../style/motion";
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import type { Run } from "../../core/run";
@@ -140,6 +141,7 @@ export class DeckScene extends Phaser.Scene {
       hideTip();
     });
     this.input.keyboard?.on("keydown-ESC", () => this.close());
+    fadeInScene(this);
     Object.assign(window, { __screenReady: DECK_SCENE });
   }
 

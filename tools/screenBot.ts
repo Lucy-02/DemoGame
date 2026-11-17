@@ -34,9 +34,12 @@ const visited = new Set<string>();
 const placed = new WeakMap<object, number>();
 
 function top(game: Phaser.Game): Loose | undefined {
-  const all = game.scene.getScenes(true);
+  // 화면 전환 막(0086)이 덮고 있는 동안에는 사람도 못 눌러요
+  const veil = game.scene.getScene("veil") as Loose | null;
+  if (veil?.rect?.input?.enabled) return undefined;
+  const all = game.scene.getScenes(true).filter((s) => s !== veil);
   // 만들어지는 중(불러오기 · create)인 장면이 하나라도 있으면 기다려요
-  if (game.scene.getScenes(false).some((s) => s.sys.settings.status > 0 && s.sys.settings.status < RUNNING)) return undefined;
+  if (game.scene.getScenes(false).some((s) => s !== veil && s.sys.settings.status > 0 && s.sys.settings.status < RUNNING)) return undefined;
   return all[all.length - 1];
 }
 
