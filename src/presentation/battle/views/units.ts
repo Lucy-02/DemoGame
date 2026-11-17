@@ -784,7 +784,7 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPrev
   const bodyX = cx - ALLY.body.w / 2, bodyTop = ALLY.feet - ALLY.body.h;
   if (pv.lit) glow(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, 0, true);
   const art = gather(scene, 0, 0, () => {
-    if (!(a.stage && drawAllyArt(scene, a.face, a.stage, cx, ALLY.feet, ALLY.body, ALLY.art))) placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
+    if (!(a.stage && ALLY.art.stages.includes(a.stage) && drawAllyArt(scene, a.face, a.stage, cx, ALLY.feet, ALLY.body, ALLY.art))) placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
   });
   // 쓰러진 아군은 그림이 흐려요 (0086)
   if (a.hp <= 0) art.setAlpha(tokens.provisional.motion.hit.down.alpha);
