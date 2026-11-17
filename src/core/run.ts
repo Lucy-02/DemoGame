@@ -157,6 +157,11 @@ export class Run {
     for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
   }
 
+  /** 이 막의 보스 전 층 수. 보스는 그 다음 층 */
+  get floors(): number {
+    return (C.acts[this.act - 1] as { floors?: number }).floors ?? FLOORS;
+  }
+
   /** 이 판의 마지막 막 */
   get lastAct(): number {
     return Math.min(this.opts.acts ?? C.acts_enabled, C.acts.length);
@@ -266,6 +271,9 @@ export class Run {
 
   private generateMap() {
     const rng = this.rng;
+    const FLOORS = this.floors;
+    // 정예는 4층부터, 짧은 막은 휴식 바로 앞 층부터
+    const eliteFrom = Math.min(4, FLOORS - 1);
     const key = (f: number, c: number) => `${f}:${c}`;
     const ensure = (f: number, c: number) => {
       const k = key(f, c);
@@ -299,13 +307,13 @@ export class Run {
       else {
         const w: Record<string, number> = { battle: 45, event: 22, shop: 11 };
         if (n.floor >= 3) w.rest = 10;
-        if (n.floor >= 4) w.elite = 14;
+        if (n.floor >= eliteFrom) w.elite = 14;
         n.type = rng.weighted(w) as NodeType;
       }
     }
-    const mids = [...this.map.values()].filter((n) => n.floor >= 3 && n.floor <= 5);
-    if (!mids.some((n) => n.type === "shop")) rng.pick(mids).type = "shop";
-    const elites = [...this.map.values()].filter((n) => n.floor >= 4 && n.floor <= 6);
+    const mids = [...this.map.values()].filter((n) => n.floor >= 3 && n.floor <= 5 && n.floor < FLOORS);
+    if (mids.length && !mids.some((n) => n.type === "shop")) rng.pick(mids).type = "shop";
+    const elites = [...this.map.values()].filter((n) => n.floor >= eliteFrom && n.floor < FLOORS);
     if (!elites.some((n) => n.type === "elite")) rng.pick(elites).type = "elite";
   }
 

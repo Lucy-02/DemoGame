@@ -1,4 +1,4 @@
-export const ELEMENTS = ["fire", "water", "forest", "wind", "light", "earth", "electric", "none"] as const;
+export const ELEMENTS = ["fire", "water", "forest", "wind", "light", "earth", "electric", "ice", "shadow", "none"] as const;
 export type Element = (typeof ELEMENTS)[number];
 /** 능력치. 스피드는 카드 시간을 나누는 값이에요 (시간 = 카드 기본 시간 ÷ 스피드, 0036). */
 export type StatKey = "hp" | "power" | "guard" | "focus" | "speed";
@@ -202,6 +202,8 @@ export type EnemyAction =
   | { type: "sapHeal"; value: number }
   /** 쓸 때마다 step씩 세지는 화상 (0062) */
   | { type: "burnRamp"; value: number; step: number; target: EnemyTargetRule }
+  /** 쓸 때마다 step씩 세지는 공격. 틈이 열리면 처음으로 돌아가요 (onBreak: resetRamp) */
+  | { type: "attackRamp"; dmg: number; step: number; hits?: number; target: EnemyTargetRule }
   /** 아군마다 쌓인 화상 × mult만큼 피해 */
   | { type: "detonateBurn"; mult: number }
   /** 땅속으로 숨어요: 다음 행동 때까지 피해를 받지 않아요 (2막) */
@@ -216,8 +218,8 @@ export interface EnemyMove {
   charge?: boolean;
   /** 큰 차징: 끊거나 늦추거나 차징 중에 몰아 때리면 틈이 열려요 (0062) */
   big?: boolean;
-  /** 끊겼을 때: clearBurn = 아군의 화상이 꺼지고 화상 세기가 처음으로 돌아가요 */
-  onBreak?: "clearBurn";
+  /** 틈이 열렸을 때. clearBurn = 세기가 처음으로 돌아가고, 끊어서 열었으면 아군의 화상도 꺼져요. resetRamp = 세기만 처음으로 */
+  onBreak?: "clearBurn" | "resetRamp";
   /** 방전 칸: 이 행동을 앞둔 턴에 시간축에 깔리는 구간 [시작, 끝)(ms). 그 안에서 끝나는 카드의 주인이 zoneDmg를 받아요 (2막) */
   zones?: [number, number][];
   zoneDmg?: number;
