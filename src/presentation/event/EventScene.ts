@@ -18,6 +18,7 @@ import { drawSlimParty } from "../run/slimLane";
 import type { DeckCardVM, LaneVM } from "../run/viewmodel";
 import { upgradedId } from "../../core/data";
 import { preloadSpiritArt } from "../spiritArt";
+import { preloadStage } from "../stage";
 import { loadIcon } from "../style/icons";
 import { crossPaint } from "../style/motion";
 import { PICK_CONFIRM } from "./copy";
@@ -71,6 +72,7 @@ export class EventScene extends Phaser.Scene {
       if (this.session.run.canUpgrade(c.uid)) preloadHandCard(this, cardVM(upgradedId(c.cardId), c.owner), { showRarity: true });
     }
     preloadSpiritArt(this, this.session.run.spirits.map((s) => s.id));
+    preloadStage(this, this.session.run.act);
   }
 
   create() {
@@ -104,7 +106,7 @@ export class EventScene extends Phaser.Scene {
 
   private paint() {
     for (const o of [...this.children.list]) o.destroy();
-    drawBackdrop(this);
+    drawBackdrop(this, this.session.run.act);
     const st = this.session.step;
     if (st.kind === "pick") return this.paintPick(st.mode);
     if (st.kind !== "choose") return;

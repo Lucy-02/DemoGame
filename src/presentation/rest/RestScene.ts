@@ -19,6 +19,7 @@ import { drawStoryPanel } from "../run/panel";
 import { drawSlimParty } from "../run/slimLane";
 import type { DeckCardVM, LaneVM } from "../run/viewmodel";
 import { preloadSpiritArt } from "../spiritArt";
+import { preloadStage } from "../stage";
 import { loadIcon } from "../style/icons";
 import { COPY } from "./copy";
 import { restSession } from "./fixtures";
@@ -77,6 +78,7 @@ export class RestScene extends Phaser.Scene {
       if (c.after) preloadHandCard(this, c.after, { showRarity: true });
     }
     preloadSpiritArt(this, this.session.run.spirits.map((s) => s.id));
+    preloadStage(this, this.session.run.act);
   }
 
   create() {
@@ -142,7 +144,7 @@ export class RestScene extends Phaser.Scene {
 
   private paint() {
     for (const o of [...this.children.list]) o.destroy();
-    drawBackdrop(this);
+    drawBackdrop(this, this.session.run.act);
     if (this.upgrading) return this.paintUpgrade();
     const s = this.session;
     const heal = s.healPreview();
