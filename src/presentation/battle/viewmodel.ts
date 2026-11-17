@@ -97,8 +97,10 @@ export interface AllyVM {
   hp: number;
   maxHp: number;
   block?: number;
-  /** 이번 적 차례에 받을 피해 합계. HP 막대에 (방어도를 뺀 만큼) 깎일 구간을 보여요 */
+  /** 이번 적 차례에 받을 피해 합계 (막기 전) */
   incoming?: number;
+  /** HP 막대에 깎일 구간: 놓은 카드까지 미리 돌려 본 값. 없으면 받을 피해에서 방어도를 뺀 만큼 */
+  loss?: number;
   statuses: StatusVM[];
   /** 앞열 (유닛 앞에 깃발) */
   front?: boolean;
