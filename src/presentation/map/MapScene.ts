@@ -120,10 +120,10 @@ export class MapScene extends Phaser.Scene {
     drawGold(this, pv?.gold?.to ?? this.vm.gold, pv?.gold ? { was: pv.gold.from } : {}, GOLD_AT);
     drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) });
     if (this.under) {
-      if (this.under.hide !== "path") gather(this, 0, 0, () => this.drawPath()).setAlpha(this.under.path);
+      if (this.under.hide === "mini" || !this.under.hide) gather(this, 0, 0, () => this.drawPath()).setAlpha(this.under.path);
       this.input.enabled = false;
     } else this.drawPath();
-    if (this.under?.hide !== "mini") this.drawMini();
+    if (this.under?.hide === "path" || !this.under?.hide) this.drawMini();
     this.drawParty(pv);
   }
 
@@ -217,7 +217,8 @@ export class MapScene extends Phaser.Scene {
   }
 
   private drawParty(pv?: MapPreview) {
-    let y = this.under?.hide === "mini" ? MINI.y : SLIM.y;
+    const hide = this.under?.hide;
+    let y = hide === "mini" ? MINI.y : hide === "bothc" ? Math.round((FRAME.h - (this.vm.party.length * (SLIM.h + SLIM.gap) - SLIM.gap)) / 2) : SLIM.y;
     this.vm.party.forEach((l, i) => {
       if (l.id !== this.open) {
         const hpTo = pv?.hp[l.id], maxTo = pv?.maxHp[l.id];
