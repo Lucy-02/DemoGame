@@ -30,6 +30,8 @@
   "start_pool": ["fire_fox", "glass_salamander", "magma_ibex", "prism_chameleon"],
   "stat_base": 10,
   "release_duration": 2,
+  "release_cost": 1,
+  "release_ms": 400,
   "vuln_base": 0.25,
   "vuln_focus_step": 0.05,
   "vuln_cap": 0.6,

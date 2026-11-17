@@ -21,7 +21,7 @@ async function start() {
   const params = new URLSearchParams(location.search);
   const screen = params.get("screen");
   const get = (k: string) => params.get(k) ?? undefined;
-  const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" ? screen : undefined;
+  const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "deck" || screen === "map" ? screen : undefined;
   const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform);
   Object.assign(window, { session });
   const game = await startGame("game", {

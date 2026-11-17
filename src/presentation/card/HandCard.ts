@@ -179,10 +179,12 @@ function drawBody(
   else place(scene, top, { t: "image", key: faceKey(c.owner), w: fd, h: fd, round: true }, fx, fy);
 
   // 수치판 (오른쪽 맞춤)
-  const pn = plate(c);
-  const ps = size(pn);
-  const right = x + C.w - C.border - C.plate.right;
-  render(scene, pn, right - ps.w, y + (c.values.length > 1 ? C.plate.yTwo : C.plate.y));
+  if (c.values.length) {
+    const pn = plate(c);
+    const ps = size(pn);
+    const right = x + C.w - C.border - C.plate.right;
+    render(scene, pn, right - ps.w, y + (c.values.length > 1 ? C.plate.yTwo : C.plate.y));
+  }
 
   if (c.mark) {
     const mw = C.mark.padX * 2 + C.mark.icon;

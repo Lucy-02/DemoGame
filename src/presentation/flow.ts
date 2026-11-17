@@ -13,8 +13,10 @@ import { ShopSession } from "../session/shop";
 import { BATTLE_SCENE, type BattleSceneData } from "./battle/BattleScene";
 import { COPY as BATTLE_COPY } from "./battle/copy";
 import { EVENT_SCENE, type EventSceneData } from "./event/EventScene";
+import { DECK_SCENE, type DeckSceneData } from "./deck/DeckScene";
 import { homeVM } from "./home/fromGame";
 import { HOME_SCENE, type HomeSceneData } from "./home/HomeScene";
+import { MAP_SCENE, type MapSceneData } from "./map/MapScene";
 import { LEGACY, LEGACY_FLOW, type LegacyFlow } from "./placeholder";
 import { REST_SCENE, type RestSceneData } from "./rest/RestScene";
 import { RESULT_SCENE, type ResultSceneData } from "./result/ResultScene";
@@ -77,12 +79,15 @@ export class GameFlow implements LegacyFlow {
     this.current = run;
     const phase = run.phase;
     switch (phase.kind) {
-      case "map": return this.go(LEGACY.map);
+      case "map": {
+        const data: MapSceneData = { run: run.run, onEnter: (id) => this.enter(id), onDeck: (scene) => this.deck(scene) };
+        return this.go(MAP_SCENE, data);
+      }
       case "battle": {
         const session = new BattleSession(run.run, phase.enemies);
         const floor = run.run.current?.floor;
         const data: BattleSceneData = {
-          session, onOver: (scene) => this.battleOver(scene, session.outcome()),
+          session, onOver: (scene) => this.battleOver(scene, session.outcome()), onDeck: (scene) => this.deck(scene),
           place: floor === undefined ? undefined : BATTLE_COPY.floor(floor),
         };
         return this.go(BATTLE_SCENE, data);
@@ -136,6 +141,19 @@ export class GameFlow implements LegacyFlow {
       session: new RewardSession(run.run, { kind: "battle", reward: phase.reward }), over: true, onDone: () => this.rewardDone(),
     };
     scene.scene.launch(RESULT_SCENE, data);
+    scene.scene.pause();
+  }
+
+  /** 덱 보기: 지금 화면은 아래에 멈춰 두고 그 위에 창으로 띄워요 (0069 · 0076 15번) */
+  deck(scene: Phaser.Scene) {
+    const data: DeckSceneData = {
+      run: this.need().run,
+      onClose: () => {
+        scene.scene.stop(DECK_SCENE);
+        scene.scene.resume();
+      },
+    };
+    scene.scene.launch(DECK_SCENE, data);
     scene.scene.pause();
   }
 

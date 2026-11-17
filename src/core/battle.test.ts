@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { Battle, type BCard } from "./battle";
 import { stackOf } from "./battle/state";
+import { C } from "./data";
 import { Rng } from "./rng";
 import { Run } from "./run";
 
@@ -55,15 +56,33 @@ describe("문구대로 동작하는 카드 (0022)", () => {
 });
 
 describe("해방 (0036)", () => {
-  it("각성체만, 전투마다 한 번 해방해요", () => {
-    const b = battleWith();
+  it("각성체만, 전투마다 한 번 해방해요. 칸을 쓰고 줄 끝에 놓여 끝나는 시각에 켜져요 (0076)", () => {
+    const b = battleWith("glass_skin");
     const cat = b.spirit(OWNER);
     expect(b.canRelease(OWNER)).toBe(false);
     cat.run = { ...cat.run, stage: "awakened" };
+    const mana = b.mana;
     expect(b.release(OWNER)).toBe(true);
-    expect(cat.release).toBeGreaterThan(0);
-    expect(b.drain().some((e) => e.k === "release")).toBe(true);
+    expect(b.mana).toBe(mana - C.release_cost);
+    expect(b.laneEnd(OWNER)).toBe(C.release_ms);
+    expect(cat.release).toBe(0);
     expect(b.canRelease(OWNER)).toBe(false);
+    // 뒤에 놓은 카드는 해방 뒤에 시작해요
+    b.play(100);
+    expect(b.planned[1].start).toBe(C.release_ms);
+    b.endTurn();
+    const ev = b.drain();
+    expect(ev.findIndex((e) => e.k === "release")).toBeGreaterThanOrEqual(0);
+    expect(ev.findIndex((e) => e.k === "release")).toBeLessThan(ev.findIndex((e) => e.k === "spiritAct" && e.card !== cat.def.release.name));
+    expect(b.canRelease(OWNER)).toBe(false);
+  });
+
+  it("칸이 모자라면 해방하지 못해요", () => {
+    const b = battleWith();
+    const cat = b.spirit(OWNER);
+    cat.run = { ...cat.run, stage: "awakened" };
+    b.mana = C.release_cost - 1;
+    expect(b.release(OWNER)).toBe(false);
   });
 });
 
