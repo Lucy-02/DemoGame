@@ -77,8 +77,14 @@ function createWindow() {
       sandbox: true,
     },
   });
-  // 창 모드에서는 화면 비율대로만 늘어나서 남는 곳이 없어요
-  win.setAspectRatio(BASE.w / BASE.h);
+  // 창 모드에서는 화면 비율대로만 늘어나서 남는 곳이 없어요.
+  // 윈도는 비율을 창틀까지 포함한 바깥 크기에 걸어서, 창틀만큼을 빼고 맞추게 알려 줘요. 비율을 걸 때 바뀐 크기는 기준 크기로 되돌려요
+  if (process.platform === "win32") {
+    const [outerW, outerH] = win.getSize();
+    const [innerW, innerH] = win.getContentSize();
+    win.setAspectRatio(BASE.w / BASE.h, { width: outerW - innerW, height: outerH - innerH });
+    win.setContentSize(BASE.w, BASE.h);
+  } else win.setAspectRatio(BASE.w / BASE.h);
   win.once("ready-to-show", () => win.show());
 
   // 게임 창 밖으로 나가는 탐색은 막고, 외부 링크는 기본 브라우저로 열어요.
