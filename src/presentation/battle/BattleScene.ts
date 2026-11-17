@@ -501,7 +501,7 @@ export class BattleScene extends Phaser.Scene {
         ? this.vm.order.bundles.map((l, k) => (k === held.bundle ? [...l.slice(0, held.i), held.token, ...l.slice(held.i)] : l))
         : this.vm.order.bundles;
       const order = drawOrder(this, {
-        ...this.vm.order, bundles,
+        ...this.vm.order, bundles, bands: held?.bands ?? this.vm.order.bands,
         slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: "plan" as const } : s)),
       });
       if (!f) {
