@@ -44,6 +44,8 @@ export interface AllyTokenVM {
   mark?: "gap" | "held" | "release";
   /** 재생 중 지나감 (흐림) */
   past?: boolean;
+  /** 마지막에 놓은 카드: 오른쪽 위에 되돌리기 배지, 누르면 손패로 돌아와요 (0074 7번) */
+  undo?: boolean;
   tip?: OrderTipVM;
 }
 
