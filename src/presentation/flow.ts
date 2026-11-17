@@ -141,6 +141,7 @@ export class GameFlow implements LegacyFlow {
       onPick: (id) => {
         picked = id;
         garden.dispatch({ kind: "join", id });
+        audioOf(this.game)?.play("join");
       },
       onDone: () => (this.session.joinPending ? this.join(picked, then) : then()),
     };

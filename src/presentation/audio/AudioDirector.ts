@@ -1,6 +1,6 @@
 // 소리 재생 층: 전체 · 음악 · 효과음 세 묶음으로 음량을 나눠요 (0084 1번).
 // 브라우저 규칙 때문에 첫 입력 전에는 소리가 나지 않아요. 파일이 없거나 못 읽으면 조용히 넘어가요.
-import { AUDIO_BASE, nextVariant, type Bus, type MusicId, type SfxId, type SoundBank } from "./sounds";
+import { AUDIO_BASE, admit, nextVariant, type Bus, type MusicId, type SfxId, type SoundBank } from "./sounds";
 
 export type Volumes = Record<Bus, number>;
 
@@ -9,6 +9,8 @@ export class AudioDirector {
   private gains: Record<Bus, GainNode>;
   private buffers = new Map<string, Promise<AudioBuffer | null>>();
   private last = new Map<SfxId, number>();
+  /** 지금 나고 있는 효과음 (난 순서) */
+  private voices: { id: SfxId; source: AudioBufferSourceNode }[] = [];
   private track?: { id: MusicId; gain: GainNode; source?: AudioBufferSourceNode };
 
   constructor(private bank: SoundBank, private fade: number, private random: () => number = Math.random) {
@@ -22,7 +24,7 @@ export class AudioDirector {
     };
     this.gains = { master, music: bus(), sfx: bus() };
     // 효과음은 작아서 미리 풀어 둬요. 음악은 틀 때 읽어요
-    for (const files of Object.values(bank.sfx)) for (const f of files ?? []) void this.load(`sfx/${f}`);
+    for (const e of Object.values(bank.sfx)) for (const f of e?.files ?? []) void this.load(`sfx/${f}`);
   }
 
   /** 첫 입력에 불러요 */
@@ -49,15 +51,30 @@ export class AudioDirector {
   }
 
   play(id: SfxId) {
-    const files = this.bank.sfx[id];
-    if (!files?.length || this.ctx.state !== "running") return;
+    const entry = this.bank.sfx[id];
+    const files = entry?.files;
+    if (!entry || !files?.length || this.ctx.state !== "running") return;
     const i = nextVariant(files.length, this.last.get(id), this.random);
     this.last.set(id, i);
     void this.load(`sfx/${files[i]}`).then((buffer) => {
       if (!buffer) return;
+      // 동시 수를 넘으면 작은 사건부터 빠져요
+      const slot = admit(this.voices.map((v) => v.id), id, this.bank.voices);
+      if (slot === "skip") return;
+      if (slot !== "play") this.voices.splice(slot, 1)[0].source.stop();
       const source = this.ctx.createBufferSource();
       source.buffer = buffer;
-      source.connect(this.gains.sfx);
+      if (entry.detune) source.detune.value = (this.random() * 2 - 1) * entry.detune;
+      const gain = this.ctx.createGain();
+      gain.gain.value = Math.min(1, Math.max(0, entry.gain ?? 1));
+      source.connect(gain).connect(this.gains.sfx);
+      const voice = { id, source };
+      this.voices.push(voice);
+      source.onended = () => {
+        gain.disconnect();
+        const i = this.voices.indexOf(voice);
+        if (i >= 0) this.voices.splice(i, 1);
+      };
       source.start();
     });
   }

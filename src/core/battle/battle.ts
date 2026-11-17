@@ -27,6 +27,36 @@ interface Step {
 
 type Targets = { enemies: BEnemy[]; allies: BSpirit[] };
 
+/** 미리 돌려 본 이번 턴 (받을 피해 미리보기) */
+export interface Forecast {
+  /** 아군마다 적 공격 · 방전으로 받을 피해 합계 (막기 전) */
+  hit: Map<string, number>;
+  /** 아군마다 이번 재생으로 깎일 HP (놓은 방어 · 회복까지 넣은 값) */
+  lost: Map<string, number>;
+  /** 더 놓아 본 카드가 재생될 때 적마다 생긴 일 (적 uid). 그 카드가 재생되지 못하면 없어요 */
+  card?: Map<number, CardOutcome>;
+}
+
+/** 카드 한 장이 재생되는 동안 적 하나에게 생긴 일 */
+export interface CardOutcome {
+  /** 타격마다 준 피해 (막기 전, 때린 순서대로) */
+  hits: number[];
+  /** 그 카드 직전 → 직후 */
+  hp: { from: number; to: number };
+  block: { from: number; to: number };
+  /** 차징이 끊김 */
+  cut: boolean;
+}
+
+/** 미리 돌려 보는 사본의 난수: 운에 맡긴 일은 일어나지 않은 것으로 봐요 (치명 없음). 운을 물었는지만 기억해요 */
+class NoLuck extends Rng {
+  asked = false;
+  override next(): number {
+    this.asked = true;
+    return 1 - Number.EPSILON;
+  }
+}
+
 export class Battle implements Engine {
   spirits: BSpirit[] = [];
   enemies: BEnemy[] = [];
@@ -66,6 +96,11 @@ export class Battle implements Engine {
   /** 숨은 정령이 이번 턴 끌어온 공격 피해 (가장 큰 것) */
   private pulled = new Map<string, number>();
   private nextUid = 10000;
+  /** 미리 돌려 보는 사본에서만 있어요: 아군마다 받은 피해(막기 전)를 모아요 */
+  private tally: Map<string, number> | null = null;
+  /** 미리 돌려 보는 사본에서만: 지켜볼 카드와 그 카드가 재생되는 동안 적마다 생긴 일 */
+  private watch: Planned | null = null;
+  private watched: Map<number, CardOutcome> | null = null;
 
   constructor(
     runSpirits: RunSpirit[],
@@ -394,7 +429,7 @@ export class Battle implements Engine {
   }
 
   freezeEnemy(e: BEnemy, extraMs = 0) {
-    this.emit({ k: "freeze", uid: e.uid });
+    this.emit({ k: "freeze", uid: e.uid, ...this.by() });
     this.delayEnemy(e, C.freeze_delay_ms + extraMs, "빙결");
   }
 
@@ -612,6 +647,16 @@ export class Battle implements Engine {
   /** 턴 종료: 계획한 카드와 적 행동을 시각 순서로 재생해요. 같은 시각이면 아군 먼저 (0036). 고르지 않은 낙하는 사라져요. */
   endTurn() {
     if (this.result !== "ongoing" || this.replaying) return;
+    const left = this.replay();
+    if (!left) return;
+    // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
+    for (const p of left) if (p.card) this.discard.push(p.card);
+    this.planned = [];
+    this.finishTurn(0);
+  }
+
+  /** 이번 턴의 시간축을 재생해요. 전투가 끝나면 거기서 멈추고 null, 아니면 재생하지 못한 카드를 돌려줘요 */
+  private replay(): Planned[] | null {
     this.replaying = true;
     this.stars.choice = null;
     const allies = this.planned.slice().sort((x, y) => x.end - y.end);
@@ -623,19 +668,81 @@ export class Battle implements Engine {
       if (nextAlly && (!nextEnemy || nextAlly.end <= nextEnemy.at)) {
         ai++;
         this.now = nextAlly.end;
-        this.resolvePlanned(nextAlly);
+        if (nextAlly === this.watch) this.observe(() => this.resolvePlanned(nextAlly));
+        else this.resolvePlanned(nextAlly);
       } else {
         nextEnemy.done = true;
         this.now = nextEnemy.at;
         const e = this.enemy(nextEnemy.uid);
         if (!e.dead) this.enemyAct(e);
       }
-      if (this.checkEnd()) return;
+      if (this.checkEnd()) return null;
     }
-    // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
-    for (const p of allies.slice(ai)) if (p.card) this.discard.push(p.card);
-    this.planned = [];
-    this.finishTurn(0);
+    return allies.slice(ai);
+  }
+
+  // ───────────────────────── 미리보기 ─────────────────────────
+
+  /**
+   * 지금 놓아 둔 카드로 이번 턴을 사본에서 끝까지 재생해 보고, 아군마다 받을 피해를 돌려줘요. 이 전투는 바뀌지 않아요.
+   * 실제 재생과 같은 코드를 타요. 다만 운은 몰라요: 치명은 없는 것으로, 무작위로 고르는 대상(적 공격 · 아군 카드)은 아무도 맞지 않는 것으로 봐요 (0072 4번, 0123).
+   * play를 주면 그 카드를 사본에 더 놓아 보고, 그 카드가 재생될 때 적마다 생긴 일도 돌려줘요 (조준 결과 미리보기).
+   */
+  forecast(play?: { uid: number; target?: Ref }): Forecast {
+    const out: Forecast = { hit: new Map(), lost: new Map() };
+    if (this.result !== "ongoing" || this.replaying) return out;
+    const f = this.fork();
+    if (play) {
+      if (!f.play(play.uid, play.target)) return out;
+      f.watch = f.planned[f.planned.length - 1];
+    }
+    f.replay();
+    out.hit = f.tally ?? out.hit;
+    if (f.watched) out.card = f.watched;
+    for (const s of this.aliveSpirits()) {
+      const lost = s.hp - f.spirit(s.id).hp;
+      if (lost > 0) out.lost.set(s.id, lost);
+    }
+    return out;
+  }
+
+  /** 지켜보는 카드가 재생되는 동안 적마다 생긴 일을 적어요 (피해 · 끊김 이벤트에서) */
+  private observe(run: () => void) {
+    const before = new Map(this.enemies.map((e) => [e.uid, { hp: e.hp, block: e.block }]));
+    const from = this.events.length;
+    run();
+    const out = new Map<number, CardOutcome>();
+    const of = (uid: number) => {
+      const was = before.get(uid)!, e = this.enemy(uid);
+      if (!out.has(uid)) out.set(uid, { hits: [], hp: { from: was.hp, to: e.hp }, block: { from: was.block, to: e.block }, cut: false });
+      return out.get(uid)!;
+    };
+    for (const ev of this.events.slice(from)) {
+      if (ev.k === "damage" && ev.ref.side === "e") of(ev.ref.uid).hits.push(ev.amount + ev.blocked);
+      if (ev.k === "cancel" && ev.reason === "break") of(ev.uid).cut = true;
+    }
+    // 피해 없이 방어도 · HP만 바뀐 적도 넣어요
+    for (const e of this.enemies) if (e.hp !== before.get(e.uid)!.hp || e.block !== before.get(e.uid)!.block) of(e.uid);
+    this.watched = out;
+  }
+
+  /** 전투 상태의 사본. 턴 흐름 목록은 옮기지 않아서 재생(replay)만 할 수 있어요 */
+  private fork(): Battle {
+    const skip = ["rng", "events", "turnStartSteps", "turnEndSteps", "roundEndSteps"];
+    const state = Object.fromEntries(Object.entries(this).filter(([k, v]) => !skip.includes(k) && typeof v !== "function"));
+    return Object.assign(Object.create(Battle.prototype) as Battle, structuredClone(state), { rng: new NoLuck(0), events: [], tally: new Map<string, number>() });
+  }
+
+  /**
+   * 이 정령의 카드가 재생될 때의 모습 (카드 숫자를 미리 보여 줄 때만 써요).
+   * 줄에 놓아 둔 해방이 그 카드보다 먼저 켜지면 해방 중으로 봐요. before: 이미 놓은 카드면 그 카드
+   */
+  casting(s: BSpirit, before?: Planned): BSpirit {
+    if (s.release > 0) return s;
+    const mine = this.planned.filter((p) => p.owner === s.id);
+    const i = before ? mine.indexOf(before) : -1;
+    const ahead = i < 0 ? mine : mine.slice(0, i);
+    return ahead.some((p) => !p.card) ? { ...s, release: C.release_duration } : s;
   }
 
   /** 턴 끝 처리(from번째부터) → 손 버리기 → 라운드 끝 → 다음 턴. 품을 카드를 물어야 하면 품기 직전에 멈춰요 */
@@ -680,7 +787,11 @@ export class Battle implements Engine {
   pickTargets(rule: EnemyTargetRule): BSpirit[] {
     const alive = this.aliveSpirits();
     if (!alive.length) return [];
-    return runStages(ENEMY_TARGET_STAGES, { b: this, rule, alive, picked: null }).picked ?? [];
+    if (this.rng instanceof NoLuck) this.rng.asked = false;
+    const picked = runStages(ENEMY_TARGET_STAGES, { b: this, rule, alive, picked: null }).picked ?? [];
+    // 미리 돌려 볼 때: 운으로 고른 대상은 누가 맞을지 몰라요
+    if (this.rng instanceof NoLuck && this.rng.asked && alive.length > 1) return [];
+    return picked;
   }
 
   /** 적 공격 1타: 피해 파이프라인 → 피해 받기 → 맞은 뒤 반응(반격). 숨은 정령이 맞으면 받아낸 것으로 표시해요. */
@@ -782,6 +893,7 @@ export class Battle implements Engine {
     for (const z of this.zones) {
       const src = this.enemy(z.uid);
       if (src.dead || p.end < z.from || p.end >= z.to) continue;
+      this.count(owner, z.dmg);
       this.hurtSpirit(owner, z.dmg, false, { src: "방전" });
       if (owner.downed) {
         this.sealed.push(c);
@@ -1043,7 +1155,7 @@ export class Battle implements Engine {
       return;
     }
     const r = runStages<Incoming>(INCOMING_STAGES, { b: this, target: e, attacker: null, dmg, pierce, wall: 0, wallKeeper: null, blocked: 0, real: 0 });
-    this.emit({ k: "damage", ref: refOf(e), amount: r.real, blocked: r.blocked, ...extra });
+    this.emit({ k: "damage", ref: refOf(e), amount: r.real, blocked: r.blocked, ...extra, ...this.by() });
     if (e.hp > 0 && e.charging && !e.gapOpened && this.currentMove(e).big) {
       e.chargeDmg += r.real;
       if (e.chargeDmg >= e.maxHp * C.gap.burst_pct) this.openGap(e, "burst");
@@ -1066,11 +1178,23 @@ export class Battle implements Engine {
     }
   }
 
+  /** 무작위 적 하나. 미리 돌려 볼 때 적이 여럿이면 누가 맞을지 몰라서 고르지 않아요 */
+  randomEnemy(): BEnemy | undefined {
+    const alive = this.aliveEnemies();
+    if (!alive.length || (this.rng instanceof NoLuck && alive.length > 1)) return undefined;
+    return this.rng.pick(alive);
+  }
+
+  private count(s: BSpirit, dmg: number) {
+    this.tally?.set(s.id, (this.tally.get(s.id) ?? 0) + dmg);
+  }
+
   hurtSpirit(s: BSpirit, dmg: number, pierce: boolean, opts: HurtOptions = {}) {
+    if (opts.attacker) this.count(s, dmg);
     const r = runStages<Incoming>(INCOMING_STAGES, {
       b: this, target: s, attacker: opts.attacker ?? null, dmg, pierce, wall: 0, wallKeeper: null, blocked: 0, real: 0,
     });
-    this.emit({ k: "damage", ref: refOf(s), amount: r.real, blocked: r.blocked, ...(r.wall ? { wall: r.wall } : {}) });
+    this.emit({ k: "damage", ref: refOf(s), amount: r.real, blocked: r.blocked, ...(r.wall ? { wall: r.wall } : {}), ...(r.wallKeeper ? { keeper: r.wallKeeper.id } : {}) });
     if (r.wallKeeper && opts.attacker) {
       const keeper = r.wallKeeper;
       this.log(`${keeper.def.name}의 벽이 ${r.wall} 막음`);
@@ -1219,6 +1343,11 @@ export class Battle implements Engine {
       return true;
     }
     return false;
+  }
+
+  /** 지금 재생 중인 카드의 주인 (이벤트의 출처 표시). 카드 밖에서 생긴 일(화상 · 턴 끝)에는 없어요 */
+  private by(): { by?: string } {
+    return this.resolving ? { by: this.resolving.owner } : {};
   }
 
   log(text: string) {

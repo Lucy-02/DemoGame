@@ -146,13 +146,16 @@ export class GameSession {
   }
 
   /**
-   * 전투가 끝났어요. 이겼으면 출전한 정령이 경험을, 정원이 재료를 받아요 (져도 이긴 만큼은 남아요).
+   * 전투가 끝났어요. 이겼으면 출전한 정령이 경험과 자람 조건을, 정원이 재료를 받아요 (져도 이긴 만큼은 남아요).
    * 보스를 이기거나 지면 판이 그 자리에서 닫혀요. 끝난 판은 run.phase가 over인 채로 돌려받아 결과를 그려요.
    */
   finishBattle(outcome: BattleOutcome): BattleWin | undefined {
     const run = this.need();
     const win = run.finishBattle(outcome);
-    if (win && !this.trialOpts) this.garden.dispatch({ kind: "grantBattle", party: win.party, tier: win.tier });
+    if (win && !this.trialOpts) {
+      this.garden.dispatch({ kind: "grantBattle", party: win.party, tier: win.tier });
+      if (win.deeds) this.garden.dispatch({ kind: "deeds", tally: win.deeds });
+    }
     if (run.phase.kind === "over") this.close(run);
     return win;
   }
