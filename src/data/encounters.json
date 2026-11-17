@@ -14,5 +14,20 @@
   { "id": "x_imp", "tier": "elite", "element": "fire", "enemies": ["cinder_imp"] },
   { "id": "b_grimbark", "tier": "boss", "element": "forest", "enemies": ["grimbark"] },
   { "id": "b_wildfire", "tier": "boss", "element": "fire", "enemies": ["wildfire"] },
-  { "id": "b_gale", "tier": "boss", "element": "wind", "enemies": ["gale"] }
+  { "id": "b_gale", "tier": "boss", "element": "wind", "enemies": ["gale"] },
+  { "id": "e2_mole", "tier": "normal", "pool": "weak", "act": 2, "element": "earth", "enemies": ["mole", "firefly_swarm"] },
+  { "id": "e2_bugs", "tier": "normal", "pool": "weak", "act": 2, "element": "electric", "enemies": ["spark_bug", "spark_bug"] },
+  { "id": "e2_shard", "tier": "normal", "pool": "weak", "act": 2, "element": "light", "enemies": ["mirror_shard", "firefly_swarm"] },
+  { "id": "e2_pile", "tier": "normal", "pool": "strong", "act": 2, "element": "earth", "enemies": ["rock_pile", "mole"] },
+  { "id": "e2_moles", "tier": "normal", "pool": "strong", "act": 2, "element": "earth", "enemies": ["mole", "mole"] },
+  { "id": "e2_rod", "tier": "normal", "pool": "strong", "act": 2, "element": "electric", "enemies": ["spark_bug", "lightning_rod", "spark_bug"] },
+  { "id": "e2_rod_armor", "tier": "normal", "pool": "strong", "act": 2, "element": "electric", "enemies": ["lightning_rod", "wandering_armor"] },
+  { "id": "e2_mirrors", "tier": "normal", "pool": "strong", "act": 2, "element": "light", "enemies": ["mirror_shard", "mirror_shard"] },
+  { "id": "e2_armor", "tier": "normal", "pool": "strong", "act": 2, "element": "light", "enemies": ["wandering_armor", "firefly_swarm"] },
+  { "id": "x2_turtle", "tier": "elite", "act": 2, "element": "earth", "enemies": ["quake_turtle"] },
+  { "id": "x2_bird", "tier": "elite", "act": 2, "element": "electric", "enemies": ["thunder_bird"] },
+  { "id": "x2_lantern", "tier": "elite", "act": 2, "element": "light", "enemies": ["firefly_swarm", "lantern_keeper", "firefly_swarm"] },
+  { "id": "b2_landslide", "tier": "boss", "act": 2, "element": "earth", "enemies": ["landslide"] },
+  { "id": "b2_storm", "tier": "boss", "act": 2, "element": "electric", "enemies": ["thunderstorm"] },
+  { "id": "b2_noon", "tier": "boss", "act": 2, "element": "light", "enemies": ["high_noon"] }
 ]

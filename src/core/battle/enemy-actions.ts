@@ -105,6 +105,11 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
       }
     },
   },
+  burrow: {
+    kind: "defend",
+    text: () => "땅속으로 숨음",
+    run: (b, e) => b.addStatus(e, "burrow", 1),
+  },
   swapFront: {
     kind: "debuff",
     text: () => "앞열 바꿈",

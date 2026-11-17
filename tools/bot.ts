@@ -4,6 +4,7 @@
 import type { Battle, BCard } from "../src/core/battle";
 import { C, cardDef } from "../src/core/data";
 import type { Rng } from "../src/core/rng";
+import { readyMult } from "../src/core/battle/statuses";
 import { scale } from "../src/core/stats";
 import type { CardOp } from "../src/core/types";
 
@@ -71,7 +72,9 @@ function scoreCard(b: Battle, c: BCard, plan: Plan, enemy?: Enemy, ally?: Spirit
     for (const op of ops) {
       switch (op.op) {
         case "damage": {
-          const per = scale(op.value, power) * (op.hits ?? 1);
+          // 받아칠 기회가 있으면 이 정령의 다음 카드가 세져요
+          const ready = owner.playedThisTurn === 0 && (owner.status.ready?.n ?? 0) > 0 ? readyMult(owner.status.ready!.strength) : 1;
+          const per = scale(op.value, power) * (op.hits ?? 1) * ready;
           for (const e of def.target === "enemy" || def.target === "allEnemies" ? enemies : enemies.slice(0, 1)) {
             const left = e.hp + e.block - (plan.dealt.get(e.uid) ?? 0);
             if (left <= 0) continue;
@@ -104,7 +107,8 @@ function scoreCard(b: Battle, c: BCard, plan: Plan, enemy?: Enemy, ally?: Spirit
           break;
         }
         case "hide":
-          if (inTime) score += Math.max(0, ...b.aliveSpirits().map((s) => unblocked(plan, s))) * W.hide;
+          // 끌어온 공격을 절반만 받고, 다음 턴 카드가 세져요
+          if (inTime && plan.firstHit < Infinity) score += Math.max(0, ...b.aliveSpirits().map((s) => unblocked(plan, s))) * W.hide + W.setup;
           break;
         case "draw":
           score += op.value * W.draw;
@@ -146,6 +150,13 @@ function note(b: Battle, c: BCard, plan: Plan, enemy?: Enemy, ally?: Spirit) {
   }
 }
 
+/** 카드가 끝나는 시각에 땅 위에 있는 적. 모두 땅속이면 살아 있는 적 전부 */
+function reachable(b: Battle, c: BCard): Enemy[] {
+  const end = b.laneEnd(c.owner) + b.cardTime(c);
+  const up = b.aliveEnemies().filter((e) => !b.buriedAt(e, end));
+  return up.length ? up : b.aliveEnemies();
+}
+
 export function smartPlayTurn(b: Battle, _rng: Rng) {
   for (const s of b.aliveSpirits()) if (b.canRelease(s.id)) b.release(s.id);
   while (b.stars.choice) b.chooseFall(["meteor", "comet", "meteor_shower", "star_veil"]);
@@ -156,11 +167,14 @@ export function smartPlayTurn(b: Battle, _rng: Rng) {
       if (!b.canPlay(c).ok) continue;
       const need = b.needsTarget(c);
       const options: { target: Target; enemy?: Enemy; ally?: Spirit }[] =
-        need === "enemy" ? b.aliveEnemies().map((e) => ({ target: { side: "e" as const, uid: e.uid }, enemy: e }))
+        need === "enemy" ? reachable(b, c).map((e) => ({ target: { side: "e" as const, uid: e.uid }, enemy: e }))
         : need === "ally" ? b.aliveSpirits().map((s) => ({ target: { side: "s" as const, id: s.id }, ally: s }))
         : [{ target: undefined }];
       for (const o of options) {
-        const score = scoreCard(b, c, plan, o.enemy, o.ally) / Math.max(0.5, b.cardCost(c));
+        // 방전 칸 안에서 끝나는 카드는 뒤로 미뤄요
+        const end = b.laneEnd(c.owner) + b.cardTime(c);
+        const shocked = b.zones.some((z) => !b.enemy(z.uid).dead && end >= z.from && end < z.to);
+        const score = (scoreCard(b, c, plan, o.enemy, o.ally) / Math.max(0.5, b.cardCost(c))) * (shocked ? 0.3 : 1);
         if (!best || score > best.score) best = { c, score, ...o };
       }
     }

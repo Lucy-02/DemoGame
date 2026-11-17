@@ -29,6 +29,8 @@ export interface RunOptions {
   unlockAll: boolean;
   /** 오늘 센 기운을 정해 두고 시작해요 (시험 · 자동 플레이). 없으면 뽑아요 */
   strongElement?: Element;
+  /** 몇 막까지 가는지. 없으면 constants.acts_enabled (화면이 2막 규칙을 보여 줄 때까지 1) */
+  acts?: number;
 }
 
 /** 정원 없이 "성체로 시작"할 때의 레벨 (성체 문 = Lv4, growth.json evolutions) */
@@ -80,6 +82,7 @@ export interface RunSave {
   strongElement: Element;
   recentEncounters: string[];
   normalBattles: number;
+  act?: number;
   strongEliteMet?: boolean;
   bossPeeked?: boolean;
   bossGapBonus?: number;
@@ -99,6 +102,8 @@ export class Run {
   map: Map<string, MapNode> = new Map();
   current: MapNode | null = null;
   visited: string[] = [];
+  /** 지금 막 (1부터) */
+  act = 1;
   /** 오늘 센 기운: 이 막의 세 기운 중 하나. 그 기운의 편성이 자주 나오고 보스도 그 기운이에요 (0062) */
   strongElement: Element;
   /** 최근에 만난 편성 (같은 편성은 바로 다시 안 나와요) */
@@ -152,6 +157,33 @@ export class Run {
     for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
   }
 
+  /** 이 판의 마지막 막 */
+  get lastAct(): number {
+    return Math.min(this.opts.acts ?? C.acts_enabled, C.acts.length);
+  }
+
+  hasNextAct(): boolean {
+    return this.act < this.lastAct;
+  }
+
+  /** 보스를 이기고 다음 막으로: 새 지도와 그 막의 센 기운을 뽑고, 막에 묶인 표시를 지우고, 조금 회복해요 */
+  nextAct() {
+    if (!this.hasNextAct()) throw new Error("다음 막이 없어요");
+    this.act++;
+    this.map = new Map();
+    this.current = null;
+    this.visited = [];
+    this.generateMap();
+    this.strongElement = this.rng.pick(C.acts[this.act - 1].elements as Element[]);
+    for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
+    this.recentEncounters = [];
+    this.normalBattles = 0;
+    this.strongEliteMet = false;
+    this.bossPeeked = false;
+    this.bossGapBonus = 0;
+    this.healAllPct(C.act_heal_pct);
+  }
+
   /** 저장용 값. JSON으로 바꿔도 돼요 */
   save(): RunSave {
     const copy = <T>(v: T): T => structuredClone(v);
@@ -159,7 +191,7 @@ export class Run {
       version: RUN_SAVE_VERSION, opts: copy(this.opts), rng: this.rng.state,
       spirits: copy(this.spirits), deck: copy(this.deck), received: copy(this.received), nextUid: this.nextUid,
       gold: this.gold, frontId: this.frontId, map: copy([...this.map.values()]), current: this.current?.id ?? null, visited: [...this.visited],
-      strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet, bossPeeked: this.bossPeeked, bossGapBonus: this.bossGapBonus,
+      act: this.act, strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet, bossPeeked: this.bossPeeked, bossGapBonus: this.bossGapBonus,
       removals: this.removals, bossDefeated: this.bossDefeated,
     };
   }
@@ -181,6 +213,7 @@ export class Run {
     run.strongElement = s.strongElement;
     run.recentEncounters = [...s.recentEncounters];
     run.normalBattles = s.normalBattles;
+    run.act = s.act ?? 1;
     run.strongEliteMet = s.strongEliteMet ?? false;
     run.bossPeeked = s.bossPeeked ?? false;
     run.bossGapBonus = s.bossGapBonus ?? 0;
@@ -290,7 +323,7 @@ export class Run {
   pickEncounter(type: "battle" | "elite" | "boss"): EncounterDef {
     const tier = type === "battle" ? "normal" : type;
     const rule = C.run_pool;
-    let pool = ENCOUNTERS.filter((e) => e.tier === tier);
+    let pool = ENCOUNTERS.filter((e) => e.tier === tier && (e.act ?? 1) === this.act);
     if (tier === "normal") {
       const want = this.normalBattles < rule.weak_battles ? "weak" : "strong";
       pool = pool.filter((e) => e.pool === want);
@@ -318,7 +351,7 @@ export class Run {
 
   /** 이 막의 보스 편성. 지도에 처음부터 보여 줘요 */
   bossEncounter(): EncounterDef {
-    const bosses = ENCOUNTERS.filter((e) => e.tier === "boss");
+    const bosses = ENCOUNTERS.filter((e) => e.tier === "boss" && (e.act ?? 1) === this.act);
     return bosses.find((e) => e.element === this.strongElement) ?? bosses[0];
   }
 

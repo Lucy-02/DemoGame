@@ -103,7 +103,12 @@ export class RunSession {
       return undefined;
     }
     const win = { party: this.party, tier };
-    if (tier === "boss") {
+    if (tier === "boss" && this.run.hasNextAct()) {
+      // 막 사이: 정예와 같은 보상을 받고 다음 막 지도로 가요
+      const reward = this.run.rollBattleReward("elite");
+      this.run.nextAct();
+      this.set({ kind: "reward", reward });
+    } else if (tier === "boss") {
       this.run.bossDefeated = true;
       this.set({ kind: "over", victory: true });
     } else {
