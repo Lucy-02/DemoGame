@@ -177,8 +177,11 @@ export interface BattleVM {
 
 /** 재생 한 걸음: 행동한 유닛과, 그 행동으로 유닛마다 뜬 수 (일어난 순서대로) */
 export interface ActedVM {
+  /** 없으면 행동자 없는 걸음 (턴 끝 효과) */
   actor?: UnitRef;
   pops: PopVM[];
+  /** 이 걸음에서 바뀐 유닛의 바뀌기 전 값. 맞는 때까지는 이 값으로 보여요 */
+  was?: { ref: UnitRef; hp: number; block?: number }[];
 }
 
 /** 유닛 머리 위에 잠깐 뜨는 알약. damage = HP가 깎임, heal = 회복, block = 방어도 얻음 */

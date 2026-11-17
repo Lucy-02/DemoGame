@@ -208,6 +208,8 @@ export type BattleEvent =
   | { k: "charge"; uid: number; move: string }
   | { k: "enemyAct"; uid: number; move: string }
   | { k: "spiritAct"; id: string; card: string }
+  /** 시간축 재생이 끝나고 턴 끝 처리(화상 등)가 시작돼요. 이 뒤의 피해는 누구의 행동도 아니에요 */
+  | { k: "turnEnd" }
   | { k: "release"; id: string }
   | { k: "releaseEnd"; id: string }
   | { k: "downed"; id: string }
