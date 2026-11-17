@@ -4,10 +4,18 @@
 import { GardenSession } from "./garden";
 import { RunSession, type BattleOutcome, type BattleWin, type RunSaveFile } from "./run";
 import { C } from "../core/data";
-import { defaultFront } from "../core/garden";
+import { defaultFront, type Garden } from "../core/garden";
 import { Rng } from "../core/rng";
-import type { RunOptions } from "../core/run";
+import type { Run, RunOptions } from "../core/run";
 import type { Element } from "../core/types";
+
+/** 끝난 판 하나 (판 결과 화면, 0046). before = 떠날 때의 정원, after = 판을 닫은 뒤의 정원 */
+export interface RunRecord {
+  run: Run;
+  victory: boolean;
+  before: Garden;
+  after: Garden;
+}
 
 /** platform 저장 가운데 세션이 쓰는 것만 */
 export interface SaveStore {
@@ -23,6 +31,7 @@ export type TrialOptions = Omit<RunOptions, "seed" | "garden">;
 
 export class GameSession {
   private _run?: RunSession;
+  private _last?: RunRecord;
   private writes: Promise<void> = Promise.resolve();
 
   private constructor(
@@ -48,6 +57,11 @@ export class GameSession {
 
   static trial(opts: TrialOptions, newSeed: () => number = randomSeed): GameSession {
     return new GameSession(GardenSession.fresh(newSeed()), undefined, newSeed, opts);
+  }
+
+  /** 마지막으로 끝난 판 (판 결과 화면이 그려요) */
+  get lastRun(): RunRecord | undefined {
+    return this._last;
   }
 
   /** 진행 중인 판 (없으면 undefined) */
@@ -106,7 +120,10 @@ export class GameSession {
    * 장비 남기기(keepEquipment)는 런 결과 화면(0046, Lucy 결정 대기)에서 고르므로 아직 부르지 않아요: 판에서 얻은 장비는 사라지고 정원의 장비는 그대로예요.
    */
   private close(run: RunSession) {
+    const before = run.run.opts.garden ?? this.garden.state;
     if (!this.trialOpts) this.garden.dispatch({ kind: "endRun", received: run.run.receivedBySpirit() });
+    const victory = run.phase.kind === "over" && run.phase.victory;
+    this._last = { run: run.run, victory, before, after: this.garden.state };
     this._run = undefined;
     if (this.store) this.queue(() => this.store!.remove(SAVE_KEYS.run));
   }

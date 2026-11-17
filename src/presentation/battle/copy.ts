@@ -11,6 +11,13 @@ export const COPY = {
   playing: "재생 중",
   maxPrefix: "/",
   endTurn: "턴 종료",
+  /** 가운데 고르기 창 (0075). 제목은 명사형, 버튼은 행동 이름 */
+  pick: {
+    fall: (n: number) => `낙하 ${n}장 고르기`,
+    hold: (n: number) => `품을 카드 ${n}장 고르기`,
+    showField: "필드 보기",
+    confirmHold: "품기",
+  },
   // 기호 풀이 (TEXT_RULES 4절 라벨: 명사구). 상태 풀이는 이름 + 수만: 효과 문장은 정본 문구가 생기면 붙여요
   element: "속성",
   block: "방어도",

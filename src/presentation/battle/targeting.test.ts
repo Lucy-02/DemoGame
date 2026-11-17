@@ -48,4 +48,12 @@ describe("대상 고르기", () => {
     const noOutcome = focusFor("drops", drops, { side: "enemy", i: 0 }, counts);
     expect(dimmed(noOutcome, { side: "ally", i: 2 })).toBe(true);
   });
+
+  it("only가 있으면 그 캐릭터만 고를 수 있어요 (해방 카드)", () => {
+    const release: PlayVM = { target: { kind: "pick", side: "ally", only: 2 } };
+    expect(focusFor("r", release, { side: "ally", i: 2 }, counts).ready).toEqual({ target: { side: "ally", i: 2 } });
+    const other = focusFor("r", release, { side: "ally", i: 0 }, counts);
+    expect(other.ready).toBeUndefined();
+    expect(other.cand).toEqual([{ side: "ally", i: 2 }]);
+  });
 });

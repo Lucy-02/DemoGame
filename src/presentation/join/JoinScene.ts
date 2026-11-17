@@ -10,7 +10,7 @@ import { cardWithFace } from "../run/cards";
 import { drawBackdrop } from "../run/backdrop";
 import { FRAME, GRID } from "../run/layout";
 import { faceTexture, preloadSpiritArt } from "../spiritArt";
-import { P, text } from "../spirits/views/parts";
+import { P, plateStyle, text } from "../spirits/views/parts";
 import { withAlpha } from "../style/color";
 import { box, circle } from "../style/draw";
 import { cubicBezier, ms } from "../style/ease";
@@ -291,7 +291,8 @@ function drawPersonalityTip(scene: Phaser.Scene, c: JoinCandVM, r: Rect) {
 function drawCta(scene: Phaser.Scene, label: string, on: boolean, click: () => void): Phaser.GameObjects.Container {
   const node: BoxNode = {
     t: "row", h: CTA.h, radius: CTA.radius, pad: [0, CTA.padX, 0, CTA.padX], justify: "center", align: "center",
-    style: on ? { fill: P.veil["16"], ring: { width: CTA.ring, color: P.veil["50"] } } : { fill: P.veil["04"], ring: { width: CTA.ring, color: P.glassLine } },
+    // 정본 버튼 판 (0054 밝은 유리 판). 꺼지면 테만 + 흐린 글자
+    style: plateStyle(on),
     children: [text(label, T.cta, on ? P.ink : P.ink3Spirit)],
   };
   const s = size(node);

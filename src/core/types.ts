@@ -179,6 +179,8 @@ export interface CardData {
   unlock: string;
   /** 갈래 표시 (0027). 이 카드를 받으면 주인 정령의 이 갈래 쪽으로 세요. 갈래 id는 growth.json evolutions의 branch */
   branch?: string;
+  /** 강화한 뒤의 효과 (0080). 없으면 숫자 효과마다 C.card_upgrade 규칙으로 올려요. 카드마다 손으로 값을 줄 때만 써요 */
+  upgrade?: CardOp[];
 }
 
 /** 게임이 쓰는 카드 = 데이터 + 지금 언어의 문구 */
@@ -258,8 +260,14 @@ export type EventOutcome =
   | { type: "damageAll"; value: number }
   | { type: "damageFront"; value: number }
   | { type: "cardReward"; rarity?: Rarity }
+  /** 덱에서 고른 카드 한 장: 빼기 · 강화(0080) · 복제. 이 셋은 고르기를 마쳐야 선택지 전체가 적용돼요 */
   | { type: "removeCard" }
+  | { type: "upgradeCard" }
+  | { type: "duplicateCard" }
   | { type: "maxHpAll"; value: number };
+
+/** 덱에서 카드를 골라야 하는 이벤트 결과 */
+export type DeckPickOutcome = Extract<EventOutcome, { type: "removeCard" | "upgradeCard" | "duplicateCard" }>["type"];
 
 export interface EventDef {
   id: string;
@@ -273,6 +281,8 @@ export interface DeckCard {
   uid: number;
   cardId: string;
   owner: string;
+  /** 휴식·이벤트에서 강화했어요 (0080). 전투에는 강화한 카드 id(`<id>+`)로 들고 가요 */
+  upgraded?: boolean;
 }
 
 /** 성장 단계 (결정 0021) */

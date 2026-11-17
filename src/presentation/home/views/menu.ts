@@ -4,7 +4,7 @@ import { tokens } from "../../../design/tokens";
 import { faceTexture } from "../../spiritArt";
 import { box } from "../../style/draw";
 import { render, type BoxNode, type Node } from "../../style/flex";
-import { P, glass, text } from "../../spirits/views/parts";
+import { P, glass, plateStyle, text } from "../../spirits/views/parts";
 import { COPY } from "../copy";
 import { LOGO, MENU, PRIMARY } from "../layout";
 import type { HomeBadge, HomeItemVM, HomePrimaryVM } from "../viewmodel";
@@ -59,7 +59,7 @@ export function drawItem(scene: Phaser.Scene, item: HomeItemVM, i: number, hover
 }
 
 /** 강조 줄 채움: 밝은 유리 판 (Lucy 2026-11-13, 보라 채움은 기각). 크기로만 무게를 줘요 */
-const TONE = { style: { fill: P.veil["09"], ring: { width: PRIMARY.ring, color: P.veil["50"] } }, ink: P.ink };
+const TONE = { style: plateStyle(true), ink: P.ink };
 
 /** 메뉴 맨 위 강조 줄. 이어하기면 함께 간 정령 얼굴과 층을 붙여요 */
 export function drawPrimary(scene: Phaser.Scene, vm: HomePrimaryVM, onClick?: () => void) {

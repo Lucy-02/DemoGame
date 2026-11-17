@@ -20,9 +20,9 @@ export const CAND = {
  *  성격 칩과 새 카드 칩이 같은 조각이에요 (0078 고칠 점 4) */
 export const CHIP = { h: 30, radius: 15, padX: 12, gap: 6, ring: 1, icon: 16 };
 
-/** .cta 아래 38 가운데, 높이 52 최소 폭 200 padding 0 30 radius 12 · 밝은 유리 판 veil .16 테 veil .5 · 꺼짐 veil .04 테 glass-line
+/** .cta 아래 38 가운데, 높이 52 최소 폭 200 padding 0 30 radius 12 · 판은 정본 plateStyle(0054 밝은 유리 판)
  *  .focus 바깥 4 떨어진 테 2 ink2 */
-export const CTA = { bottom: 38, h: 52, minW: 200, padX: 30, radius: 12, ring: 1, focus: { width: 2, offset: 4 } };
+export const CTA = { bottom: 38, h: 52, minW: 200, padX: 30, radius: 12, focus: { width: 2, offset: 4 } };
 
 /** 연달아 둘째 깃들기에만 (0078 고칠 점 3): .pips 위 28 가운데 gap 12 · 지름 38 · 지금 칸 테 2 자두빛 + 바깥 4 자두빛 .18 · 잇는 선 28×1 */
 export const PIPS = { top: 28, d: 38, gap: 12, line: 28, ring: 2, glow: 4, glowAlpha: 0.18, faceAlpha: 0.85 };

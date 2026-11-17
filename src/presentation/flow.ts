@@ -5,19 +5,26 @@ import * as Phaser from "phaser";
 import type { Run } from "../core/run";
 import type { GameSession } from "../session/game";
 import { BattleSession } from "../session/battle";
+import { EventSession } from "../session/event";
+import { RestSession } from "../session/rest";
 import { RewardSession } from "../session/reward";
 import type { BattleOutcome, RunSession } from "../session/run";
 import { ShopSession } from "../session/shop";
 import { BATTLE_SCENE, type BattleSceneData } from "./battle/BattleScene";
 import { COPY as BATTLE_COPY } from "./battle/copy";
-import { departVM } from "./depart/fromGarden";
-import { DEPART_SCENE, type DepartSceneData } from "./depart/DepartScene";
+import { EVENT_SCENE, type EventSceneData } from "./event/EventScene";
+import { DECK_SCENE, type DeckSceneData } from "./deck/DeckScene";
 import { homeVM } from "./home/fromGame";
 import { HOME_SCENE, type HomeSceneData } from "./home/HomeScene";
+import { MAP_SCENE, type MapSceneData } from "./map/MapScene";
+import { departVM } from "./depart/fromGarden";
+import { DEPART_SCENE, type DepartSceneData } from "./depart/DepartScene";
 import { joinVM } from "./join/fromGarden";
 import { JOIN_SCENE, type JoinSceneData } from "./join/JoinScene";
 import { LEGACY, LEGACY_FLOW, type LegacyFlow } from "./placeholder";
+import { REST_SCENE, type RestSceneData } from "./rest/RestScene";
 import { RESULT_SCENE, type ResultSceneData } from "./result/ResultScene";
+import { RUN_END_SCENE, type RunEndSceneData } from "./runEnd/RunEndScene";
 import { SHOP_SCENE, type ShopSceneData } from "./shop/ShopScene";
 import { SPIRITS_SCENE, type SpiritsSceneData } from "./spirits/SpiritsScene";
 
@@ -68,12 +75,13 @@ export class GameFlow implements LegacyFlow {
 
   /** 떠나기. 정령이 둘 이상이면 메인 화면 위에 출전 준비를 띄워 앞열을 정하고 떠나요 (0076 14) */
   depart() {
+    // 판 결과의 다시 떠나기: 깃들기를 먼저 고르고 이어서 떠나요
+    if (!this.opts.trial && this.session.joinPending) return this.join(undefined, () => this.depart());
     const garden = this.session.garden.state;
     if (this.opts.trial || garden.spirits.length < 2) {
       this.session.startRun();
       return this.resume();
     }
-    if (this.session.joinPending) return this.join();
     const plan = this.session.planRun();
     const data: DepartSceneData = {
       vm: departVM(garden, plan),
@@ -96,7 +104,7 @@ export class GameFlow implements LegacyFlow {
   }
 
   /** 깃들기: 판 끝에 꼭 골라요. 둘이면 연달아 골라요 (0076 9 · 10). prev = 바로 앞에 고른 정령 */
-  private join(prev?: string) {
+  private join(prev?: string, then: () => void = () => this.home()) {
     const garden = this.session.garden;
     let picked: string | undefined;
     const data: JoinSceneData = {
@@ -105,7 +113,7 @@ export class GameFlow implements LegacyFlow {
         picked = id;
         garden.dispatch({ kind: "join", id });
       },
-      onDone: () => (this.session.joinPending ? this.join(picked) : this.home()),
+      onDone: () => (this.session.joinPending ? this.join(picked, then) : then()),
     };
     this.go(JOIN_SCENE, data);
   }
@@ -117,20 +125,36 @@ export class GameFlow implements LegacyFlow {
     this.current = run;
     const phase = run.phase;
     switch (phase.kind) {
-      case "map": return this.go(LEGACY.map);
+      case "map": {
+        const data: MapSceneData = { run: run.run, onEnter: (id) => this.enter(id), onDeck: (scene) => this.deck(scene) };
+        return this.go(MAP_SCENE, data);
+      }
       case "battle": {
         const session = new BattleSession(run.run, phase.enemies);
         const floor = run.run.current?.floor;
         const data: BattleSceneData = {
-          session, onOver: (scene) => this.battleOver(scene, session.outcome()),
+          session, onOver: (scene) => this.battleOver(scene, session.outcome()), onDeck: (scene) => this.deck(scene),
           place: floor === undefined ? undefined : BATTLE_COPY.floor(floor),
         };
         return this.go(BATTLE_SCENE, data);
       }
-      case "event": return this.go(LEGACY.event);
-      case "rest": return this.go(LEGACY.rest);
+      case "event": {
+        const data: EventSceneData = {
+          session: new EventSession(run.run, phase.eventId),
+          onDone: () => this.leave(), onDeck: (scene) => this.deck(scene),
+          // 카드 보상은 결과를 적용한 뒤 보상 창으로 받아요 (주인이 정해지지 않은 카드 묶음)
+          onCards: (_scene, cardIds) => this.go(RESULT_SCENE, {
+            session: new RewardSession(run.run, { kind: "cards", cardIds }), onDone: () => this.leave(),
+          } satisfies ResultSceneData),
+        };
+        return this.go(EVENT_SCENE, data);
+      }
+      case "rest": {
+        const data: RestSceneData = { session: new RestSession(run.run), onLeave: () => this.leave(), onDeck: (scene) => this.deck(scene) };
+        return this.go(REST_SCENE, data);
+      }
       case "shop": {
-        const data: ShopSceneData = { session: new ShopSession(run.run), onLeave: () => this.leave() };
+        const data: ShopSceneData = { session: new ShopSession(run.run), onLeave: () => this.leave(), onDeck: (scene) => this.deck(scene) };
         return this.go(SHOP_SCENE, data);
       }
       case "reward": {
@@ -156,7 +180,7 @@ export class GameFlow implements LegacyFlow {
     const run = this.need();
     this.session.finishBattle(outcome);
     const phase = run.phase;
-    if (phase.kind === "over") return this.go(LEGACY.end, { victory: phase.victory });
+    if (phase.kind === "over") return this.runEnd();
     if (phase.kind !== "reward") return this.resume();
     // 싸우던 장면은 아래에 멈춰 두고 그 위에 창으로 띄워요 (0069)
     const data: ResultSceneData = {
@@ -166,11 +190,32 @@ export class GameFlow implements LegacyFlow {
     scene.scene.pause();
   }
 
+  /** 덱 보기: 지금 화면은 아래에 멈춰 두고 그 위에 창으로 띄워요 (0069 · 0076 15번) */
+  deck(scene: Phaser.Scene) {
+    const data: DeckSceneData = {
+      run: this.need().run,
+      onClose: () => {
+        scene.scene.stop(DECK_SCENE);
+        scene.scene.resume();
+      },
+    };
+    scene.scene.launch(DECK_SCENE, data);
+    scene.scene.pause();
+  }
+
   /** 판 결과 뒤. 깃들기가 남았으면 먼저 골라요 */
   finish() {
     if (this.opts.trial) return this.depart();
     if (this.session.joinPending) return this.join();
     this.home();
+  }
+
+  /** 판 결과 (0046): 정원으로 또는 다시 떠나기 */
+  private runEnd() {
+    const record = this.session.lastRun;
+    if (!record) return this.finish();
+    const data: RunEndSceneData = { record, onGarden: () => this.finish(), onAgain: () => this.depart() };
+    this.go(RUN_END_SCENE, data);
   }
 
   private rewardDone() {

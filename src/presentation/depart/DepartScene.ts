@@ -12,7 +12,7 @@ import { miniSlotNode, preloadEquipArt } from "../run/equip";
 import { EQUIP_MINI, FRAME, INFO } from "../run/layout";
 import { STAT_IDS } from "../run/viewmodel";
 import { preloadSpiritArt } from "../spiritArt";
-import { P, text } from "../spirits/views/parts";
+import { P, plateStyle, text } from "../spirits/views/parts";
 import { withAlpha } from "../style/color";
 import { box, circle } from "../style/draw";
 import { render, size, type BoxNode, type Node } from "../style/flex";
@@ -191,7 +191,8 @@ function strongNode(vm: DepartVM, hot: boolean): BoxNode {
 function button(label: string, go: boolean): BoxNode {
   return {
     t: "row", h: BTN.h, radius: BTN.radius, pad: [0, BTN.padX, 0, BTN.padX], gap: BTN.gap, align: "center", justify: "center",
-    style: go ? { fill: P.veil["16"], ring: { width: 1, color: P.veil["50"] } } : { fill: P.veil["05"], ring: { width: 1, color: P.glassLine } },
+    // 정본 버튼 판 (0054 밝은 유리 판): 떠나기 = 강조, 취소 = 테만
+    style: plateStyle(go),
     children: go ? [text(label, T.button, P.ink)] : [
       { t: "icon", id: "g-close", w: BTN.icon, h: BTN.icon, tint: P.ink },
       text(label, T.button, P.ink),

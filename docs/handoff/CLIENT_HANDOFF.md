@@ -119,10 +119,20 @@ src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오�
   lanes.ts                     drawLane(scene, LaneVM, i, LaneState): 링·얼굴·이름·HP·능력치·카드 칸. 상태(hot·stat·card·open·deckTo·heal·on)는 화면이 줌
   gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경
   cards.ts                     cardWithFace(초상 홈 얼굴 굽기), drawCardTip(카드 위 말풍선)
-  fromCore.ts                  cardVM(cardId, owner?), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 임시 표)
+  fromCore.ts                  cardVM(cardId, owner?), deckCardVM(DeckCard), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 인쇄값보다 오르면 ▲)
+  deckPick.ts                  drawDeckPick: 덱 보기 창 틀(얼굴 머리 + 카드 줄)에서 고르기 → 확인 (상점 빼기 · 휴식 강화 · 이벤트 빼기·강화·복제, 0082). drawQuietButton
+  panel.ts                     drawStoryPanel: 이벤트 · 휴식 왼쪽 판(이름 줄 · 상황 글 · 선택지), 가운데 높이
+  slimLane.ts                  얇은 정령 줄(지도 · 이벤트 · 휴식 · 상점), 미리보기 SlimState(HP a→b · 최대 HP · 밝은 테 · 점선 테 · 능력치 하나), drawSlimParty
+  topbar.ts                    판 안 위 띠: 골드 왼쪽 위 + 덱 · 기록 · 설정 오른쪽 위
+  choices.ts                   drawChoices: 선택지 판(이름 + 칩: HP는 정령 얼굴 + a→b, 나머지는 기호 + 짧은 명사구)
 src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 게임 흐름(flow.ts)이 전투 위에 띄움. 고정 장면 RESULTS
 src/presentation/home/         타이틀 겸 메인 화면 (0054). 기본 진입점, 정원·판 저장에 연결(fromGame.ts). 고정 장면 ?screen=home&scene=first|full|running
-src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=remove[:카드], P1 f3 · f4). 레거시 지도에서 열림. 빼기 = 덱 펼침 → 고르기 → 확인
+src/presentation/map/          지도 (?screen=map&scene=start|mid|boss, &select=<정령 id>, Lucy 2026-11-17). 한 막 전체 지도 + 오른쪽 위 얇은 정령 줄(run/slimLane.ts), 줄을 누르면 정령 줄로 펼침
+src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=<카드 id>|heal|remove[:카드], 0050 · 0082). 진열 3×2 + 빼기 · 치료 칸 + 오른쪽 얇은 정령 줄(진열 가운데 높이, 집은 카드를 배울 줄은 점선 테 + 능력치 하나). 빼기 = 덱 고르기 창
+src/presentation/rest/         휴식 (?screen=rest&scene=normal|full, &hover=rest|upgrade[:카드], 0046 · 0080). 쉬기 · 카드 강화 중 꼭 하나
+src/presentation/event/        이벤트 (?screen=event&scene=<이벤트 id>, &hover=<번호>|pick:<번호>). 이름 줄 + 상황 글 + 선택지, 올리면 대가 미리보기
+src/presentation/runEnd/       판 결과 (?screen=runEnd&scene=victory|first|defeat). RunRecord(정원 전·후)에서 VM, 라벨 없이 부품으로
+src/session/rest.ts, event.ts  휴식 · 이벤트 세션. 이벤트 결과 적용과 미리보기(판을 복제해 적용)는 세션이 맡음
 src/session/shop.ts            상점 세션: buy·heal·remove 명령 → Run, onChange. 진열·값·치료량은 constants.json shop
 src/session/garden.ts          정원 세션: 명령 → core/garden → onChange. snapshot/restore
 src/session/run.ts             판 세션: 판의 자리(phase) + enter·leave·finishBattle·finishReward. 칸 사이 저장 save/restore

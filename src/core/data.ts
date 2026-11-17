@@ -60,8 +60,44 @@ function must<T>(m: Map<string, T>, id: string, what: string): T {
   return v;
 }
 export const spiritDef = (id: string) => must(spiritMap, id, "spirit");
-export const cardDef = (id: string) => must(cardMap, id, "card");
+/** 강화한 카드 id의 꼬리 (0080). `fire_claw+` = 강화한 할퀴기 */
+export const UPGRADED = "+";
+export const isUpgradedId = (id: string) => id.endsWith(UPGRADED);
+/** 강화 꼬리를 뗀 카드 id */
+export const baseCardId = (id: string) => (isUpgradedId(id) ? id.slice(0, -UPGRADED.length) : id);
+export const upgradedId = (id: string) => (isUpgradedId(id) ? id : id + UPGRADED);
+
+/** 강화로 오르는 숫자: +pct 올림, 최소 +min (0080) */
+export const upgradeValue = (v: number) => v + Math.max(C.card_upgrade.min, Math.ceil(v * C.card_upgrade.pct));
+
+/** 강화할 수 있는 카드: 숫자 효과가 하나라도 있어야 해요. 전투 중에 생기는 카드는 덱에 남지 않아서 빠져요 */
+export function canUpgradeCard(def: CardData): boolean {
+  if (isUpgradedId(def.id) || def.obtain === "generated") return false;
+  return !!def.upgrade || def.effects.some((op) => "value" in op && typeof op.value === "number" && op.value > 0);
+}
+
+const upgradedMap = new Map<string, CardDef>();
+function upgradedDef(base: CardDef): CardDef {
+  const effects = base.upgrade ?? base.effects.map((op) => ("value" in op && typeof op.value === "number" && op.value > 0
+    ? { ...op, value: upgradeValue(op.value) } as typeof op : op));
+  const def = { ...base, id: upgradedId(base.id), effects, upgrade: undefined } as CardDef;
+  // 이름은 언어를 바꿀 때 원래 카드에서 따라와요
+  Object.defineProperty(def, "name", { get: () => base.name, enumerable: true });
+  return def;
+}
+
+export function cardDef(id: string): CardDef {
+  if (!isUpgradedId(id)) return must(cardMap, id, "card");
+  let def = upgradedMap.get(id);
+  if (!def) {
+    def = upgradedDef(must(cardMap, baseCardId(id), "card"));
+    upgradedMap.set(id, def);
+  }
+  return def;
+}
 export const enemyDef = (id: string) => must(enemyMap, id, "enemy");
+const eventMap = byId(EVENTS);
+export const eventDef = (id: string) => must(eventMap, id, "event");
 
 /** 출전 인원에 맞춘 적 세기 (0053). 셋이면 그대로(undefined) */
 export function partyScale(size: number): EnemyScale | undefined {
