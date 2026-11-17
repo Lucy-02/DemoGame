@@ -13,6 +13,10 @@ import { cardWithFace, drawCardTip } from "../run/cards";
 import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
 import { GOLD_ICONS, drawGold } from "../run/gold";
 import { protoLayout } from "../run/proto";
+import { drawSlimLane } from "../run/slimLane";
+import { SLIM } from "../map/layout";
+import { STAT_ICON } from "../run/copy";
+import { P } from "../spirits/views/parts";
 import { SYS_ICONS, drawSys } from "../battle/views/topbar";
 import { SYS } from "../battle/layout";
 import { LANE_ICONS, drawLane, type LaneState } from "../run/lanes";
@@ -173,6 +177,19 @@ export class ShopScene extends Phaser.Scene {
         const last = this.got.get(l.id);
         if (last) st.card = { vm: last, hot: false };
         if (healing) st.heal = vm.heal.gain[l.id];
+      }
+      if (new URLSearchParams(location.search).get("shop") === "slim") {
+        const y = Math.round((FRAME.h - (vm.lanes.length * (SLIM.h + SLIM.gap) - SLIM.gap)) / 2) + i * (SLIM.h + SLIM.gap);
+        drawSlimLane(this, l, y, SLIM, st.on?.click, {
+          hot: st.hot, open: st.open, hpTo: st.heal ? Math.min(l.maxHp, l.hp + st.heal) : undefined,
+          stat: st.stat ? { icon: STAT_ICON[st.stat], value: l.stats[st.stat], color: P.stat[st.stat] } : undefined,
+        });
+        if (st.on) {
+          const z = this.add.zone(SLIM.x, y, SLIM.w, SLIM.h).setOrigin(0, 0).setInteractive();
+          if (st.on.over) z.on("pointerover", st.on.over);
+          if (st.on.out) z.on("pointerout", st.on.out);
+        }
+        return;
       }
       drawLane(this, l, i, st);
     });

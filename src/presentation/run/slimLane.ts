@@ -20,12 +20,12 @@ export interface SlimLook {
   hp: { x: number; w: number; h: number; numX: number; numGap: number; numRight?: number };
 }
 
-export interface SlimState { hpTo?: number; maxTo?: number; hot?: boolean }
+export interface SlimState { hpTo?: number; maxTo?: number; hot?: boolean; open?: boolean; stat?: { icon: string; value: number; color: string }; deck?: { from: number; to: number } }
 
 export function drawSlimLane(scene: Phaser.Scene, l: LaneVM, y: number, S: SlimLook, onClick?: () => void, st: SlimState = {}) {
   const g = scene.add.graphics();
   if (st.hot) box(g, S.x - 4, y - 4, S.w + 8, S.h + 8, S.radius + 4, { fill: withAlpha(P.accHi, 0.14) });
-  box(g, S.x, y, S.w, S.h, S.radius, { fill: P.glass, ring: { width: 1, color: st.hot ? P.accHi : P.glassLine } });
+  box(g, S.x, y, S.w, S.h, S.radius, { fill: P.glass, ring: st.open && !st.hot ? { width: 1, color: P.accHi, dash: 4 } : { width: 1, color: st.hot ? P.accHi : P.glassLine } });
   const R = S.ring;
   const rx = S.x + R.x, ry = y + (S.h - R.d) / 2;
   const d = R.d - R.faceInset * 2;
@@ -37,6 +37,8 @@ export function drawSlimLane(scene: Phaser.Scene, l: LaneVM, y: number, S: SlimL
   const mid = (n: Node, x: number) => render(scene, n, x, y + (S.h - size(n).h) / 2);
   mid({ t: "row", gap: S.name.gap, align: "baseline", children: [text(l.name, T.name, P.ink), text(COPY.lv(l.level), T.level, P.ink3Spirit)] }, S.x + S.name.x);
   const low = !!l.down;
+  // 시안(상점): 집은 카드가 쓰는 능력치 하나, 받으면 덱 장수 a→b
+  if (st.stat) mid({ t: "row", gap: 6, align: "center", children: [{ t: "icon", id: st.stat.icon, w: 15, h: 15, tint: st.stat.color }, text(String(st.stat.value), T.was, st.stat.color)] }, S.x + 222);
   const max = st.maxTo ?? l.maxHp, to = st.hpTo ?? l.hp;
   const changed = to !== l.hp || max !== l.maxHp;
   const base = bar(S.hp.h, l.hp / l.maxHp, P.wallLo, low ? P.danger : P.ink2, { w: S.hp.w, grow: false });
