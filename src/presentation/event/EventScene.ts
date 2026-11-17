@@ -23,6 +23,9 @@ import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
 import { PICK_CONFIRM } from "./copy";
 import { eventSession } from "./fixtures";
+import { drawProtoPanel, protoLayout } from "../run/proto";
+import type { FaceFx } from "../run/choices";
+import type { MapPreview, MapScene } from "../map/MapScene";
 
 export const EVENT_SCENE = "event";
 
@@ -86,6 +89,44 @@ export class EventScene extends Phaser.Scene {
 
   private redraw() {
     this.dirty = true;
+    (this.scene.get("map") as MapScene | undefined)?.repaint?.();
+  }
+
+  /** 시안 2: 지도의 정령 줄 · 골드가 미리보기를 보여요 */
+  mapPreview(): MapPreview | undefined {
+    if (protoLayout() !== "2" || this.hover === undefined || this.session?.step.kind !== "choose") return undefined;
+    const pv = this.session.preview(this.hover);
+    return { gold: pv.gold, hp: Object.fromEntries(Object.entries(pv.hp).map(([k, v]) => [k, v.to])), maxHp: Object.fromEntries(Object.entries(pv.maxHp).map(([k, v]) => [k, v.to])) };
+  }
+
+  private paintProto(layout: "1" | "2" | "3") {
+    const s = this.session;
+    const lanes = this.lanes();
+    const pv = this.hover === undefined ? undefined : s.preview(this.hover);
+    const touchesGold = s.event.options.some((o) => o.outcome.some((x) => x.type === "gold"));
+    const HP_FX = ["healPct", "damageAll", "damageFront", "maxHpAll"];
+    drawProtoPanel(this, {
+      layout, lanes, title: s.event.title, story: s.event.text, hot: this.hover, none: RUN_COPY.fx.none,
+      gold: touchesGold ? { total: pv?.gold?.to ?? s.run.gold, was: pv?.gold?.from } : undefined,
+      items: s.event.options.map((o, i) => {
+        if (layout !== "3") return { label: o.label, fx: outcomesFx(o.outcome), enabled: s.canChoose(i) };
+        const v = s.preview(i);
+        const faces: FaceFx[] = lanes.flatMap((l) => [
+          ...(v.hp[l.id] ? [{ face: l.face, from: v.hp[l.id].from, to: v.hp[l.id].to }] : []),
+          ...(v.maxHp[l.id] ? [{ face: l.face, from: v.maxHp[l.id].from, to: v.maxHp[l.id].to, max: true }] : []),
+        ]);
+        return { label: o.label, faces, fx: outcomesFx(o.outcome.filter((x) => !HP_FX.includes(x.type))), enabled: s.canChoose(i) };
+      }),
+      lane: (l) => {
+        const hp = pv?.hp[l.id], max = pv?.maxHp[l.id];
+        return { hpTo: hp?.to, maxTo: max?.to, hot: !!hp || !!max };
+      },
+      on: {
+        click: (i) => { if (this.session.choose(i)) { this.hover = undefined; this.advance(); } },
+        over: (i) => { this.hover = i; this.redraw(); },
+        out: (i) => { if (this.hover === i) { this.hover = undefined; this.redraw(); } },
+      },
+    });
   }
 
   private lanes(): LaneVM[] {
@@ -102,8 +143,10 @@ export class EventScene extends Phaser.Scene {
 
   private paint() {
     for (const o of [...this.children.list]) o.destroy();
-    drawBackdrop(this);
     const st = this.session.step;
+    const layout = protoLayout();
+    if (layout && st.kind === "choose") return this.paintProto(layout);
+    drawBackdrop(this);
     if (st.kind === "pick") return this.paintPick(st.mode);
     if (st.kind !== "choose") return;
     const s = this.session;

@@ -21,6 +21,10 @@ import { EVOLUTION_SCENE, EvolutionScene } from "./evolution/EvolutionScene";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
 import type { TabId } from "./spirits/viewmodel";
 import { installCursor } from "./style/cursor";
+import { protoLayout } from "./run/proto";
+import { eventSession } from "./event/fixtures";
+import { restSession } from "./rest/fixtures";
+import { walk } from "./map/fixtures";
 import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
@@ -124,13 +128,28 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           game.scene.add(RUN_END_SCENE, RunEndScene, true, data);
           return;
         }
+        const layout = protoLayout();
         if (opts.screen === "event") {
           const data: EventSceneData = { scene: opts.scene, hover: opts.hover };
+          if (layout) {
+            data.session = eventSession(opts.scene);
+            const hp = data.session.run.spirits.map((sp) => sp.hp);
+            walk(data.session.run, 3);
+            data.session.run.spirits.forEach((sp, i) => { sp.hp = hp[i]; });
+            game.scene.add(MAP_SCENE, MapScene, true, { run: data.session.run, under: { path: layout === "2" ? 0.3 : 1, preview: () => (game.scene.getScene(EVENT_SCENE) as EventScene | null)?.mapPreview() } } satisfies MapSceneData);
+          }
           game.scene.add(EVENT_SCENE, EventScene, true, data);
           return;
         }
         if (opts.screen === "rest") {
           const data: RestSceneData = { scene: opts.scene, hover: opts.hover };
+          if (layout) {
+            data.session = restSession(opts.scene);
+            const hp = data.session.run.spirits.map((sp) => sp.hp);
+            walk(data.session.run, 3);
+            data.session.run.spirits.forEach((sp, i) => { sp.hp = hp[i]; });
+            game.scene.add(MAP_SCENE, MapScene, true, { run: data.session.run, under: { path: layout === "2" ? 0.3 : 1, preview: () => (game.scene.getScene(REST_SCENE) as RestScene | null)?.mapPreview() } } satisfies MapSceneData);
+          }
           game.scene.add(REST_SCENE, RestScene, true, data);
           return;
         }

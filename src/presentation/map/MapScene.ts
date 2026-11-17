@@ -46,7 +46,11 @@ export interface MapSceneData {
   onDeck?: (scene: Phaser.Scene) => void;
   /** 시각 검증용: 처음부터 펼쳐 둘 정령 줄 */
   select?: string;
+  /** 시안: 칸 안(이벤트 · 휴식)이 위에 떠 있는 동안. 길은 흐리고 입력을 받지 않아요. party=false면 정령 줄을 안 그려요 */
+  under?: { path: number; preview?: () => MapPreview | undefined };
 }
+
+export interface MapPreview { gold?: { from: number; to: number }; hp: Record<string, number>; maxHp: Record<string, number> }
 
 interface Pt { x: number; y: number }
 
@@ -73,6 +77,7 @@ export class MapScene extends Phaser.Scene {
   /** 펼친 정령 줄 */
   private open?: string;
   private hover: Phaser.GameObjects.Container | null = null;
+  private under?: MapSceneData["under"];
 
   constructor() {
     super(MAP_SCENE);
@@ -84,6 +89,7 @@ export class MapScene extends Phaser.Scene {
     this.onEnter = data.onEnter;
     this.onDeck = data.onDeck;
     this.open = data.select;
+    this.under = data.under;
     this.hover = null;
   }
 
@@ -103,16 +109,22 @@ export class MapScene extends Phaser.Scene {
     Object.assign(window, { __screenReady: MAP_SCENE });
   }
 
+  repaint() { this.paint(); }
+
   private paint() {
     this.children.removeAll(true);
     this.hover = null;
     this.vm = mapVM(this.run);
     drawBackdrop(this);
-    drawGold(this, this.vm.gold, {}, GOLD_AT);
+    const pv = this.under?.preview?.();
+    drawGold(this, pv?.gold?.to ?? this.vm.gold, pv?.gold ? { was: pv.gold.from } : {}, GOLD_AT);
     drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) });
-    this.drawPath();
+    if (this.under) {
+      gather(this, 0, 0, () => this.drawPath()).setAlpha(this.under.path);
+      this.input.enabled = false;
+    } else this.drawPath();
     this.drawMini();
-    this.drawParty();
+    this.drawParty(pv);
   }
 
   /** 보이는 층 구간의 맨 아래 층 */
@@ -204,11 +216,12 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
-  private drawParty() {
+  private drawParty(pv?: MapPreview) {
     let y = SLIM.y;
     this.vm.party.forEach((l, i) => {
       if (l.id !== this.open) {
-        drawSlimLane(this, l, y, SLIM, () => this.toggle(l.id));
+        const hpTo = pv?.hp[l.id], maxTo = pv?.maxHp[l.id];
+        drawSlimLane(this, l, y, SLIM, () => this.toggle(l.id), { hpTo, maxTo, hot: hpTo !== undefined || maxTo !== undefined });
         y += SLIM.h + SLIM.gap;
         return;
       }

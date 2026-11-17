@@ -8,7 +8,7 @@ import { GOLD } from "./layout";
 
 const T = tokens.provisional.text.result;
 
-export const GOLD_ICONS = [["i-coin", GOLD.coin]] as const;
+export const GOLD_ICONS = [["i-coin", GOLD.coin], ["i-coin", 18]] as const;
 
 export interface GoldLook {
   /** 이번에 받은 만큼 (+18, +?) */

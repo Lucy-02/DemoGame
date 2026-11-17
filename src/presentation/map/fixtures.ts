@@ -17,6 +17,15 @@ export const MAPS: Record<string, MapSetup> = {
 
 export const DEFAULT_MAP = "mid";
 
+/** 시안용: 판을 몇 칸 걸어 둬요 */
+export function walk(run: Run, steps: number) {
+  for (let i = 0; i < steps; i++) {
+    const next = run.reachable();
+    if (!next.length) break;
+    run.enter(next[next.length > 1 ? i % 2 : 0]);
+  }
+}
+
 export function mapRun(name?: string): Run {
   const setup = MAPS[name ?? DEFAULT_MAP] ?? MAPS[DEFAULT_MAP];
   const run = new Run({ seed: 11, frontId: "", adult: false, unlockAll: true });

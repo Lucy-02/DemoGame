@@ -20,6 +20,8 @@ import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
 import { COPY } from "./copy";
 import { restSession } from "./fixtures";
+import { drawProtoPanel, protoLayout } from "../run/proto";
+import type { MapPreview, MapScene } from "../map/MapScene";
 
 export const REST_SCENE = "rest";
 
@@ -84,6 +86,13 @@ export class RestScene extends Phaser.Scene {
 
   private redraw() {
     this.dirty = true;
+    (this.scene.get("map") as MapScene | undefined)?.repaint?.();
+  }
+
+  mapPreview(): MapPreview | undefined {
+    if (protoLayout() !== "2" || this.hover !== Pick.Rest || this.upgrading || !this.session) return undefined;
+    const gain = this.session.healPreview();
+    return { hp: Object.fromEntries(this.session.run.spirits.filter((sp) => gain[sp.id]).map((sp) => [sp.id, sp.hp + gain[sp.id]])), maxHp: {} };
   }
 
   private lanes(): LaneVM[] {
@@ -117,6 +126,29 @@ export class RestScene extends Phaser.Scene {
 
   private paint() {
     for (const o of [...this.children.list]) o.destroy();
+    const layout = protoLayout();
+    if (layout && !this.upgrading) {
+      const s = this.session;
+      const lanes = this.lanes();
+      const all = s.healPreview();
+      const gain = this.hover === Pick.Rest ? all : {};
+      drawProtoPanel(this, {
+        layout, lanes, hot: this.hover,
+        items: [
+          layout === "3"
+            ? { label: COPY.rest, fx: [], faces: lanes.filter((l) => all[l.id]).map((l) => ({ face: l.face, from: l.hp, to: l.hp + all[l.id] })), enabled: s.canRest() }
+            : { label: COPY.rest, fx: [outcomeFx({ type: "healPct", value: C.rest_heal_pct })!], enabled: s.canRest() },
+          { label: COPY.upgrade, fx: [outcomeFx({ type: "upgradeCard" })!], enabled: s.canUpgrade() },
+        ],
+        lane: (l) => ({ hpTo: gain[l.id] ? l.hp + gain[l.id] : undefined, hot: !!gain[l.id] }),
+        on: {
+          click: (i) => this.choose(i),
+          over: (i) => { this.hover = i; this.redraw(); },
+          out: (i) => { if (this.hover === i) { this.hover = undefined; this.redraw(); } },
+        },
+      });
+      return;
+    }
     drawBackdrop(this);
     if (this.upgrading) return this.paintUpgrade();
     const s = this.session;
