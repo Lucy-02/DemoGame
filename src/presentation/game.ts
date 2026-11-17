@@ -59,6 +59,8 @@ export interface GameOptions {
   scene?: string;
   /** 들기 크기 바꿔 보기 (battle/layout LIFT_STYLES) */
   lift?: string;
+  /** 전투 고정 장면에 깔 배경의 막 (?stage=1) */
+  stage?: number;
   /** 모션 느리게 보기 (?slow=4 는 4배 느리게). 모션을 확인할 때만 써요 */
   slow?: number;
 }
@@ -189,7 +191,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           game.scene.add(REST_SCENE, RestScene, true, data);
           return;
         }
-        game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, lift: opts.lift });
+        game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, lift: opts.lift, stage: opts.stage });
       },
     },
   });

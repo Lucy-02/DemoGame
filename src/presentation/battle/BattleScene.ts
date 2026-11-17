@@ -18,6 +18,7 @@ import { playbackFrames } from "./playback";
 import { audioOf, type SfxId } from "../audio";
 import { cuesOf, playbackCues } from "../audio/battleCues";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
+import { preloadStage } from "./stage";
 import { drawBackdrop } from "./views/backdrop";
 import { drawGuide, type GuideBox } from "./views/guide";
 import { createHand, drawBand, drawEnd, drawMana, handBoxes, preloadHand, type HandSnapshot, type HandView } from "./views/hand";
@@ -45,6 +46,8 @@ export interface BattleSceneData {
   onDeck?: (scene: Phaser.Scene) => void;
   /** 순서표 머리의 장소 글 (session이 있을 때) */
   place?: string;
+  /** 고정 장면에 깔 배경의 막 (?stage=1, 시각 검증용). 실제 전투는 session의 막을 써요 */
+  stage?: number;
   hover?: string;
   lift?: string;
   /** 첫 판 안내 (0088): 주면 이 전투에서 개념을 한 번씩 짚어요. 이미 짚은 것을 여기에 적어 장면을 다시 그려도 남겨요 */
@@ -81,6 +84,7 @@ export class BattleScene extends Phaser.Scene {
   private guideCharge = false;
   private onOver?: (scene: Phaser.Scene) => void;
   private onDeck?: (scene: Phaser.Scene) => void;
+  private stage?: number;
 
   init(data: BattleSceneData) {
     this.session = data.session;
@@ -112,12 +116,14 @@ export class BattleScene extends Phaser.Scene {
     this.pick = null;
     this.hover = data.hover;
     this.lift = data.lift;
+    this.stage = data.session?.act ?? data.stage;
   }
 
   preload() {
     for (const id of SYS_ICONS) loadIcon(this, id, SYS.icon);
     preloadOrder(this, this.vm.order);
     for (const p of Object.values(this.vm.plays)) if (p.slot) preloadOrderIcon(this, p.slot.token.icon);
+    preloadStage(this, this.stage);
     preloadUnits(this, this.vm);
     preloadHand(this, this.vm);
     if (this.vm.pick) preloadPick(this, this.vm.pick);
@@ -151,7 +157,7 @@ export class BattleScene extends Phaser.Scene {
   create() {
     // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
     for (const s of this.session?.battle.spirits ?? []) bakeSpiritFace(this, s.id, s.run.stage);
-    drawBackdrop(this);
+    drawBackdrop(this, this.stage);
     drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) }, false);
     this.fieldLayer = this.add.container(0, 0);
     this.rest = this.drawField(null);

@@ -1,14 +1,22 @@
-// 배경 벽(타원 방사 그라데이션) + 아래쪽 바닥 그늘. 정본 .bg, .floor
+// 배경: 막의 그림(먼 풍경 + 땅, 0103)이 있으면 그걸, 없으면 벽(타원 방사 그라데이션) + 아래쪽 바닥 그늘. 정본 .bg, .floor
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { withAlpha } from "../../style/color";
 import { canvasTexture, ellipse } from "../../style/gradient";
 import { BG, FLOOR, FRAME } from "../layout";
+import { stageArt } from "../stage";
 
 const P = tokens.provisional.palette;
 const KEY = "battle:backdrop";
 
-export function drawBackdrop(scene: Phaser.Scene) {
+export function drawBackdrop(scene: Phaser.Scene, act?: number) {
+  const art = stageArt(scene, act);
+  if (art) {
+    return scene.add.container(0, 0, [
+      scene.add.image(0, 0, art.far).setOrigin(0, 0),
+      scene.add.image(0, 0, art.ground).setOrigin(0, 0),
+    ]);
+  }
   canvasTexture(scene, KEY, FRAME.w, FRAME.h, (ctx) => {
     ctx.fillStyle = P.floor;
     ctx.fillRect(0, 0, FRAME.w, FRAME.h);
@@ -20,5 +28,5 @@ export function drawBackdrop(scene: Phaser.Scene) {
     ctx.fillStyle = f;
     ctx.fillRect(0, FLOOR.top, FRAME.w, FRAME.h - FLOOR.top);
   });
-  return scene.add.image(0, 0, KEY).setOrigin(0, 0);
+  return scene.add.container(0, 0, [scene.add.image(0, 0, KEY).setOrigin(0, 0)]);
 }

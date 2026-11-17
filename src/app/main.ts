@@ -47,7 +47,7 @@ async function start() {
   if (!fixture && screen !== "legacy") followFullscreen(platform, settings);
   const game = await startGame("game", {
     screen: fixture, session, settings, trial: screen === "legacy", quit: () => void platform.quit(), version,
-    hover: get("hover"), scene: get("scene"), lift: get("lift"), select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
+    hover: get("hover"), scene: get("scene"), lift: get("lift"), stage: params.has("stage") ? Number(get("stage")) : undefined, select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
     slow: Number(params.get("slow")) || undefined,
   });
   // 시험용 문: 개발 빌드에서만 열어요
