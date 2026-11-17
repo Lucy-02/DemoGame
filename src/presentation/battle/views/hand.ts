@@ -6,6 +6,7 @@ import { cubicBezier, ms } from "../../style/ease";
 import { place, render, size, type Node } from "../../style/flex";
 import { gather } from "../../style/gather";
 import { loadIcon } from "../../style/icons";
+import { FAST, MOVE, reducedMotion } from "../../style/motion";
 import { cardTipContent } from "../../card/cardTip";
 import { createHandCard, preloadHandCard, type HandCardView } from "../../card/HandCard";
 import { HAND_CARD } from "../../card/layout";
@@ -61,7 +62,12 @@ export interface HandView {
   moveDrag(x: number, y: number, at: { field: boolean; target: boolean }, instant?: boolean): void;
   /** 끌기 끝: 카드가 제자리로 돌아가요 (지금은 내도 손패로 돌아와요. session 층이 생기면 낸 카드는 버린 더미로) */
   endDrag(): void;
+  /** 지금 손패의 카드 자리 (다음 장면이 이어서 움직여요, 0086) */
+  snap: HandSnapshot;
 }
+
+/** 앞 장면의 손패: 카드 key마다 자리와 카드 */
+export type HandSnapshot = Record<string, { x: number; y: number; vm: CardVM }>;
 
 export interface HandOptions {
   /** 앞에 나선 카드가 바뀔 때. held = 그 카드가 집은 카드인지 (필드를 미리보기로 바꾸려고) */
@@ -70,10 +76,44 @@ export interface HandOptions {
   onPress?: (key: string, pointer: Phaser.Input.Pointer) => void;
   /** 들기 크기·밀림 (없으면 Lucy가 고른 LIFT) */
   lift?: LiftStyle;
+  /** 앞 장면의 손패. 주면 이어서 움직여요: 남은 카드는 자리를 좁히고, 새 카드는 흐리게 나타나고, 빠진 카드는 제자리에서 흐려져요 (0086) */
+  prev?: HandSnapshot;
+  /** 새 손패 (전투 시작 · 새 턴): 모든 카드가 왼쪽부터 차례로 나타나요 */
+  deal?: boolean;
 }
 
 const ease = cubicBezier(tokens.provisional.motion.hover.easing);
 const duration = ms(tokens.provisional.motion.hover.duration);
+const HM = tokens.provisional.motion.hand;
+
+/** 앞 장면에서 이어 움직여요 (0086). 자리 옮김은 카드만, 묶음 판은 바로 바뀌어요 */
+function playHandMotion(scene: Phaser.Scene, cards: { vm: CardVM; view: HandCardView; x: number; y: number }[], opts: HandOptions) {
+  const prev = opts.prev ?? {};
+  const still = reducedMotion();
+  const fadeIn = (view: HandCardView, delay: number) => {
+    view.opacity = 0;
+    scene.tweens.add({ targets: view, opacity: 1, delay, ...FAST });
+  };
+  let fresh = 0;
+  for (const c of cards) {
+    const was = prev[c.vm.key];
+    if (!was) {
+      if (opts.deal || opts.prev) fadeIn(c.view, opts.deal ? fresh++ * ms(HM.stagger) : 0);
+      continue;
+    }
+    if (was.x !== c.x && !still) {
+      c.view.root.x = was.x;
+      scene.tweens.add({ targets: c.view.root, x: c.x, ...MOVE });
+    }
+  }
+  // 빠진 카드 (낸 카드 · 턴 끝에 버린 카드): 제자리에서 흐려져요
+  const now = new Set(cards.map((c) => c.vm.key));
+  for (const [key, was] of Object.entries(prev)) {
+    if (now.has(key)) continue;
+    const ghost = createHandCard(scene, was.vm, was.x - HAND_CARD.w / 2, was.y - HAND_CARD.h);
+    scene.tweens.add({ targets: ghost, opacity: 0, duration: ms(HM.leave), ease, onComplete: () => ghost.root.destroy() });
+  }
+}
 
 export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: HandOptions = {}): HandView {
   const { group: G, face: F } = HAND;
@@ -101,6 +141,10 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
     groups.push({ root, face, cards });
     x += w + HAND.gap;
   }
+
+  const all = groups.flatMap((g) => g.cards);
+  playHandMotion(scene, all, opts);
+  const snap: HandSnapshot = Object.fromEntries(all.map((c) => [c.vm.key, { x: c.x, y: c.y, vm: c.vm }]));
 
   const L = opts.lift ?? LIFT;
   const tips = new TooltipHost(scene);
@@ -214,7 +258,7 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
     current = undefined;
     setHover(null);
   };
-  return { setHover, setHeld, startDrag, moveDrag, endDrag };
+  return { setHover, setHeld, startDrag, moveDrag, endDrag, snap };
 }
 
 /** onEnd: 턴 종료를 누르면 (고정 장면에서는 없어요) */

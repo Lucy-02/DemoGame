@@ -24,6 +24,7 @@ import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/Sp
 import type { TabId } from "./spirits/viewmodel";
 import { installCursor } from "./style/cursor";
 import { loadFonts } from "./style/fonts";
+import { VEIL_SCENE, VeilScene } from "./veil";
 
 export interface GameOptions {
   /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
@@ -48,6 +49,8 @@ export interface GameOptions {
   scene?: string;
   /** 들기 크기 바꿔 보기 (battle/layout LIFT_STYLES) */
   lift?: string;
+  /** 모션 느리게 보기 (?slow=4 는 4배 느리게). 모션을 확인할 때만 써요 */
+  slow?: number;
 }
 
 export async function startGame(parent: string, opts: GameOptions = {}): Promise<Phaser.Game> {
@@ -66,11 +69,22 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
       postBoot: (game) => {
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
+        if (opts.slow && opts.slow > 0) {
+          const k = 1 / opts.slow;
+          game.events.on(Phaser.Core.Events.PRE_STEP, () => {
+            for (const s of game.scene.getScenes(true)) {
+              s.tweens.timeScale = k;
+              s.time.timeScale = k;
+            }
+          });
+        }
         if (live) {
           for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
+          // 화면 전환 막: 맨 나중에 더해 늘 맨 위에 있어요 (0086)
+          game.scene.add(VEIL_SCENE, VeilScene, true);
           new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit }).start();
           return;
         }
