@@ -197,11 +197,12 @@ export const refOf = (h: BSpirit | BEnemy): Ref => (isEnemy(h) ? { side: "e", ui
 /** 연출용 이벤트. 확정된 결과만 담아요 (0001). */
 export type BattleEvent =
   | { k: "log"; text: string }
-  | { k: "damage"; ref: Ref; amount: number; blocked: number; crit?: boolean; weakHit?: boolean; resist?: boolean; opening?: boolean; wall?: number }
+  /** by = 재생 중인 카드의 주인(적이 받은 피해), keeper = 벽으로 대신 막은 정령. 자람 조건을 세는 데 써요 (0021 · 0045) */
+  | { k: "damage"; ref: Ref; amount: number; blocked: number; crit?: boolean; weakHit?: boolean; resist?: boolean; opening?: boolean; wall?: number; by?: string; keeper?: string }
   | { k: "heal"; ref: Ref; amount: number }
   | { k: "block"; ref: Ref; amount: number }
   | { k: "status"; ref: Ref; text: string }
-  | { k: "freeze"; uid: number }
+  | { k: "freeze"; uid: number; by?: string }
   | { k: "delay"; uid: number; ms: number; nextTurn: boolean }
   | { k: "cancel"; uid: number; reason: string }
   | { k: "charge"; uid: number; move: string }

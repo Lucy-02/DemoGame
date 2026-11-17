@@ -253,7 +253,6 @@ export const tokens = {
         "tipResult": "20px"
       },
       "spirits": {
-        "res": "16px",
         "back": "13px",
         "here": "14px",
         "stage": "12.5px",
@@ -276,8 +275,6 @@ export const tokens = {
         "small": "12px",
         "chipName": "12px",
         "ep": "14px",
-        "epSide": "12.5px",
-        "epNum": "12px",
         "railTab": "13.5px",
         "railCount": "12px",
         "factLabel": "12px",

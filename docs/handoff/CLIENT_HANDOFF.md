@@ -96,7 +96,7 @@ src/presentation/battle/
   layout.ts                    FRAME BG FLOOR SYS ORDER ALLY ENEMY GROUND INFO TIP INTENT BAND MANA HAND END HOVER
   viewmodel.ts, copy.ts        BattleVM 타입, 화면 문구
   fixtures/canonRest.ts        정본 고정 장면
-  ../stage.ts                  막마다 까는 배경 그림 (0103, 0110~0113). 전투와 이벤트 · 휴식(0119)이 함께 써요. public/assets/stages/act<N>/far.webp · ground.webp, 만들기 tools/art/stage-bg.py, 보기 ?screen=battle&stage=1
+  ../stage.ts                  막마다 까는 배경 그림 (0103, 0110~0113). 전투와 이벤트 · 휴식(0119)이 함께 써요. public/assets/stages/act<N>/far.webp · ground.webp, 만들기 tools/art/stage-bg.py, 보기 ?screen=battle&stage=1. 장소 그림(상점, 0122)은 한 장: public/assets/stages/shop.webp, 만들기 tools/art/place-bg.py
   views/backdrop.ts            배경: 막의 그림이 있으면 그걸, 없으면 방사 그라데이션 + 바닥
   views/topbar.ts, order.ts    위치·시스템 버튼, 행동 순서 띠
   views/units.ts               아군·적(그림 자리, 그림자, 발밑 정보 묶음 "캡슐 막대 V1": HP 막대 + 기호 칩 줄, 의도 알약). drawAlly/drawEnemy → { bounds, info, marks, bottom, intent? }. 가리키면 drawUnitTip(유닛 풀이)·drawMarkTip(기호 한 줄 풀이)·drawAllyPulse(깎일 구간 깜빡임)·drawIntent(이어진 의도 밝게)
@@ -119,7 +119,7 @@ src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/can
 src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오른쪽 정령 세 줄, 0050 격자). 전투 결과·상점이 함께 씀
   layout.ts                    FRAME GRID BG GOLD CARD_FOCUS LANE RING INFO SOCKET (E1·P1 시안에서 잰 임시 값)
   lanes.ts                     drawLane(scene, LaneVM, i, LaneState): 링·얼굴·이름·HP·능력치·카드 칸. 상태(hot·stat·card·open·deckTo·heal·on)는 화면이 줌
-  gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경 (막을 주면 그 막의 전투 배경 + scrim 덮개, 0119)
+  gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경 (막을 주면 그 막의 전투 배경, "shop"을 주면 상점 그림 + scrim 덮개, 0119 · 0122)
   cards.ts                     cardWithFace(초상 홈 얼굴 굽기), drawCardTip(카드 위 말풍선)
   fromCore.ts                  cardVM(cardId, owner?), deckCardVM(DeckCard), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 인쇄값보다 오르면 ▲)
   deckPick.ts                  drawDeckPick: 덱 보기 창 틀(얼굴 머리 + 카드 줄)에서 고르기 → 확인 (상점 빼기 · 휴식 강화 · 이벤트 빼기·강화·복제, 0082). drawQuietButton
@@ -242,7 +242,7 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 
 정령 관리·정원
 - 정원 저장: `GardenSession.snapshot/restore`를 platform 저장에 연결, 새 판(`Run`)에 `garden`을 넘기기
-- 런 종료 R2-1(0012): `grantBattle`로 경험·재료, 전투 이벤트로 자람 조건(`addDeed`: 준 피해·막은 피해·빙결), 그 화면에서 키우기
+- 자람 조건은 이긴 전투의 이벤트에서 세요(`session/deeds.ts`: 카드로 준 피해 · 방어도와 벽으로 막은 피해 · 카드로 건 빙결). 판 결과 화면에서 키우기는 아직이에요
 - 성장 길 카드를 카드 몸체(`card/HandCard`)로, 이야기 문안(S3 뒤)
 - 정렬·필터·편성 바꾸기는 모양만 있어요 (출전 준비 화면과 함께)
 

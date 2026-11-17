@@ -4,17 +4,13 @@ import { josa } from "../../core/korean";
 import type { Stage } from "../../core/types";
 import type { TabId } from "./viewmodel";
 
-const COPY_MATERIAL = "재료";
-
 export const COPY = {
   garden: "정원",
   sep: "/",
   here: "정령",
-  material: COPY_MATERIAL,
   owned: "보유 정령",
   sort: "얻은 순",
   deployed: "출전",
-  partyEdit: "편성 바꾸기",
   close: "닫기",
   personality: "성격",
   hidden: "???",
@@ -26,29 +22,20 @@ export const COPY = {
   next: "다음 단계",
   final: "최종 단계",
   exclusive: "전용 카드",
-  bond: "유대",
   todo: "할 일",
   grow: "키우기",
   /** 레벨은 `Lv 4` 한 꼴 (문구 규칙 숫자 표기) */
   lv: (n: number) => `Lv ${n}`,
   exp: "경험",
   gate: (to: string) => josa(to, "으로/로"),
-  feed: "먹이기",
-  affinity: "호감도",
-  episode: (n: number) => `이야기 ${n}`,
-  seen: "읽음",
   /** 현재/최대: 빗금 앞뒤 붙이고 단위는 끝에 한 번 */
-  of: (total: number) => `/${total}`,
   ofCards: (total: number) => `/${total}장`,
   percent: "%",
   personalityOn: "성격 효과 시작",
   personalityLater: "성체가 되면 효과가 나요",
   newCard: "새 카드 보기",
-  newEpisode: "이야기 보기",
   maxLevel: "최대 레벨",
   now: "지금",
-  watch: "보기",
-  cost: (n: number) => `${COPY_MATERIAL} ${n}`,
   fresh: "새",
   freshCount: (n: number) => `새 카드 ${n}`,
   /** 목업: 정하지 않은 숫자와 설명 */
@@ -69,7 +56,6 @@ export const COPY = {
 export const TAB_LABEL: Record<TabId, string> = {
   overview: "개요",
   growth: "성장 길",
-  bond: "유대",
 };
 
 export const STAGE_LABEL: Record<Stage, string> = {
