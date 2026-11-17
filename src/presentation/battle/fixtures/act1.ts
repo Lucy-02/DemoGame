@@ -1,4 +1,4 @@
-// 예시: 1막 적 그림 (0100). 실제 전투 규칙으로 만든 장면이에요. 그림 크기와 발 위치(enemyFit.json)를 맞출 때 봐요.
+// 예시: 1 · 2막 적 그림 (0100 · 0114). 실제 전투 규칙으로 만든 장면이에요. 그림 크기와 발 위치(enemyFit.json)를 맞출 때 봐요.
 import { Run } from "../../../core/run";
 import { BattleSession } from "../../../session/battle";
 import { battleVM } from "../fromBattle";
@@ -22,4 +22,17 @@ export const ACT1: Record<string, () => BattleVM> = {
   "act1-grimbark": () => scene(["grimbark"]),
   "act1-wildfire": () => scene(["wildfire"]),
   "act1-gale": () => scene(["gale"]),
+};
+
+/** ?scene=act2-<이름>: 2막 잡몹 · 정예 · 보스 (0114) */
+export const ACT2_ART: Record<string, () => BattleVM> = {
+  "act2-mobs-a": () => scene(["rock_pile", "mole", "spark_bug"]),
+  "act2-mobs-b": () => scene(["lightning_rod", "firefly_swarm", "mirror_shard"]),
+  "act2-mobs-c": () => scene(["wandering_armor", "firefly_swarm"]),
+  "act2-turtle": () => scene(["quake_turtle"]),
+  "act2-bird": () => scene(["thunder_bird"]),
+  "act2-lantern": () => scene(["lantern_keeper"]),
+  "act2-landslide": () => scene(["landslide"]),
+  "act2-thunderstorm": () => scene(["thunderstorm"]),
+  "act2-high-noon": () => scene(["high_noon"]),
 };
