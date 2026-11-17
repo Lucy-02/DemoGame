@@ -168,6 +168,8 @@ export interface TargetPick {
   b: Engine;
   rule: EnemyTargetRule;
   alive: BSpirit[];
+  /** 무작위 대상으로 턴 시작에 미리 뽑아 둔 정령 (0128). 없으면 그 자리에서 뽑아요 */
+  aimed?: string;
   picked: BSpirit[] | null;
 }
 
@@ -204,7 +206,9 @@ export const ENEMY_TARGET_STAGES: Stage<TargetPick>[] = [
       if (c.picked) return;
       if (c.rule === "front") c.picked = [c.alive.find((s) => s.id === c.b.frontId) ?? c.alive[0]];
       else if (c.rule === "lowest") c.picked = [c.alive.slice().sort((a, b) => a.hp - b.hp)[0]];
-      else c.picked = [c.b.rng.pick(c.alive)];
+      else if (c.aimed === undefined) c.picked = [c.b.rng.pick(c.alive)];
+      // 미리 뽑은 정령이 그사이 쓰러졌으면 앞열이 맞아요
+      else c.picked = [c.alive.find((s) => s.id === c.aimed) ?? c.alive.find((s) => s.id === c.b.frontId) ?? c.alive[0]];
     },
   },
 ];

@@ -256,3 +256,38 @@ describe("적 효과문 (TEXT_RULES 1절)", () => {
     }
   });
 });
+
+describe("무작위 대상은 턴 시작에 정해요 (0128)", () => {
+  it("칸에 뽑아 둔 정령이 그대로 맞고, 미리 돌려 본 받을 피해도 같아요", () => {
+    const b = battle(["wisp", "wisp", "wisp"]);
+    const aim = b.slots.map((x) => x.aim!);
+    expect(aim.every((a) => a.length === 1)).toBe(true);
+    const want = new Map<string, number>();
+    for (const [id] of aim) want.set(id, (want.get(id) ?? 0) + b.enemyDmgPreview(b.enemies[0], 3));
+    expect(b.forecast().hit).toEqual(want);
+    const before = new Map(b.spirits.map((s) => [s.id, s.hp]));
+    b.endTurn();
+    b.drain();
+    for (const s of b.spirits) expect(before.get(s.id)! - s.hp).toBe(want.get(s.id) ?? 0);
+  });
+
+  it("여러 번 치는 공격은 타격마다 하나씩 뽑아요", () => {
+    const def = ENEMIES.find((d) => d.pattern[0].actions.some((a) => a.type === "attack" && a.target === "random" && (a.hits ?? 1) > 1 && !d.pattern[0].charge))!;
+    const b = battle([def.id]);
+    const a = def.pattern[0].actions.find((x) => x.type === "attack")! as { hits: number };
+    expect(b.slots[0].aim).toHaveLength(a.hits);
+  });
+
+  it("뽑아 둔 정령이 먼저 쓰러지면 앞열이 맞아요", () => {
+    const b = battle(["wisp"]);
+    const other = b.spirits.find((s) => s.id !== b.frontId)!;
+    b.slots[0].aim = [other.id];
+    other.hp = 0;
+    other.downed = true;
+    const front = b.spirit(b.frontId);
+    const hp = front.hp;
+    b.endTurn();
+    b.drain();
+    expect(front.hp).toBeLessThan(hp);
+  });
+});

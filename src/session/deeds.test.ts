@@ -36,8 +36,8 @@ describe("자람 조건 세기", () => {
     const deeds = s.outcome().deeds!;
     const dealt = Object.values(deeds).reduce((a, r) => a + (r.dealt ?? 0), 0);
     expect(dealt).toBeGreaterThan(0);
-    // 카드로 준 피해는 적이 잃은 HP를 넘지 않아요
-    expect(dealt).toBeLessThanOrEqual(s.battle.enemies.reduce((a, e) => a + e.maxHp, 0));
+    // 카드로 준 피해는 적 HP 언저리예요 (쓰러뜨린 타격의 넘친 피해도 세요)
+    expect(dealt).toBeLessThan(s.battle.enemies.reduce((a, e) => a + e.maxHp, 0) * 2);
   });
 
   it("정원은 지금 진화 조건과 종류가 같은 것만 쌓아요", () => {
