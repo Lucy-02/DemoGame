@@ -5,8 +5,9 @@ Electron + Vite + TypeScript + Phaser 4 + Spine. 구조는 `docs/architecture/00
 ## 실행
 - `corepack enable` 후 `pnpm install` (패키지 매니저는 pnpm, 버전은 package.json의 packageManager)
 - `pnpm dev`: Electron 창으로 실행 (핫 리로드)
-- `pnpm dev:web`: 브라우저로만 실행 (저장은 localStorage). 기본은 정본 기준 전투 화면, `?screen=spirits` 정령 관리, `?screen=result` 전투 결과, `?screen=legacy` 임시 UI(`&party=a,b,c`로 파티 고르기)
-- `pnpm dist`: 배포용 폴더를 `release/`에 만들기
+- `pnpm dev:web`: 브라우저로만 실행 (저장은 localStorage). 기본은 저장에 이어진 게임(메인 화면 → 판 → 메인 화면). 고정 장면은 `?screen=battle` 전투, `?screen=spirits` 정령 관리, `?screen=result` 전투 결과, `?screen=home` 메인 화면. `?screen=legacy`는 정원·저장 없는 시험 판(`&party=a,b,c&adult&unlockAll&seed=`)
+- `pnpm dist`: 배포용 폴더를 `release/`에 만들기 (`pnpm dist --mac` · `--win`으로 다른 플랫폼)
+- `pnpm dist:demo`: 데모 빌드를 `release/demo/`에 만들기 (2막까지 + 데모 끝 화면, 0101)
 - `pnpm check`: 타입 검사 + 의존 방향 검사 + 테스트 + 리터럴 검사 + 문서 검사(`pnpm check:docs`)
 - `pnpm test:e2e`: Electron 스모크 테스트 (GPU 없는 리눅스는 `xvfb-run -a` 앞에 붙이기)
 - `pnpm sim 200 [파티 a,b,c]`: 헤드리스 전투 시뮬레이터
@@ -20,7 +21,7 @@ Electron + Vite + TypeScript + Phaser 4 + Spine. 구조는 `docs/architecture/00
 - `src/data/assets.json`: 정령/적 비주얼 지정 (shape / image / spine)
 - `src/core/`: 게임 로직. Phaser를 import하지 않아요(`pnpm lint:deps`가 막아요). 전투 규칙(battle.ts), 런·맵·보상(run.ts), 능력치(stats.ts), 카드 문구(text.ts)
 - `src/presentation/battle/`, `spirits/`, `card/`, `style/`: 정본 기준 새 화면 (`docs/handoff/CLIENT_HANDOFF.md`)
-- `src/presentation/placeholder/`: 임시 UI(`?screen=legacy`). 지금 규칙으로 끝까지 플레이되는 유일한 화면이라, 새 화면이 규칙에 연결될 때 화면 단위로 지워요
+- `src/presentation/placeholder/`: 임시 장면. 게임 흐름(`src/presentation/flow.ts`)에서 새 화면이 아직 없는 칸(지도·이벤트·휴식·덱·판 결과)을 맡아요. 새 화면이 규칙에 연결될 때 화면 단위로 지워요
 - `tools/`: 시뮬레이터와 자동 플레이 AI (골든 테스트도 같이 씀)
 
 ## 디자인 작업

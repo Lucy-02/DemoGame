@@ -58,11 +58,11 @@ export const tokens = {
     }
   },
   "font": {
-    "display": "Orbit, Pretendard, sans-serif",
-    "title": "Orbit, Pretendard, sans-serif",
-    "body": "Orbit, Pretendard, sans-serif",
-    "number": "Orbit, Pretendard, sans-serif",
-    "caption": "Orbit, Pretendard, sans-serif"
+    "display": "Pretendard, sans-serif",
+    "title": "Pretendard, sans-serif",
+    "body": "Pretendard, sans-serif",
+    "number": "Pretendard, sans-serif",
+    "caption": "Pretendard, sans-serif"
   },
   "size": {
     "text": {
@@ -118,7 +118,6 @@ export const tokens = {
       "glass": "rgba(31,29,27,.76)",
       "glassD": "rgba(31,29,27,.86)",
       "glassLine": "rgba(246,241,233,.14)",
-      "plate": "rgba(24,23,22,.74)",
       "chip": "#46423e",
       "face": "#3a3734",
       "paper": "#e9e6df",
@@ -145,7 +144,11 @@ export const tokens = {
         "wood": "#9eab8b",
         "wind": "#b4b8b0",
         "light": "#c9bb93",
-        "none": "#a59f96"
+        "none": "#a59f96",
+        "earth": "#b8a27c",
+        "electric": "#d3c57a",
+        "ice": "#a3c6d6",
+        "shadow": "#a195b8"
       },
       "sil": {
         "star": "#8c887f",
@@ -153,10 +156,6 @@ export const tokens = {
         "jelly": "#7f898b"
       },
       "glassThin": "rgba(31,29,27,.5)",
-      "barTrack": "rgba(246,241,233,.14)",
-      "chipSoft": "rgba(246,241,233,.08)",
-      "chipSofter": "rgba(246,241,233,.07)",
-      "plateLine": "rgba(246,241,233,.06)",
       "debuffLine": "rgba(246,241,233,.32)",
       "groundShade": "rgba(0,0,0,.35)",
       "up": "#3f6b38",
@@ -179,9 +178,8 @@ export const tokens = {
       "cardLiftShadow": "rgba(0,0,0,.5)",
       "cardLiftShine": "rgba(255,255,255,.6)",
       "pvFill": "rgba(122,69,119,.26)",
-      "pvBlockFill": "rgba(122,69,119,.28)",
       "aimGlow": "rgba(201,155,196,.45)",
-      "ghostStripe": "rgba(217,120,106,.35)",
+      "scrimDeep": "rgba(22,20,19,.82)",
       "scrim": "rgba(22,20,19,.55)",
       "glassSel": "rgba(246,241,233,.09)",
       "ink3Spirit": "#a39c92",
@@ -217,37 +215,29 @@ export const tokens = {
     },
     "text": {
       "battle": {
-        "where": "14px",
-        "whereNum": "15px",
-        "orderLabel": "13px",
-        "orderNum": "12px",
+        "orderPlace": "12px",
+        "orderState": "14px",
+        "orderNum": "13px",
+        "orderMore": "12px",
         "hp": "16px",
-        "hpMax": "12px",
-        "incoming": "15px",
-        "incomingLabel": "12px",
+        "incoming": "13px",
         "chip": "13px",
-        "block": "14px",
-        "tag": "12px",
+        "tipTag": "12px",
+        "block": "13px",
         "intentOrder": "12px",
-        "intentAmount": "19px",
-        "intentAmountDebuff": "16px",
-        "intentLabel": "14px",
-        "intentTo": "12px",
-        "intentAll": "13px",
+        "intentAmount": "17px",
+        "intentAmountDebuff": "15px",
+        "intentMult": "12px",
         "cardCost": "14px",
         "cardValue": "22px",
         "cardValueTwo": "15px",
-        "cardMult": "11px",
-        "cardUp": "11px",
+        "cardMult": "12px",
+        "cardUp": "12px",
         "cardName": "12px",
-        "cardWhy": "11.5px",
-        "cardMark": "11px",
+        "cardMark": "12px",
         "mana": "32px",
         "manaMax": "15px",
-        "manaLabel": "12px",
         "endTurn": "18px",
-        "endSub": "12px",
-        "endSubNum": "13px",
         "pile": "13px",
         "tipBody": "12.5px",
         "tipTitle": "15px",
@@ -259,22 +249,19 @@ export const tokens = {
         "bubbleCalcStrong": "13px",
         "bubbleWhy": "12.5px",
         "bubbleOwner": "12px",
-        "pvFrom": "12px",
-        "pvIncomingFrom": "13px",
-        "pvArrow": "12px",
-        "pvHp": "17px",
-        "hit": "16px"
+        "hit": "16px",
+        "tipResult": "20px"
       },
       "spirits": {
         "res": "16px",
         "back": "13px",
         "here": "14px",
         "stage": "12.5px",
-        "chip": "10.5px",
+        "chip": "12px",
         "name": "38px",
         "tags": "13px",
         "per": "14px",
-        "statLabel": "11.5px",
+        "statLabel": "12px",
         "stat": "22px",
         "tab": "14px",
         "tabCount": "12px",
@@ -283,16 +270,16 @@ export const tokens = {
         "secNum": "14px",
         "sbLabel": "13px",
         "sbValue": "13px",
-        "legend": "11.5px",
+        "legend": "12px",
         "action": "16px",
         "stageHead": "16px",
-        "small": "11.5px",
-        "chipName": "11.5px",
+        "small": "12px",
+        "chipName": "12px",
         "ep": "14px",
         "epSide": "12.5px",
         "epNum": "12px",
         "railTab": "13.5px",
-        "railCount": "11px",
+        "railCount": "12px",
         "factLabel": "12px",
         "factValue": "24px",
         "factValueFin": "20px",
@@ -319,7 +306,24 @@ export const tokens = {
         "deck": "22px",
         "price": "17px",
         "service": "24px",
-        "servicePrice": "22px"
+        "servicePrice": "22px",
+        "equipName": "18px",
+        "equipMeta": "12px",
+        "statDelta": "16px",
+        "tipTitle": "15px",
+        "tipTag": "12px",
+        "tipBody": "12.5px",
+        "tipStat": "18px"
+      },
+      "runScreen": {
+        "record": "14px",
+        "story": "18px",
+        "eventName": "20px",
+        "optLabel": "17px",
+        "optText": "14px",
+        "keep": "15px",
+        "onlyNum": "20px",
+        "onlyWas": "14px"
       },
       "branch": {
         "name": "26px",
@@ -335,6 +339,23 @@ export const tokens = {
         "button": "16px",
         "kbd": "12px",
         "cardName": "12px"
+      },
+      "home": {
+        "logo": "44px",
+        "item": "16px",
+        "badge": "12px",
+        "floor": "17px",
+        "primary": "24px"
+      },
+      "join": {
+        "name": "30px",
+        "hero": "40px",
+        "chip": "15px",
+        "cta": "18px"
+      },
+      "depart": {
+        "button": "17px",
+        "kbd": "12px"
       }
     },
     "pattern": {
@@ -519,6 +540,141 @@ export const tokens = {
           0.2,
           1
         ]
+      },
+      "lethal": {
+        "duration": "1100ms",
+        "easing": [
+          0.42,
+          0,
+          0.58,
+          1
+        ],
+        "peak": 0.4,
+        "scale": 1.25
+      },
+      "lossPulse": {
+        "duration": "1100ms",
+        "easing": [
+          0.42,
+          0,
+          0.58,
+          1
+        ],
+        "peak": 0.45,
+        "low": 0.25
+      },
+      "playback": {
+        "step": "450ms",
+        "fastStep": "250ms"
+      },
+      "orderToken": {
+        "act": {
+          "duration": "220ms",
+          "scale": 1.16
+        },
+        "cut": {
+          "duration": "420ms",
+          "peak": 0.85
+        },
+        "enter": {
+          "duration": "200ms",
+          "delay": "120ms",
+          "stagger": "50ms",
+          "from": 0.85,
+          "easing": [
+            0.3,
+            1.5,
+            0.5,
+            1
+          ]
+        },
+        "cursor": {
+          "grow": "200ms"
+        },
+        "leave": {
+          "duration": "160ms"
+        }
+      },
+      "join": {
+        "easing": [
+          0.3,
+          0.7,
+          0.2,
+          1
+        ],
+        "fade": {
+          "delay": "300ms",
+          "duration": "400ms"
+        },
+        "move": {
+          "delay": "600ms",
+          "duration": "800ms"
+        },
+        "halo": {
+          "delay": "1100ms",
+          "duration": "1100ms"
+        },
+        "hop": {
+          "delay": "1600ms",
+          "duration": "420ms"
+        },
+        "info": {
+          "delay": "2000ms",
+          "duration": "450ms"
+        },
+        "party": {
+          "delay": "2300ms",
+          "duration": "350ms"
+        },
+        "face": {
+          "delay": "2450ms",
+          "duration": "420ms"
+        },
+        "cta": {
+          "delay": "2900ms",
+          "duration": "350ms"
+        }
+      },
+      "screen": {
+        "out": {
+          "duration": "120ms"
+        },
+        "in": {
+          "duration": "240ms"
+        }
+      },
+      "hit": {
+        "lunge": {
+          "duration": "220ms",
+          "distance": 14
+        },
+        "recoil": {
+          "delay": "110ms",
+          "duration": "240ms",
+          "distance": 8
+        },
+        "pill": {
+          "hold": "180ms",
+          "fade": "160ms",
+          "rise": 10
+        },
+        "trail": {
+          "duration": "240ms"
+        },
+        "down": {
+          "duration": "240ms",
+          "alpha": 0.35
+        }
+      },
+      "hand": {
+        "stagger": "40ms",
+        "leave": "120ms"
+      },
+      "reveal": {
+        "stagger": "60ms"
+      },
+      "musicFade": {
+        "duration": "600ms"
       }
     },
     "effect": {
@@ -527,6 +683,19 @@ export const tokens = {
         "contrast": 0.7,
         "brightness": 1.1,
         "opacity": 0.62
+      }
+    },
+    "order": {
+      "allyScale": 0.8,
+      "bundleMax": 4,
+      "pastOpacity": 0.5,
+      "ring": {
+        "width": 2,
+        "gap": 3
+      },
+      "badge": {
+        "ratio": 0.42,
+        "deg": 45
       }
     }
   }

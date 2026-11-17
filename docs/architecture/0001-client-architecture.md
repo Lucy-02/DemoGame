@@ -28,7 +28,7 @@ src/platform      Platform 인터페이스, Electron/웹 구현. 저장은 문�
 ## 순서
 
 - PR 1 (이 문서와 함께): Electron 셸, platform, 폴더 이동, Vitest·골든·e2e, 의존 규칙, CI
-- PR 2: session 층 (`getRun/setRun` 제거, 명령 dispatch, 칸 사이 저장)
+- PR 2: session 층 (`getRun/setRun` 제거, 명령 dispatch, 칸 사이 저장). ✅ `session/game.ts`·`session/run.ts`, 화면 사이 이동은 `presentation/flow.ts`
 - PR 3: 연출 시퀀서 (core에 이벤트 추가는 Lucy 확인 후)
 - 그 뒤: DOM 메뉴 층, 확정된 디자인으로 뷰 교체
 
@@ -36,4 +36,4 @@ src/platform      Platform 인터페이스, Electron/웹 구현. 저장은 문�
 
 - Spine 에디터 4.2 / 4.3 (런타임을 거기에 맞춰 고정)
 - 기준 해상도·화면비 대응 (디자인 시스템 §4)
-- 글꼴 번들 (Orbit·Pretendard, 지금은 임시 UI가 Google Fonts CDN 사용)
+- 글꼴 번들 (Pretendard, 0068. 임시 UI는 Google Fonts CDN 사용)

@@ -168,3 +168,55 @@
 - Q2-B 장비 줄 안에: https://claude.ai/artifact/7Kpawa2LB6MaKgcZKL5ctq
 - Q2-C 받는 정령 줄에: https://claude.ai/artifact/KMVowSLLj4QWM7CUEYKxGh
 - 프레임: /mnt/project-files/design/round-q2/A~C/ (f1 일반 장비, f1b 유니크 무기)
+## 묶음 C (2026-11-11): 런 밖 여정 — 만남·해금·출전 준비가 어디서 일어나나
+- 연구 노트: `design/concepts/out-of-run-research.md`, 결정 `0052`
+- C1 정원이 무대: https://claude.ai/artifact/FakW367Fg1xHQvSqHBMcWA
+- C2 유리 틀 하나: https://claude.ai/artifact/4cDNnkZPsuUoGCsjK4FshK
+- C3 정령 줄이 잇는다: https://claude.ai/artifact/FURzzSGZKXstU2uGsxTwiG
+- C4 한 박자씩: https://claude.ai/artifact/4EN59UpcoJ6ZgTEHWTVJ4y
+- 프레임: /mnt/project-files/design/batch-c/C1~C4/ (f1–f10.png)
+
+## 묶음 C 라운드 2 (2026-11-11 새벽): 메인 화면 3안 + 정리안
+- 페르소나 1차: `design/review/persona/batch-c.md` · 메인 화면 조사: `docs/archive/research/out-of-run/D-main-screen.md`
+- 정리안 (런 밖 여정 12프레임): https://claude.ai/artifact/8H2Zzwh38hzRbaJqvnQC3A
+- M1 울타리 한 장: https://claude.ai/artifact/Tqn8PszZua9c7fyM6ftAZx
+- M2 가지런한 무리: https://claude.ai/artifact/BeoXitUZZrkSGtKsxf7FVX
+- M3 큰 정령 길: https://claude.ai/artifact/BE5ZiNetHzrbnQ9JzC7yMi
+- 프레임: /mnt/project-files/design/batch-c-r2/final·M1·M2·M3/
+- M4 섞기안 (가지런한 무리 + 진입점): https://claude.ai/artifact/95Aij4w11QhtzK9deF1i2h (프레임: /mnt/project-files/design/batch-c-r2/M4/)
+- 비교 시트 (C1~C4, 정리안, M1~M4, Lucy가 정할 것): https://claude.ai/artifact/6mczMhvwmbtF6ryQHWifMG
+
+## 묶음 C 라운드 3 (2026-11-11 오전, 메인 화면 다시. M1~M4는 Lucy 폐기)
+- N1 메뉴가 곧 메인: https://claude.ai/artifact/C8KeA5Dg4UTvrtDPY597nN
+- N2 한 아이: https://claude.ai/artifact/ErhBYixxiwsCcDbXrE6Lhf
+- N3 떠날 곳: https://claude.ai/artifact/72FhtacRUUBnhh3BAZok9S
+- N4 돌아오는 곳: https://claude.ai/artifact/4For9c73Q1tshMcagjExrU
+- 프레임: /mnt/project-files/design/batch-c-r3/N1~N4/
+
+## 묶음 C 라운드 4 (2026-11-11 오전, 메인 화면 메뉴 배치만. 배경 미정. N1·N2는 Lucy 폐기)
+- L1 왼쪽 세로 줄: https://claude.ai/artifact/2GgF3WN1krad5WNv7z61Q4
+- L2 오른쪽 아래 묶음: https://claude.ai/artifact/8uz4t8M1oCHY7gkv4jcQ4p
+- L3 아래 가로 줄: https://claude.ai/artifact/AqBM1GsKRToxSgBQwHNw2M
+- 프레임: /mnt/project-files/design/batch-c-r4/L1~L3/
+
+## 결과 창 라운드 X (2026-11-15): 전투 결과를 전투 위 창으로 (Lucy: X1 → 0069)
+- X1 뼈대 그대로 줄인 창: https://claude.ai/artifact/6VPabrXkV3yHm54NkwXMp1
+- X2 정령은 싸운 자리에: https://claude.ai/artifact/SSyLbjtUNDnuioyiBczxCh
+- X3 정령마다 한 칸: https://claude.ai/artifact/XxB1n8gtAsvA13cNj7Dfkp
+- 프레임: /mnt/project-files/design/round-x/X1~X3/ (f1 평소 · f2 카드에 올림 · f3 정예 장비 · f4 정령 하나), 바탕 캡처 /mnt/project-files/design/round-x/assets/
+
+## 깃들기 · 출전 준비 라운드 J (2026-11-16, BRIEF "라운드 J")
+- J1 무대 하나: https://claude.ai/artifact/FsL7WxvqmjcMg4cNtVamHw
+- J2 세 줄 잇기: https://claude.ai/artifact/G3NNkKtdYDesfRfTrYG5jS
+- J3 싸울 자리 미리보기: https://claude.ai/artifact/GQWVZNE6uFn4ae3KEXGDS3
+- 프레임: /mnt/project-files/design/round-j/J1~J3/ (f1 후보 둘 · f2 고름 + 성격 말풍선 · f3 깃듦 박자 · f4 둘째 깃들기 · f5 출전 준비 셋 · f6 출전 준비 둘, 앞열 바꾸는 중), 바탕 캡처 /mnt/project-files/design/round-j/assets/
+
+## 2막 규칙 표시 (2026-11-17, 작업 가정 → 0096)
+- 방전 띠 · 땅속 · 되돌리기 칩: https://claude.ai/artifact/GaerMky9DQJuSMPa2XixY8
+- 사본: /mnt/project-files/design/act2-display/act2-display.html
+
+## 설정 · 판 안 메뉴 (2026-11-17, 0090)
+- 캡처: /mnt/project-files/settings-menu/ (A 가운데 창 = 채택, B 왼쪽 세로 메뉴 · C 메뉴와 설정 나란히 = 기각). 디렉터 판단, Lucy 확인 대기
+
+## 모션 3차 (2026-11-17, 0092 "남은 것")
+- 새 모양이 필요한 여덟 곳의 움직이는 시안(상태 칩 · 방어도 깨짐 · 차징 시작 · 브레이크 · 해방 · 전투 시작 · 승리 · 패배): https://claude.ai/artifact/7evJqo9bQqUkuXZbYMHN6M

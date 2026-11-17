@@ -1,7 +1,8 @@
 // 적 규칙 (0062): 틈, 한 턴에 여러 번 행동, 거친 특성, 오늘 센 기운과 편성 풀
 import { describe, expect, it } from "vitest";
 import { Battle, statusN, type BattleEvent } from "./battle";
-import { C, ENCOUNTERS, applyTraits, enemyDef } from "./data";
+import { C, ENCOUNTERS, applyTraits, enemyDef, partyScale } from "./data";
+import { newGarden } from "./garden";
 import { Rng } from "./rng";
 import { Run } from "./run";
 import type { Element, EnemyTrait } from "./types";
@@ -164,10 +165,79 @@ describe("오늘 센 기운과 편성 풀", () => {
     }
   });
 
+  it("이 판의 첫 정예는 센 기운의 정예예요", () => {
+    for (const el of C.acts[0].elements as Element[]) {
+      for (let seed = 1; seed <= 10; seed++) {
+        const r = new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: false, strongElement: el });
+        expect(r.pickEncounter("elite").element).toBe(el);
+        expect(Run.load(r.save()).strongEliteMet).toBe(true);
+      }
+    }
+  });
+
+  it("첫 판은 센 기운이 정해져 있어요", () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const first = new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: false, garden: newGarden(seed, ["fire_fox"]) });
+      expect(first.strongElement).toBe(C.run_pool.first_run_strong);
+    }
+    const later = new Set<string>();
+    for (let seed = 1; seed <= 30; seed++) {
+      later.add(new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: false, garden: { ...newGarden(seed, ["fire_fox"]), runs: 1 } }).strongElement);
+    }
+    expect(later.size).toBeGreaterThan(1);
+  });
+
   it("정예 칸마다 거친 특성이 하나 붙어요", () => {
     const r = new Run({ seed: 5, frontId: "fire_fox", adult: false, unlockAll: false });
     const elites = [...r.map.values()].filter((n) => n.type === "elite");
     expect(elites.length).toBeGreaterThan(0);
     for (const n of elites) expect(n.trait).toBeDefined();
+  });
+});
+
+describe("판에 표시를 남기는 이벤트", () => {
+  const fresh = (seed = 5, strong: Element = "forest") => new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: false, strongElement: strong });
+
+  it("남은 정예의 거친 특성이 모두 다른 것으로 바뀌어요", () => {
+    const r = fresh();
+    const before = new Map([...r.map.values()].filter((n) => n.type === "elite").map((n) => [n.id, n.trait]));
+    expect(r.applyMark({ type: "rerollEliteTraits" })).toBe(true);
+    for (const [id, t] of before) expect(r.map.get(id)!.trait).not.toBe(t);
+  });
+
+  it("미리 보면 보스의 큰 차징이 시작되는 턴을 알려 줘요", () => {
+    const want: Record<string, number> = { forest: 5, fire: 5, wind: 3 };
+    for (const el of C.acts[0].elements as Element[]) {
+      const r = fresh(5, el);
+      expect(r.bossPeek()).toBeNull();
+      r.applyMark({ type: "peekBossCharge" });
+      expect(Run.load(r.save()).bossPeek()?.turn).toBe(want[el]);
+    }
+  });
+
+  it("보스전의 첫 틈만 길어져요", () => {
+    const r = fresh();
+    r.applyMark({ type: "extendBossGap", turns: 1 });
+    expect(r.battleGapBonus()).toBe(0);
+    r.current = [...r.map.values()].find((n) => n.type === "boss")!;
+    expect(Run.load(r.save()).bossGapBonus).toBe(1);
+    expect(r.battleGapBonus()).toBe(1);
+    expect(r.applyMark({ type: "gold", value: 1 })).toBe(false);
+  });
+});
+
+describe("혼자 떠난 판의 적 세기 (0098)", () => {
+  it("보스 칸은 보스 값을, 그 밖은 기본 값을 써요", () => {
+    const k = C.party_scale["1"];
+    expect(partyScale(1)).toMatchObject({ hp: k.hp, dmg: k.dmg });
+    expect(partyScale(1, true)).toEqual(k.boss);
+    expect(partyScale(2, true)).toEqual(partyScale(2));
+    expect(partyScale(3, true)).toBeUndefined();
+  });
+
+  it("단단한 특성의 방어도는 적 세기를 따라가요", () => {
+    const run = new Run({ seed: 1, frontId: PARTY[0], adult: false, unlockAll: true, party: [PARTY[0]] });
+    const b = new Battle(run.spirits, [], ["frostfang"], run.frontId, new Rng(1), partyScale(1), ["sturdy"]);
+    expect(b.enemy(1).block).toBe(Math.round(C.traits.sturdy_block * C.party_scale["1"].hp));
   });
 });

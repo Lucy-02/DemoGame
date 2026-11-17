@@ -29,8 +29,8 @@ export function fontBox(px: number): FontBox {
 
 export const px = (size: string) => parseFloat(size);
 
-/** Orbit OS/2 yStrikeoutPosition 300, yStrikeoutSize 50 (unitsPerEm 1000). 브라우저 line-through가 이 값을 써요. */
-const STRIKE = { position: 0.3, size: 0.05 };
+/** Pretendard OS/2 yStrikeoutPosition 652, yStrikeoutSize 139 (unitsPerEm 2048). 브라우저 line-through가 이 값을 써요. */
+const STRIKE = { position: 652 / 2048, size: 139 / 2048 };
 
 /** 취소선: 기준선 위 중심 높이와 굵기. 굵기를 주면(text-decoration-thickness) 같은 중심에서 그 굵기로 */
 export function strikeLine(fontPx: number, width?: number) {
@@ -38,8 +38,20 @@ export function strikeLine(fontPx: number, width?: number) {
   return { center: fontPx * STRIKE.position - (fontPx * STRIKE.size) / 2, width: w };
 }
 
+/** 굵게(글꼴에 굵은 벌이 없으면 브라우저가 만든 굵기) · 바깥 외곽선(CSS text-shadow로 두른 테와 같은 두께) */
+export interface TextLook {
+  bold?: boolean;
+  outline?: { color: string; width: number };
+}
+
+const fontOf = (size: string, bold?: boolean) => `${bold ? "bold " : ""}${size} ${FONT_STACK}`;
+
+/** 외곽선을 준 글자를 놓을 때 왼쪽·위로 빼는 양. Phaser가 글자를 외곽선 두께만큼 안쪽에 그리는데,
+ *  두께가 정수가 아니면 반 픽셀에 걸쳐 흐려지니 textStyle이 여백으로 정수까지 채워요. */
+export const outlineInset = (look: TextLook) => Math.ceil(look.outline?.width ?? 0);
+
 /** Phaser Text 스타일. metrics를 직접 넣어 글자 상자 = 브라우저의 인라인 상자가 되게 해요. */
-export function textStyle(size: string, color: string, letterSpacing = 0): Phaser.Types.GameObjects.Text.TextStyle {
+export function textStyle(size: string, color: string, letterSpacing = 0, look: TextLook = {}): Phaser.Types.GameObjects.Text.TextStyle {
   const s = px(size);
   const { ascent, descent } = fontBox(s);
   return {
@@ -48,7 +60,25 @@ export function textStyle(size: string, color: string, letterSpacing = 0): Phase
     color,
     letterSpacing,
     metrics: { ascent, descent, fontSize: ascent + descent },
+    ...(look.bold ? { fontStyle: "bold" } : {}),
+    ...(look.outline ? { stroke: look.outline.color, strokeThickness: look.outline.width * 2, padding: { x: outlineInset(look) - look.outline.width, y: outlineInset(look) - look.outline.width } } : {}),
   };
+}
+
+const inkShifts = new Map<string, number>();
+
+/** 숫자 잉크(실제 획)의 가운데가 글꼴 상자 가운데보다 얼마나 아래인지 (px). 기호와 숫자를 한 눈높이에 놓을 때 빼요. */
+export function digitInkShift(size: string, bold = false): number {
+  const key = fontOf(size, bold);
+  let v = inkShifts.get(key);
+  if (v === undefined) {
+    const b = fontBox(px(size));
+    probe!.font = key;
+    const m = probe!.measureText("0123456789");
+    v = (b.ascent - b.descent) / 2 - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+    inkShifts.set(key, v);
+  }
+  return v;
 }
 
 export interface Span {
@@ -110,41 +140,50 @@ export function inlineLine(
 }
 
 /** 글자 한 조각의 너비만 재요 (배치 전에 가운데 정렬 계산용). */
-export function measure(text: string, size: string, letterSpacing = 0): number {
+export function measure(text: string, size: string, letterSpacing = 0, bold = false): number {
   fontBox(px(size));
-  probe!.font = `${size} ${FONT_STACK}`;
+  probe!.font = fontOf(size, bold);
   // CSS letter-spacing은 글자마다 뒤에 붙어요 (마지막 글자 포함)
   return probe!.measureText(text).width + letterSpacing * [...text].length;
 }
 
 /**
  * 글자 조각들을 maxW 폭에 맞춰 줄로 나눠요 (브라우저 기본 줄바꿈: 공백과 한글 음절 사이에서 끊김).
- * 줄 끝 공백은 버려요.
+ * 줄 끝 공백은 버려요. keepAll이면 낱말 안에서 끊지 않아요 (CSS word-break: keep-all).
  */
-export function wrapSpans(spans: Span[], maxW: number): Span[][] {
+export function wrapSpans(spans: Span[], maxW: number, keepAll = false): Span[][] {
   // 끊을 수 있는 단위로 쪼개기: 한글 한 음절, 공백 하나, 나머지 글자 묶음
   const units: Span[] = [];
+  const unit = keepAll ? /\s|\S+/g : /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]|\s|[^\s\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+/g;
   for (const s of spans) {
-    for (const piece of s.text.match(/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]|\s|[^\s\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]+/g) ?? []) {
+    for (const piece of s.text.match(unit) ?? []) {
       units.push({ ...s, text: piece });
     }
   }
+  // keepAll이면 조각 경계를 넘어 붙어 있는 글자(예: 강조 숫자 + "번")도 한 낱말로 묶어요
+  const groups: Span[][] = [];
+  for (const u of units) {
+    const prev = groups[groups.length - 1];
+    const glue = keepAll && prev && u.text.trim() !== "" && prev[prev.length - 1].text.trim() !== "";
+    if (glue) prev.push(u);
+    else groups.push([u]);
+  }
   const lines: Span[][] = [[]];
   let w = 0;
-  for (const u of units) {
-    const uw = measure(u.text, u.size);
+  for (const g of groups) {
+    const gw = g.reduce((a, u) => a + measure(u.text, u.size), 0);
     const line = lines[lines.length - 1];
-    if (u.text.trim() === "") {
-      if (line.length) { line.push(u); w += uw; }
+    if (g[0].text.trim() === "") {
+      if (line.length) { line.push(...g); w += gw; }
       continue;
     }
-    if (w + uw > maxW && line.length) {
+    if (w + gw > maxW && line.length) {
       while (line.length && line[line.length - 1].text.trim() === "") line.pop();
-      lines.push([u]);
-      w = uw;
+      lines.push([...g]);
+      w = gw;
     } else {
-      line.push(u);
-      w += uw;
+      line.push(...g);
+      w += gw;
     }
   }
   // 같은 모양의 이웃 조각은 다시 합쳐요 (글자 사이 간격이 브라우저와 같아지게)

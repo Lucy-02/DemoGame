@@ -77,10 +77,15 @@ const numPair = (have: number, need: number): Node => ({
 function statBar(g: Phaser.GameObjects.Graphics, r: StatRowVM, was: StatRowVM | undefined, x: number, y: number, w: number, h: number) {
   const k = w / PANEL.statMax;
   const paint = (to: Phaser.GameObjects.Graphics, total: number, stage: number) => {
-    const base = Math.min(w, (total - stage) * k);
+    // 장비 몫은 막대 끝에: 더한 만큼은 막대 뒤에 잇고, 깎은 만큼은 막대 뒤 빈 자리에 표시해요
+    const gain = Math.max(0, r.equip), loss = Math.max(0, -r.equip);
+    const base = Math.min(w, (total - stage - gain) * k);
     box(to, x, y, w, h, h / 2, { fill: P.veil["12"] });
     box(to, x, y, base, h, h / 2, { fill: P.ink2 });
-    if (stage > 0) box(to, x + base, y, Math.min(w - base, stage * k), h, h / 2, { fill: P.ok });
+    const sw = stage > 0 ? Math.min(w - base, stage * k) : 0;
+    if (sw > 0) box(to, x + base, y, sw, h, h / 2, { fill: P.ok });
+    const ex = x + base + sw, ew = Math.min(w - base - sw, (gain || loss) * k);
+    if (ew > 0) box(to, ex, y, ew, h, h / 2, gain ? { fill: P.accHi } : { ring: { width: PANEL.statGrid.equipLoss.ring, color: P.danger, dash: PANEL.statGrid.equipLoss.dash } });
   };
   if (!was) {
     paint(g, r.total, r.stage);
@@ -105,6 +110,10 @@ function overview(d: SpiritDetailVM, statsFrom?: StatRowVM[]): Node[] {
       text(COPY.legendBase, T.legend, P.ink2),
       { t: "block", w: G.legend.w, h: G.legend.h, ml: G.legend.ml, draw: (g, x, y, w, h) => box(g, x, y, w, h, h / 2, { fill: P.ok }) },
       text(COPY.legendStage, T.legend, P.ink2),
+      ...(d.overview.rows.some((r) => r.equip !== 0) ? [
+        { t: "block", w: G.legend.w, h: G.legend.h, ml: G.legend.ml, draw: (g, x, y, w, h) => box(g, x, y, w, h, h / 2, { fill: P.accHi }) } as Node,
+        text(COPY.legendEquip, T.legend, P.ink2),
+      ] : []),
     ],
   };
   const rows: Node[] = d.overview.rows.map((r) => ({
@@ -129,8 +138,8 @@ function overview(d: SpiritDetailVM, statsFrom?: StatRowVM[]): Node[] {
       children: [
         head(COPY.personality),
         { t: "row", children: [personalityPill(per?.name)] },
-        text(per?.desc ?? COPY.undecided, T.tags, P.ink2, { wrap: BODY.w }),
-        ...(per?.note ? [text(per.note, T.small, P.ink3Spirit, { wrap: BODY.w })] : []),
+        text(per?.desc ?? COPY.undecided, T.tags, P.ink2, { wrap: BODY.w, keepAll: true }),
+        ...(per?.note ? [text(per.note, T.small, P.ink3Spirit, { wrap: BODY.w, keepAll: true })] : []),
       ],
     },
   ];
@@ -152,7 +161,7 @@ function growthRow(r: GrowthRowVM, act: PanelActions): Node {
           ...(c.fresh ? [text(COPY.fresh, T.small, P.accHi)] : []),
         ],
       },
-      text(c.detail, T.small, c.open ? P.ink2 : P.ink3Spirit, { wrap: width }),
+      text(c.detail, T.small, c.open ? P.ink2 : P.ink3Spirit, { wrap: width, keepAll: true }),
     ],
   }));
   const notes = r.notes.map((n) => text(n, T.small, r.state === "next" ? P.ink3Spirit : P.ink2));
@@ -291,6 +300,6 @@ function drawSpine(scene: Phaser.Scene, body: Node[]) {
 function releaseFoot(d: SpiritDetailVM): Node {
   return {
     t: "col", gap: B.secGap,
-    children: [head(COPY.release), text(d.overview.release.desc, T.tags, P.ink, { wrap: BODY.w })],
+    children: [head(COPY.release), text(d.overview.release.desc, T.tags, P.ink, { wrap: BODY.w, keepAll: true })],
   };
 }

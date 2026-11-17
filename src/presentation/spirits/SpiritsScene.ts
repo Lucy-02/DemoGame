@@ -1,21 +1,28 @@
 // 정령 관리 화면 (정본: 정령 관리 R4 v5, 탭 내용은 결정 0021). 정원 세션 상태 → 화면 데이터 → 그리기.
 // 상태가 바뀌거나 탭·정령을 고르면 화면을 통째로 다시 그려요(정지 화면이라 충분히 가벼워요).
 import * as Phaser from "phaser";
+import { STAGE_LABEL } from "./copy";
+import { EVOLUTION_SCENE, hasEvolutionCutscene, type EvolutionSceneData } from "../evolution/EvolutionScene";
 import { gardenSpirit, isBranching, type Garden } from "../../core/garden";
 import { GardenSession } from "../../session/garden";
 import { createPuppet, ensurePuppet } from "../puppet/loadPuppet";
 import type { PuppetCore } from "../puppet/puppetCore";
 import { preloadSpiritArt } from "../spiritArt";
+import { preloadHandCard } from "../card/HandCard";
 import { loadIcon } from "../style/icons";
 import type { Stage } from "../../core/types";
 import { DEFAULT_GARDEN, GARDENS } from "./fixtures";
 import { branchPickVM, spiritsVM, type MockView } from "./fromGarden";
 import { MOCKUPS, MOCK_FIRST_STAGE } from "./mockups";
-import type { SpiritDetailVM, StatRowVM, TabId } from "./viewmodel";
+import type { SpiritDetailVM, SpiritsVM, StatRowVM, TabId } from "./viewmodel";
 import { playArtSwap, type ArtMotion } from "./views/artSwap";
 import { drawArt, drawArtGlow, drawBackdrop, drawScrim, type LiveArt } from "./views/backdrop";
 import { BRANCH_ICONS, drawBranchPick, preloadBranchCards } from "./views/branchPick";
 import { ID_ICONS, drawIdCard } from "./views/idCard";
+import { drawMiniSlotHot, preloadEquipArt, type Rect } from "../run/equip";
+import { EQUIP_TIP_ICONS, drawEquipTip } from "../run/equipTip";
+import { EQUIP_MINI, EQUIP_TIP } from "../run/layout";
+import { EQUIPMENT } from "../../core/data";
 import { PANEL_ICONS, drawPanel } from "./views/panel";
 import { RAIL_ICONS, drawFacts, drawRail } from "./views/rail";
 import { BRANCH, FRAME, STRIP } from "./layout";
@@ -34,6 +41,8 @@ export interface SpiritsSceneData {
   closed?: boolean;
   /** 고른 정령의 갈래 고르기 창을 연 채로 시작 (시각 검증용) */
   pick?: boolean;
+  /** 위 띠의 돌아가기 (메인 화면에서 들어왔을 때) */
+  onBack?: () => void;
 }
 
 export class SpiritsScene extends Phaser.Scene {
@@ -48,6 +57,7 @@ export class SpiritsScene extends Phaser.Scene {
   private stripFrom = 0;
   /** 입력 처리 중에 지우면 안 돼서, 다시 그리기는 다음 update에서 해요 */
   private dirty = false;
+  private onBack?: () => void;
   /** 퍼핏 움직임 상태 (정령별). 화면을 다시 그려도 움직임이 처음부터 시작하지 않게 남겨 둬요 */
   private puppetCores = new Map<string, PuppetCore>();
   /** 마지막으로 그린 정령 (다른 정령을 고르면 여기서 전환해요, 0035) */
@@ -68,14 +78,20 @@ export class SpiritsScene extends Phaser.Scene {
     this.selected = data.select ?? this.session.state.spirits[0].id;
     this.tab = data.tab ?? "overview";
     this.open = !data.closed;
+    this.onBack = data.onBack;
     if (data.pick) this.picking = { id: this.selected };
   }
 
   preload() {
-    for (const [id, w] of [...TOP_ICONS, ...ID_ICONS, ...STRIP_ICONS, ...PANEL_ICONS, ...RAIL_ICONS, ...BRANCH_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...TOP_ICONS, ...ID_ICONS, ...STRIP_ICONS, ...PANEL_ICONS, ...RAIL_ICONS, ...BRANCH_ICONS, ...EQUIP_TIP_ICONS]) loadIcon(this, id, w);
+    preloadEquipArt(this, EQUIPMENT.map((e) => e.id));
     for (const s of this.session.state.spirits) {
       const vm = branchPickVM(this.session.state, s.id, "garden");
       if (vm) preloadBranchCards(this, vm);
+      // 전용 무기 말풍선의 기술 카드
+      for (const slot of spiritsVM(this.session.state, s.id).detail.equip) {
+        if (slot?.tip.sheet.card) preloadHandCard(this, slot.tip.sheet.card.vm, { showRarity: true });
+      }
     }
     preloadSpiritArt(this, [...this.session.state.spirits.map((s) => s.id), ...MOCKUPS.map((m) => m.id)]);
   }
@@ -131,8 +147,12 @@ export class SpiritsScene extends Phaser.Scene {
       this.artMotion = { alpha: 1, dx: 0 };
     }
     drawScrim(this);
-    drawTopbar(this, vm.material);
-    drawIdCard(this, d);
+    drawTopbar(this, vm.material, this.onBack);
+    this.equipTip = [];
+    drawIdCard(this, d, {
+      over: (i, r) => this.showEquipTip(vm, i, r),
+      out: () => this.hideEquipTip(),
+    });
     if (this.open) {
       drawPanel(this, d, this.tab, {
         tab: (t) => this.show(this.selected, t, true),
@@ -156,11 +176,47 @@ export class SpiritsScene extends Phaser.Scene {
     this.paintPick();
   }
 
+  /** 장비 칸에 올리면 뜨는 것(밝은 테 · 말풍선). 화면을 다시 그리지 않고 얹었다 지워요 */
+  private equipTip: Phaser.GameObjects.GameObject[] = [];
+
+  private showEquipTip(vm: SpiritsVM, i: number, r: Rect) {
+    this.hideEquipTip();
+    const slot = vm.detail.equip[i];
+    if (!slot) return;
+    const before = new Set(this.children.list);
+    drawMiniSlotHot(this, r, EQUIP_MINI.s32);
+    const top = r.y + r.h + EQUIP_MINI.pip.mt + EQUIP_MINI.pip.d + EQUIP_TIP.gapToLane;
+    drawEquipTip(this, slot.tip, { kind: "under", left: r.x, top }, vm.roster.find((t) => t.id === vm.selected));
+    this.equipTip = this.children.list.filter((o) => !before.has(o));
+  }
+
+  private hideEquipTip() {
+    for (const o of this.equipTip) o.destroy();
+    this.equipTip = [];
+  }
+
   /** 키우기: 갈래 고르기면 창을 열고, 아니면 바로 키워요 */
   private grow(id: string) {
-    if (!isBranching(gardenSpirit(this.session.state, id))) return this.session.dispatch({ kind: "evolve", id });
+    if (!isBranching(gardenSpirit(this.session.state, id))) return this.evolve(id);
     this.picking = { id };
     this.redraw();
+  }
+
+  /** 키우고, 유체 → 성체면 진화 컷신(0037)을 틀어요. 컷신이 끝나면 이 화면으로 돌아와요 */
+  private evolve(id: string, branch?: string) {
+    const before = gardenSpirit(this.session.state, id);
+    this.session.dispatch({ kind: "evolve", id, branch });
+    const after = gardenSpirit(this.session.state, id);
+    if (after.stage === before.stage || !hasEvolutionCutscene(id, before.stage, after.stage)) return;
+    if (!this.scene.manager.getScene(EVOLUTION_SCENE)) return;
+    this.scene.launch(EVOLUTION_SCENE, {
+      id, from: before.stage, to: after.stage, personality: after.personality, stageName: STAGE_LABEL[after.stage],
+      onDone: () => {
+        this.scene.stop(EVOLUTION_SCENE);
+        this.scene.wake();
+      },
+    } satisfies EvolutionSceneData);
+    this.scene.sleep();
   }
 
   /** 갈래 창이 있을 때만 쓰는 위 카메라 (아래 화면만 흐리게) */
@@ -190,9 +246,9 @@ export class SpiritsScene extends Phaser.Scene {
         const b = vm.selected !== undefined ? vm.branches[vm.selected] : undefined;
         if (!b) return;
         this.picking = undefined;
-        // 갈래 선택 → 진화 컷신(0037, 아직 연결 전) → 결과. 지금은 바로 키워요
-        this.session.dispatch({ kind: "evolve", id: p.id, branch: b.id });
+        // 갈래 선택 → 진화 컷신(0037) → 이 화면
         this.redraw();
+        this.evolve(p.id, b.id);
       },
       later: () => {
         this.picking = undefined;

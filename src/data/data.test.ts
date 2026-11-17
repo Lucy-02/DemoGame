@@ -1,8 +1,8 @@
 // 데이터 무결성: JSON끼리 가리키는 ID가 모두 있는지 확인해요.
 import { readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ASSETS, CARDS, ENCOUNTERS, ENEMIES, EQUIPMENT, GROWTH, PERSONALITIES, SPIRITS } from "../core/data";
-import { DEFAULT_LOCALE, LOCALE_IDS, cardTextIds } from "../core/l10n";
+import { ASSETS, CARDS, ENCOUNTERS, ENEMIES, EQUIPMENT, GROWTH, PERSONALITIES, SPIRITS, equipName } from "../core/data";
+import { DEFAULT_LOCALE, LOCALE_IDS, cardTextIds, equipTextIds } from "../core/l10n";
 import { cardProblems, equipProblems } from "../core/validate";
 import { CARD_FILES } from "./cards";
 import { EQUIP_FILES } from "./equipment";
@@ -65,5 +65,15 @@ describe("데이터 무결성", () => {
     for (const locale of LOCALE_IDS) {
       expect(cardTextIds(locale).filter((id) => !cardIds.has(id)).map((id) => `${locale}:${id}`)).toEqual([]);
     }
+  });
+
+  it("기본 언어는 모든 장비 이름이 있고, 어느 언어든 없는 장비를 적지 않아요", () => {
+    const equipIds = ids(EQUIPMENT);
+    expect(EQUIPMENT.filter((e) => !equipTextIds(DEFAULT_LOCALE).includes(e.id)).map((e) => e.id)).toEqual([]);
+    for (const locale of LOCALE_IDS) {
+      expect(equipTextIds(locale).filter((id) => !equipIds.has(id)).map((id) => `${locale}:${id}`)).toEqual([]);
+    }
+    const names = EQUIPMENT.map((e) => equipName(e.id));
+    expect(new Set(names).size).toBe(names.length);
   });
 });

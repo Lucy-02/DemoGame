@@ -11,5 +11,6 @@ export function createElectronPlatform(bridge: PlatformBridge): Platform {
     setFullscreen: (on) => bridge.setFullscreen(on),
     isFullscreen: () => bridge.isFullscreen(),
     quit: () => bridge.quit(),
+    logError: (text) => bridge.logError(text),
   };
 }

@@ -42,6 +42,8 @@ export const ID = {
   per: { gap: 8, pad: [2, 10, 2, 10] as [number, number, number, number], radius: 6 },
   /** .q-stats margin-top 6 padding-top 12 border-top 1 gap 8 · .q-st gap 2 · b line-height 1.1 */
   stats: { mt: 6, pt: 12, line: 1, gap: 2, valueLh: 1.1 },
+  /** 장비 칸 (Q2-A f5 .gslots): margin-top 16 (카드 gap 8 + 8) padding-top 18 border-top 1 gap 26 */
+  equip: { mt: 8, pt: 18, gap: 26 },
 };
 
 /** .q-panel right 20 top 72 460×548 radius 16 */
@@ -54,7 +56,11 @@ export const PANEL = {
   /** .q-body padding 18 24 20 gap 18 · .q-sec gap 10 · h4 gap 8 */
   body: { pad: [18, 24, 20, 24] as [number, number, number, number], gap: 18, secGap: 10, headGap: 8 },
   /** .q-body.ov .q-sb grid 56 1fr 30, gap 14 12 · .q-bar height 6 radius 3 · .q-lg gap 6, i 10×4 */
-  statGrid: { labelW: 56, valueW: 30, rowGap: 14, colGap: 12, bar: 6, legend: { gap: 6, w: 10, h: 4, ml: 6 } },
+  statGrid: {
+    labelW: 56, valueW: 30, rowGap: 14, colGap: 12, bar: 6, legend: { gap: 6, w: 10, h: 4, ml: 6 },
+    /** 장비가 깎은 몫: 점선 테 (0066) */
+    equipLoss: { ring: 1, dash: 2 },
+  },
   /** .q-act height 48 radius 12 */
   action: { h: 48, radius: 12 },
   /** 작은 버튼 .q-learn height 30 padding 0 16, .btn radius 8 */

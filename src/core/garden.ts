@@ -52,6 +52,10 @@ export interface Garden {
   runs?: number;
   /** 아직 고르지 않은 깃들기 수 (0053) */
   joins?: number;
+  /** 지난 판의 앞열. 출전 준비의 기본값이에요 (0076 14) */
+  front?: string;
+  /** 한 번 짚어 준 안내 (0095). 다시 나오지 않아요 */
+  guides?: string[];
 }
 
 // ───────────────────────── 만들기 · 찾기 ─────────────────────────
@@ -79,19 +83,45 @@ const START_SALT = 0x51ed;
 
 /** 지금 깃들 수 있는 후보: 시작 풀에서 아직 없는 정령 가운데 둘 (0053). 고를 것이 없으면 빈 목록 */
 export function joinOffer(g: Garden): string[] {
-  if (!g.joins) return [];
-  const left = (C.start_pool as string[]).filter((id) => !g.spirits.some((s) => s.id === id));
-  return new Rng((g.seed ?? 0) + g.spirits.length * 7919).shuffle(left).slice(0, 2);
+  return joinCandidates(g).map((c) => c.id);
 }
 
-/** 후보 가운데 하나가 깃들어요 */
+/** 깃들기 후보 하나: 정령과 깃들면 가질 성격 */
+export interface JoinCandidate {
+  id: string;
+  personality: string;
+}
+
+/**
+ * 깃들기 후보와 후보마다의 성격 (0053 · 0076 12). 고르기 화면에서 성격을 보고 골라요.
+ * 성격은 후보를 띄울 때 후보마다 따로 굴리고, 두 후보가 같은 성격을 받지 않아요. 같은 정원이면 다시 켜도 같아요.
+ */
+export function joinCandidates(g: Garden): JoinCandidate[] {
+  if (!g.joins) return [];
+  const left = (C.start_pool as string[]).filter((id) => !g.spirits.some((s) => s.id === id));
+  const ids = new Rng((g.seed ?? 0) + g.spirits.length * 7919).shuffle(left).slice(0, 2);
+  const personalities = new Rng((g.seed ?? 0) + g.spirits.length * 104729).shuffle(PERSONALITIES.map((p) => p.id));
+  return ids.map((id, i) => ({ id, personality: personalities[i % personalities.length] }));
+}
+
+/** 후보 가운데 하나가 그 후보의 성격으로 깃들어요 */
 export function join(g: Garden, id: string): Garden {
-  if (!joinOffer(g).includes(id)) return g;
-  const personality = new Rng((g.seed ?? 0) + g.spirits.length * 104729).pick(PERSONALITIES).id;
+  const pick = joinCandidates(g).find((c) => c.id === id);
+  if (!pick) return g;
   return {
     ...g, joins: (g.joins ?? 0) - 1,
-    spirits: [...g.spirits, { id, exp: 0, stage: "baby", personality, deed: 0, affinity: 0, episodes: 0, seen: [] }],
+    spirits: [...g.spirits, { id, exp: 0, stage: "baby", personality: pick.personality, deed: 0, affinity: 0, episodes: 0, seen: [] }],
   };
+}
+
+/** 다음 판의 기본 앞열: 지난 판의 앞열, 없으면 첫 정령 (0076 14) */
+export function defaultFront(g: Garden): string {
+  return g.front && g.spirits.some((s) => s.id === g.front) ? g.front : g.spirits[0].id;
+}
+
+/** 이번 판의 앞열을 남겨요. 가진 정령만 돼요 */
+export function setFront(g: Garden, id: string): Garden {
+  return g.spirits.some((s) => s.id === id) && g.front !== id ? { ...g, front: id } : g;
 }
 
 /** 시작 풀에 아직 없는 정령이 남았을 때만 깃들기를 하나 더해요 */
@@ -284,6 +314,12 @@ export function isCardUnlocked(g: Garden, card: CardDef): boolean {
 /** 갈래 표시가 있는 성체 해금 카드 (갈래마다 하나) */
 export const isBranchAdultCard = (card: CardDef) => !!card.branch && !!card.spirit && card.unlock === `${card.spirit}_adult`;
 
+/** 이 안내를 이미 짚었는지 (0095) */
+export const hasGuide = (g: Garden, id: string) => !!g.guides?.includes(id);
+
+/** 안내를 짚었다고 적어요. 다시 나오지 않아요 */
+export const markGuide = (g: Garden, id: string): Garden => (hasGuide(g, id) ? g : { ...g, guides: [...(g.guides ?? []), id] });
+
 /** 해금을 봤다고 표시해요 (보면 배지가 사라져요, "받기" 버튼 없음) */
 export function markSeen(g: Garden, id: string, keys: readonly string[]): Garden {
   return withSpirit(g, id, (s) => ({ ...s, seen: [...new Set([...s.seen, ...keys])] }));
@@ -367,4 +403,14 @@ export function todos(s: GardenSpirit): Todo[] {
   for (const key of spiritUnlocks(s)) if (!s.seen.includes(key) && hasCard(key)) out.push({ kind: "unlock", key });
   if (episodesOpen(s) > s.episodes) out.push({ kind: "episode" });
   return out;
+}
+
+/** 뒤 막에서 출발할 수 있나 (0108): 그 막이 켜져 있고, 출전 정령이 모두 기준 단계(성체) 이상일 때 */
+export function deepStartOpen(g: Garden, party: string[]): boolean {
+  const d = C.deep_start;
+  if (C.acts_enabled < d.act || !party.length) return false;
+  return party.every((id) => {
+    const s = g.spirits.find((x) => x.id === id);
+    return !!s && stageRank(s.stage) >= stageRank(d.stage as Stage);
+  });
 }

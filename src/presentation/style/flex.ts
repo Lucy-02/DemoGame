@@ -3,9 +3,9 @@
 // flex:1(grow), margin-left:auto, 둥근 바탕·inset 테두리. 글자 항목의 상자 = CSS 줄 상자(크기 × 1.25).
 import type * as Phaser from "phaser";
 import { box, circle, type BoxStyle } from "./draw";
-import { icon as drawIcon } from "./icons";
+import { icon as drawIcon, iconFit } from "./icons";
 import { rgba } from "./color";
-import { LINE_HEIGHT, fontBox, measure, px, strikeLine, textStyle, wrapSpans } from "./text";
+import { LINE_HEIGHT, digitInkShift, fontBox, measure, outlineInset, px, strikeLine, textStyle, wrapSpans, type TextLook } from "./text";
 
 interface Margins {
   ml?: number | "auto";
@@ -18,7 +18,7 @@ interface Margins {
   onClick?: () => void;
 }
 
-export interface TextNode extends Margins {
+export interface TextNode extends Margins, TextLook {
   t: "text";
   text: string;
   size: string;
@@ -33,10 +33,16 @@ export interface TextNode extends Margins {
   strike?: { color?: string; width?: number };
   /** 이 폭에서 줄을 바꿔요 (브라우저 기본 줄바꿈). 상자 폭 = 이 값 */
   wrap?: number;
+  /** 줄을 바꿀 때 낱말 안에서 끊지 않아요 (word-break: keep-all) */
+  keepAll?: boolean;
+  /** 숫자 잉크 가운데를 상자 가운데에 맞추고 픽셀에 붙여요 (기호 옆 숫자) */
+  ink?: boolean;
+  /** 자리를 픽셀에 붙여요 (작은 글자가 반 픽셀에 걸쳐 흐려지지 않게) */
+  snap?: boolean;
 }
 
 /** 줄바꿈할 글자의 줄들 */
-const linesOf = (n: TextNode) => (n.wrap ? wrapSpans([{ text: n.text, size: n.size, color: n.color }], n.wrap).map((l) => l.map((s) => s.text).join("")) : [n.text]);
+const linesOf = (n: TextNode) => (n.wrap ? wrapSpans([{ text: n.text, size: n.size, color: n.color }], n.wrap, n.keepAll).map((l) => l.map((s) => s.text).join("")) : [n.text]);
 
 export interface IconNode extends Margins {
   t: "icon";
@@ -44,6 +50,8 @@ export interface IconNode extends Margins {
   w: number;
   h: number;
   tint?: string;
+  /** 기호 잉크 가운데를 상자 가운데에 맞추고 픽셀에 붙여요. y = 세로만, xy = 가로도 */
+  fit?: "y" | "xy";
 }
 
 export interface ImageNode extends Margins {
@@ -102,7 +110,7 @@ export function size(n: Node): Size {
       const b = fontBox(fs);
       const lineH = fs * (n.lh ?? LINE_HEIGHT);
       const h = lineH * linesOf(n).length;
-      return { w: n.w ?? n.wrap ?? measure(n.text, n.size, n.ls), h, base: (lineH - (b.ascent + b.descent)) / 2 + b.ascent };
+      return { w: n.w ?? n.wrap ?? measure(n.text, n.size, n.ls, n.bold), h, base: (lineH - (b.ascent + b.descent)) / 2 + b.ascent };
     }
     case "icon":
     case "image":
@@ -152,14 +160,26 @@ export function place(
       if (n.wrap) {
         const lineH = px(n.size) * (n.lh ?? LINE_HEIGHT);
         linesOf(n).forEach((line, i) => {
-          scene.add.text(x, y + i * lineH + (lineH - (b.ascent + b.descent)) / 2, line, textStyle(n.size, n.color, n.ls));
+          const top = y + i * lineH + (lineH - (b.ascent + b.descent)) / 2;
+          scene.add.text(x, top, line, textStyle(n.size, n.color, n.ls));
+          if (n.strike) {
+            const st = strikeLine(px(n.size), n.strike.width);
+            const c = rgba(n.strike.color ?? n.color);
+            scene.add.graphics().fillStyle(c.color, c.alpha).fillRect(x, top + b.ascent - st.center - st.width / 2, measure(line, n.size, n.ls), st.width);
+          }
         });
         return;
       }
-      const top = y + (H - (b.ascent + b.descent)) / 2;
-      const tw = measure(n.text, n.size, n.ls);
-      const tx = n.w ? x + (n.w - tw) / 2 : x;
-      scene.add.text(tx, top, n.text, textStyle(n.size, n.color, n.ls));
+      let top = y + (H - (b.ascent + b.descent)) / 2;
+      const tw = measure(n.text, n.size, n.ls, n.bold);
+      let tx = n.w ? x + (n.w - tw) / 2 : x;
+      if (n.ink) top -= digitInkShift(n.size, n.bold);
+      if (n.ink || n.snap) {
+        top = Math.round(top);
+        tx = Math.round(tx);
+      }
+      const o = outlineInset(n);
+      scene.add.text(tx - o, top - o, n.text, textStyle(n.size, n.color, n.ls, n));
       if (n.strike) {
         const st = strikeLine(px(n.size), n.strike.width);
         const c = rgba(n.strike.color ?? n.color);
@@ -169,7 +189,8 @@ export function place(
       return;
     }
     case "icon":
-      drawIcon(scene, x, y, n.id, n.w, n.h, n.tint);
+      if (n.fit) iconFit(scene, x, y, n.id, n.w, n.tint, n.fit);
+      else drawIcon(scene, x, y, n.id, n.w, n.h, n.tint);
       return;
     case "image": {
       const key = n.round ? roundTexture(scene, n.key, W) : n.key;

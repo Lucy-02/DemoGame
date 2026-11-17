@@ -3,6 +3,7 @@ import { app, BrowserWindow, ipcMain, net, protocol, shell } from "electron";
 import { join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { IPC } from "../../src/platform/bridge";
+import { createErrorLog } from "./errorLog";
 import { createFileStorage } from "./storage";
 
 const SCHEME = "app";
@@ -17,6 +18,10 @@ protocol.registerSchemesAsPrivileged([
   { scheme: SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ]);
 
+/** 게임 기준 해상도와 바닥색 (렌더러의 FRAME · tokens.provisional.palette.floor와 같은 값) */
+const BASE = { w: 1280, h: 800 };
+const FLOOR = "#232120";
+
 function serveRenderer() {
   protocol.handle(SCHEME, (req) => {
     const { pathname } = new URL(req.url);
@@ -28,7 +33,16 @@ function serveRenderer() {
   });
 }
 
+/** 오류 기록: userData/logs/error.log. 렌더러의 잡히지 않은 오류와 main의 오류를 같이 적어요 */
+function openErrorLog() {
+  const log = createErrorLog(join(app.getPath("userData"), "logs", "error.log"));
+  // 기록만 하고 기본 동작(종료)은 그대로 둬요
+  process.on("uncaughtExceptionMonitor", (e) => void log.append(`v${app.getVersion()} main ${e.stack ?? e.message}`));
+  return log;
+}
+
 function registerIpc() {
+  const errors = openErrorLog();
   const storage = createFileStorage(join(app.getPath("userData"), "saves"));
   ipcMain.handle(IPC.read, (_e, key: string) => storage.read(key));
   ipcMain.handle(IPC.write, (_e, key: string, text: string) => {
@@ -41,14 +55,19 @@ function registerIpc() {
   });
   ipcMain.handle(IPC.isFullscreen, (e) => BrowserWindow.fromWebContents(e.sender)?.isFullScreen() ?? false);
   ipcMain.handle(IPC.quit, () => app.quit());
+  ipcMain.handle(IPC.logError, (_e, text: string) => errors.append(String(text)));
 }
 
 function createWindow() {
   const win = new BrowserWindow({
-    // 게임 기준 해상도(1280×800)와 같은 크기
-    width: 1280,
-    height: 800,
+    // 게임 기준 해상도(1280×800)와 같은 크기로 열어요. 크기를 바꾸면 화면이 비율을 지키며 따라 늘어요 (0084 4번)
+    width: BASE.w,
+    height: BASE.h,
+    minWidth: BASE.w / 2,
+    minHeight: BASE.h / 2,
     useContentSize: true,
+    // 남는 곳(비율이 다른 전체화면)은 게임 바닥색 (index.html과 같은 값)
+    backgroundColor: FLOOR,
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
@@ -58,6 +77,8 @@ function createWindow() {
       sandbox: true,
     },
   });
+  // 창 모드에서는 화면 비율대로만 늘어나서 남는 곳이 없어요
+  win.setAspectRatio(BASE.w / BASE.h);
   win.once("ready-to-show", () => win.show());
 
   // 게임 창 밖으로 나가는 탐색은 막고, 외부 링크는 기본 브라우저로 열어요.

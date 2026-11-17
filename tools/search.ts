@@ -61,7 +61,7 @@ export function staticEval(b: Battle, o: SearchOpts): number {
 }
 
 const stateKey = (b: Battle) => {
-  const pl = b.planned.map((p) => `${p.card.cardId}|${p.owner}|${p.end}|${p.target ? (p.target.side === "e" ? p.target.uid : p.target.id) : ""}|${p.repeat ? 1 : 0}|${p.card.held ? 1 : 0}|${cardDef(p.card.cardId).effects.some((x) => x.op === "combo") ? p.comboCount : ""}`).sort().join(";");
+  const pl = b.planned.map((p) => !p.card ? `release|${p.owner}|${p.end}` : `${p.card.cardId}|${p.owner}|${p.end}|${p.target ? (p.target.side === "e" ? p.target.uid : p.target.id) : ""}|${p.repeat ? 1 : 0}|${p.card.held ? 1 : 0}|${cardDef(p.card.cardId).effects.some((x) => x.op === "combo") ? p.comboCount : ""}`).sort().join(";");
   const hand = b.hand.map((c) => `${c.cardId}|${c.owner}|${c.tempCostDelta}|${c.locked ? 1 : 0}|${c.held ? 1 : 0}`).sort().join(";");
   const foot = b.spirits.map((s) => (s.status as any).footing?.n ?? 0).join(",");
   return `${pl}#${hand}#${b.mana}#${foot}#${b.repeatNext ? b.repeatNext.maxCost : ""}#${b.stars.choice ? 1 : 0}#${b.enemies.map((e) => e.hp).join(",")}`;

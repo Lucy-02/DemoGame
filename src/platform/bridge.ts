@@ -8,6 +8,7 @@ export interface PlatformBridge {
   setFullscreen(on: boolean): Promise<void>;
   isFullscreen(): Promise<boolean>;
   quit(): Promise<void>;
+  logError(text: string): Promise<void>;
 }
 
 export const IPC = {
@@ -17,6 +18,7 @@ export const IPC = {
   setFullscreen: "platform:setFullscreen",
   isFullscreen: "platform:isFullscreen",
   quit: "platform:quit",
+  logError: "platform:logError",
 } as const;
 
 /** 저장 키는 파일 이름이 되므로 좁게 제한해요. 경로 조작(../)을 막는 1차 방어선이에요. */

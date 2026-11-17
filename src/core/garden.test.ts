@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { C, CARDS, GROWTH, SPIRITS, enemyDef, partyScale, scaleEnemy } from "./data";
 import {
-  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, join, joinOffer, keepEquipment, levelOf, newGarden,
+  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, joinCandidates, defaultFront, setFront, join, joinOffer, keepEquipment, levelOf, newGarden,
   seeEpisode, startGarden, todos, unlockKeys, type Garden,
 } from "./garden";
 import { Run } from "./run";
@@ -154,6 +154,39 @@ describe("처음 세 마리 (0053)", () => {
     expect(joinOffer(grantBattle(g, party, "boss"))).toEqual([]);
   });
 
+  it("깃들기 후보마다 성격이 따로 있고, 고르면 그 성격으로 깃들어요 (0076 12)", () => {
+    for (let seed = 0; seed < 30; seed++) {
+      const g = endRun(startGarden(seed));
+      const cands = joinCandidates(g);
+      expect(cands.map((c) => c.id)).toEqual(joinOffer(g));
+      expect(new Set(cands.map((c) => c.personality)).size).toBe(cands.length);
+      expect(joinCandidates(g)).toEqual(cands);
+      for (const c of cands) expect(gardenSpirit(join(g, c.id), c.id).personality).toBe(c.personality);
+    }
+  });
+
+  it("한 판에 깃들기가 둘이면 연달아 골라요: 첫째를 고른 뒤 남은 정령에서 다시 둘 (0076 10)", () => {
+    const g0 = startGarden(7);
+    const g = endRun(grantBattle(g0, [g0.spirits[0].id], "boss"));
+    expect(g.joins).toBe(2);
+    const first = joinOffer(g);
+    const g1 = join(g, first[0]);
+    const second = joinOffer(g1);
+    expect(second).toHaveLength(2);
+    expect(second).not.toContain(first[0]);
+    const g2 = join(g1, second[0]);
+    expect(g2.spirits).toHaveLength(3);
+    expect(joinOffer(g2)).toEqual([]);
+  });
+
+  it("기본 앞열은 지난 판의 앞열이고, 없거나 가진 정령이 아니면 첫 정령이에요 (0076 14)", () => {
+    const g = newGarden(1);
+    expect(defaultFront(g)).toBe(g.spirits[0].id);
+    const g2 = setFront(g, g.spirits[2].id);
+    expect(defaultFront(g2)).toBe(g.spirits[2].id);
+    expect(setFront(g2, "nobody")).toBe(g2);
+  });
+
   it("출전하지 않은 정령은 경험을 받지 않아요", () => {
     const g = grantBattle(newGarden(1), ["fire_fox"], "normal");
     expect(g.spirits.map((s) => s.exp)).toEqual([GROWTH.exp.normal, 0, 0]);
@@ -250,5 +283,16 @@ describe("장비 남기기 (0056)", () => {
   it("지니지 않은 장비는 남길 수 없어요", () => {
     const g = withStage("adult");
     expect(() => keepEquipment(g, [foxRun(g)], { fire_fox: ["fox_spear"] })).toThrow();
+  });
+});
+
+describe("한 번 짚는 안내 (0095)", () => {
+  it("짚은 안내는 정원에 남고 두 번 적히지 않아요", async () => {
+    const { hasGuide, markGuide, newGarden } = await import("./garden");
+    const g = newGarden(1);
+    expect(hasGuide(g, "break")).toBe(false);
+    const seen = markGuide(g, "break");
+    expect(hasGuide(seen, "break")).toBe(true);
+    expect(markGuide(seen, "break")).toBe(seen);
   });
 });

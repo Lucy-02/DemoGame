@@ -34,6 +34,9 @@ export interface TipSkin {
     size: string; color: string; lh: number; gap: number;
     tag: { size: string; color: string; padX: number; radius: number; ring: number; ringColor: string };
   };
+  /** 결과 줄의 큰 값 (대상 이름은 body 모양) · 칩 줄의 강조 색 (칩 모양은 title.tag) */
+  result?: { size: string; color: string; gap: number };
+  tone?: { warn: string; acc: string };
   /** 아래 꼬리: 45° 돌린 정사각형, 아래 두 변에 선 */
   tail?: { size: number; line: number; lineColor: string };
   /** 나타날 때 이만큼 아래에서 올라와요 (움직임 시간·곡선은 provisional.motion.hover) */
@@ -54,6 +57,8 @@ export const PAPER: TipSkin = {
     body: role(T.bubbleText, T.bubbleStrong, P.paperInk, P.paperInk, 1.5),
     calc: role(T.bubbleCalc, T.bubbleCalcStrong, P.bubbleSub, P.paperInk, 1.25, 5),
     why: role(T.bubbleWhy, T.bubbleWhy, P.bubbleWhy, P.bubbleWhy, 1.25),
+    // 용어 풀이: 계산 줄과 같은 글자 (새 값 없음)
+    term: role(T.bubbleCalc, T.bubbleCalcStrong, P.bubbleSub, P.paperInk, 1.25),
     meta: role(T.bubbleOwner, T.bubbleOwner, P.bubbleSub, P.bubbleSub, 1.25),
   },
   termOffset: 3,
@@ -74,4 +79,7 @@ export const GLASS: TipSkin = {
     size: T.tipTitle, color: P.ink, lh: 1.45, gap: 6,
     tag: { size: T.tipChip, color: P.ink3, padX: 6, radius: 8, ring: 1, ringColor: P.glassLine },
   },
+  /** 0074 시안 .bt .res gap 6 · .big · 칩 강조: 허점 = 노랑, 브레이크 = 보라 */
+  result: { size: T.tipResult, color: P.ink, gap: 6 },
+  tone: { warn: P.warn, acc: P.accHi },
 };

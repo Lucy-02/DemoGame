@@ -16,6 +16,8 @@ export const STATUS_IDS = [
   "delayed",
   // 보스의 틈 (0062)
   "gap",
+  // 땅속 숨기 (2막)
+  "burrow",
   // 카멜레온
   "hidden", "ready",
 ] as const;
@@ -96,6 +98,8 @@ export interface BEnemy extends StatusHolder {
   gapOpened: boolean;
   /** 세지는 화상을 쓴 횟수 */
   ramp: number;
+  /** 이번 턴 첫 타격을 이미 되돌렸는지 (2막) */
+  reflected: boolean;
 }
 
 export const isEnemy = (h: BSpirit | BEnemy): h is BEnemy => "uid" in h;
@@ -114,7 +118,8 @@ export interface BCard extends DeckCard {
 
 /** 계획된 아군 카드. 턴 종료 때 끝나는 시각 순서로 재생돼요 (0036). */
 export interface Planned {
-  card: BCard;
+  /** 카드. 해방은 카드가 없어요 (null) */
+  card: BCard | null;
   owner: string;
   target?: Ref;
   start: number;
@@ -123,6 +128,14 @@ export interface Planned {
   repeat: boolean;
   /** 재생할 때 쓴 받아칠 기회가 끌어온 공격 피해 (안 썼으면 0) */
   pulled?: number;
+}
+
+/** 방전 칸: 이번 턴 시간축의 [from, to) 안에서 끝나는 카드의 주인이 dmg를 받아요. 깐 적이 쓰러지면 꺼져요 (2막) */
+export interface Zone {
+  uid: number;
+  from: number;
+  to: number;
+  dmg: number;
 }
 
 /** 이번 턴 시간축에 박힌 적 행동 */
@@ -164,6 +177,18 @@ export interface HoldState {
   highTide: boolean;
   /** 다음 턴 더 뽑는 수 (용궁) */
   nextTurnDraw: number;
+}
+
+/** 턴 끝 품기 고르기: 화면이 물을 때만 열려요 */
+export interface HoldChoice {
+  /** 품을 장 수 */
+  n: number;
+  /** 품을 수 있는 카드 uid (자동 규칙 순서) */
+  cards: number[];
+  /** 자동 규칙이 고른 카드 uid */
+  auto: number[];
+  /** 멈춘 턴 끝 처리 자리 */
+  at: number;
 }
 
 export type Ref = { side: "s"; id: string } | { side: "e"; uid: number };

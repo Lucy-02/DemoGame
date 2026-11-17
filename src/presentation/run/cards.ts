@@ -16,7 +16,7 @@ const NOTCH = HAND_CARD.notch.d - HAND_CARD.notch.inset * 2;
 
 /** 카드 초상 홈 얼굴을 채워요: 주인 줄의 얼굴 그림, 그림이 없는 정령은 빈 자리, 주인이 없으면 종이 빛 빈 홈.
  *  scale = 카드를 키워 놓는 배율 (그 크기로 구워서 또렷해요) */
-export function cardWithFace(scene: Phaser.Scene, card: CardVM, owner: LaneVM | undefined, scale = 1): CardVM {
+export function cardWithFace(scene: Phaser.Scene, card: CardVM, owner: Pick<LaneVM, "face"> | undefined, scale = 1): CardVM {
   const d = Math.round(NOTCH * scale);
   const blank = (name: string, color: string) => canvasTexture(scene, `run:no-face:${name}:${d}`, d, d, (ctx) => {
     ctx.fillStyle = color;
@@ -35,4 +35,12 @@ export function drawCardTip(scene: Phaser.Scene, card: CardVM, x: number, y: num
   const cx = x + w / 2;
   const left = clampLeft(cx - PAPER.w / 2, PAPER.w, FRAME.w, GRID.gutter);
   return drawTooltip(scene, { skin: PAPER, content: cardTipContent(card.detail), at: { left, bottom: y - CARD_FOCUS.tipGap, tailX: cx - left } });
+}
+
+/** 카드 옆(오른쪽, 넘치면 왼쪽)에 꼬리 없는 효과 말풍선. 윗줄 머리 · 카드를 가리면 안 되는 자리(덱 고르기 둘째 줄부터)에 */
+export function drawCardTipBeside(scene: Phaser.Scene, card: CardVM, x: number, y: number, w: number) {
+  const gap = CARD_FOCUS.tipGap;
+  const right = x + w + gap;
+  const left = right + PAPER.w <= FRAME.w - GRID.gutter ? right : x - gap - PAPER.w;
+  return drawTooltip(scene, { skin: PAPER, content: cardTipContent(card.detail), at: { left, top: y } });
 }

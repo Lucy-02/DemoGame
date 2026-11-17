@@ -21,6 +21,7 @@ export const COPY = {
   stats: "능력치",
   legendBase: "기본",
   legendStage: "단계 보정",
+  legendEquip: "장비",
   release: "해방",
   next: "다음 단계",
   final: "최종 단계",
