@@ -264,7 +264,13 @@ export type EventOutcome =
   | { type: "removeCard" }
   | { type: "upgradeCard" }
   | { type: "duplicateCard" }
-  | { type: "maxHpAll"; value: number };
+  | { type: "maxHpAll"; value: number }
+  /** 남은 정예 칸의 거친 특성을 다시 뽑아요 (0079) */
+  | { type: "rerollEliteTraits" }
+  /** 보스의 큰 차징이 몇 턴째인지 알려 줘요. 화면은 `Run.bossPeek()`를 읽어요 (0079) */
+  | { type: "peekBossCharge" }
+  /** 보스전에서 처음 열리는 틈이 그만큼 길어져요 (0079) */
+  | { type: "extendBossGap"; turns: number };
 
 /** 덱에서 카드를 골라야 하는 이벤트 결과 */
 export type DeckPickOutcome = Extract<EventOutcome, { type: "removeCard" | "upgradeCard" | "duplicateCard" }>["type"];
