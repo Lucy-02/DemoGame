@@ -122,7 +122,7 @@ function orderOf(b: Battle): OrderEntry[] {
       text: [{ text: b.intent(e).text }],
       chips: [{ text: COPY.order.n(i + 1) }, ...(charge ? [{ text: COPY.order.breakable, tone: "acc" as const }] : [])],
     };
-    return { uid: x.uid, slot: { key: `t${b.turn}:s${b.slots.indexOf(x)}`, n: i + 1, art: "", action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
+    return { uid: x.uid, slot: { key: `t${b.turn}:s${b.slots.indexOf(x)}`, n: i + 1, art: e.def.id, action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
   });
 }
 

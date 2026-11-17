@@ -11,6 +11,7 @@ import { ringTexture } from "../../style/ring";
 import { faceKey } from "../../faces";
 import { LINE_HEIGHT, fontBox, measure, px, textStyle } from "../../style/text";
 import { COPY } from "../copy";
+import { drawEnemyFace, preloadEnemyArt } from "../enemyArt";
 import { ORDER as O } from "../layout";
 import type { AllyTokenVM, BandVM, BattleVM, OrderSlotVM } from "../viewmodel";
 
@@ -164,6 +165,7 @@ function planCell(n: number, bands: BandVM[]): CellPlan {
 
 export function preloadOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   for (const s of vm.slots) loadIcon(scene, s.action, ENEMY_BADGE.icon);
+  preloadEnemyArt(scene, vm.slots.map((s) => s.art));
   loadIcon(scene, BREAK_ICON, ENEMY_BADGE.icon);
   for (const t of (vm.bundles ?? []).flat()) loadIcon(scene, t.icon, ALLY_BADGE.icon);
   loadIcon(scene, BAND_ICON, B.icon);
@@ -360,7 +362,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
       // 끊긴 적은 얼굴만 흐리고 배지는 그대로 (0074 10번)
       const face = gather(scene, 0, 0, () => {
         circle(scene.add.graphics(), fx, cy, O.face, { fill: P.face });
-        placeholderArt(scene, fx - O.art / 2, cy - O.art / 2, O.art, O.art, P.ink3);
+        if (!drawEnemyFace(scene, s.art, fx, cy, O.face)) placeholderArt(scene, fx - O.art / 2, cy - O.art / 2, O.art, O.art, P.ink3);
       });
       if (s.cut === "done") opacityOf(face).value = O.fade.cutFace;
       if (s.state === "now") drawRing(scene, fx, cy, O.face, { color: P.ink });
