@@ -8,7 +8,13 @@ import type { BattleOutcome } from "./run";
 export type BattleCommand =
   /** 카드를 그 주인 줄 끝에 놓아요. 대상이 필요한 카드면 target */
   | { kind: "play"; uid: number; target?: Ref }
-  | { kind: "endTurn" };
+  | { kind: "endTurn" }
+  /** 해방 카드를 그 정령에게 놓아요 (0075) */
+  | { kind: "release"; id: string }
+  /** 열린 낙하 고르기에서 받을 카드 */
+  | { kind: "fall"; cards: string[] }
+  /** 턴 끝 품기 고르기에서 품을 카드 */
+  | { kind: "hold"; uids: number[] };
 
 export class BattleSession {
   readonly battle: Battle;
@@ -16,6 +22,8 @@ export class BattleSession {
   /** 판의 지금 상태로 전투를 열어요. 난수는 판의 난수에서 하나 뽑아 써요 (legacy와 같은 자리) */
   constructor(run: Run, enemies: string[]) {
     this.battle = new Battle(run.spirits, run.battleDeck(), enemies, run.frontId, new Rng(run.rng.int(0, 1e9)), run.enemyScale(), run.battleTraits());
+    // 품을 카드는 재생 뒤 고르기 창에서 물어요 (0075)
+    this.battle.askHold = true;
     // 여는 동안 생긴 이벤트(전투 시작 기록 · 첫 뽑기)는 화면이 처음 그릴 때 이미 반영돼 있어요
     this.battle.drain();
   }
@@ -34,6 +42,15 @@ export class BattleSession {
         break;
       case "endTurn":
         b.endTurn();
+        break;
+      case "release":
+        if (!b.release(cmd.id)) return [];
+        break;
+      case "fall":
+        if (!b.chooseFall(cmd.cards)) return [];
+        break;
+      case "hold":
+        if (!b.confirmHold(cmd.uids)) return [];
         break;
     }
     return b.drain();

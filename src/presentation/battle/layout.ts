@@ -40,7 +40,7 @@ export const ORDER = {
    *  시안 .disc>.bg: 판 색 바깥 테 box-shadow 0 0 0 1.5, 상태 테 border 1.5 (점선은 선 3 · 틈 2), 기호 68%, 글자(✦) 62% */
   badge: { ratio: OT.badge.ratio, deg: OT.badge.deg, outline: 1.5, border: 1.5, dash: [3, 2] as [number, number], icon: 0.68, glyph: 0.62 },
   /** 아군 묶음 (.rt .bun): gap 10, padding 6, 테 1 */
-  bundle: { gap: 10, pad: 6, ring: 1, max: OT.bundleMax },
+  bundle: { gap: 10, pad: 6, ring: 1, max: OT.bundleMax, reserve: 2 },
   /** "+n" 칩 (.more): padding 2 7, 테 1 */
   more: { padX: 7, padY: 2, ring: 1 },
   /** 흐림: 지나간 토큰 (0074 8번) · 든 카드 자리 (시안 held .62) · 끊긴 적 얼굴 (시안 faceOp .4) */
@@ -187,3 +187,11 @@ export const LIFT_STYLES: Record<string, LiftStyle> = {
   b: { lift: 30, scale: 1.4, shiftIn: 10, shiftGroup: 10 },
 };
 export const LIFT: LiftStyle = LIFT_STYLES.b;
+
+/** 가운데 고르기 창 (0075, 낙하 · 품기 공용). 화면 한가운데에 제목 · 카드 · 버튼을 한 덩어리로 놓아요.
+ *  Lucy 2026-11-16 "카드 크기 증가, 여백 증가, 더 어둡게, 가운데 정렬": 카드 = 보상 카드 크기(폭 166, result REWARD),
+ *  카드 사이 28(전투 위 창 열 사이), 제목 · 카드 · 버튼 사이 48(런 화면 격자 여백), 버튼 = 턴 종료 버튼, 말풍선 거리 = 보상 카드 말풍선. 모두 임시 값이에요 */
+export const PICK = {
+  cardW: 166, gap: 28, pad: 48, tipGap: 20,
+  cx: FRAME.w / 2, cy: FRAME.h / 2, button: { w: END.w, ...END.button }, depth: DRAG.depth - 1,
+};

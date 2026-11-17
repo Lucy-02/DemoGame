@@ -29,16 +29,17 @@ const all = (side: Side, counts: Counts): UnitRef[] => Array.from({ length: coun
 const isUnit = (o: Over): o is UnitRef => typeof o === "object";
 
 export function focusFor(card: string, play: PlayVM, over: Over, counts: Counts): Focus {
-  const { kind, side } = play.target;
+  const { kind, side, only } = play.target;
   const onField = over !== "hand";
   if (kind === "pick") {
-    if (isUnit(over) && over.side === side && over.i < counts[side]) {
+    const cand = only === undefined ? all(side, counts) : [{ side, i: only }];
+    if (isUnit(over) && cand.some((r) => r.side === over.side && r.i === over.i)) {
       return {
         outcome: play.outcomes?.[over.i], lit: [over], cand: [], dim: true,
         ready: { target: over }, key: `${card}:${side}${over.i}`,
       };
     }
-    return { lit: [], cand: all(side, counts), dim: true, key: `${card}:cand` };
+    return { lit: [], cand, dim: true, key: `${card}:cand` };
   }
   if (!onField) return { lit: [], cand: all(side, counts), dim: true, key: `${card}:cand` };
   // 전체는 모두 강조, 무작위는 누가 맞을지 모르니 강조 없이 그 편만 밝게 (정본 규칙 상태 3: 카드가 대상을 정해요)
