@@ -12,6 +12,9 @@ import { drawBackdrop } from "../run/backdrop";
 import { cardWithFace, drawCardTip } from "../run/cards";
 import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
 import { GOLD_ICONS, drawGold } from "../run/gold";
+import { protoLayout } from "../run/proto";
+import { SYS_ICONS, drawSys } from "../battle/views/topbar";
+import { SYS } from "../battle/layout";
 import { LANE_ICONS, drawLane, type LaneState } from "../run/lanes";
 import { CARD_FOCUS, FRAME } from "../run/layout";
 import { preloadSpiritArt } from "../spiritArt";
@@ -70,6 +73,8 @@ export class ShopScene extends Phaser.Scene {
 
   preload() {
     for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...SERVICE_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
+    for (const id of SYS_ICONS) loadIcon(this, id, SYS.icon);
+    loadIcon(this, "i-deck", 18);
     const vm = shopVM(this.session);
     for (const c of vm.cards) if (c) preloadHandCard(this, c.card, { showRarity: true, scale: STOCK.scale });
     for (const row of Object.values(vm.deck)) for (const c of row) preloadHandCard(this, c.card, { showRarity: true });
@@ -138,7 +143,8 @@ export class ShopScene extends Phaser.Scene {
     });
 
     const spend = focus?.affordable ? focus.price : healing ? vm.heal.price : undefined;
-    drawGold(this, vm.gold - (spend ?? 0), spend === undefined ? {} : { was: vm.gold });
+    drawGold(this, vm.gold - (spend ?? 0), spend === undefined ? {} : { was: vm.gold }, protoLayout() ? { x: 48, y: 9 } : undefined);
+    if (protoLayout()) drawSys(this);
 
     // 정령 줄
     vm.lanes.forEach((l, i) => {
@@ -235,7 +241,7 @@ export class ShopScene extends Phaser.Scene {
   private paintRemove(vm: ShopVM) {
     const { hover, pick } = this;
     drawBackdrop(this);
-    drawGold(this, vm.gold - (pick === undefined ? 0 : vm.remove.price), pick === undefined ? {} : { was: vm.gold });
+    drawGold(this, vm.gold - (pick === undefined ? 0 : vm.remove.price), pick === undefined ? {} : { was: vm.gold }, protoLayout() ? { x: 48, y: 9 } : undefined);
     drawDeckPick(this, {
       lanes: vm.lanes, rows: vm.deck, mode: "remove", pick,
       hover: hover?.kind === "deck" ? hover.uid : undefined,
