@@ -1,10 +1,11 @@
 // 정원 세션: 화면이 보내는 명령을 받아 core/garden 규칙을 부르고, 바뀐 상태를 알려요.
 // 화면은 상태를 직접 고치지 않아요 (아키텍처 0001 "화면은 명령만 보내고"). 저장은 snapshot/restore로 (다음 단계에서 platform에 연결).
 import {
-  endRun, evolve, feed, grantBattle, join, keepEquipment, markGuide, markSeen, setFront, openBranches, startGarden, seeEpisode, spiritUnlocks, gardenSpirit, GARDEN_VERSION,
+  addDeed, endRun, evolve, feed, grantBattle, join, keepEquipment, markGuide, markSeen, setFront, openBranches, startGarden, seeEpisode, spiritUnlocks, gardenSpirit, GARDEN_VERSION,
   type BattleTier, type Garden,
 } from "../core/garden";
 import type { RunSpirit } from "../core/types";
+import type { DeedKind, DeedTally } from "./deeds";
 
 export type GardenCommand =
   /** 키우기. 갈래 고르기면 고른 갈래 id (0027) */
@@ -13,6 +14,8 @@ export type GardenCommand =
   | { kind: "seeEpisode"; id: string }
   /** 이긴 전투 하나: 출전한 정령이 경험을, 정원이 재료를 받아요 */
   | { kind: "grantBattle"; party: string[]; tier: BattleTier }
+  /** 이긴 전투에서 센 자람 조건 (0021 · 0045). 지금 진화 조건과 종류가 같은 것만 쌓여요 */
+  | { kind: "deeds"; tally: DeedTally }
   /** 판이 끝났어요 (져도). received = 정령 id → 이번 탐험에서 받은 카드 id들 (Run.receivedBySpirit, 갈래 조건) */
   | { kind: "endRun"; received?: Record<string, string[]> }
   /** 판이 끝나고 남길 장비 (0056). keep = 정령 id → 남길 장비 id들 */
@@ -58,6 +61,13 @@ export class GardenSession {
       case "feed": return feed(g, cmd.id);
       case "seeEpisode": return seeEpisode(g, cmd.id);
       case "grantBattle": return grantBattle(g, cmd.party, cmd.tier);
+      case "deeds":
+        return Object.entries(cmd.tally).reduce(
+          (acc, [id, row]) => (acc.spirits.some((s) => s.id === id)
+            ? Object.entries(row).reduce((a, [kind, n]) => addDeed(a, id, kind as DeedKind, n ?? 0), acc)
+            : acc),
+          g,
+        );
       case "endRun": return endRun(cmd.received ? openBranches(g, cmd.received) : g);
       case "keepEquipment": return keepEquipment(g, cmd.party, cmd.keep);
       case "join": return join(g, cmd.id);

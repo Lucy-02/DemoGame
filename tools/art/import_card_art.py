@@ -23,6 +23,7 @@ MODEL_NAMES = {"nai-diffusion-4-5-full": "NovelAI Diffusion V4.5 Full"}
 SELECTION = {
     "0042": "Lucy가 후보 중 선별(0042)",
     "0063": "Claude가 고른 1순위를 Lucy가 승인(0063)",
+    "0063-r10": "Lucy 지적(이치에 안 맞음) 뒤 R10에서 Claude가 다시 고름(0063)",
     "0118": "Claude가 임시로 고름, Lucy 확인 전(0118)",
 }
 HUMAN_WORK = {

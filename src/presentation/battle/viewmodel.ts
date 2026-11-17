@@ -97,8 +97,10 @@ export interface AllyVM {
   hp: number;
   maxHp: number;
   block?: number;
-  /** 이번 적 차례에 받을 피해 합계. HP 막대에 (방어도를 뺀 만큼) 깎일 구간을 보여요 */
+  /** 이번 적 차례에 받을 피해 합계 (막기 전) */
   incoming?: number;
+  /** HP 막대에 깎일 구간: 놓은 카드까지 미리 돌려 본 값. 없으면 받을 피해에서 방어도를 뺀 만큼 */
+  loss?: number;
   statuses: StatusVM[];
   /** 앞열 (유닛 앞에 깃발) */
   front?: boolean;
@@ -221,12 +223,17 @@ export interface PickVM {
 
 /** 카드를 낼 때 필드에 그리는 결과 (결정 0007 "미리보기 예산", 0013 끌어 대기).
  *  필드엔 ① 대상의 결과 ② 아군마다 받을 피해 a→b 두 가지만. 연쇄·지연·다음 턴 효과는 카드 설명에만.
- *  값은 아직 전투 규칙(src/core)에서 계산하지 않아요. session 층이 생기면 거기서 채워요. */
+ *  실제 전투에서는 그 카드를 더 놓고 이번 턴을 미리 돌려 본 값이에요 (0123). 무작위로 고르는 대상의 결과는 없어요. */
 export interface OutcomeVM {
   /** 적마다 결과 (enemies 인덱스). 없는 적은 그대로 */
   enemies: Partial<Record<number, EnemyOutcomeVM>>;
   /** 아군마다 받을 피해 a→b (allies 순서). 비어 있으면 그 아군은 그대로 */
-  incoming: (Change | undefined)[];
+  incoming: (IncomingChange | undefined)[];
+}
+
+/** 받을 피해 a→b. loss = 그 카드를 놓으면 깎일 HP (없으면 받을 피해에서 방어도를 뺀 만큼) */
+export interface IncomingChange extends Change {
+  loss?: number;
 }
 
 export interface EnemyOutcomeVM {
