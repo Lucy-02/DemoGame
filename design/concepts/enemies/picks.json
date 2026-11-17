@@ -241,5 +241,311 @@
    457,
    768
   ]
+ },
+ "cold_snap": {
+  "case_id": "cold_snap-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   768,
+   458
+  ]
+ },
+ "dark_moon": {
+  "case_id": "dark_moon-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   527
+  ]
+ },
+ "droplet": {
+  "case_id": "droplet-ga-s8304",
+  "run_id": "enemy-act345-r3-20261118",
+  "seed": 8304,
+  "size": [
+   668,
+   768
+  ]
+ },
+ "dusk": {
+  "case_id": "dusk-ga-s8103",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8103,
+  "size": [
+   475,
+   768
+  ]
+ },
+ "echo": {
+  "case_id": "echo-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   437,
+   325
+  ]
+ },
+ "eclipse": {
+  "case_id": "eclipse-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   493
+  ]
+ },
+ "ember_shard": {
+  "case_id": "ember_shard-ga-s8203",
+  "run_id": "enemy-act345-r2-20261118",
+  "seed": 8203,
+  "size": [
+   546,
+   768
+  ]
+ },
+ "flood_tide": {
+  "case_id": "flood_tide-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   768,
+   455
+  ]
+ },
+ "gate_keeper": {
+  "case_id": "gate_keeper-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   663,
+   768
+  ]
+ },
+ "glass_mole": {
+  "case_id": "glass_mole-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   443
+  ]
+ },
+ "gloam": {
+  "case_id": "gloam-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   471
+  ]
+ },
+ "gloom_twin": {
+  "case_id": "gloom_twin-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   466
+  ]
+ },
+ "halo": {
+  "case_id": "halo-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   768,
+   751
+  ]
+ },
+ "hollow_armor": {
+  "case_id": "hollow_armor-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   518,
+   768
+  ]
+ },
+ "ice_rock": {
+  "case_id": "ice_rock-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   699
+  ]
+ },
+ "ice_warden": {
+  "case_id": "ice_warden-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   768,
+   477
+  ]
+ },
+ "mirror_knight": {
+  "case_id": "mirror_knight-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   443,
+   768
+  ]
+ },
+ "old_statue": {
+  "case_id": "old_statue-ga-s8103",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8103,
+  "size": [
+   768,
+   753
+  ]
+ },
+ "origin": {
+  "case_id": "origin-ga-s8103",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8103,
+  "size": [
+   768,
+   456
+  ]
+ },
+ "pinwheel": {
+  "case_id": "pinwheel-ga-s8103",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8103,
+  "size": [
+   768,
+   738
+  ]
+ },
+ "rapids": {
+  "case_id": "rapids-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   514
+  ]
+ },
+ "sand_gust": {
+  "case_id": "sand_gust-ga-s8301",
+  "run_id": "enemy-act345-r3-20261118",
+  "seed": 8301,
+  "size": [
+   768,
+   595
+  ]
+ },
+ "shade": {
+  "case_id": "shade-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   768,
+   556
+  ]
+ },
+ "shade_claw": {
+  "case_id": "shade_claw-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   541
+  ]
+ },
+ "small_shade": {
+  "case_id": "small_shade-ga-s8103",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8103,
+  "size": [
+   768,
+   751
+  ]
+ },
+ "snowball": {
+  "case_id": "snowball-ga-s8303",
+  "run_id": "enemy-act345-r3-20261118",
+  "seed": 8303,
+  "size": [
+   768,
+   561
+  ]
+ },
+ "spark_shard": {
+  "case_id": "spark_shard-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   583,
+   768
+  ]
+ },
+ "stone_shard": {
+  "case_id": "stone_shard-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   545,
+   768
+  ]
+ },
+ "storm_hawk": {
+  "case_id": "storm_hawk-ga-s8103",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8103,
+  "size": [
+   768,
+   520
+  ]
+ },
+ "tidal_serpent": {
+  "case_id": "tidal_serpent-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   491
+  ]
+ },
+ "tide_shard": {
+  "case_id": "tide_shard-ga-s8103",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8103,
+  "size": [
+   506,
+   768
+  ]
+ },
+ "twin_shade": {
+  "case_id": "twin_shade-ga-s8102",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8102,
+  "size": [
+   768,
+   553
+  ]
+ },
+ "typhoon": {
+  "case_id": "typhoon-ga-s8103",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8103,
+  "size": [
+   768,
+   484
+  ]
+ },
+ "white_night": {
+  "case_id": "white_night-ga-s8101",
+  "run_id": "enemy-act345-r1-20261118",
+  "seed": 8101,
+  "size": [
+   768,
+   554
+  ]
  }
 }

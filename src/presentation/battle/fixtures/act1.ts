@@ -1,4 +1,4 @@
-// 예시: 1 · 2막 적 그림 (0100 · 0114). 실제 전투 규칙으로 만든 장면이에요. 그림 크기와 발 위치(enemyFit.json)를 맞출 때 봐요.
+// 예시: 1~5막 적 그림 (0100 · 0114 · 0115 · 0116 · 0117). 실제 전투 규칙으로 만든 장면이에요. 그림 크기와 발 위치(enemyFit.json)를 맞출 때 봐요.
 import { Run } from "../../../core/run";
 import { BattleSession } from "../../../session/battle";
 import { battleVM } from "../fromBattle";
@@ -35,4 +35,25 @@ export const ACT2_ART: Record<string, () => BattleVM> = {
   "act2-landslide": () => scene(["landslide"]),
   "act2-thunderstorm": () => scene(["thunderstorm"]),
   "act2-high-noon": () => scene(["high_noon"]),
+};
+
+/** ?scene=act3-<이름> · act4-<이름> · act5-<이름>: 3~5막 적 (0115 · 0116 · 0117) */
+export const ACT345_ART: Record<string, () => BattleVM> = {
+  "act3-mobs-a": () => scene(["snowball", "ice_rock", "droplet"]),
+  "act3-mobs-b": () => scene(["rapids", "shade", "dusk"]),
+  "act3-mobs-c": () => scene(["hollow_armor", "small_shade"]),
+  "act3-elites": () => scene(["ice_warden", "tidal_serpent", "twin_shade"]),
+  "act3-cold-snap": () => scene(["cold_snap"]),
+  "act3-flood-tide": () => scene(["flood_tide"]),
+  "act3-eclipse": () => scene(["eclipse"]),
+  "act4-mobs-a": () => scene(["sand_gust", "pinwheel", "glass_mole"]),
+  "act4-mobs-b": () => scene(["halo", "shade_claw", "gloam"]),
+  "act4-mobs-c": () => scene(["old_statue", "gloom_twin_a", "gloom_twin_b"]),
+  "act4-elites": () => scene(["storm_hawk", "mirror_knight"]),
+  "act4-typhoon": () => scene(["typhoon"]),
+  "act4-white-night": () => scene(["white_night"]),
+  "act4-dark-moon": () => scene(["dark_moon"]),
+  "act5-shards": () => scene(["ember_shard", "tide_shard", "stone_shard"]),
+  "act5-elites": () => scene(["spark_shard", "gate_keeper", "echo"]),
+  "act5-origin": () => scene(["origin"]),
 };
