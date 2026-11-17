@@ -266,11 +266,15 @@ export class Battle implements Engine {
     this.log(`${s.def.name}: 앞열로 끌려 나옴`);
   }
 
+  /** 이 전투에서 처음 열리는 틈에 더할 턴 수 (이벤트, 0079). 한 번 쓰면 0이 돼요 */
+  firstGapBonus = 0;
+
   /** 틈을 열어요: 큰 차징 하나에 한 번 (0062) */
   private openGap(e: BEnemy, reason: "break" | "delay" | "burst") {
     if (e.gapOpened) return;
     e.gapOpened = true;
-    const turns = reason === "break" ? C.gap.turns_break : reason === "delay" ? C.gap.turns_delay : C.gap.turns_burst;
+    const turns = (reason === "break" ? C.gap.turns_break : reason === "delay" ? C.gap.turns_delay : C.gap.turns_burst) + this.firstGapBonus;
+    this.firstGapBonus = 0;
     const st = stackOf(e, "gap");
     st.n = 1;
     // 턴을 재생하는 중에 열리면 이번 턴은 세지 않아요

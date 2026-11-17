@@ -129,6 +129,7 @@ function apply(run: Run, outs: readonly EventOutcome[], uid?: number): string[] 
       case "removeCard": if (uid !== undefined) run.removeCard(uid); break;
       case "upgradeCard": if (uid !== undefined && canUpgradeCard(cardDef(run.deck.find((c) => c.uid === uid)!.cardId))) run.upgradeCard(uid); break;
       case "duplicateCard": if (uid !== undefined) run.duplicateCard(uid); break;
+      default: run.applyMark(o);
     }
   }
   return cards;
