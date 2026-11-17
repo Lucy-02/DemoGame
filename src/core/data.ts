@@ -105,7 +105,7 @@ export function partyScale(size: number, boss = false): EnemyScale | undefined {
   return (boss && k?.boss) || k;
 }
 
-/** 세기를 곱한 적 데이터. HP · 방어도 · 회복은 hp, 피해 · 화상 · 새끼 피해는 dmg */
+/** 세기를 곱한 적 데이터. HP · 방어도 · 회복은 hp, 피해 · 화상 · 새끼 피해 · 되돌리는 몫은 dmg */
 export function scaleEnemy(def: EnemyDef, k: EnemyScale): EnemyDef {
   const up = (v: number, m: number) => Math.max(1, Math.round(v * m));
   const move = (m: EnemyMove): EnemyMove => ({
@@ -120,6 +120,8 @@ export function scaleEnemy(def: EnemyDef, k: EnemyScale): EnemyDef {
   return {
     ...def,
     hp: up(def.hp, k.hp),
+    // 되돌리기는 돌려주는 몫이 피해라 피해 세기를 따라가요 (혼자 · 둘인 판에서 한 정령이 다 받아요)
+    ...(def.reflectFirst ? { reflectFirst: def.reflectFirst * k.dmg } : {}),
     pattern: def.pattern.map(move),
     phase2: def.phase2 && { ...def.phase2, turnStartBlock: up(def.phase2.turnStartBlock, k.hp), pattern: def.phase2.pattern.map(move) },
   };
