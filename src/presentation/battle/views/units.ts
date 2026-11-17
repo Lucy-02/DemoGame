@@ -784,7 +784,7 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPrev
   const bodyX = cx - ALLY.body.w / 2, bodyTop = ALLY.feet - ALLY.body.h;
   if (pv.lit) glow(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, 0, true);
   const art = gather(scene, 0, 0, () => {
-    if (!(a.stage && drawAllyArt(scene, a.face, a.stage, cx, ALLY.feet, ALLY.body, ALLY.art))) placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
+    if (!(a.stage && ALLY.art.stages.includes(a.stage) && drawAllyArt(scene, a.face, a.stage, cx, ALLY.feet, ALLY.body, ALLY.art))) placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
   });
   // 쓰러진 아군은 그림이 흐려요 (0086)
   if (a.hp <= 0) art.setAlpha(tokens.provisional.motion.hit.down.alpha);
@@ -805,6 +805,14 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPrev
 /** 가리킨 적이 노리는 아군의 묶음: 깎일 구간이 깜빡여요 (쉬는 묶음 자리에 덮어 그려요) */
 export function drawAllyPulse(scene: Phaser.Scene, a: AllyVM, i: number) {
   allyInfo(scene, a, i, undefined, true);
+}
+
+/** 유닛의 정보 묶음만 다시 그려요 (재생 중 맞기 전 값으로 잠깐 덮어 그릴 때, 0086) */
+export function drawUnitInfo(scene: Phaser.Scene, side: "ally" | "enemy", unit: AllyVM | EnemyVM, i: number): Phaser.GameObjects.Container {
+  return gather(scene, 0, 0, () => {
+    if (side === "ally") allyInfo(scene, unit as AllyVM, i);
+    else enemyInfo(scene, unit as EnemyVM, i, undefined, false);
+  });
 }
 
 /** 이 아군이 받을 피해로 HP가 깎이는지 */

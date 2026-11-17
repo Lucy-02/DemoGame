@@ -21,6 +21,7 @@ jobs:
       - run: pnpm test
       - run: pnpm check:design
       - run: pnpm check:docs
+      - run: pnpm check:assets
       - name: Electron smoke test
         run: xvfb-run -a pnpm test:e2e
 
@@ -43,3 +44,32 @@ jobs:
         with:
           name: screen-run-results
           path: test-results/
+
+  # 주 대상인 윈도에서 데모 패키지를 만들고, 그 실행 파일로 스모크와 성능 기록을 돌려요 (0139)
+  windows-package:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm dist:demo
+      - name: Packaged smoke test
+        run: pnpm exec playwright test
+        env:
+          DEMOGAME_EXE: release/demo/win-unpacked/demogame.exe
+          DEMOGAME_SOFTWARE_GL: "1"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-e2e-results
+          path: test-results/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-win-unpacked
+          path: release/demo/win-unpacked/
+          retention-days: 7

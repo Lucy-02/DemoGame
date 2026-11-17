@@ -24,7 +24,29 @@ export interface SaveStore {
   remove(key: string): Promise<void>;
 }
 
-export const SAVE_KEYS = { garden: "garden", run: "run" } as const;
+export const SAVE_KEYS = { garden: "garden", run: "run", runLog: "runlog" } as const;
+
+/**
+ * 끝난 판 한 줄 (플레이테스트용 로컬 기록, docs/release/PLAYTEST.md). 이 기계의 저장 폴더에만 남고 어디로도 보내지 않아요.
+ * 어느 막 · 어느 층에서 어떻게 끝났는지만 적어요.
+ */
+export interface RunLogEntry {
+  /** 끝난 시각 (ISO) */
+  at: string;
+  seed: number;
+  party: string[];
+  /** 끝난 막과 층 (지도에 들어서기 전이면 0층) */
+  act: number;
+  floor: number;
+  /** 들어간 전투 칸 수 */
+  fights: number;
+  end: "victory" | "defeat" | "abandon";
+  /** 이 판이 가는 마지막 막 (데모는 2) */
+  lastAct: number;
+}
+
+/** 기록은 최근 이만큼만 남겨요 */
+const RUN_LOG_MAX = 200;
 
 /** 판의 범위. 데모 빌드는 막 수를 묶어요 (0101) */
 export interface GameScope {
@@ -145,7 +167,7 @@ export class GameSession {
   abandonRun() {
     const run = this.need();
     run.abandon();
-    this.close(run);
+    this.close(run, true);
   }
 
   /**
@@ -161,7 +183,7 @@ export class GameSession {
    * 판을 닫고 정원으로 돌아가요. 판 수가 오르고, 이번 탐험에서 받은 카드로 갈래 조건이 쌓여요.
    * 지닌 장비는 모두 남겨요(0056: 남기는 수 = 지닌 수, 져도 남김). 남길지 고르는 화면은 아직 없어요(OPEN_QUESTIONS).
    */
-  private close(run: RunSession) {
+  private close(run: RunSession, abandoned = false) {
     const before = run.run.opts.garden ?? this.garden.state;
     if (!this.trialOpts) {
       const party = run.run.spirits;
@@ -171,6 +193,7 @@ export class GameSession {
     }
     const victory = run.phase.kind === "over" && run.phase.victory;
     this._last = { run: run.run, victory, before, after: this.garden.state };
+    if (!this.trialOpts) this.logRun({ at: new Date().toISOString(), seed: run.run.opts.seed, party: run.party, act: run.run.act, floor: run.run.current?.floor ?? 0, fights: run.run.fights, end: victory ? "victory" : abandoned ? "abandon" : "defeat", lastAct: run.run.lastAct });
     this._run = undefined;
     this.runText = undefined;
     if (this.store) this.queue(() => this.store!.remove(SAVE_KEYS.run));
@@ -201,6 +224,22 @@ export class GameSession {
 
   private write(key: string, text: string) {
     if (this.store) this.queue(() => this.store!.write(key, text));
+  }
+
+  /** 끝난 판을 기록 끝에 덧붙여요. 기록이 깨져 있으면 새로 시작해요 */
+  private logRun(entry: RunLogEntry) {
+    const store = this.store;
+    if (!store) return;
+    this.queue(async () => {
+      let log: RunLogEntry[] = [];
+      try {
+        const parsed: unknown = JSON.parse((await store.read(SAVE_KEYS.runLog)) ?? "[]");
+        if (Array.isArray(parsed)) log = parsed as RunLogEntry[];
+      } catch {
+        // 깨진 기록은 버려요
+      }
+      await store.write(SAVE_KEYS.runLog, JSON.stringify([...log, entry].slice(-RUN_LOG_MAX)));
+    });
   }
 
   /** 저장은 부른 순서대로 하나씩 해요 */

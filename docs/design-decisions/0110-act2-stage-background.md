@@ -29,4 +29,4 @@
 
 ## 결과와 후속 작업
 - 파일: `public/assets/stages/act2/far.webp`, `ground.webp` (임시 상태, `assets/provenance.jsonl`).
-- 남은 것: 2배 업스케일, 3~5막 배경, 2막 지역 이름.
+- 남은 것: 3~5막 배경, 2막 지역 이름.

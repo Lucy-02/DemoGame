@@ -11,7 +11,7 @@
 //   smart  한 장씩 값을 매겨 놓고, 보상 · 이벤트 · 빼기를 가려 골라요 (기본)
 //   search 턴 안의 모든 순서를 돌려 보고 끝까지 굴려 고르는 탐색 봇 (느려요)
 import { Battle } from "../src/core/battle";
-import { C, CARDS, cardDef, spiritDef } from "../src/core/data";
+import { C, CARDS, GROWTH, cardDef, spiritDef } from "../src/core/data";
 import { newGarden } from "../src/core/garden";
 import { Rng } from "../src/core/rng";
 import { Run, type MapNode, type RewardCard } from "../src/core/run";
@@ -23,8 +23,8 @@ import { makeSearchBot, type Bot } from "./search";
 
 const MAX_TURNS = 40;
 /** 성체 문 레벨(Lv4)과 각성체 문 레벨(Lv6)에 닿는 경험 (growth.json levels) */
-const ADULT_EXP = 150;
-const AWAKENED_EXP = 380;
+const ADULT_EXP = GROWTH.levels[3];
+const AWAKENED_EXP = GROWTH.levels[5];
 
 export type BotKind = "basic" | "smart" | "search";
 

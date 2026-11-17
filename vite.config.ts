@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite";
+import { prunePuppets } from "./tools/build/prunePuppets";
 
 const FIT_FILE = resolve(__dirname, "src/presentation/spiritFit.json");
 const STAGES = ["baby", "adult", "awakened"];
@@ -72,5 +73,5 @@ function formatFits(fits: Record<string, Record<string, Fit>>): string {
 export default defineConfig({
   base: "./",
   build: { chunkSizeWarningLimit: 4000 },
-  plugins: [spiritFit()],
+  plugins: [spiritFit(), prunePuppets()],
 });
