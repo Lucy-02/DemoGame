@@ -10,7 +10,7 @@ import { GLASS } from "../tooltip/skins";
 import { DEFAULT_HOME, HOMES } from "./fixtures";
 import { MENU, TIP } from "./layout";
 import type { HomeItemId, HomeVM } from "./viewmodel";
-import { MENU_ICONS, drawItem, drawLogo, drawPrimary, rowY } from "./views/menu";
+import { MENU_ICONS, drawItem, drawLogo, drawPrimary, drawVersion, rowY } from "./views/menu";
 
 export const HOME_SCENE = "home";
 
@@ -77,6 +77,7 @@ export class HomeScene extends Phaser.Scene {
       out: () => { if (this.hover === item.id) this.setHover(undefined); },
     }));
     drawPrimary(this, this.vm.primary, this.onPrimary);
+    if (this.vm.version) drawVersion(this, this.vm.version);
     const i = this.vm.items.findIndex((it) => it.id === this.hover);
     const tip = this.vm.items[i]?.tip;
     if (tip) {

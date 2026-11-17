@@ -37,6 +37,8 @@ export interface GameOptions {
   trial?: boolean;
   /** 메인 화면의 종료 */
   quit?: () => void;
+  /** 메인 화면 구석에 적는 버전 */
+  version?: string;
   /** 저장된 볼륨 묶음 셋. 없으면 기본값 */
   volume?: Volume;
   /** 전투 결과: 받은 상태로 시작 (카드 key 또는 skip, 시각 검증용) */
@@ -91,7 +93,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
           // 화면 전환 막: 맨 나중에 더해 늘 맨 위에 있어요 (0086)
           game.scene.add(VEIL_SCENE, VeilScene, true);
-          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit }).start();
+          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit, version: opts.version }).start();
           return;
         }
         if (opts.screen === "spirits") {

@@ -1,4 +1,4 @@
-// Electron 스모크: 창이 뜨고, 게임 캔버스가 생기고, 저장이 실제 파일로 남는지 봐요.
+// Electron 스모크: 창이 뜨고, 게임 캔버스가 생기고, 저장과 오류 기록이 실제 파일로 남는지 봐요.
 import { _electron as electron, expect, test } from "@playwright/test";
 import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -26,6 +26,10 @@ test("앱이 뜨고 platform 저장이 파일로 남는다", async () => {
     });
     expect(roundTrip).toBe('{"ok":true}');
     expect(await readFile(join(userData, "saves", "e2e.json"), "utf8")).toBe('{"ok":true}');
+
+    // 오류 기록: 잡히지 않은 오류가 버전과 함께 파일에 남아요
+    await page.evaluate(() => void setTimeout(() => { throw new Error("e2e 오류"); }));
+    await expect.poll(() => readFile(join(userData, "logs", "error.log"), "utf8").catch(() => ""), { timeout: 5_000 }).toMatch(/v\d+\.\d+\.\d+ error Error: e2e 오류/);
 
     // 렌더러에는 Node가 없어야 해요.
     expect(await page.evaluate(() => typeof (globalThis as { require?: unknown }).require)).toBe("undefined");

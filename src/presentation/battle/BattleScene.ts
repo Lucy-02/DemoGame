@@ -259,22 +259,32 @@ export class BattleScene extends Phaser.Scene {
     const b = this.session?.battle;
     if (!b || !this.guide || this.playback || this.pick) return;
     const charging = b.enemies.filter((e) => !e.dead && e.charging);
-    const step = guideStep({ turn: b.turn, placed: b.playedThisTurn.length > 0, charging: charging.length > 0, spent: !Object.keys(this.vm.plays).length }, this.guide);
+    const breaks = b.hand.filter((c) => this.vm.plays[cardKey(c)] && b.cardDefOf(c).effects.some((o) => o.op === "ram" || o.op === "breakCharging"));
+    const step = guideStep({
+      turn: b.turn, placed: b.playedThisTurn.length > 0, charging: charging.length > 0,
+      spent: !Object.keys(this.vm.plays).length, canBreak: breaks.length > 0,
+    }, this.guide);
     if (!step) return;
     this.guideCharge = step === "charge";
     const hand = handBoxes(this.vm.hand);
     if (step === "place") this.guideBoxes = hand.groups;
     else if (step === "end") this.guideBoxes = [{ x: END.x, y: END.y, w: END.w, h: END.button.h, radius: END.button.radius }];
     else {
-      // 차징 중인 적의 의도 알약, 손에 브레이크 카드가 있으면 그 카드도 같은 테로
+      // 차징 중인 적의 의도 알약. 브레이크를 짚을 때는 그 카드도 같은 테로 (0095)
       const alive = b.enemies.filter((e) => !e.dead);
       for (const u of this.units) {
         const box = u.ref.side === "enemy" && alive[u.ref.i]?.charging ? u.view.intentBox : undefined;
         if (box) this.guideBoxes.push({ ...box, radius: INTENT.radius });
       }
-      for (const c of b.hand) {
-        const box = b.cardDefOf(c).effects.some((o) => o.op === "ram" || o.op === "breakCharging") ? hand.cards.get(cardKey(c)) : undefined;
-        if (box) this.guideBoxes.push(box);
+      if (step === "break") {
+        for (const c of breaks) {
+          const box = hand.cards.get(cardKey(c));
+          if (box) this.guideBoxes.push(box);
+        }
+        if (!this.guide.breakShown) {
+          this.guide.breakShown = true;
+          this.guide.onBreak?.();
+        }
       }
     }
     this.guideFx = drawGuide(this, this.guideBoxes);

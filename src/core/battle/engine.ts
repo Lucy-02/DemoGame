@@ -63,7 +63,7 @@ export interface Engine {
   /** 적 공격 1타. 피해 파이프라인 → 피해 받기 → 맞은 뒤 반응 */
   enemyHit(e: BEnemy, s: BSpirit, base: number, pierce: boolean): void;
   /** 적 공격 1타의 미리보기 수치 (대상 상태 제외) */
-  enemyDmgPreview(e: BEnemy, base: number): number;
+  enemyDmgPreview(e: BEnemy, base: number, target?: BSpirit | null): number;
   /** 적의 공격 행동이 끝난 뒤: 숨어서 받아낸 정령이 받아칠 기회를 얻어요 */
   settleHidden(): void;
   /** 적이 다음 턴 손패에 거는 효과를 쌓아요 */

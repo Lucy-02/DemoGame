@@ -25,4 +25,6 @@ export interface HomeVM {
   title: string;
   primary: HomePrimaryVM;
   items: HomeItemVM[];
+  /** 구석에 적는 버전. 고정 장면에는 없어요 */
+  version?: string;
 }

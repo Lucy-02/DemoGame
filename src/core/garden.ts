@@ -54,6 +54,8 @@ export interface Garden {
   joins?: number;
   /** 지난 판의 앞열. 출전 준비의 기본값이에요 (0076 14) */
   front?: string;
+  /** 한 번 짚어 준 안내 (0095). 다시 나오지 않아요 */
+  guides?: string[];
 }
 
 // ───────────────────────── 만들기 · 찾기 ─────────────────────────
@@ -311,6 +313,12 @@ export function isCardUnlocked(g: Garden, card: CardDef): boolean {
 
 /** 갈래 표시가 있는 성체 해금 카드 (갈래마다 하나) */
 export const isBranchAdultCard = (card: CardDef) => !!card.branch && !!card.spirit && card.unlock === `${card.spirit}_adult`;
+
+/** 이 안내를 이미 짚었는지 (0095) */
+export const hasGuide = (g: Garden, id: string) => !!g.guides?.includes(id);
+
+/** 안내를 짚었다고 적어요. 다시 나오지 않아요 */
+export const markGuide = (g: Garden, id: string): Garden => (hasGuide(g, id) ? g : { ...g, guides: [...(g.guides ?? []), id] });
 
 /** 해금을 봤다고 표시해요 (보면 배지가 사라져요, "받기" 버튼 없음) */
 export function markSeen(g: Garden, id: string, keys: readonly string[]): Garden {

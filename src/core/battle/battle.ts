@@ -191,8 +191,9 @@ export class Battle implements Engine {
     return { name: move.name, at, text: desc, kind: intentKind(move.actions) };
   }
 
-  enemyDmgPreview(e: BEnemy, base: number): number {
-    return runStages(ENEMY_HIT_STAGES, { b: this, attacker: e, target: null, base, amount: 0 }).amount;
+  /** 적 공격 1타가 줄 피해 (막기 전). target을 주면 그 정령의 취약 · 숨음까지 넣은, 실제 타격과 같은 값이에요 */
+  enemyDmgPreview(e: BEnemy, base: number, target: BSpirit | null = null): number {
+    return runStages(ENEMY_HIT_STAGES, { b: this, attacker: e, target, base, amount: 0 }).amount;
   }
 
   passiveMult(s: BSpirit, hook: MultHook): number {
