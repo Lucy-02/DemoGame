@@ -633,6 +633,9 @@ export const tokens = {
           "delay": "2900ms",
           "duration": "350ms"
         }
+      },
+      "musicFade": {
+        "duration": "600ms"
       }
     },
     "effect": {

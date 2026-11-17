@@ -10,6 +10,7 @@ import { RestSession } from "../session/rest";
 import { RewardSession } from "../session/reward";
 import type { BattleOutcome, RunSession } from "../session/run";
 import { ShopSession } from "../session/shop";
+import { audioOf, type MusicId } from "./audio";
 import { BATTLE_SCENE, type BattleSceneData } from "./battle/BattleScene";
 import { COPY as BATTLE_COPY } from "./battle/copy";
 import { EVENT_SCENE, type EventSceneData } from "./event/EventScene";
@@ -188,6 +189,7 @@ export class GameFlow implements LegacyFlow {
     const phase = run.phase;
     if (phase.kind === "over") return this.runEnd();
     if (phase.kind !== "reward") return this.resume();
+    audioOf(this.game)?.play("reward");
     // 싸우던 장면은 아래에 멈춰 두고 그 위에 창으로 띄워요 (0069)
     const data: ResultSceneData = {
       session: new RewardSession(run.run, { kind: "battle", reward: phase.reward }), over: true, onDone: () => this.rewardDone(),
@@ -220,6 +222,7 @@ export class GameFlow implements LegacyFlow {
   private runEnd() {
     const record = this.session.lastRun;
     if (!record) return this.finish();
+    audioOf(this.game)?.play(record.victory ? "victory" : "defeat");
     const data: RunEndSceneData = { record, onGarden: () => this.finish(), onAgain: () => this.depart() };
     this.go(RUN_END_SCENE, data);
   }
@@ -243,5 +246,12 @@ export class GameFlow implements LegacyFlow {
       if (k !== key && status > SCENE_PENDING && status < SCENE_SHUTDOWN) scenes.stop(k);
     }
     scenes.start(key, data);
+    audioOf(this.game)?.music(this.musicOf(key));
+  }
+
+  /** 화면이 틀 음악 (0084 1번): 판 밖은 메인, 판 안은 지도, 전투는 전투 · 보스 */
+  private musicOf(key: string): MusicId {
+    if (key === BATTLE_SCENE) return this.current?.run.current?.type === "boss" ? "boss" : "battle";
+    return [MAP_SCENE, EVENT_SCENE, REST_SCENE, SHOP_SCENE, RESULT_SCENE].includes(key) ? "map" : "menu";
   }
 }
