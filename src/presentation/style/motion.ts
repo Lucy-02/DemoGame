@@ -43,3 +43,9 @@ export function revealInOrder(scene: Phaser.Scene, parts: Phaser.GameObjects.Con
     scene.tweens.addCounter({ from: 0, to: 1, delay: delay + i * stagger, ...FAST, onUpdate: (t) => { fade.value = t.getValue() ?? 1; } });
   });
 }
+
+/** 빠지는 것: 제자리에서 흐려져 사라져요 (0086 8번 · 0089). target.opacity는 CSS opacity처럼 한 장으로 흐려지는 값 */
+export function fadeAway(scene: Phaser.Scene, target: { opacity: number; root: Phaser.GameObjects.Container }) {
+  if (reducedMotion()) return target.root.destroy();
+  scene.tweens.add({ targets: target, opacity: 0, duration: ms(M.hand.leave), ease: FAST.ease, onComplete: () => target.root.destroy() });
+}
