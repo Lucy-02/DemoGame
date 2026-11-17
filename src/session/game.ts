@@ -2,7 +2,7 @@
 // 정원 ↔ 판 연결은 여기서만 해요: 판을 떠날 때 정원의 정령으로(toRunSpirit), 이긴 전투마다 경험·재료(grantBattle),
 // 판이 끝나면 판 수와 갈래 조건(endRun · openBranches). 저장은 platform의 문자열 저장만 써요 (아키텍처 0001).
 import { GardenSession } from "./garden";
-import { RunSession, type BattleOutcome, type BattleWin, type RunSaveFile } from "./run";
+import { RunSession, type BattleOutcome, type BattleWin } from "./run";
 import { C } from "../core/data";
 import { deepStartOpen, defaultFront, type Garden } from "../core/garden";
 import { Rng } from "../core/rng";
@@ -22,6 +22,19 @@ export interface SaveStore {
   read(key: string): Promise<string | null>;
   write(key: string, text: string): Promise<void>;
   remove(key: string): Promise<void>;
+  /** 덮어쓰기 직전 저장 (없는 저장소는 안 둬도 돼요) */
+  readBackup?(key: string): Promise<string | null>;
+  /** 못 읽는 저장을 옆에 치워 둬요 */
+  setAside?(key: string): Promise<void>;
+}
+
+/**
+ * 켤 때 저장을 못 읽어서 한 일 (P8-01). 플레이어에게 어떻게 보일지는 아직 안 정했어요(Lucy 확인).
+ * garden: backup = 직전 저장으로 되돌림, reset = 새 정원으로 시작. run: dropped = 진행 중이던 판을 버림.
+ */
+export interface SaveRecovery {
+  garden?: "backup" | "reset";
+  run?: "dropped";
 }
 
 export const SAVE_KEYS = { garden: "garden", run: "run", runLog: "runlog" } as const;
@@ -66,6 +79,10 @@ export class GameSession {
   /** 마지막으로 남긴 판 저장 (메인으로 나갔다 올 때 그 칸의 처음으로 되돌려요) */
   private runText?: string;
   private writes: Promise<void> = Promise.resolve();
+  /** 켤 때 저장을 복구했으면 무엇을 했는지 */
+  recovery: SaveRecovery = {};
+  /** 저장을 못 읽거나 못 썼을 때 알릴 곳 (오류 기록) */
+  private report: (text: string) => void = () => {};
 
   private constructor(
     readonly garden: GardenSession,
@@ -77,17 +94,52 @@ export class GameSession {
     garden.onChange(() => this.write(SAVE_KEYS.garden, garden.snapshot()));
   }
 
-  /** 저장을 읽어요. 정원이 없으면 새로 하기의 정원을 만들어 바로 남겨요 (0053) */
-  static async load(store: SaveStore, newSeed: () => number = randomSeed, scope: GameScope = {}): Promise<GameSession> {
+  /**
+   * 저장을 읽어요. 정원이 없으면 새로 하기의 정원을 만들어 바로 남겨요 (0053).
+   * 못 읽는 저장이 있어도 게임은 켜져요: 정원은 직전 저장 → 새 정원 순으로, 판은 버려요. 못 읽은 파일은 옆에 치워 두고 report로 알려요.
+   */
+  static async load(store: SaveStore, newSeed: () => number = randomSeed, scope: GameScope = {}, report: (text: string) => void = () => {}): Promise<GameSession> {
+    const recovery: SaveRecovery = {};
+    const failed = (what: string, e: unknown) => report(`${what} ${e instanceof Error ? e.message : String(e)}`);
     const gardenText = await store.read(SAVE_KEYS.garden);
-    const fresh = !gardenText;
-    const garden = gardenText ? GardenSession.restore(gardenText) : GardenSession.fresh(newSeed());
+    let garden: GardenSession | undefined;
+    if (gardenText) {
+      try {
+        garden = GardenSession.restore(gardenText);
+      } catch (e) {
+        failed("정원 저장을 못 읽었어요.", e);
+        try {
+          const backup = await store.readBackup?.(SAVE_KEYS.garden);
+          if (backup) garden = GardenSession.restore(backup);
+        } catch (e2) {
+          failed("정원 직전 저장도 못 읽었어요.", e2);
+        }
+        recovery.garden = garden ? "backup" : "reset";
+        // 다음 쓰기가 못 읽는 파일을 직전 저장 자리에 덮지 않게 먼저 치워요
+        await store.setAside?.(SAVE_KEYS.garden);
+      }
+    }
+    const rewrite = !garden || recovery.garden !== undefined;
+    garden ??= GardenSession.fresh(newSeed());
     const game = new GameSession(garden, store, newSeed, undefined, scope);
-    if (fresh) game.write(SAVE_KEYS.garden, garden.snapshot());
+    game.recovery = recovery;
+    game.report = report;
+    if (rewrite) game.write(SAVE_KEYS.garden, garden.snapshot());
     const runText = await store.read(SAVE_KEYS.run);
     if (runText) {
-      game.attach(RunSession.restore(JSON.parse(runText) as RunSaveFile));
-      game.runText = runText;
+      try {
+        const run = RunSession.restore(JSON.parse(runText));
+        // 새 정원으로 시작했거나 되돌린 정원에 없는 정령이 나간 판은 잇지 않아요
+        const owned = run.run.spirits.every((s) => garden.state.spirits.some((x) => x.id === s.id));
+        if (recovery.garden === "reset" || !owned) throw new Error("정원과 맞지 않는 판이에요");
+        game.attach(run);
+        game.runText = runText;
+      } catch (e) {
+        failed("판 저장을 못 읽었어요.", e);
+        recovery.run = "dropped";
+        if (store.setAside) await store.setAside(SAVE_KEYS.run);
+        else await store.remove(SAVE_KEYS.run);
+      }
     }
     return game;
   }
@@ -176,7 +228,7 @@ export class GameSession {
    */
   suspendRun() {
     if (!this._run || !this.runText) return;
-    this.attach(RunSession.restore(JSON.parse(this.runText) as RunSaveFile));
+    this.attach(RunSession.restore(JSON.parse(this.runText)));
   }
 
   /**
@@ -244,7 +296,10 @@ export class GameSession {
 
   /** 저장은 부른 순서대로 하나씩 해요 */
   private queue(job: () => Promise<void>) {
-    this.writes = this.writes.then(job).catch((e) => console.error("저장 실패", e));
+    this.writes = this.writes.then(job).catch((e) => {
+      console.error("저장 실패", e);
+      this.report(`저장에 실패했어요. ${e instanceof Error ? e.message : String(e)}`);
+    });
   }
 }
 

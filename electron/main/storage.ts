@@ -7,6 +7,10 @@ export interface FileStorage {
   read(key: string): Promise<string | null>;
   write(key: string, text: string): Promise<void>;
   remove(key: string): Promise<void>;
+  /** 덮어쓰기 직전에 남긴 `<key>.bak.json`. 없으면 null */
+  readBackup(key: string): Promise<string | null>;
+  /** 못 읽는 `<key>.json`을 `<key>.broken.json`으로 치워요 (하나만 남겨요) */
+  setAside(key: string): Promise<void>;
 }
 
 const isMissing = (e: unknown) => (e as NodeJS.ErrnoException).code === "ENOENT";
@@ -21,13 +25,23 @@ export function createFileStorage(dir: string): FileStorage {
     assertStorageKey(key);
     return join(dir, `${key}.json`);
   };
+  const readOrNull = async (path: string) => {
+    try {
+      return await readFile(path, "utf8");
+    } catch (e) {
+      if (isMissing(e)) return null;
+      throw e;
+    }
+  };
+  const side = (key: string, kind: "bak" | "broken") => (file(key), join(dir, `${key}.${kind}.json`));
   return {
-    async read(key) {
+    read: (key) => readOrNull(file(key)),
+    readBackup: (key) => readOrNull(side(key, "bak")),
+    async setAside(key) {
       try {
-        return await readFile(file(key), "utf8");
+        await rename(file(key), side(key, "broken"));
       } catch (e) {
-        if (isMissing(e)) return null;
-        throw e;
+        if (!isMissing(e)) throw e;
       }
     },
     async write(key, text) {
@@ -36,7 +50,7 @@ export function createFileStorage(dir: string): FileStorage {
       await mkdir(dir, { recursive: true });
       await writeFile(tmp, text, "utf8");
       try {
-        await copyFile(target, join(dir, `${key}.bak.json`));
+        await copyFile(target, side(key, "bak"));
       } catch (e) {
         if (!isMissing(e)) throw e;
       }

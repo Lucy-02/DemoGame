@@ -54,6 +54,8 @@ function openErrorLog() {
   const log = createErrorLog(join(app.getPath("userData"), "logs", "error.log"));
   // 기록만 하고 기본 동작(종료)은 그대로 둬요
   process.on("uncaughtExceptionMonitor", (e) => void log.append(`v${app.getVersion()} main ${e.stack ?? e.message}`));
+  // 화면 프로세스가 죽으면 까닭을 남겨요
+  app.on("render-process-gone", (_e, _contents, details) => void log.append(`v${app.getVersion()} render-process-gone ${details.reason} ${details.exitCode}`));
   return log;
 }
 
@@ -66,6 +68,8 @@ function registerIpc() {
     return storage.write(key, text);
   });
   ipcMain.handle(IPC.remove, (_e, key: string) => storage.remove(key));
+  ipcMain.handle(IPC.readBackup, (_e, key: string) => storage.readBackup(key));
+  ipcMain.handle(IPC.setAside, (_e, key: string) => storage.setAside(key));
   ipcMain.handle(IPC.setFullscreen, (e, on: boolean) => {
     BrowserWindow.fromWebContents(e.sender)?.setFullScreen(Boolean(on));
   });
