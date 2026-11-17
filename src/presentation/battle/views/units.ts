@@ -159,7 +159,7 @@ function elementTexture(scene: Phaser.Scene, el: string): string {
 }
 
 /** 약점 배지 바탕 (.weak): 어두운 원 + 십자 틈이 난 조준 테. on = 맞는 속성 카드를 든 동안 (warn 원, 바깥 warn 테, 1.25배) */
-function weakTexture(scene: Phaser.Scene, on: boolean): { key: string; d: number } {
+export function weakTexture(scene: Phaser.Scene, on: boolean): { key: string; d: number } {
   const W = I.weak, k = on ? W.on.scale : 1;
   const inner = W.d / 2 - W.line;
   const d = Math.ceil((on ? (inner + W.on.ringOut) * 2 : W.d) * k);
@@ -397,14 +397,17 @@ function incomingChip(scene: Phaser.Scene, n: number, lethal: boolean, pv: boole
   };
 }
 
+/** 켜진 배지의 바깥 테가 옆 칩을 덮지 않게 늘 양옆에 두는 자리: 켜진 반지름 - 꺼진 반지름 - 칩 간격. 켜져도 옆 칩이 밀리지 않아요 */
+const WEAK_PAD = Math.max(0, Math.ceil((I.weak.d / 2 - I.weak.line + I.weak.on.ringOut) * I.weak.on.scale - I.weak.d / 2 - I.chips.gap));
+
 /** 약점 배지 (.weak): 조준 테 두른 속성 기호. on이면 켜져요 */
 function weakChip(scene: Phaser.Scene, el: string, on: boolean): Chip {
   const W = I.weak;
   return {
     node: {
-      t: "block", w: W.d, h: W.d,
+      t: "block", w: W.d + 2 * WEAK_PAD, h: W.d,
       draw: (_g, x, y) => {
-        const cx = Math.round(x) + W.d / 2, cy = Math.round(y) + W.d / 2;
+        const cx = Math.round(x) + WEAK_PAD + W.d / 2, cy = Math.round(y) + W.d / 2;
         scene.add.image(cx, cy, weakTexture(scene, on).key);
         const s = on ? WEAK_ON_ICON : W.icon;
         iconFit(scene, cx - s / 2, cy - s / 2, el, s, on ? P.onWarn : mix(elementTint(el), P.ink, W.mix), "xy");
