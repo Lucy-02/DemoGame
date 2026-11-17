@@ -16,6 +16,7 @@ import { inlineLine, lineBox, measure, type Span } from "../../style/text";
 import type { RichText } from "../../tooltip/content";
 import { faceKey, preloadFaces } from "../../faces";
 import { miniSlotNode, preloadEquipArt } from "../../run/equip";
+import { drawEnemyArt, preloadEnemyArt } from "../enemyArt";
 import { EQUIP_MINI } from "../../run/layout";
 import { TERMS, termOfIcon } from "../../glossary/terms";
 import { COPY, elementName, statusName } from "../copy";
@@ -51,6 +52,7 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
   loadIcon(scene, "fx-damage", I.incoming.lethalIcon);
   loadIcon(scene, "g-flag", I.flag.icon);
   loadIcon(scene, "g-flag", TIP.unit.stat.icon);
+  preloadEnemyArt(scene, vm.enemies.map((e) => e.art));
   for (const e of vm.enemies) {
     loadIcon(scene, e.element, I.element.icon);
     if (e.weakTo) {
@@ -822,9 +824,12 @@ export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPr
   const bodyTop = ENEMY.top + intentH + ENEMY.body.mt;
   const artX = cx - ENEMY.art.w / 2, artY = ENEMY.feet - ENEMY.art.h;
   if (pv.lit) glow(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, 0, true);
-  // 땅속: 몸 윗부분만 남아요 (0096). 그림이 생기면 발 선에서 잘라요
-  const artH = e.buried ? ENEMY.art.h * ENEMY.buried : ENEMY.art.h;
-  const art = gather(scene, 0, 0, () => { placeholderArt(scene, artX, ENEMY.feet - artH, ENEMY.art.w, artH, P.ink3); });
+  // 땅속: 몸 윗부분만 남아요 (0096). 그림은 발 선에서 잘라요
+  const show = e.buried ? ENEMY.buried : 1;
+  const artH = ENEMY.art.h * show;
+  const art = gather(scene, 0, 0, () => {
+    if (!drawEnemyArt(scene, e.art, cx, ENEMY.feet, show)) placeholderArt(scene, artX, ENEMY.feet - artH, ENEMY.art.w, artH, P.ink3);
+  });
   ground(scene, cx, ENEMY.feet);
   if (pv.outcome) drawHits(scene, pv.outcome.hits, cx - ENEMY.body.w / 2, bodyTop);
   let v!: InfoView;

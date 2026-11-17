@@ -1,0 +1,128 @@
+{
+ "bog_witch": {
+  "case_id": "bog_witch-ga-s6201",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6201,
+  "size": [
+   768,
+   599
+  ]
+ },
+ "bramble_rat": {
+  "case_id": "bramble_rat-ga-s6202",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6202,
+  "size": [
+   768,
+   515
+  ]
+ },
+ "cinder_imp": {
+  "case_id": "cinder_imp-ga-s6301",
+  "run_id": "enemy-r7-20261118",
+  "seed": 6301,
+  "size": [
+   607,
+   768
+  ]
+ },
+ "frost_pup": {
+  "case_id": "frost_pup-ga-s6202",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6202,
+  "size": [
+   768,
+   376
+  ]
+ },
+ "frostfang": {
+  "case_id": "frostfang-ga-s6202",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6202,
+  "size": [
+   768,
+   554
+  ]
+ },
+ "gale": {
+  "case_id": "gale-ga-s6304",
+  "run_id": "enemy-r7-20261118",
+  "seed": 6304,
+  "size": [
+   768,
+   581
+  ]
+ },
+ "grimbark": {
+  "case_id": "grimbark-ga-s6203",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6203,
+  "size": [
+   530,
+   768
+  ]
+ },
+ "moss_slime": {
+  "case_id": "moss_slime-ga-s6201",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6201,
+  "size": [
+   768,
+   583
+  ]
+ },
+ "rubble_shell": {
+  "case_id": "rubble_shell-ga-s6303",
+  "run_id": "enemy-r7-20261118",
+  "seed": 6303,
+  "size": [
+   768,
+   456
+  ]
+ },
+ "rust_golem": {
+  "case_id": "rust_golem-ga-s6304",
+  "run_id": "enemy-r7-20261118",
+  "seed": 6304,
+  "size": [
+   490,
+   768
+  ]
+ },
+ "tempest_crow": {
+  "case_id": "tempest_crow-ga-s6202",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6202,
+  "size": [
+   768,
+   512
+  ]
+ },
+ "whirl": {
+  "case_id": "whirl-ga-s6201",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6201,
+  "size": [
+   442,
+   768
+  ]
+ },
+ "wildfire": {
+  "case_id": "wildfire-ga-s6203",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6203,
+  "size": [
+   768,
+   537
+  ]
+ },
+ "wisp": {
+  "case_id": "wisp-ga-s6203",
+  "run_id": "enemy-r6-20261118",
+  "seed": 6203,
+  "size": [
+   526,
+   609
+  ]
+ }
+}
