@@ -21,10 +21,21 @@ const same = (a: UnitRef, b?: UnitRef) => !!b && a.side === b.side && a.i === b.
 /** 상대 쪽 방향: 아군은 오른쪽, 적은 왼쪽 */
 const toward = (ref: UnitRef) => (ref.side === "ally" ? 1 : -1);
 
+/** 이 유닛이 이 걸음에 맞은 횟수 가운데 가장 많은 수 */
+const mostHits = (acted?: ActedVM) => {
+  const n = new Map<string, number>();
+  for (const p of acted?.pops ?? []) if (p.kind === "damage") n.set(`${p.ref.side}${p.ref.i}`, (n.get(`${p.ref.side}${p.ref.i}`) ?? 0) + 1);
+  return Math.max(0, ...n.values());
+};
+
+/** 여러 번 치는 공격은 타격마다 한 박자씩 어긋나요 (0093). 그만큼 이 걸음이 길어지는 시간(ms) */
+export const hitSpan = (vm: BattleVM) => (reducedMotion() ? 0 : Math.max(0, mostHits(vm.acted) - 1) * ms(H.recoil.delay));
+
 /**
  * 이 장면에서 일어난 일을 보여 줘요. layer = 알약 · 잔상을 올릴 층 (필드 맨 위).
  * - 행동한 유닛: 상대 쪽으로 한 번 나섰다 돌아와요 (순서표 토큰 짚기와 같은 때)
  * - 맞은 유닛: 나섬이 가장 깊을 때 밀렸다 돌아오고, 머리 위에 타격 알약이 떴다 흐려져요. HP 막대의 깎인 구간은 잠깐 남았다가 줄어들어요
+ * - 여러 번 맞으면 타격마다 밀림과 알약이 한 박자(맞는 때와 같은 간격)씩 어긋나요 (0093)
  * - 회복 · 방어도: 알약만 떠요
  * - 쓰러짐: 적은 한 덩어리로 흐려져 사라지고, 아군은 그림이 흐려진 채 남아요
  * 앞 걸음에 이미 쓰러진 적은 그리지 않아요.
@@ -37,6 +48,10 @@ export function playUnitMotion(scene: Phaser.Scene, vm: BattleVM, units: UnitAct
     const unit = u.ref.side === "ally" ? vm.allies[u.ref.i] : vm.enemies[u.ref.i];
     const pops = acted?.pops.filter((p) => same(u.ref, p.ref)) ?? [];
     const lost = pops.reduce((a, p) => a + (p.kind === "damage" ? p.n : 0), 0);
+    // 타격마다의 때: k번째 타격은 k박자 뒤
+    let k = 0;
+    const whens = pops.map((p) => hitAt + (p.kind === "damage" && !still ? k++ : 0) * hitAt);
+    const lastHit = hitAt + Math.max(0, k - 1) * hitAt;
     if (u.ref.side === "enemy" && unit.hp <= 0 && !lost) {
       // 재생이 끝나 화면에서 빠질 때까지 자리는 비워 둬요
       u.root.setVisible(false);
@@ -50,12 +65,15 @@ export function playUnitMotion(scene: Phaser.Scene, vm: BattleVM, units: UnitAct
     }
     if (lost && !still) {
       const d = -H.recoil.distance * toward(u.ref), all = ms(H.recoil.duration);
-      scene.tweens.chain({
-        targets: art, delay: hitAt,
-        tweens: [
-          { x: d, duration: all / 4, ease: FAST.ease },
-          { x: 0, duration: (all * 3) / 4, ease: MOVE.ease },
-        ],
+      pops.forEach((p, j) => {
+        if (p.kind !== "damage") return;
+        scene.tweens.chain({
+          targets: art, delay: whens[j],
+          tweens: [
+            { x: d, duration: all / 4, ease: FAST.ease },
+            { x: 0, duration: (all * 3) / 4, ease: MOVE.ease },
+          ],
+        });
       });
     }
     if (lost) {
@@ -74,23 +92,24 @@ export function playUnitMotion(scene: Phaser.Scene, vm: BattleVM, units: UnitAct
         const d = ms(H.down.duration);
         if (u.ref.side === "enemy") {
           const fade = opacityOf(u.root);
-          scene.tweens.addCounter({ from: 1, to: 0, delay: hitAt + ms(H.pill.hold) - d / 2, duration: d, ease: FAST.ease, onUpdate: (t) => { fade.value = t.getValue() ?? 0; } });
+          scene.tweens.addCounter({ from: 1, to: 0, delay: lastHit + ms(H.pill.hold) - d / 2, duration: d, ease: FAST.ease, onUpdate: (t) => { fade.value = t.getValue() ?? 0; } });
         } else {
           art.setAlpha(1);
-          scene.tweens.add({ targets: art, alpha: H.down.alpha, delay: hitAt, duration: d, ease: FAST.ease });
+          scene.tweens.add({ targets: art, alpha: H.down.alpha, delay: lastHit, duration: d, ease: FAST.ease });
         }
       }
     }
     if (!pops.length) continue;
     const at = popAt(u.ref.side, u.ref.i);
-    for (const pill of drawPops(scene, pops, at.x, at.y)) {
+    drawPops(scene, pops, at.x, at.y).forEach((pill, j) => {
+      const when = whens[j] ?? hitAt;
       layer.add(pill);
       const fade = opacityOf(pill);
       fade.value = 0;
-      const show = { delay: hitAt, duration: FAST.duration / 2, ease: FAST.ease };
+      const show = { delay: when, duration: FAST.duration / 2, ease: FAST.ease };
       scene.tweens.addCounter({ from: 0, to: 1, ...show, onUpdate: (t) => { fade.value = t.getValue() ?? 1; } });
-      scene.tweens.addCounter({ from: 1, to: 0, delay: hitAt + ms(H.pill.hold), duration: ms(H.pill.fade), ease: FAST.ease, onUpdate: (t) => { fade.value = t.getValue() ?? 0; } });
-      if (!still) scene.tweens.add({ targets: pill, y: -H.pill.rise, delay: hitAt, duration: ms(H.pill.hold) + ms(H.pill.fade), ease: MOVE.ease });
-    }
+      scene.tweens.addCounter({ from: 1, to: 0, delay: when + ms(H.pill.hold), duration: ms(H.pill.fade), ease: FAST.ease, onUpdate: (t) => { fade.value = t.getValue() ?? 0; } });
+      if (!still) scene.tweens.add({ targets: pill, y: -H.pill.rise, delay: when, duration: ms(H.pill.hold) + ms(H.pill.fade), ease: MOVE.ease });
+    });
   }
 }
