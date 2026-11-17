@@ -6,7 +6,7 @@ import { createHandCard } from "../card/HandCard";
 import type { CardVM } from "../card/viewmodel";
 import { faceTexture } from "../spiritArt";
 import { P, badge, bar, text } from "../spirits/views/parts";
-import { withAlpha } from "../style/color";
+import { rgba, withAlpha } from "../style/color";
 import { box, circle } from "../style/draw";
 import { hitArea, render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
@@ -199,13 +199,12 @@ function hpBar(l: LaneVM, to: number, max: number): Node {
     ...base,
     draw: (g, x, y, w, h) => {
       box(g, x, y, w, h, h / 2, { fill: P.wallLo });
-      if (after >= now) {
-        box(g, x, y, Math.max(h, w * after), h, h / 2, { fill: P.ok });
-        box(g, x, y, Math.max(h, w * now), h, h / 2, { fill: P.ink2 });
-      } else {
-        box(g, x, y, Math.max(h, w * now), h, h / 2, { fill: P.danger });
-        box(g, x, y, Math.max(h, w * after), h, h / 2, { fill: P.ink2 });
-      }
+      // 남은 HP와 오르는/깎이는 구간의 이음새는 곧은 세로선 (Lucy 2026-11-17). 둥근 끝은 막대 양 끝에만
+      const [far, near, color] = after >= now ? [after, now, P.ok] : [now, after, P.danger];
+      box(g, x, y, Math.max(h, w * far), h, h / 2, { fill: color });
+      const nw = Math.max(h / 2, w * near), r = h / 2;
+      const c = rgba(P.ink2);
+      g.fillStyle(c.color, c.alpha).fillRoundedRect(x, y, nw, h, nw >= w ? r : { tl: r, bl: r, tr: 0, br: 0 });
     },
   };
 }
