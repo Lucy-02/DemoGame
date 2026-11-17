@@ -188,7 +188,7 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
       title: b.spirit(p.owner).def.release.name, kind: vm.name, text: vm.detail.text,
       chips: k < slots ? [{ text: COPY.order.before(k + 1) }] : [],
     };
-    return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", tip }, owner: p.owner };
+    return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", undo: undoOf(b, p), tip }, owner: p.owner };
   }
   const icon = cardVM(p.card.cardId, p.owner).values[0]?.icon ?? CHARGE_ICON;
   const vm = handCard(b, p.card, p.n === undefined ? undefined : b.planned[p.n]);
@@ -197,8 +197,11 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
     title: vm.name, kind: COPY.order.card, text: vm.detail.text,
     chips: [...(k < slots ? [{ text: COPY.order.before(k + 1) }] : []), ...(gap ? [{ text: COPY.order.gap, tone: "warn" as const }] : []), ...liveZones(b).filter((z) => p.end >= z.from && p.end < z.to).map((z) => ({ text: COPY.band.chip(z.dmg) }))],
   };
-  return { token: { key: keyOf(b, p), face: p.owner, icon, mark: gap ? "gap" : undefined, tip }, cardId: p.card.cardId, owner: p.owner };
+  return { token: { key: keyOf(b, p), face: p.owner, icon, mark: gap ? "gap" : undefined, undo: undoOf(b, p), tip }, cardId: p.card.cardId, owner: p.owner };
 }
+
+/** 마지막에 놓은 토큰이고 되돌릴 수 있으면 표시해요 (0074 7번) */
+const undoOf = (b: Battle, p: Lane) => (p.n === b.planned.length - 1 && b.canUndo()) || undefined;
 
 const lanesOf = (b: Battle): Lane[] => b.planned.map((p, n) => ({ end: p.end, owner: p.owner, card: p.card, target: p.target, n }));
 

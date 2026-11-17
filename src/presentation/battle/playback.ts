@@ -17,7 +17,7 @@ interface Frame {
 
 const clone = (vm: BattleVM): BattleVM => ({
   ...vm,
-  order: { ...vm.order, playing: true, slots: vm.order.slots.map((s) => ({ ...s })), bundles: vm.order.bundles?.map((l) => l.map((t) => ({ ...t }))), bands: vm.order.bands?.map((z) => ({ ...z })) },
+  order: { ...vm.order, playing: true, slots: vm.order.slots.map((s) => ({ ...s })), bundles: vm.order.bundles?.map((l) => l.map((t) => ({ ...t, undo: undefined }))), bands: vm.order.bands?.map((z) => ({ ...z })) },
   allies: vm.allies.map((a) => ({ ...a })),
   enemies: vm.enemies.map((e) => ({ ...e })),
   // 재생 중에는 카드를 낼 수 없어요

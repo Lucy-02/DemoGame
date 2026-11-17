@@ -85,6 +85,10 @@ export class Battle implements Engine {
   private nextUid = 10000;
   /** 미리 돌려 보는 사본에서만 있어요: 아군마다 받은 피해(막기 전)를 모아요 */
   private tally: Map<string, number> | null = null;
+  /** 놓은 카드를 되돌릴 수 있게 놓기 직전 상태를 남겨요 (전투 세션이 켜요, 0074 7번). 봇 · 시뮬레이션은 끈 채로 돌아요 */
+  keepUndo = false;
+  /** 되돌릴 수 있는 놓기마다 그 직전 상태 (놓은 순서) */
+  private undos: object[] = [];
 
   constructor(
     runSpirits: RunSpirit[],
@@ -631,6 +635,7 @@ export class Battle implements Engine {
   /** 턴 종료: 계획한 카드와 적 행동을 시각 순서로 재생해요. 같은 시각이면 아군 먼저 (0036). 고르지 않은 낙하는 사라져요. */
   endTurn() {
     if (this.result !== "ongoing" || this.replaying) return;
+    this.undos = [];
     const left = this.replay();
     if (!left) return;
     // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
@@ -685,9 +690,43 @@ export class Battle implements Engine {
 
   /** 전투 상태의 사본. 턴 흐름 목록은 옮기지 않아서 재생(replay)만 할 수 있어요 */
   private fork(): Battle {
-    const skip = ["rng", "events", "turnStartSteps", "turnEndSteps", "roundEndSteps"];
-    const state = Object.fromEntries(Object.entries(this).filter(([k, v]) => !skip.includes(k) && typeof v !== "function"));
-    return Object.assign(Object.create(Battle.prototype) as Battle, structuredClone(state), { rng: new NoLuck(0), events: [], tally: new Map<string, number>() });
+    return Object.assign(Object.create(Battle.prototype) as Battle, this.copyState(), { rng: new NoLuck(0), events: [], tally: new Map<string, number>(), keepUndo: false, undos: [] });
+  }
+
+  /** 지금 상태의 깊은 사본 (난수 · 이벤트 · 턴 흐름 목록 · 되돌리기 기록은 빼요) */
+  private copyState(): object {
+    const skip = ["rng", "events", "turnStartSteps", "turnEndSteps", "roundEndSteps", "undos"];
+    return structuredClone(Object.fromEntries(Object.entries(this).filter(([k, v]) => !skip.includes(k) && typeof v !== "function")));
+  }
+
+  // ───────────────────────── 되돌리기 ─────────────────────────
+
+  /** 놓기 직전: 되돌리기를 켰으면 지금 상태를 떠 둬요 */
+  private beforePlace() {
+    return this.keepUndo ? { state: this.copyState(), rng: this.rng.state, draw: this.draw.length } : null;
+  }
+
+  /** 놓은 뒤: 새 정보를 연 놓기(뽑기 · 난수 · 낙하 고르기)는 되돌릴 수 없고, 그 앞으로도 못 돌아가요 (0074 7번) */
+  private afterPlace(before: ReturnType<Battle["beforePlace"]>) {
+    if (!before) return;
+    const opened = this.rng.state !== before.rng || this.draw.length !== before.draw || !!this.stars.choice || this.result !== "ongoing";
+    if (opened) this.undos = [];
+    else this.undos.push(before.state);
+  }
+
+  /** 마지막에 놓은 카드(해방 포함)를 되돌릴 수 있는지 */
+  canUndo(): boolean {
+    return this.result === "ongoing" && !this.replaying && !this.holdChoice && this.undos.length > 0;
+  }
+
+  /** 마지막에 놓은 카드를 되돌려요: 놓기 직전 상태로 돌아가요 (마력 · 손패 · 놓는 즉시 처리된 효과까지). 거꾸로 하나씩 되돌릴 수 있어요 */
+  undo(): boolean {
+    if (!this.canUndo()) return false;
+    // 판의 정령(run)은 전투 밖과 이어져 있어서 지금 것을 그대로 써요
+    const runs = new Map(this.spirits.map((s) => [s.id, s.run]));
+    Object.assign(this, this.undos.pop());
+    for (const s of this.spirits) s.run = runs.get(s.id)!;
+    return true;
   }
 
   /**
@@ -808,6 +847,7 @@ export class Battle implements Engine {
     if (!c) return false;
     const chk = this.canPlay(c);
     if (!chk.ok) return false;
+    const before = this.beforePlace();
     const def = cardDef(c.cardId);
     const owner = this.spirit(c.owner);
     const cost = this.cardCost(c);
@@ -829,6 +869,7 @@ export class Battle implements Engine {
     for (const [p, v] of passivesOf(owner)) p.afterPlay?.(this, owner, v, c, def);
     this.playedByElement[def.element] = (this.playedByElement[def.element] ?? 0) + 1;
     c.tempCostDelta = 0;
+    this.afterPlace(before);
     return true;
   }
 
@@ -960,6 +1001,7 @@ export class Battle implements Engine {
     if (!ch || this.replaying) return false;
     const ids = [...new Set(cardIds)].filter((id) => ch.options.includes(id)).slice(0, ch.picks);
     if (!ids.length) return false;
+    this.undos = [];
     for (const id of ids) {
       this.hand.push({
         uid: this.newCardUid(), cardId: id, owner: ch.owner,
@@ -1247,11 +1289,13 @@ export class Battle implements Engine {
   /** 해방을 그 정령 줄 끝에 계획해요. 끝나는 시각에 켜지고, 끊기지 않아요 (0036 4절). */
   release(id: string): boolean {
     if (!this.canRelease(id)) return false;
+    const before = this.beforePlace();
     const s = this.spirit(id);
     s.releaseUsed = true;
     this.mana -= C.release_cost;
     const start = this.laneEnd(id);
     this.planned.push({ card: null, owner: id, start, end: start + C.release_ms, comboCount: this.playedThisTurn.length, repeat: false });
+    this.afterPlace(before);
     return true;
   }
 

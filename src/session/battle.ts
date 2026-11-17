@@ -14,7 +14,9 @@ export type BattleCommand =
   /** 열린 낙하 고르기에서 받을 카드 */
   | { kind: "fall"; cards: string[] }
   /** 턴 끝 품기 고르기에서 품을 카드 */
-  | { kind: "hold"; uids: number[] };
+  | { kind: "hold"; uids: number[] }
+  /** 마지막에 놓은 카드를 되돌려요 (0074 7번) */
+  | { kind: "undo" };
 
 export class BattleSession {
   readonly battle: Battle;
@@ -28,6 +30,8 @@ export class BattleSession {
     this.battle.firstGapBonus = run.battleGapBonus();
     // 품을 카드는 재생 뒤 고르기 창에서 물어요 (0075)
     this.battle.askHold = true;
+    // 놓은 카드는 마지막 것부터 되돌릴 수 있어요 (0074 7번)
+    this.battle.keepUndo = true;
     // 여는 동안 생긴 이벤트(전투 시작 기록 · 첫 뽑기)는 화면이 처음 그릴 때 이미 반영돼 있어요
     this.battle.drain();
   }
@@ -55,6 +59,9 @@ export class BattleSession {
         break;
       case "hold":
         if (!b.confirmHold(cmd.uids)) return [];
+        break;
+      case "undo":
+        if (!b.undo()) return [];
         break;
     }
     return b.drain();
