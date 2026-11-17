@@ -12,7 +12,7 @@ import type { HomeBadge, HomeItemVM, HomePrimaryVM } from "../viewmodel";
 
 const T = tokens.provisional.text.home;
 
-export const MENU_ICONS = [["g-flag", PRIMARY.icon], ["i-log", MENU.row.icon], ["i-gear", MENU.row.icon]] as const;
+export const MENU_ICONS = [["g-flag", PRIMARY.icon], ["i-log", MENU.row.icon], ["g-book", MENU.row.icon], ["i-gear", MENU.row.icon]] as const;
 
 /** 게임 이름 자리. 이름이 정해지기 전이라 점선 테로 비워 둬요 */
 export function drawLogo(scene: Phaser.Scene, title: string) {

@@ -6,7 +6,7 @@
 // 받을 수 있는 칸이 점선으로 밝아지고, 줄이나 칸에 올리면 장비가 비쳐 보이며 달라지는 것은 줄 왼쪽 말풍선에 나와요.
 // 세션을 주면 런에 연결돼요: 고르는 즉시 규칙에 적용하고 onDone으로 나가요. 세션이 없으면 고정 장면이에요.
 import { bindMenuKey } from "../menu/hooks";
-import { MOVE, fadeAway, fadeInScene, reducedMotion } from "../style/motion";
+import { MOVE, crossPaint, fadeAway, fadeInScene, reducedMotion } from "../style/motion";
 import * as Phaser from "phaser";
 import type { RewardSession } from "../../session/reward";
 import { createHandCard, preloadHandCard } from "../card/HandCard";
@@ -93,6 +93,7 @@ export class ResultScene extends Phaser.Scene {
     this.held = undefined;
     this.equipDone = undefined;
     this.onDone = data.onDone;
+    this.input.enabled = true;
     this.over = !!data.over;
     this.dirty = false;
   }
@@ -124,7 +125,8 @@ export class ResultScene extends Phaser.Scene {
   update() {
     if (!this.dirty) return;
     this.dirty = false;
-    this.paint();
+    // 호버 · 누름으로 다시 그릴 때 앞 모습이 흐려지며 바뀌어요 (0092)
+    crossPaint(this, () => this.paint());
   }
 
   /** 지금 고를 차례인 것 (0051: 카드 먼저, 장비 다음, 한 번에 하나만) */
@@ -159,6 +161,8 @@ export class ResultScene extends Phaser.Scene {
     this.leaving = choice === "skip" ? undefined : choice.card;
     if (this.phase !== "done") return;
     if (this.leaving === undefined || reducedMotion()) return this.onDone?.(this);
+    // 머무는 동안에는 입력을 받지 않아요
+    this.input.enabled = false;
     this.time.delayedCall(MOVE.duration, () => this.onDone?.(this));
   }
 

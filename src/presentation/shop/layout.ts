@@ -12,8 +12,6 @@ const ROW0 = 100, ROW_GAP = 70;
 export const STOCK = {
   x: GRID.gutter, rows: [ROW0, ROW0 + CARD_H + ROW_GAP], cols: 3, w: CARD_W, h: CARD_H, gap: 20, scale: CARD_W / HAND_CARD.w,
   price: { dy: CARD_H + 10, h: 20, coin: 14, gap: 5 },
-  /** .acd.poor 골드가 모자란 카드 */
-  poor: { grayscale: 0.6 },
 };
 
 /** .svt 빼기·치료 칸: 격자 오른쪽(카드 간격 하나 띄움), 폭 144 · 높이는 카드 + 값 줄, 행마다 하나 · 사방 1px 의미색 테 (.55)

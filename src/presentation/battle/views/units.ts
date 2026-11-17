@@ -18,6 +18,7 @@ import { faceKey, preloadFaces } from "../../faces";
 import { miniSlotNode, preloadEquipArt } from "../../run/equip";
 import { drawEnemyArt, preloadEnemyArt } from "../enemyArt";
 import { EQUIP_MINI } from "../../run/layout";
+import { TERMS, termOfIcon } from "../../glossary/terms";
 import { COPY, elementName, statusName } from "../copy";
 import { ALLY, ENEMY, FRAME, GROUND, INFO as I, INTENT, PREVIEW as PV, TIP } from "../layout";
 import type { AllyVM, BattleVM, Change, EnemyOutcomeVM, EnemyVM, IntentVM, StatusVM, TraitVM } from "../viewmodel";
@@ -160,7 +161,7 @@ function elementTexture(scene: Phaser.Scene, el: string): string {
 }
 
 /** 약점 배지 바탕 (.weak): 어두운 원 + 십자 틈이 난 조준 테. on = 맞는 속성 카드를 든 동안 (warn 원, 바깥 warn 테, 1.25배) */
-function weakTexture(scene: Phaser.Scene, on: boolean): { key: string; d: number } {
+export function weakTexture(scene: Phaser.Scene, on: boolean): { key: string; d: number } {
   const W = I.weak, k = on ? W.on.scale : 1;
   const inner = W.d / 2 - W.line;
   const d = Math.ceil((on ? (inner + W.on.ringOut) * 2 : W.d) * k);
@@ -308,6 +309,9 @@ const text = (t: string, sz: string, color: string, extra: Partial<Node> = {}): 
 /** 기호 옆 숫자: 잉크 가운데를 줄 가운데에 (기호도 같은 규칙, IconNode.fit) */
 const num = (n: number, sz: string, color: string, extra: Partial<Node> = {}): Node => text(String(n), sz, color, { ink: true, ...extra });
 
+/** 기호 풀이의 설명: 용어 사전의 첫 문장 (0102) */
+const SUB = Object.fromEntries(TERMS.map((t) => [t.id, t.what]));
+
 /** 기호 한 줄 풀이 (.mt): 제목(이름 + 수) · 설명 */
 export interface MarkTip {
   title: string;
@@ -363,7 +367,7 @@ function blockChip(n: number, pv = false): Chip {
   return pill({
     t: "row", h: B.h, pad: B.pad, align: "center",
     children: [{ t: "icon", id: "fx-block", w: B.icon, h: B.icon, tint: P.floor, fit: "y" }, num(n, T.block, P.floor)],
-  }, { fill: pv ? P.accHi : P.stat.guard, radius: B.radius, line: B.line }, { title: `${COPY.block} ${n}` });
+  }, { fill: pv ? P.accHi : P.stat.guard, radius: B.radius, line: B.line }, { title: `${COPY.block} ${n}`, sub: SUB.block });
 }
 
 /** 아군 받을 피해 (.inc.ia): 충격 기호 + 수, 배지 없음. 치명이면 기호가 뾰족해지고 맥박쳐요. pv = 조준 결과로 바뀐 값 */
@@ -395,20 +399,23 @@ function incomingChip(scene: Phaser.Scene, n: number, lethal: boolean, pv: boole
   };
 }
 
+/** 켜진 배지의 바깥 테가 옆 칩을 덮지 않게 늘 양옆에 두는 자리: 켜진 반지름 - 꺼진 반지름 - 칩 간격. 켜져도 옆 칩이 밀리지 않아요 */
+const WEAK_PAD = Math.max(0, Math.ceil((I.weak.d / 2 - I.weak.line + I.weak.on.ringOut) * I.weak.on.scale - I.weak.d / 2 - I.chips.gap));
+
 /** 약점 배지 (.weak): 조준 테 두른 속성 기호. on이면 켜져요 */
 function weakChip(scene: Phaser.Scene, el: string, on: boolean): Chip {
   const W = I.weak;
   return {
     node: {
-      t: "block", w: W.d, h: W.d,
+      t: "block", w: W.d + 2 * WEAK_PAD, h: W.d,
       draw: (_g, x, y) => {
-        const cx = Math.round(x) + W.d / 2, cy = Math.round(y) + W.d / 2;
+        const cx = Math.round(x) + WEAK_PAD + W.d / 2, cy = Math.round(y) + W.d / 2;
         scene.add.image(cx, cy, weakTexture(scene, on).key);
         const s = on ? WEAK_ON_ICON : W.icon;
         iconFit(scene, cx - s / 2, cy - s / 2, el, s, on ? P.onWarn : mix(elementTint(el), P.ink, W.mix), "xy");
       },
     },
-    tip: { title: named(COPY.weak, elementName(el)) },
+    tip: { title: named(COPY.weak, elementName(el)), sub: SUB.weakness },
   };
 }
 
@@ -418,7 +425,7 @@ function statusChip(s: StatusVM): Chip {
   return pill({
     t: "row", h: S.h, pad: S.pad, gap: S.gap, align: "center",
     children: [{ t: "icon", id: s.icon, w: S.icon, h: S.icon, tint: P.ink, fit: "y" }, num(s.n, T.chip, P.ink)],
-  }, { fill: P.floor, radius: S.radius }, name ? { title: `${name} ${s.n}` } : undefined);
+  }, { fill: P.floor, radius: S.radius }, name ? { title: `${name} ${s.n}`, sub: termOfIcon(s.icon)?.what } : undefined);
 }
 
 /** 특성 칩 (0072 7번): 둥근 네모에 기호만. off = 이번 턴에 이미 쓰여 흐려요 (0096) */
@@ -781,7 +788,7 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPrev
     const F = I.flag, tex = flagTexture(scene);
     const fx = cx + F.x, fy = ALLY.feet + F.y;
     scene.add.image(fx - tex.margin, fy - tex.margin, tex.key).setOrigin(0, 0);
-    marks.push({ x: fx, y: fy, w: F.icon, h: F.icon, tip: { title: COPY.front } });
+    marks.push({ x: fx, y: fy, w: F.icon, h: F.icon, tip: { title: COPY.front, sub: SUB.front } });
   }
   let v!: InfoView;
   const info = gather(scene, 0, 0, () => { v = allyInfo(scene, a, i, pv.outcome); });

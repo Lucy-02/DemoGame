@@ -2,7 +2,7 @@
 // 칸 종류는 기호로만 보여요(0050). 이름은 칸에 올렸을 때 말풍선에 나와요. 갈 수 있는 칸을 누르면 그 칸으로 들어가요.
 // 파티 줄을 누르면 그 줄만 같은 자리에서 정령 줄로 펼쳐져요(0046). 덱 보기는 오른쪽 위 덱 버튼으로 열어요(0076 15번).
 import { ms } from "../style/ease";
-import { FAST, MOVE, reducedMotion } from "../style/motion";
+import { FAST, MOVE, fadeInPart, fadeOutPart, reducedMotion } from "../style/motion";
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import type { Run } from "../../core/run";
@@ -187,8 +187,7 @@ export class MapScene extends Phaser.Scene {
     zone.setInteractive({ useHandCursor: can });
     if (can) zone.setData(SFX_DATA, "map.move" satisfies SfxId);
     zone.on("pointerover", () => {
-      this.hover?.destroy();
-      this.hover = gather(this, 0, 0, () => {
+      this.point(gather(this, 0, 0, () => {
         if (n.state === "open") {
           const d = N.d + (N.hover.gap + N.hover.width) * 2;
           circle(this.add.graphics(), x, y, d, { ring: { width: N.hover.width, color: P.ink } });
@@ -199,11 +198,10 @@ export class MapScene extends Phaser.Scene {
             ...(n.peek ? [{ kind: "chips" as const, items: [{ text: n.peek.name, tone: "acc" as const }, { text: COPY.turn(n.peek.turn) }] }] : []),
           ],
         });
-      });
+      }));
     });
     zone.on("pointerout", () => {
-      this.hover?.destroy();
-      this.hover = null;
+      this.point(null);
     });
     if (can) zone.on("pointerup", () => this.onEnter?.(n.id));
   }
@@ -238,6 +236,12 @@ export class MapScene extends Phaser.Scene {
     return Math.max(leftH, sheet.cards.length ? HAND_CARD.h : 0) + S.pad;
   }
 
+  /** 가리킨 것의 테 · 풀이를 바꿔요. 앞 것은 흐려져 사라지고 새것은 흐리게 나타나요 (0092) */
+  private point(part: Phaser.GameObjects.Container | null) {
+    if (this.hover) fadeOutPart(this, this.hover);
+    this.hover = part && fadeInPart(this, part);
+  }
+
   private drawSheet(l: LaneVM, sheet: SheetVM, y: number) {
     const S = SHEET, R = S.stat;
     const cards = sheet.cards.slice(0, S.cards.max);
@@ -245,13 +249,11 @@ export class MapScene extends Phaser.Scene {
     const tip = (zx: number, zy: number, zw: number, zh: number, title: string, text: string) => {
       this.add.zone(zx, zy, zw, zh).setOrigin(0, 0).setInteractive()
         .on("pointerover", () => {
-          this.hover?.destroy();
           const left = clampLeft(zx, GLASS.w, FRAME.w, SYS.right);
-          this.hover = drawTooltip(this, { skin: GLASS, at: { left, bottom: zy - S.tipGap }, content: [{ kind: "title", text: title }, { kind: "text", role: "body", text: [{ text }] }] });
+          this.point(drawTooltip(this, { skin: GLASS, at: { left, bottom: zy - S.tipGap }, content: [{ kind: "title", text: title }, { kind: "text", role: "body", text: [{ text }] }] }));
         })
         .on("pointerout", () => {
-          this.hover?.destroy();
-          this.hover = null;
+          this.point(null);
         });
     };
     const lx = x + S.padX;
@@ -303,12 +305,10 @@ export class MapScene extends Phaser.Scene {
       createHandCard(this, card, at, cy, { showRarity: true });
       this.add.zone(at, cy, HAND_CARD.w, HAND_CARD.h).setOrigin(0, 0).setInteractive()
         .on("pointerover", () => {
-          this.hover?.destroy();
-          this.hover = drawCardTip(this, card, at, cy, HAND_CARD.w);
+          this.point(drawCardTip(this, card, at, cy, HAND_CARD.w));
         })
         .on("pointerout", () => {
-          this.hover?.destroy();
-          this.hover = null;
+          this.point(null);
         });
       cx += HAND_CARD.w + S.cards.gap;
     }
