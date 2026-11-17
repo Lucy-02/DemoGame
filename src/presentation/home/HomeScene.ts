@@ -10,7 +10,8 @@ import { GLASS } from "../tooltip/skins";
 import { DEFAULT_HOME, HOMES } from "./fixtures";
 import { MENU, TIP } from "./layout";
 import type { HomeItemId, HomeVM } from "./viewmodel";
-import { MENU_ICONS, drawItem, drawLogo, drawPrimary, rowY } from "./views/menu";
+import { crossPaint } from "../style/motion";
+import { MENU_ICONS, drawItem, drawLogo, drawPrimary, drawVersion, rowY } from "./views/menu";
 
 export const HOME_SCENE = "home";
 
@@ -58,7 +59,8 @@ export class HomeScene extends Phaser.Scene {
   update() {
     if (!this.dirty) return;
     this.dirty = false;
-    this.paint();
+    // 호버로 다시 그릴 때 앞 모습이 흐려지며 바뀌어요 (0092)
+    crossPaint(this, () => this.paint());
   }
 
   private setHover(id?: HomeItemId) {
@@ -77,6 +79,7 @@ export class HomeScene extends Phaser.Scene {
       out: () => { if (this.hover === item.id) this.setHover(undefined); },
     }));
     drawPrimary(this, this.vm.primary, this.onPrimary);
+    if (this.vm.version) drawVersion(this, this.vm.version);
     const i = this.vm.items.findIndex((it) => it.id === this.hover);
     const tip = this.vm.items[i]?.tip;
     if (tip) {

@@ -8,8 +8,11 @@ export function createElectronPlatform(bridge: PlatformBridge): Platform {
     read: (key) => (assertStorageKey(key), bridge.read(key)),
     write: (key, text) => (assertStorageKey(key), bridge.write(key, text)),
     remove: (key) => (assertStorageKey(key), bridge.remove(key)),
+    readBackup: (key) => (assertStorageKey(key), bridge.readBackup(key)),
+    setAside: (key) => (assertStorageKey(key), bridge.setAside(key)),
     setFullscreen: (on) => bridge.setFullscreen(on),
     isFullscreen: () => bridge.isFullscreen(),
     quit: () => bridge.quit(),
+    logError: (text) => bridge.logError(text),
   };
 }

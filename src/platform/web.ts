@@ -21,6 +21,16 @@ export function createWebPlatform(store: KeyValueStore, doc?: Document): Platfor
       assertStorageKey(key);
       store.removeItem(PREFIX + key);
     },
+    async readBackup(key) {
+      assertStorageKey(key);
+      return null;
+    },
+    async setAside(key) {
+      assertStorageKey(key);
+      const text = store.getItem(PREFIX + key);
+      if (text !== null) store.setItem(`${PREFIX}${key}:broken`, text);
+      store.removeItem(PREFIX + key);
+    },
     async setFullscreen(on) {
       if (!doc) return;
       if (on && !doc.fullscreenElement) await doc.documentElement.requestFullscreen();
@@ -30,5 +40,6 @@ export function createWebPlatform(store: KeyValueStore, doc?: Document): Platfor
       return Boolean(doc?.fullscreenElement);
     },
     async quit() {},
+    async logError() {},
   };
 }

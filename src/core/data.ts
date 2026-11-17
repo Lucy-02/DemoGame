@@ -60,21 +60,59 @@ function must<T>(m: Map<string, T>, id: string, what: string): T {
   return v;
 }
 export const spiritDef = (id: string) => must(spiritMap, id, "spirit");
-export const cardDef = (id: string) => must(cardMap, id, "card");
-export const enemyDef = (id: string) => must(enemyMap, id, "enemy");
+/** 강화한 카드 id의 꼬리 (0080). `fire_claw+` = 강화한 할퀴기 */
+export const UPGRADED = "+";
+export const isUpgradedId = (id: string) => id.endsWith(UPGRADED);
+/** 강화 꼬리를 뗀 카드 id */
+export const baseCardId = (id: string) => (isUpgradedId(id) ? id.slice(0, -UPGRADED.length) : id);
+export const upgradedId = (id: string) => (isUpgradedId(id) ? id : id + UPGRADED);
 
-/** 출전 인원에 맞춘 적 세기 (0053). 셋이면 그대로(undefined) */
-export function partyScale(size: number): EnemyScale | undefined {
-  return (C.party_scale as Record<string, EnemyScale>)[String(size)];
+/** 강화로 오르는 숫자: +pct 올림, 최소 +min (0080) */
+export const upgradeValue = (v: number) => v + Math.max(C.card_upgrade.min, Math.ceil(v * C.card_upgrade.pct));
+
+/** 강화할 수 있는 카드: 숫자 효과가 하나라도 있어야 해요. 전투 중에 생기는 카드는 덱에 남지 않아서 빠져요 */
+export function canUpgradeCard(def: CardData): boolean {
+  if (isUpgradedId(def.id) || def.obtain === "generated") return false;
+  return !!def.upgrade || def.effects.some((op) => "value" in op && typeof op.value === "number" && op.value > 0);
 }
 
-/** 세기를 곱한 적 데이터. HP · 방어도 · 회복은 hp, 피해 · 화상 · 새끼 피해는 dmg */
+const upgradedMap = new Map<string, CardDef>();
+function upgradedDef(base: CardDef): CardDef {
+  const effects = base.upgrade ?? base.effects.map((op) => ("value" in op && typeof op.value === "number" && op.value > 0
+    ? { ...op, value: upgradeValue(op.value) } as typeof op : op));
+  const def = { ...base, id: upgradedId(base.id), effects, upgrade: undefined } as CardDef;
+  // 이름은 언어를 바꿀 때 원래 카드에서 따라와요
+  Object.defineProperty(def, "name", { get: () => base.name, enumerable: true });
+  return def;
+}
+
+export function cardDef(id: string): CardDef {
+  if (!isUpgradedId(id)) return must(cardMap, id, "card");
+  let def = upgradedMap.get(id);
+  if (!def) {
+    def = upgradedDef(must(cardMap, baseCardId(id), "card"));
+    upgradedMap.set(id, def);
+  }
+  return def;
+}
+export const enemyDef = (id: string) => must(enemyMap, id, "enemy");
+const eventMap = byId(EVENTS);
+export const eventDef = (id: string) => must(eventMap, id, "event");
+
+/** 출전 인원에 맞춘 적 세기 (0053). 셋이면 그대로(undefined). 보스 칸은 boss 값이 있으면 그 값 (0087) */
+export function partyScale(size: number, boss = false): EnemyScale | undefined {
+  const k = (C.party_scale as Record<string, EnemyScale & { boss?: EnemyScale }>)[String(size)];
+  return (boss && k?.boss) || k;
+}
+
+/** 세기를 곱한 적 데이터. HP · 방어도 · 회복은 hp, 피해 · 화상 · 새끼 피해 · 되돌리는 몫은 dmg */
 export function scaleEnemy(def: EnemyDef, k: EnemyScale): EnemyDef {
   const up = (v: number, m: number) => Math.max(1, Math.round(v * m));
   const move = (m: EnemyMove): EnemyMove => ({
     ...m,
+    ...(m.zoneDmg ? { zoneDmg: up(m.zoneDmg, k.dmg) } : {}),
     actions: m.actions.map((a) =>
-      a.type === "attack" ? { ...a, dmg: up(a.dmg, k.dmg) }
+      a.type === "attack" || a.type === "attackRamp" ? { ...a, dmg: up(a.dmg, k.dmg) }
       : a.type === "burn" || a.type === "buffMinions" || a.type === "burnRamp" ? { ...a, value: up(a.value, k.dmg) }
       : a.type === "block" || a.type === "sapHeal" ? { ...a, value: up(a.value, k.hp) }
       : a),
@@ -82,6 +120,8 @@ export function scaleEnemy(def: EnemyDef, k: EnemyScale): EnemyDef {
   return {
     ...def,
     hp: up(def.hp, k.hp),
+    // 되돌리기는 돌려주는 몫이 피해라 피해 세기를 따라가요 (혼자 · 둘인 판에서 한 정령이 다 받아요)
+    ...(def.reflectFirst ? { reflectFirst: def.reflectFirst * k.dmg } : {}),
     pattern: def.pattern.map(move),
     phase2: def.phase2 && { ...def.phase2, turnStartBlock: up(def.phase2.turnStartBlock, k.hp), pattern: def.phase2.pattern.map(move) },
   };
@@ -105,13 +145,13 @@ export function equipDef(id: string): EquipDef {
 export const personalityDef = (id: string) => must(persMap, id, "personality");
 
 export const ELEMENT_NAME: Record<Element, string> = {
-  fire: "불", water: "물", forest: "숲", wind: "바람", light: "빛", earth: "땅", none: "무",
+  fire: "불", water: "물", forest: "숲", wind: "바람", light: "빛", earth: "땅", electric: "전기", ice: "얼음", shadow: "그림자", none: "무",
 };
 /** 거친 특성 이름 (후보, Lucy 확인 전) */
 export const TRAIT_NAME: Record<string, string> = { burning: "타오르는", sturdy: "단단한", swift: "재빠른", heavy: "묵직한" };
-/** 빛 · 땅은 임시값(TODO_TOKEN) */
+/** 빛 · 땅 · 전기 · 얼음 · 그림자는 임시값(TODO_TOKEN). 뒤의 셋은 화면 토큰 el.*와 같은 값 */
 export const ELEMENT_COLOR: Record<Element, number> = {
-  fire: 0xe8643a, water: 0x3d8fe0, forest: 0x4fae5c, wind: 0x8fb8c8, light: 0xe8d58a, earth: 0xb08a5a, none: 0x9a93a8,
+  fire: 0xe8643a, water: 0x3d8fe0, forest: 0x4fae5c, wind: 0x8fb8c8, light: 0xe8d58a, earth: 0xb08a5a, electric: 0xd3c57a, ice: 0xa3c6d6, shadow: 0xa195b8, none: 0x9a93a8,
 };
 export const ROLE_NAME: Record<string, string> = {
   attack: "공격", guard: "수호", support: "보조", disrupt: "교란",

@@ -3,15 +3,16 @@ import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { faceTexture } from "../../spiritArt";
 import { box } from "../../style/draw";
-import { render, type BoxNode, type Node } from "../../style/flex";
-import { P, glass, text } from "../../spirits/views/parts";
+import { render, size, type BoxNode, type Node } from "../../style/flex";
+import { P, glass, plateStyle, text } from "../../spirits/views/parts";
 import { COPY } from "../copy";
-import { LOGO, MENU, PRIMARY } from "../layout";
+import { FRAME } from "../../run/layout";
+import { LOGO, MENU, PRIMARY, VERSION } from "../layout";
 import type { HomeBadge, HomeItemVM, HomePrimaryVM } from "../viewmodel";
 
 const T = tokens.provisional.text.home;
 
-export const MENU_ICONS = [["g-flag", PRIMARY.icon], ["i-log", MENU.row.icon], ["i-gear", MENU.row.icon]] as const;
+export const MENU_ICONS = [["g-flag", PRIMARY.icon], ["i-log", MENU.row.icon], ["g-book", MENU.row.icon], ["i-gear", MENU.row.icon]] as const;
 
 /** 게임 이름 자리. 이름이 정해지기 전이라 점선 테로 비워 둬요 */
 export function drawLogo(scene: Phaser.Scene, title: string) {
@@ -20,6 +21,12 @@ export function drawLogo(scene: Phaser.Scene, title: string) {
     style: { ring: { width: LOGO.ring, color: P.glassLine, dash: LOGO.dash } },
     children: [text(title, T.logo, P.ink)],
   }, LOGO.x, LOGO.y);
+}
+
+/** 버전: 왼쪽 아래 구석에 흐린 작은 글자 (크기는 배지 글자를 빌려요) */
+export function drawVersion(scene: Phaser.Scene, version: string) {
+  const node = text(version, T.badge, P.ink3);
+  render(scene, node, VERSION.x, FRAME.h - VERSION.bottom - size(node).h);
 }
 
 /** 기호가 아직 없는 자리 (TODO_ICON): 점선 둥근 네모 */
@@ -40,11 +47,11 @@ function badgeNode(b: HomeBadge): Node {
 
 export const rowY = (i: number) => MENU.y + PRIMARY.h + PRIMARY.below + i * (MENU.row.h + MENU.gap);
 
-/** 메뉴 줄 하나: 기호 + 낱말, 줄 끝에 숫자 또는 `N` */
-export function drawItem(scene: Phaser.Scene, item: HomeItemVM, i: number, hover: boolean, on: { click: () => void; over: () => void; out: () => void }) {
+/** 메뉴 줄 판: 기호 + 낱말, 줄 끝에 숫자 또는 `N`. 판 안 메뉴도 같은 줄을 써요 (0090) */
+export function itemNode(item: Pick<HomeItemVM, "label" | "icon" | "badge">, hover: boolean, w: number = MENU.w): BoxNode {
   const R = MENU.row;
-  const node: BoxNode = {
-    t: "row", w: MENU.w, h: R.h, radius: R.radius, pad: [0, R.padX, 0, R.padX], gap: R.gap, align: "center",
+  return {
+    t: "row", w, h: R.h, radius: R.radius, pad: [0, R.padX, 0, R.padX], gap: R.gap, align: "center",
     style: hover ? { fill: P.veil["09"], ring: { width: 1, color: P.veil["50"] } } : glass(),
     children: [
       item.icon ? { t: "icon", id: item.icon, w: R.icon, h: R.icon, tint: P.ink } : todoSlot(R.icon, P.ink2),
@@ -52,17 +59,22 @@ export function drawItem(scene: Phaser.Scene, item: HomeItemVM, i: number, hover
       ...(item.badge ? [badgeNode(item.badge)] : []),
     ],
   };
+}
+
+/** 메뉴 줄 하나 */
+export function drawItem(scene: Phaser.Scene, item: HomeItemVM, i: number, hover: boolean, on: { click: () => void; over: () => void; out: () => void }) {
+  const R = MENU.row;
   const y = rowY(i);
-  render(scene, node, MENU.x, y);
+  render(scene, itemNode(item, hover), MENU.x, y);
   scene.add.zone(MENU.x, y, MENU.w, R.h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
     .on("pointerover", on.over).on("pointerout", on.out).on("pointerup", on.click);
 }
 
 /** 강조 줄 채움: 밝은 유리 판 (Lucy 2026-11-13, 보라 채움은 기각). 크기로만 무게를 줘요 */
-const TONE = { style: { fill: P.veil["09"], ring: { width: PRIMARY.ring, color: P.veil["50"] } }, ink: P.ink };
+const TONE = { style: plateStyle(true), ink: P.ink };
 
-/** 메뉴 맨 위 강조 줄. 이어하기면 함께 간 정령 얼굴과 층을 붙여요 */
-export function drawPrimary(scene: Phaser.Scene, vm: HomePrimaryVM, onClick?: () => void) {
+/** 메뉴 맨 위 강조 줄 판. 이어하기면 함께 간 정령 얼굴과 층을 붙여요 */
+export function primaryNode(scene: Phaser.Scene, vm: HomePrimaryVM, w: number = MENU.w): BoxNode {
   const S = PRIMARY;
   const F = S.face;
   const tone = TONE;
@@ -74,8 +86,8 @@ export function drawPrimary(scene: Phaser.Scene, vm: HomePrimaryVM, onClick?: ()
       children: f && scene.textures.exists(f.key) ? [{ t: "image", key: faceTexture(scene, f, F.d), w: F.d, h: F.d, round: true }] : [],
     })),
   }];
-  const node: BoxNode = {
-    t: "row", w: MENU.w, h: S.h, radius: S.radius, pad: [0, S.padX, 0, S.padX], gap: S.gap, align: "center", style: tone.style,
+  return {
+    t: "row", w, h: S.h, radius: S.radius, pad: [0, S.padX, 0, S.padX], gap: S.gap, align: "center", style: tone.style,
     children: [
       { t: "icon", id: "g-flag", w: S.icon, h: S.icon, tint: tone.ink },
       text(vm.label, T.primary, tone.ink),
@@ -83,6 +95,10 @@ export function drawPrimary(scene: Phaser.Scene, vm: HomePrimaryVM, onClick?: ()
       ...(vm.kind === "continue" ? [text(vm.floor, T.floor, tone.ink, { ml: S.floorMl })] : []),
     ],
   };
-  render(scene, node, MENU.x, MENU.y);
+}
+
+export function drawPrimary(scene: Phaser.Scene, vm: HomePrimaryVM, onClick?: () => void) {
+  const S = PRIMARY;
+  render(scene, primaryNode(scene, vm), MENU.x, MENU.y);
   if (onClick) scene.add.zone(MENU.x, MENU.y, MENU.w, S.h).setOrigin(0, 0).setInteractive({ useHandCursor: true }).on("pointerup", onClick);
 }

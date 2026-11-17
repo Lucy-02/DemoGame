@@ -2,7 +2,7 @@ import { describeOp } from "./battle/effects";
 import { join, type Clause, type TextContext } from "./clauses";
 import { josa } from "./korean";
 import { C, cardDef } from "./data";
-import { scale } from "./stats";
+import { round, scale } from "./stats";
 import type { CardDef, CardTarget, EquipStat, EquipTier, StatCondition } from "./types";
 
 export interface CasterStats {
@@ -13,7 +13,17 @@ export interface CasterStats {
   empower?: number;
   /** 성장으로 쌓인 주 수치 보너스 */
   grow?: number;
+  /** 시전 정령에게 붙은 배율 (해방 등). 없으면 1 */
+  mult?: CastMult;
 }
+
+/** 효과 종류별 배율: 전투의 damageMult · burnMult · chillMult · healMult */
+export type CastMult = Partial<Record<"damage" | "burn" | "chill" | "heal", number>>;
+
+/** 타격 수치: 실제 타격처럼 (기본값 + 강화) × 파워 × 피해 배율을 마지막에 한 번만 반올림해요 */
+export const castDamage = (v: number, st: CasterStats) => round((((v + (st.empower ?? 0)) * st.power) / C.stat_base) * (st.mult?.damage ?? 1));
+/** 화상 · 냉기 · 회복 수치: 포커스로 보정한 값 × 그 효과의 배율 */
+export const castAmount = (v: number, st: CasterStats, kind: "burn" | "chill" | "heal") => round(scale(v, st.focus) * (st.mult?.[kind] ?? 1));
 
 /** 적에게 가는 효과의 대상 (끌어서 고른 적 하나는 생략) */
 const ENEMY_TO: Partial<Record<CardTarget, string>> = { allEnemies: "모든 적에게 " };
@@ -45,7 +55,8 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
       return { to, core: `${what} ${verb}` };
     },
     sc: (v, k) => (st ? scale(v, st[k]) : v),
-    dmg: (v) => (st ? scale(v + (st.empower ?? 0), st.power) : v),
+    dmg: (v) => (st ? castDamage(v, st) : v),
+    amt: (v, kind) => (st ? castAmount(v, st, kind) : v),
     main: (v) => {
       if (mainUsed) return v;
       mainUsed = true;
@@ -117,3 +128,4 @@ export function describeEquipTier(tier: EquipTier): string[] {
 /** 전용 무기가 대표 카드를 기술로 바꾸는 효과문 (0055) */
 export const describeSignatureSwap = (from: string, to: string) =>
   `${josa(cardName(from), "이/가")} ${josa(cardName(to), "으로/로")} 바뀝니다.`;
+

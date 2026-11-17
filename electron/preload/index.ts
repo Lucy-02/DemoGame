@@ -6,9 +6,12 @@ const bridge: PlatformBridge = {
   read: (key) => ipcRenderer.invoke(IPC.read, key),
   write: (key, text) => ipcRenderer.invoke(IPC.write, key, text),
   remove: (key) => ipcRenderer.invoke(IPC.remove, key),
+  readBackup: (key) => ipcRenderer.invoke(IPC.readBackup, key),
+  setAside: (key) => ipcRenderer.invoke(IPC.setAside, key),
   setFullscreen: (on) => ipcRenderer.invoke(IPC.setFullscreen, on),
   isFullscreen: () => ipcRenderer.invoke(IPC.isFullscreen),
   quit: () => ipcRenderer.invoke(IPC.quit),
+  logError: (text) => ipcRenderer.invoke(IPC.logError, text),
 };
 
 contextBridge.exposeInMainWorld("platformBridge", bridge);

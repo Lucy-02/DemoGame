@@ -13,6 +13,7 @@
 | 전투 규칙·카드 엔진 | `docs/architecture/0003-battle-engine.md` | `docs/handoff/CARD_ENGINE_HANDOFF.md`, `src/data/README.md` |
 | 정령·카드 설계 | `design/canon/spirits/` (풀 표·시트·설계 노하우) | `design/canon/BALANCE_BASELINE.md`, `design/canon/naming/` |
 | 게임 안 문구 | `design/canon/text/TEXT_RULES.md` | `src/core/text.ts`, `src/core/korean.ts` |
+| 데모 공개 · 스팀 · 플레이테스트 | `docs/release/README.md` (지금 단계, Lucy 몫) | `STEAM.md`, `PLAYTEST.md`, `AI_DISCLOSURE.md`, `PITCH.md` |
 | 카드·정령 그림 | `design/card/art/PIPELINE.md` | `assets/PROVENANCE.md`, `docs/architecture/0002-spirit-puppet.md` |
 
 ## 폴더마다 맡는 일
@@ -26,6 +27,7 @@
 | `docs/handoff/` | 스레드 인수인계, 기획서, 열린 질문(`OPEN_QUESTIONS.md`) | 인수인계는 일을 넘길 때 써요. 질문은 정해지면 지워요 |
 | `design/canon/` | Lucy가 확정한 시안 원본과 정본 표 | 시안 원본은 고치지 않아요 |
 | `design/concepts/` | 장부, 브리프, 시안 링크, 연구 노트 | 장부는 Lucy가 고른 조각을 빠짐없이 |
+| `docs/release/` | 출시 준비: 단계표, 스팀 순서, 플레이테스트, AI 공개 근거, 피치 뼈대 | 단계나 숫자가 바뀌면 고쳐요 |
 | `docs/archive/`, `design/archive/` | 끝난 조사·리뷰·대체된 문서 | 읽지 않아도 작업할 수 있어요. 새 근거 없이 다시 제안하지 않아요 |
 
 - 레포에 넣지 않는 파일(이미지 묶음, 영상, 음원, 시안 캡처)은 프로젝트 공유 폴더에 있고, 그 폴더의 `README.md`가 안내해요.

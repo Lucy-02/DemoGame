@@ -29,16 +29,17 @@ const all = (side: Side, counts: Counts): UnitRef[] => Array.from({ length: coun
 const isUnit = (o: Over): o is UnitRef => typeof o === "object";
 
 export function focusFor(card: string, play: PlayVM, over: Over, counts: Counts): Focus {
-  const { kind, side } = play.target;
+  const { kind, side, only, not } = play.target;
   const onField = over !== "hand";
   if (kind === "pick") {
-    if (isUnit(over) && over.side === side && over.i < counts[side]) {
+    const cand = (only === undefined ? all(side, counts) : [{ side, i: only }]).filter((r) => !not?.includes(r.i));
+    if (isUnit(over) && cand.some((r) => r.side === over.side && r.i === over.i)) {
       return {
         outcome: play.outcomes?.[over.i], lit: [over], cand: [], dim: true,
         ready: { target: over }, key: `${card}:${side}${over.i}`,
       };
     }
-    return { lit: [], cand: all(side, counts), dim: true, key: `${card}:cand` };
+    return { lit: [], cand, dim: true, key: `${card}:cand` };
   }
   if (!onField) return { lit: [], cand: all(side, counts), dim: true, key: `${card}:cand` };
   // 전체는 모두 강조, 무작위는 누가 맞을지 모르니 강조 없이 그 편만 밝게 (정본 규칙 상태 3: 카드가 대상을 정해요)
@@ -48,6 +49,13 @@ export function focusFor(card: string, play: PlayVM, over: Over, counts: Counts)
     lit: kind === "all" ? units : [], cand: kind === "random" ? units : [], dim: true,
     ready: {}, key: `${card}:armed`,
   };
+}
+
+/** 이 카드가 i번째 적을 대상으로 삼을 수 있나 (약점 배지는 이때만 켜요) */
+export function aimsAtEnemy(play: PlayVM | undefined, i: number): boolean {
+  if (!play || play.target.side !== "enemy") return false;
+  const { only, not } = play.target;
+  return (only === undefined || only === i) && !not?.includes(i);
 }
 
 /** 이 캐릭터를 흐리게 할지: 흐림 상태에서 강조·고리·결과가 없는 캐릭터만 */

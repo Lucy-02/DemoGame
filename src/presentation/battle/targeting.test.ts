@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { canonDropsOnTurtle } from "./fixtures/plays";
-import { dimmed, focusFor, type Counts } from "./targeting";
+import { aimsAtEnemy, dimmed, focusFor, type Counts } from "./targeting";
 import type { PlayVM } from "./viewmodel";
 
 const counts: Counts = { enemy: 3, ally: 3 };
@@ -47,5 +47,22 @@ describe("대상 고르기", () => {
     expect(dimmed(f, { side: "ally", i: 2 })).toBe(false);
     const noOutcome = focusFor("drops", drops, { side: "enemy", i: 0 }, counts);
     expect(dimmed(noOutcome, { side: "ally", i: 2 })).toBe(true);
+  });
+
+  it("only가 있으면 그 캐릭터만 고를 수 있어요 (해방 카드)", () => {
+    const release: PlayVM = { target: { kind: "pick", side: "ally", only: 2 } };
+    expect(focusFor("r", release, { side: "ally", i: 2 }, counts).ready).toEqual({ target: { side: "ally", i: 2 } });
+    const other = focusFor("r", release, { side: "ally", i: 0 }, counts);
+    expect(other.ready).toBeUndefined();
+    expect(other.cand).toEqual([{ side: "ally", i: 2 }]);
+  });
+
+  it("약점 배지는 그 적을 대상으로 삼는 카드일 때만 켜요 (P2-13)", () => {
+    expect(aimsAtEnemy(drops, 1)).toBe(true);
+    expect(aimsAtEnemy({ target: { kind: "all", side: "enemy" } }, 0)).toBe(true);
+    // 방어 · 자기 대상 카드, 땅속이라 고를 수 없는 적, 낼 수 없는 카드
+    expect(aimsAtEnemy({ target: { kind: "all", side: "ally" } }, 0)).toBe(false);
+    expect(aimsAtEnemy({ target: { kind: "pick", side: "enemy", not: [1] } }, 1)).toBe(false);
+    expect(aimsAtEnemy(undefined, 0)).toBe(false);
   });
 });

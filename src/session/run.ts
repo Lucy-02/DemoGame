@@ -4,14 +4,20 @@
 import { returnHp } from "../core/stats";
 import { RUN_SAVE_VERSION, Run, type BattleReward, type MapNode, type RunOptions, type RunSave } from "../core/run";
 import type { BattleTier } from "../core/garden";
+import type { DeedTally } from "./deeds";
+import { upgradeSave, type SaveStep } from "./migrate";
+
+/** 옛 판 저장을 올리는 함수 (버전 n → n + 1). 지금은 버전 1뿐이라 비어 있어요 */
+const RUN_STEPS: Readonly<Record<number, SaveStep>> = {};
 
 /** 판 안에서 지금 있는 자리 */
 export type RunPhase =
   /** 지도에서 다음 칸을 고를 차례 */
   | { kind: "map" }
   /** 전투 칸에 들어왔어요. 편성은 들어올 때 뽑아 둬요 */
-  | { kind: "battle"; tier: BattleTier; enemies: string[] }
-  | { kind: "event" }
+  | { kind: "battle"; tier: BattleTier; enemies: string[]; /** 첫 판의 첫 전투 (고정 편성, 처음 한 번 짚어 줘요 0088) */ first?: true }
+  /** 이벤트 칸. 이벤트는 들어올 때 뽑아 둬요 (이어하기에도 같은 이벤트) */
+  | { kind: "event"; eventId?: string }
   | { kind: "shop" }
   | { kind: "rest" }
   /** 이긴 전투의 보상을 고르는 중. 골드와 정원 경험은 이미 들어갔어요 */
@@ -23,6 +29,8 @@ export type RunPhase =
 export interface BattleOutcome {
   won: boolean;
   spirits: { id: string; hp: number; downed: boolean }[];
+  /** 이 전투에서 센 자람 조건 (0021 · 0045). 이긴 전투만 정원에 남아요 */
+  deeds?: DeedTally;
 }
 
 export interface RunSaveFile {
@@ -35,6 +43,7 @@ export interface RunSaveFile {
 export interface BattleWin {
   party: string[];
   tier: BattleTier;
+  deeds?: DeedTally;
 }
 
 export class RunSession {
@@ -43,7 +52,10 @@ export class RunSession {
   private constructor(readonly run: Run, private _phase: RunPhase) {}
 
   static start(opts: RunOptions): RunSession {
-    return new RunSession(new Run(opts), { kind: "map" });
+    const run = new Run(opts);
+    // 뒤 막에서 출발한 판은 출발 묶음의 첫 보상부터 골라요 (0108)
+    const reward = run.rollBundleReward();
+    return new RunSession(run, reward ? { kind: "reward", reward } : { kind: "map" });
   }
 
   get phase(): RunPhase {
@@ -101,8 +113,13 @@ export class RunSession {
       this.set({ kind: "over", victory: false });
       return undefined;
     }
-    const win = { party: this.party, tier };
-    if (tier === "boss") {
+    const win: BattleWin = { party: this.party, tier, ...(outcome.deeds ? { deeds: outcome.deeds } : {}) };
+    if (tier === "boss" && this.run.hasNextAct()) {
+      // 막 사이: 정예와 같은 보상을 받고 다음 막 지도로 가요
+      const reward = this.run.rollBattleReward("elite");
+      this.run.nextAct();
+      this.set({ kind: "reward", reward });
+    } else if (tier === "boss") {
       this.run.bossDefeated = true;
       this.set({ kind: "over", victory: true });
     } else {
@@ -111,18 +128,27 @@ export class RunSession {
     return win;
   }
 
+  /** 탐험 포기: 어느 자리에서든 판을 패배로 끝내요 (0084 5번). 그 칸에서 하던 일은 버려요 */
+  abandon() {
+    if (this._phase.kind === "over") throw new Error("이미 끝난 판이에요");
+    this.set({ kind: "over", victory: false });
+  }
+
   /** 보상을 다 고르고 지도로 */
   finishReward() {
     this.expect("reward");
-    this.set({ kind: "map" });
+    // 출발 묶음이 남았으면 다음 보상으로 이어져요 (0108)
+    const reward = this.run.rollBundleReward();
+    this.set(reward ? { kind: "reward", reward } : { kind: "map" });
   }
 
   save(): RunSaveFile {
     return { version: RUN_SAVE_VERSION, run: this.run.save(), phase: structuredClone(this._phase) };
   }
 
-  static restore(file: RunSaveFile): RunSession {
-    if (file.version !== RUN_SAVE_VERSION) throw new Error(`판 저장 형식이 달라요: ${file.version}`);
+  static restore(raw: unknown): RunSession {
+    const file = upgradeSave(raw, RUN_SAVE_VERSION, RUN_STEPS, "판") as unknown as RunSaveFile;
+    if (typeof file.phase?.kind !== "string") throw new Error("판 저장에 자리가 없어요");
     return new RunSession(Run.load(file.run), structuredClone(file.phase));
   }
 }
@@ -131,9 +157,11 @@ function phaseOf(run: Run, node: MapNode): RunPhase {
   switch (node.type) {
     case "battle":
     case "elite":
-    case "boss":
-      return { kind: "battle", tier: node.type === "battle" ? "normal" : node.type, enemies: run.pickEncounter(node.type).enemies };
-    case "event": return { kind: "event" };
+    case "boss": {
+      const enc = run.pickEncounter(node.type);
+      return { kind: "battle", tier: node.type === "battle" ? "normal" : node.type, enemies: enc.enemies, ...(enc.pool === "first" ? { first: true as const } : {}) };
+    }
+    case "event": return { kind: "event", eventId: run.pickEvent().id };
     case "shop": return { kind: "shop" };
     case "rest": return { kind: "rest" };
   }

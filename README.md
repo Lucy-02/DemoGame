@@ -6,7 +6,8 @@ Electron + Vite + TypeScript + Phaser 4 + Spine. 구조는 `docs/architecture/00
 - `corepack enable` 후 `pnpm install` (패키지 매니저는 pnpm, 버전은 package.json의 packageManager)
 - `pnpm dev`: Electron 창으로 실행 (핫 리로드)
 - `pnpm dev:web`: 브라우저로만 실행 (저장은 localStorage). 기본은 저장에 이어진 게임(메인 화면 → 판 → 메인 화면). 고정 장면은 `?screen=battle` 전투, `?screen=spirits` 정령 관리, `?screen=result` 전투 결과, `?screen=home` 메인 화면. `?screen=legacy`는 정원·저장 없는 시험 판(`&party=a,b,c&adult&unlockAll&seed=`)
-- `pnpm dist`: 배포용 폴더를 `release/`에 만들기
+- `pnpm dist`: 배포용 폴더를 `release/`에 만들기 (`pnpm dist --mac` · `--win`으로 다른 플랫폼)
+- `pnpm dist:demo`: 데모 빌드를 `release/demo/`에 만들기 (2막까지 + 데모 끝 화면, 0101)
 - `pnpm check`: 타입 검사 + 의존 방향 검사 + 테스트 + 리터럴 검사 + 문서 검사(`pnpm check:docs`)
 - `pnpm test:e2e`: Electron 스모크 테스트 (GPU 없는 리눅스는 `xvfb-run -a` 앞에 붙이기)
 - `pnpm sim 200 [파티 a,b,c]`: 헤드리스 전투 시뮬레이터

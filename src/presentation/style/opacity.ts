@@ -35,6 +35,8 @@ const isIdentity = (a: ColorAdjust) =>
 export function adjustColor(root: Phaser.GameObjects.Container, initial: ColorAdjust = {}): (a: ColorAdjust) => void {
   const fx = root.enableFilters().filters!.internal.addColorMatrix();
   const apply = (a: ColorAdjust) => {
+    // 컨테이너가 지워지면 Phaser가 필터의 행렬을 비워요. 그 뒤에 도는 트윈(흐려지는 중에 화면을 다시 그릴 때)은 아무 일도 하지 않아요
+    if (!fx.colorMatrix) return;
     fx.colorMatrix.set(colorMatrix(a));
     fx.active = !isIdentity(a);
   };

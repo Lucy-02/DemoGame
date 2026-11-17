@@ -204,3 +204,19 @@
 - X2 정령은 싸운 자리에: https://claude.ai/artifact/SSyLbjtUNDnuioyiBczxCh
 - X3 정령마다 한 칸: https://claude.ai/artifact/XxB1n8gtAsvA13cNj7Dfkp
 - 프레임: /mnt/project-files/design/round-x/X1~X3/ (f1 평소 · f2 카드에 올림 · f3 정예 장비 · f4 정령 하나), 바탕 캡처 /mnt/project-files/design/round-x/assets/
+
+## 깃들기 · 출전 준비 라운드 J (2026-11-16, BRIEF "라운드 J")
+- J1 무대 하나: https://claude.ai/artifact/FsL7WxvqmjcMg4cNtVamHw
+- J2 세 줄 잇기: https://claude.ai/artifact/G3NNkKtdYDesfRfTrYG5jS
+- J3 싸울 자리 미리보기: https://claude.ai/artifact/GQWVZNE6uFn4ae3KEXGDS3
+- 프레임: /mnt/project-files/design/round-j/J1~J3/ (f1 후보 둘 · f2 고름 + 성격 말풍선 · f3 깃듦 박자 · f4 둘째 깃들기 · f5 출전 준비 셋 · f6 출전 준비 둘, 앞열 바꾸는 중), 바탕 캡처 /mnt/project-files/design/round-j/assets/
+
+## 2막 규칙 표시 (2026-11-17, 작업 가정 → 0096)
+- 방전 띠 · 땅속 · 되돌리기 칩: https://claude.ai/artifact/GaerMky9DQJuSMPa2XixY8
+- 사본: /mnt/project-files/design/act2-display/act2-display.html
+
+## 설정 · 판 안 메뉴 (2026-11-17, 0090)
+- 캡처: /mnt/project-files/settings-menu/ (A 가운데 창 = 채택, B 왼쪽 세로 메뉴 · C 메뉴와 설정 나란히 = 기각). 디렉터 판단, Lucy 확인 대기
+
+## 모션 3차 (2026-11-17, 0092 "남은 것")
+- 새 모양이 필요한 여덟 곳의 움직이는 시안(상태 칩 · 방어도 깨짐 · 차징 시작 · 브레이크 · 해방 · 전투 시작 · 승리 · 패배): https://claude.ai/artifact/7evJqo9bQqUkuXZbYMHN6M

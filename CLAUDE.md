@@ -38,13 +38,13 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 - 문서가 어디 있는지는 `docs/README.md`(길잡이)에서 찾아요. 스레드 인수인계 문서는 레포 `docs/handoff/`에 둬요.
 - 구조와 의존 방향: `docs/architecture/0001-client-architecture.md`. `pnpm lint:deps`가 강제해요.
 - `src/core`, `src/data`: 게임 로직과 데이터. UI 작업에서 건드리지 않아요. 규칙을 바꾸면 골든 테스트 스냅샷이 바뀌니 PR에 이유를 적어요.
-- `src/presentation/placeholder`: 예전 임시 UI. 게임 흐름(`src/presentation/flow.ts`)에서 새 화면이 없는 칸만 맡아요(`?screen=legacy`는 정원 없는 시험 판). 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 레거시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지금 지도·이벤트·휴식·판 결과는 레거시가 맡아요. 전투는 새 전투 화면이 맡고, 해방·품기·낙하 고르기는 새 화면 설계 전이라 게임에서 쓸 수 없어요 (Lucy 2026-11-16). 작업하면서 안 쓰게 된 코드·토큰도 같은 PR에서 정리해요.
+- `src/presentation/placeholder`: 예전 임시 UI. 게임 흐름(`src/presentation/flow.ts`)에서 새 화면이 없는 칸만 맡아요(`?screen=legacy`는 정원 없는 시험 판). 화면 단위로 지워요: 새 화면이 `src/core` 규칙에 연결되면 같은 일을 하던 레거시 화면을 그 PR에서 함께 지워요 (Lucy 2026-10-31). 연결 전에는 남겨 둬요. 지도 · 이벤트 · 휴식 · 판 결과는 새 화면(`map/` · `event/` · `rest/` · `runEnd/`)이 맡아요. 전투는 새 전투 화면이 맡아요(해방 카드, 품기·낙하 가운데 고르기 창 포함, 0075). 작업하면서 안 쓰게 된 코드·토큰도 같은 PR에서 정리해요.
 - 클라이언트(전투 화면) 작업은 `docs/handoff/CLIENT_HANDOFF.md`를 먼저 읽어요. 정본 옮기는 관행과 렌더링 디테일이 있어요.
 - 시안을 구현할 때 시안 HTML을 그대로 옮기지 않아요. 재사용·리팩터링할 수 있는 기존 컴포넌트를 먼저 찾아 쓰고, 실제 코드 구조에 맞게 가져와요 (Lucy 2026-11-09).
 - `src/platform`, `electron/`: 저장·창 같은 바깥 세계. 렌더러는 Electron을 직접 import하지 않아요.
 - `src/design/tokens.ts`: `design/tokens/tokens.json`에서 `pnpm tokens`로 생성. 손으로 고치지 않아요.
 - `pnpm check:design`: 리터럴 값 검사. `design/strict-paths.txt`에 적힌 경로는 위반 시 실패해요.
-- `pnpm check`: 타입·의존 규칙·테스트·리터럴을 한 번에. `pnpm test:e2e`: Electron 스모크.
+- `pnpm check`: 타입·의존 규칙·테스트·리터럴·문서·에셋 출처 기록을 한 번에. 출시 준비(단계표 · 스팀 순서 · 플레이테스트)는 `docs/release/`. `pnpm test:e2e`: Electron 스모크(창 크기 · 전체화면 포함, `DEMOGAME_EXE`로 패키지된 앱). `pnpm dist`(`--mac` · `--win`): `release/`에 패키징, `pnpm dist:demo`: 데모 빌드(0101). `pnpm test:run`: 봇이 화면으로 막을 넘긴 한 판을 끝까지 돌고, 같은 버튼을 빠르게 다시 눌러도 같은 판인지 봐요(`tools/screenBot.ts`, 약 10분, CI는 별도 잡 `screen-run`. 깔린 크로미움을 쓰려면 `PW_CHROMIUM`).
 
 ## 에셋
 - TTI(NovelAI Diffusion V5/V4.5)로 만든 파일은 모두 `assets/provenance.jsonl`에 기록해요 (`assets/PROVENANCE.md` 참고). 생성은 Lucy가 하고, Claude는 프롬프트 시트·후처리·기록을 맡아요.

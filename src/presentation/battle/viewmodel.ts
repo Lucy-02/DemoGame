@@ -3,11 +3,14 @@
 import type { CardVM } from "../card/viewmodel";
 import type { RichText } from "../tooltip/content";
 import type { FaceId, IconId, UnitFace } from "../faces";
+import type { Stage } from "../../core/types";
 import type { EquipVM } from "../run/viewmodel";
 
 export type { FaceId, IconId, UnitFace };
 
 export interface OrderSlotVM {
+  /** 장면이 바뀌어도 같은 토큰임을 알아보는 이름 (모션, 0077). 없으면 움직이지 않아요 */
+  key?: string;
   n: number;
   /** 적 그림 기호 (en-*) */
   art: IconId;
@@ -32,6 +35,8 @@ export interface OrderHeadVM {
 
 /** 순서표의 아군 토큰: 놓은 카드 한 장 (0038). 주인 얼굴 + 카드 기호, 번호 없음 */
 export interface AllyTokenVM {
+  /** 장면이 바뀌어도 같은 토큰임을 알아보는 이름 (모션, 0077) */
+  key?: string;
   face: UnitFace;
   /** 카드 그림 창의 효과 기호 */
   icon: IconId;
@@ -39,6 +44,8 @@ export interface AllyTokenVM {
   mark?: "gap" | "held" | "release";
   /** 재생 중 지나감 (흐림) */
   past?: boolean;
+  /** 마지막에 놓은 카드: 오른쪽 위에 되돌리기 배지, 누르면 손패로 돌아와요 (0074 7번) */
+  undo?: boolean;
   tip?: OrderTipVM;
 }
 
@@ -54,6 +61,26 @@ export interface OrderTipVM {
   chips?: { text: string; tone?: "warn" | "acc" }[];
 }
 
+/** 방전 띠 조각 (0096): 묶음 칸 안에서 at번째 토큰부터 n장이 띠 위에 있어요. 적 칸을 걸친 띠는 조각 둘, 머리(충격 기호 + 피해)는 첫 조각에만 */
+export interface BandVM {
+  /** 묶음 칸 번호 (bundles 인덱스) */
+  cell: number;
+  at: number;
+  n: number;
+  dmg: number;
+  head?: boolean;
+  /** 띠를 까는 적 (enemies 인덱스) */
+  enemy?: number;
+  tip?: OrderTipVM;
+}
+
+/** 적의 특성 칩 (0072 7번): 둥근 네모, 늘 보임. off = 이번 턴에 이미 쓰임 (0096) */
+export interface TraitVM {
+  icon: IconId;
+  off?: boolean;
+  tip: { title: string; sub?: string };
+}
+
 export interface StatusVM {
   icon: IconId;
   n: number;
@@ -67,11 +94,15 @@ export interface AllyVM {
   element?: IconId;
   /** 필드 그림 (지금은 정본의 임시 실루엣 sil-*) */
   art: IconId;
+  /** 성장 단계: 있으면 그 단계의 정령 그림을 세워요 (0109). 없으면 빈 상자 */
+  stage?: Stage;
   hp: number;
   maxHp: number;
   block?: number;
-  /** 이번 적 차례에 받을 피해 합계. HP 막대에 (방어도를 뺀 만큼) 깎일 구간을 보여요 */
+  /** 이번 적 차례에 받을 피해 합계 (막기 전) */
   incoming?: number;
+  /** HP 막대에 깎일 구간: 놓은 카드까지 미리 돌려 본 값. 없으면 받을 피해에서 방어도를 뺀 만큼 */
+  loss?: number;
   statuses: StatusVM[];
   /** 앞열 (유닛 앞에 깃발) */
   front?: boolean;
@@ -96,6 +127,10 @@ export interface EnemyVM {
   /** 약점 속성. 바람·무속성처럼 약점이 없으면 비움 (0028). 있으면 약점 배지를 늘 그리고, 맞는 속성 카드를 들면 켜요 */
   weakTo?: IconId;
   statuses: StatusVM[];
+  /** 특성 칩: 기호 줄 맨 앞 (0072 7번) */
+  traits?: TraitVM[];
+  /** 땅속: 몸이 가라앉아요 (0096) */
+  buried?: boolean;
   /** 이번 턴 행동. 없으면 의도 알약을 그리지 않아요 */
   intent?: IntentVM;
   hovered?: boolean;
@@ -117,21 +152,43 @@ export interface BattleVM {
   /** bundles: 적 칸마다 그 앞에 묶인 아군 토큰, 마지막은 꼬리 묶음 (길이 = slots + 1, 0038). 없으면 적 칸만 */
   order: {
     slots: OrderSlotVM[]; bundles?: AllyTokenVM[][]; head?: OrderHeadVM;
+    /** 방전 띠 (0096) */
+    bands?: BandVM[];
     /** 턴 재생 중: 머리가 "재생 중"(빈 점), 지나가지 않은 첫 칸 앞에 흰 재생 위치 선 (0074) */
     playing?: boolean;
   };
   allies: AllyVM[];
   enemies: EnemyVM[];
   mana: { n: number; max: number };
-  /** 정령별 손패 묶음 (왼쪽부터) */
+  /** 정령별 손패 묶음 (왼쪽부터). 각성체 묶음 끝에는 해방 카드가 붙어요 (0075) */
   hand: { owner: UnitFace; cards: CardVM[] }[];
   /** 지금 낼 수 있는 카드 수 */
   playable: number;
   piles: { draw: number; discard: number; exhaust: number };
   /** 낼 수 있는 카드마다 대상 규칙과 결과 미리보기 (card key). 없는 카드는 끌거나 집을 수 없어요 */
   plays: Record<string, PlayVM>;
+  /** 열린 고르기 창. 닫힐 때까지 다른 조작은 쉬어요 */
+  pick?: PickVM;
   /** 시각 검증용 시작 상태 (?scene=aim 등). 없으면 쉬는 상태 */
   start?: StartVM;
+  /** 턴 재생 중 이 장면에서 일어난 일 (유닛 반응 모션, 0086). 없으면 움직이지 않아요 */
+  acted?: ActedVM;
+}
+
+/** 재생 한 걸음: 행동한 유닛과, 그 행동으로 유닛마다 뜬 수 (일어난 순서대로) */
+export interface ActedVM {
+  /** 없으면 행동자 없는 걸음 (턴 끝 효과) */
+  actor?: UnitRef;
+  pops: PopVM[];
+  /** 이 걸음에서 바뀐 유닛의 바뀌기 전 값. 맞는 때까지는 이 값으로 보여요 */
+  was?: { ref: UnitRef; hp: number; block?: number }[];
+}
+
+/** 유닛 머리 위에 잠깐 뜨는 알약. damage = HP가 깎임, heal = 회복, block = 방어도 얻음 */
+export interface PopVM {
+  ref: UnitRef;
+  kind: "damage" | "heal" | "block";
+  n: number;
 }
 
 /** 바뀌기 전 → 뒤 */
@@ -152,16 +209,36 @@ export interface UnitRef {
 export interface TargetRule {
   kind: "pick" | "all" | "random";
   side: Side;
+  /** pick: 이 인덱스만 고를 수 있어요 (해방 카드는 그 정령에게만) */
+  only?: number;
+  /** pick: 이 인덱스는 고를 수 없어요 (이 카드가 끝날 때 땅속인 적, 0096) */
+  not?: number[];
+}
+
+/** 가운데 고르기 창 (0075): 낙하(턴 시작)와 품기(재생 뒤)가 같이 써요 */
+export interface PickVM {
+  /** fall = 고르면 바로 받아요 · hold = 미리 골라져 있고 버튼으로 닫아요 */
+  kind: "fall" | "hold";
+  /** 고를 장 수 */
+  n: number;
+  cards: CardVM[];
+  /** 미리 골라진 카드 key */
+  picked: string[];
 }
 
 /** 카드를 낼 때 필드에 그리는 결과 (결정 0007 "미리보기 예산", 0013 끌어 대기).
  *  필드엔 ① 대상의 결과 ② 아군마다 받을 피해 a→b 두 가지만. 연쇄·지연·다음 턴 효과는 카드 설명에만.
- *  값은 아직 전투 규칙(src/core)에서 계산하지 않아요. session 층이 생기면 거기서 채워요. */
+ *  실제 전투에서는 그 카드를 더 놓고 이번 턴을 미리 돌려 본 값이에요 (0123). 무작위로 고르는 대상의 결과는 없어요. */
 export interface OutcomeVM {
   /** 적마다 결과 (enemies 인덱스). 없는 적은 그대로 */
   enemies: Partial<Record<number, EnemyOutcomeVM>>;
   /** 아군마다 받을 피해 a→b (allies 순서). 비어 있으면 그 아군은 그대로 */
-  incoming: (Change | undefined)[];
+  incoming: (IncomingChange | undefined)[];
+}
+
+/** 받을 피해 a→b. loss = 그 카드를 놓으면 깎일 HP (없으면 받을 피해에서 방어도를 뺀 만큼) */
+export interface IncomingChange extends Change {
+  loss?: number;
 }
 
 export interface EnemyOutcomeVM {
@@ -176,7 +253,7 @@ export interface EnemyOutcomeVM {
 export interface PlayVM {
   target: TargetRule;
   /** 지금 놓으면 순서표에 들어갈 자리: bundles[bundle]의 i번째 (든 동안 흰 점선 토큰, 0074) */
-  slot?: { bundle: number; i: number; token: AllyTokenVM };
+  slot?: { bundle: number; i: number; token: AllyTokenVM; bands?: BandVM[] };
   /** pick: 고른 대상 인덱스마다 결과. all·random: 한 가지 결과("all"). 없으면 강조만 해요 */
   outcomes?: Partial<Record<number | "all", OutcomeVM>>;
 }

@@ -5,6 +5,9 @@ import { exampleCardArt } from "./cardArt";
 import { canonRest } from "./canonRest";
 import { exampleCrowded } from "./crowded";
 import { exampleEquip } from "./equip";
+import { ACT1, ACT2_ART, ACT345_ART } from "./act1";
+import { ALLIES } from "./allies";
+import { exampleAct2Band, exampleAct2Buried, exampleAct2Plan } from "./act2";
 import { exampleOrderPlan, exampleOrderPlay } from "./order";
 
 export const FIXTURES: Record<string, BattleVM> = {
@@ -29,6 +32,12 @@ export const FIXTURES: Record<string, BattleVM> = {
   /** 예시: 순서표 토큰 상태 (0074). 계획 중 · 재생 중 */
   "order-plan": exampleOrderPlan,
   "order-play": exampleOrderPlay,
+  /** 예시: 2막 새 규칙 (0096). 방전 띠 · 띠 위 카드 · 땅속 적. 실제 규칙으로 만들어서 getter로 늦게 만들어요 */
+  get "act2-band"() { return exampleAct2Band(); },
+  get "act2-plan"() { return exampleAct2Plan(); },
+  get "act2-buried"() { return exampleAct2Buried(); },
   /** 예시: 꽉 찬 정보 묶음 (상태 다섯, 치명 받을 피해) */
   crowded: exampleCrowded,
 };
+/** 예시: 1막 적 그림 (0100). 실제 규칙으로 만들어서 getter로 늦게 만들어요 */
+for (const [name, make] of Object.entries({ ...ACT1, ...ACT2_ART, ...ACT345_ART, ...ALLIES })) Object.defineProperty(FIXTURES, name, { get: make, enumerable: true });

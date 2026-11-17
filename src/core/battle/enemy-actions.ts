@@ -1,3 +1,4 @@
+import type { Clause } from "../clauses";
 import { C } from "../data";
 import { round } from "../stats";
 import type { EnemyAction, EnemyTargetRule } from "../types";
@@ -8,29 +9,31 @@ import { vulnMult } from "./statuses";
 type ActionId = EnemyAction["type"];
 type ActionOf<K extends ActionId> = Extract<EnemyAction, { type: K }>;
 
-/** 적 행동 하나의 규칙: 의도 표기, 종류, 처리 */
+/** 적 행동 하나의 규칙: 풀이 문장, 종류, 처리 */
 export interface EnemyActionHandler<K extends ActionId = ActionId> {
   /** 의도 종류. 한 행동에 여럿이면 attack > defend > buff > debuff 순으로 대표를 골라요 */
   kind: Exclude<Intent["kind"], "charge" | "chargeReady" | "skip">;
-  text: (b: Engine, e: BEnemy, a: ActionOf<K>) => string;
+  /** 호버 풀이의 한 문장 (TEXT_RULES 1절 문장 틀). 숫자는 지금 상태를 넣은 실제 값이에요 */
+  text: (b: Engine, e: BEnemy, a: ActionOf<K>) => Clause;
   run: (b: Engine, e: BEnemy, a: ActionOf<K>) => void;
 }
 
-const TARGET_NAME: Record<EnemyTargetRule, string> = { front: "앞열", random: "무작위", lowest: "HP 최저", all: "전체" };
+/** 적이 노리는 대상 (효과문의 대상 자리) */
+const TO: Record<EnemyTargetRule, string> = { front: "앞열 아군에게 ", random: "무작위 아군에게 ", lowest: "HP가 가장 낮은 아군에게 ", all: "모든 아군에게 " };
+const hitsOf = (d: number, hits?: number) => (hits && hits > 1 ? `${d}씩 ${hits}번` : `${d}`);
 
 export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
   attack: {
     kind: "attack",
     text(b, e, a) {
       const d = b.enemyDmgPreview(e, a.dmg);
-      const hits = a.hits && a.hits > 1 ? `${d}×${a.hits}` : `${d}`;
-      return `${TARGET_NAME[a.target]} 피해 ${hits}${a.pierce ? " (방어 무시)" : ""}`;
+      return { to: TO[a.target], core: `피해를 ${hitsOf(d, a.hits)} 입히`, after: a.pierce ? "방어도를 무시합니다." : undefined };
     },
     run(b, e, a) {
       const hits = a.hits ?? 1;
-      const fixed = a.target === "random" ? null : b.pickTargets(a.target);
+      const fixed = a.target === "random" ? null : b.pickTargets(a.target, e);
       for (let h = 0; h < hits; h++) {
-        const targets = fixed ?? b.pickTargets("random");
+        const targets = fixed ?? b.pickTargets("random", e);
         for (const s of targets) {
           if (s.downed) continue;
           b.enemyHit(e, s, a.dmg, !!a.pierce);
@@ -42,7 +45,7 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
   },
   block: {
     kind: "defend",
-    text: (_b, _e, a) => `방어도 ${a.value}`,
+    text: (_b, _e, a) => ({ to: "", core: `방어도를 ${a.value} 얻` }),
     run(b, e, a) {
       e.block += a.value;
       b.emit({ k: "block", ref: refOf(e), amount: a.value });
@@ -50,54 +53,66 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
   },
   weak: {
     kind: "debuff",
-    text: (_b, _e, a) => `${TARGET_NAME[a.target]} 약화 ${a.turns}턴`,
-    run(b, _e, a) {
-      for (const s of b.pickTargets(a.target)) b.addStatus(s, "weak", a.turns, { fresh: b.replaying });
+    text: (_b, _e, a) => ({ to: TO[a.target], core: `약화를 ${a.turns}턴 부여하` }),
+    run(b, e, a) {
+      for (const s of b.pickTargets(a.target, e)) b.addStatus(s, "weak", a.turns, { fresh: b.replaying });
     },
   },
   vulnerable: {
     kind: "debuff",
-    text: (_b, _e, a) => `${TARGET_NAME[a.target]} 취약 ${a.turns}턴`,
-    run(b, _e, a) {
-      for (const s of b.pickTargets(a.target)) b.addStatus(s, "vuln", a.turns, { fresh: b.replaying, strength: C.vuln_base });
+    text: (_b, _e, a) => ({ to: TO[a.target], core: `취약을 ${a.turns}턴 부여하` }),
+    run(b, e, a) {
+      for (const s of b.pickTargets(a.target, e)) b.addStatus(s, "vuln", a.turns, { fresh: b.replaying, strength: C.vuln_base });
     },
   },
   burn: {
     kind: "debuff",
-    text: (_b, _e, a) => `${TARGET_NAME[a.target]} 화상 ${a.value}`,
-    run(b, _e, a) {
-      for (const s of b.pickTargets(a.target)) b.addStatus(s, "burn", a.value);
+    text: (_b, _e, a) => ({ to: TO[a.target], core: `화상을 ${a.value} 부여하` }),
+    run(b, e, a) {
+      for (const s of b.pickTargets(a.target, e)) b.addStatus(s, "burn", a.value);
     },
   },
   buffMinions: {
     kind: "buff",
-    text: (_b, _e, a) => `새끼 피해 +${a.value}`,
+    text: (_b, _e, a) => ({ to: "", core: `새끼가 입히는 피해를 ${a.value} 늘리` }),
     run(b, _e, a) {
       for (const m of b.aliveEnemies()) if (m.def.tier === "minion") b.addStatus(m, "bonusDmg", a.value);
     },
   },
   costUp: {
     kind: "debuff",
-    text: (_b, _e, a) => `손패 1장 비용 +${a.value}`,
+    text: (_b, _e, a) => ({ to: "", core: `다음 턴에 손패의 무작위 카드 비용을 ${a.value} 늘리` }),
     run: (b, _e, a) => b.queueCostUp(a.value),
   },
   sealCards: {
     kind: "debuff",
-    text: (_b, _e, a) => `카드 ${a.count}장 봉인`,
+    text: (_b, _e, a) => ({ to: "", core: `다음 턴에 카드를 ${a.count}장 봉인하` }),
     run: (b, _e, a) => b.queueSeal(a.count),
   },
   burnRamp: {
     kind: "debuff",
-    text: (_b, e, a) => `${TARGET_NAME[a.target]} 화상 ${a.value + e.ramp * a.step}`,
+    text: (_b, e, a) => ({ to: TO[a.target], core: `화상을 ${a.value + e.ramp * a.step} 부여하`, after: `사용할 때마다 화상이 ${a.step} 늘어납니다.` }),
     run(b, e, a) {
       const v = a.value + e.ramp * a.step;
       e.ramp++;
       for (const s of b.pickTargets(a.target)) b.addStatus(s, "burn", v);
     },
   },
+  attackRamp: {
+    kind: "attack",
+    text(b, e, a) {
+      const d = b.enemyDmgPreview(e, a.dmg + e.ramp * a.step);
+      return { to: TO[a.target], core: `피해를 ${hitsOf(d, a.hits)} 입히`, after: `사용할 때마다 피해가 ${a.step} 늘어납니다.` };
+    },
+    run(b, e, a) {
+      const dmg = a.dmg + e.ramp * a.step;
+      e.ramp++;
+      ENEMY_ACTIONS.attack.run(b, e, { type: "attack", dmg, hits: a.hits, target: a.target });
+    },
+  },
   detonateBurn: {
     kind: "attack",
-    text: (_b, _e, a) => `전체 화상 ×${a.mult} 피해`,
+    text: (_b, _e, a) => ({ to: TO.all, core: `화상 수치의 ${a.mult}배만큼 피해를 입히` }),
     run(b, e, a) {
       for (const s of b.aliveSpirits()) {
         const n = statusN(s, "burn");
@@ -105,9 +120,14 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
       }
     },
   },
+  burrow: {
+    kind: "defend",
+    text: () => ({ to: "", core: "땅속으로 숨" }),
+    run: (b, e) => b.addStatus(e, "burrow", 1),
+  },
   swapFront: {
     kind: "debuff",
-    text: () => "앞열 바꿈",
+    text: () => ({ to: "", core: "HP가 가장 낮은 다른 아군을 앞열로 끌어내" }),
     run(b) {
       const others = b.aliveSpirits().filter((s) => s.id !== b.frontId).sort((x, y) => x.hp - y.hp);
       if (others.length) b.setFront(others[0].id);
@@ -115,7 +135,9 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
   },
   sapHeal: {
     kind: "defend",
-    text: (_b, e, a) => (statusN(e, "burn") > 0 ? `회복 ${a.value} → 화상 ${statusN(e, "burn") * 2} 역류` : `회복 ${a.value}`),
+    text: (_b, e, a) => (statusN(e, "burn") > 0
+      ? { to: "", core: `회복하지 못하고 피해를 ${statusN(e, "burn") * 2} 입` }
+      : { to: "", core: `HP를 ${a.value} 회복하` }),
     run(b, e, a) {
       if (b.inGap(e)) {
         b.log(`${e.def.name}: 틈이라 회복하지 못함`);

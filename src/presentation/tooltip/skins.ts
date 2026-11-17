@@ -57,6 +57,8 @@ export const PAPER: TipSkin = {
     body: role(T.bubbleText, T.bubbleStrong, P.paperInk, P.paperInk, 1.5),
     calc: role(T.bubbleCalc, T.bubbleCalcStrong, P.bubbleSub, P.paperInk, 1.25, 5),
     why: role(T.bubbleWhy, T.bubbleWhy, P.bubbleWhy, P.bubbleWhy, 1.25),
+    // 용어 풀이: 계산 줄과 같은 글자 (새 값 없음)
+    term: role(T.bubbleCalc, T.bubbleCalcStrong, P.bubbleSub, P.paperInk, 1.25),
     meta: role(T.bubbleOwner, T.bubbleOwner, P.bubbleSub, P.bubbleSub, 1.25),
   },
   termOffset: 3,

@@ -1,4 +1,4 @@
-export const ELEMENTS = ["fire", "water", "forest", "wind", "light", "earth", "none"] as const;
+export const ELEMENTS = ["fire", "water", "forest", "wind", "light", "earth", "electric", "ice", "shadow", "none"] as const;
 export type Element = (typeof ELEMENTS)[number];
 /** 능력치. 스피드는 카드 시간을 나누는 값이에요 (시간 = 카드 기본 시간 ÷ 스피드, 0036). */
 export type StatKey = "hp" | "power" | "guard" | "focus" | "speed";
@@ -179,6 +179,8 @@ export interface CardData {
   unlock: string;
   /** 갈래 표시 (0027). 이 카드를 받으면 주인 정령의 이 갈래 쪽으로 세요. 갈래 id는 growth.json evolutions의 branch */
   branch?: string;
+  /** 강화한 뒤의 효과 (0080). 없으면 숫자 효과마다 C.card_upgrade 규칙으로 올려요. 카드마다 손으로 값을 줄 때만 써요 */
+  upgrade?: CardOp[];
 }
 
 /** 게임이 쓰는 카드 = 데이터 + 지금 언어의 문구 */
@@ -200,8 +202,12 @@ export type EnemyAction =
   | { type: "sapHeal"; value: number }
   /** 쓸 때마다 step씩 세지는 화상 (0062) */
   | { type: "burnRamp"; value: number; step: number; target: EnemyTargetRule }
+  /** 쓸 때마다 step씩 세지는 공격. 틈이 열리면 처음으로 돌아가요 (onBreak: resetRamp) */
+  | { type: "attackRamp"; dmg: number; step: number; hits?: number; target: EnemyTargetRule }
   /** 아군마다 쌓인 화상 × mult만큼 피해 */
   | { type: "detonateBurn"; mult: number }
+  /** 땅속으로 숨어요: 다음 행동 때까지 피해를 받지 않아요 (2막) */
+  | { type: "burrow" }
   /** 앞열을 HP가 가장 낮은 다른 정령으로 바꿔요 */
   | { type: "swapFront" };
 
@@ -212,8 +218,11 @@ export interface EnemyMove {
   charge?: boolean;
   /** 큰 차징: 끊거나 늦추거나 차징 중에 몰아 때리면 틈이 열려요 (0062) */
   big?: boolean;
-  /** 끊겼을 때: clearBurn = 아군의 화상이 꺼지고 화상 세기가 처음으로 돌아가요 */
-  onBreak?: "clearBurn";
+  /** 틈이 열렸을 때. clearBurn = 세기가 처음으로 돌아가고, 끊어서 열었으면 아군의 화상도 꺼져요. resetRamp = 세기만 처음으로 */
+  onBreak?: "clearBurn" | "resetRamp";
+  /** 방전 칸: 이 행동을 앞둔 턴에 시간축에 깔리는 구간 [시작, 끝)(ms). 그 안에서 끝나는 카드의 주인이 zoneDmg를 받아요 (2막) */
+  zones?: [number, number][];
+  zoneDmg?: number;
   actions: EnemyAction[];
 }
 
@@ -232,6 +241,10 @@ export interface EnemyDef {
   desc?: string;
   /** 한 턴에 여러 번 움직이는 적: 턴마다 돌아가며 쓰는 행동 시각 목록(ms). 없으면 한 번 (0062) */
   acts?: number[][];
+  /** 살아 있는 동안 다른 적의 행동이 이만큼(ms) 빨라져요 (2막) */
+  haste?: number;
+  /** 턴마다 처음 받은 타격을 되돌려요: 그 피해의 이 비율을 적 대신 때린 정령이 받아요 (2막) */
+  reflectFirst?: number;
   pattern: EnemyMove[];
   phase2?: { hpBelow: number; turnStartBlock: number; pattern: EnemyMove[] };
 }
@@ -239,8 +252,10 @@ export interface EnemyDef {
 export interface EncounterDef {
   id: string;
   tier: "normal" | "elite" | "boss";
-  /** 일반 편성: 처음 몇 전투는 weak, 그 뒤는 strong (0062) */
-  pool?: "weak" | "strong";
+  /** 일반 편성: 처음 몇 전투는 weak, 그 뒤는 strong (0062). first는 첫 판의 첫 전투에만 나오는 고정 편성 (0088) */
+  pool?: "weak" | "strong" | "first";
+  /** 이 편성이 나오는 막 (1부터). 없으면 1막 */
+  act?: number;
   /** 이 편성의 기운. 오늘 센 기운과 같으면 더 자주 나오고, 보스는 센 기운의 보스가 나와요 */
   element: Element;
   enemies: string[];
@@ -258,8 +273,20 @@ export type EventOutcome =
   | { type: "damageAll"; value: number }
   | { type: "damageFront"; value: number }
   | { type: "cardReward"; rarity?: Rarity }
+  /** 덱에서 고른 카드 한 장: 빼기 · 강화(0080) · 복제. 이 셋은 고르기를 마쳐야 선택지 전체가 적용돼요 */
   | { type: "removeCard" }
-  | { type: "maxHpAll"; value: number };
+  | { type: "upgradeCard" }
+  | { type: "duplicateCard" }
+  | { type: "maxHpAll"; value: number }
+  /** 남은 정예 칸의 거친 특성을 다시 뽑아요 (0079) */
+  | { type: "rerollEliteTraits" }
+  /** 보스의 큰 차징이 몇 턴째인지 알려 줘요. 화면은 `Run.bossPeek()`를 읽어요 (0079) */
+  | { type: "peekBossCharge" }
+  /** 보스전에서 처음 열리는 틈이 그만큼 길어져요 (0079) */
+  | { type: "extendBossGap"; turns: number };
+
+/** 덱에서 카드를 골라야 하는 이벤트 결과 */
+export type DeckPickOutcome = Extract<EventOutcome, { type: "removeCard" | "upgradeCard" | "duplicateCard" }>["type"];
 
 export interface EventDef {
   id: string;
@@ -273,6 +300,8 @@ export interface DeckCard {
   uid: number;
   cardId: string;
   owner: string;
+  /** 휴식·이벤트에서 강화했어요 (0080). 전투에는 강화한 카드 id(`<id>+`)로 들고 가요 */
+  upgraded?: boolean;
 }
 
 /** 성장 단계 (결정 0021) */

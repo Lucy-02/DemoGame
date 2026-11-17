@@ -16,23 +16,30 @@ export function cloneBattle(src: Battle, rng?: Rng): Battle {
   b.spirits = s.spirits.map((x: any) => ({ ...x, status: cloneStatus(x.status), auras: new Map(x.auras) }));
   b.enemies = s.enemies.map((e: any) => ({ ...e, status: cloneStatus(e.status) }));
   for (const k of ["draw", "hand", "discard", "exhaust", "sealed", "playedThisTurn"]) b[k] = s[k].map(cc);
-  b.planned = s.planned.map((p: any) => ({ ...p, card: cc(p.card) }));
+  b.planned = s.planned.map((p: any) => ({ ...p, card: p.card ? cc(p.card) : null }));
   // 재생 중에는 복제하지 않아요
   b.resolving = null;
   b.slots = s.slots.map((x: any) => ({ ...x }));
+  b.zones = s.zones.map((x: any) => ({ ...x }));
   b.stars = { ...s.stars, choice: s.stars.choice ? { ...s.stars.choice, options: [...s.stars.choice.options] } : null };
   b.hold = { ...s.hold, picks: [...s.hold.picks], held: s.hold.held.map(cc) };
+  b.askHold = s.askHold;
+  b.holdChoice = s.holdChoice ? { ...s.holdChoice, cards: [...s.holdChoice.cards], auto: [...s.holdChoice.auto] } : null;
   b.pulled = new Map(s.pulled);
   b.playedByElement = { ...s.playedByElement };
   b.repeatNext = s.repeatNext ? { ...s.repeatNext } : null;
-  for (const k of ["mana", "turn", "frontId", "result", "nextTurnMana", "replaying", "now", "pendingCostUp", "pendingSeal", "nextUid", "echoingReady"]) b[k] = s[k];
+  for (const k of ["mana", "turn", "frontId", "result", "nextTurnMana", "replaying", "now", "pendingCostUp", "pendingSeal", "nextUid", "echoingReady", "firstGapBonus"]) b[k] = s[k];
   b.events = [];
   b.rng = rng ?? cloneRng(s.rng);
   return b as Battle;
 }
 
 /** 복제가 아는 Battle 필드. 여기에 없는 필드가 생기면 테스트가 실패해요. */
-export const CLONED_FIELDS = ["spirits", "enemies", "draw", "hand", "discard", "exhaust", "sealed", "playedThisTurn", "planned", "slots", "stars", "hold",
-  "pulled", "playedByElement", "repeatNext", "mana", "turn", "frontId", "result", "nextTurnMana", "replaying", "resolving", "now", "pendingCostUp", "pendingSeal", "nextUid", "echoingReady", "events", "rng",
+export const CLONED_FIELDS = ["spirits", "enemies", "draw", "hand", "discard", "exhaust", "sealed", "playedThisTurn", "planned", "slots", "zones", "stars", "hold", "askHold", "holdChoice",
+  "pulled", "playedByElement", "repeatNext", "mana", "turn", "frontId", "result", "nextTurnMana", "replaying", "resolving", "now", "pendingCostUp", "pendingSeal", "nextUid", "echoingReady", "firstGapBonus", "events", "rng", "scale",
+  // 받을 피해를 미리 돌려 보는 사본(Battle.forecast)에서만 채워져요. 전투에서는 늘 null이라 복사하지 않아요
+  "tally", "watch", "watched",
+  // 놓은 카드 되돌리기(0074 7번)는 전투 세션만 켜요. 봇이 쓰는 복제에는 옮기지 않아요
+  "keepUndo", "undos",
   // 생성자가 새 전투에 묶어 만드는 단계 목록이라 복사하지 않아요
   "turnStartSteps", "turnEndSteps", "roundEndSteps"];

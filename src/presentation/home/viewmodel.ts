@@ -1,7 +1,7 @@
 // 타이틀 겸 메인 화면이 그리는 값. 규칙 타입(core)은 넣지 않아요.
 import type { Crop } from "../spirits/artFit";
 
-export type HomeItemId = "spirits" | "codex" | "settings" | "quit";
+export type HomeItemId = "spirits" | "codex" | "glossary" | "settings" | "quit";
 
 /** 줄 끝 표시: 숫자 = 눌러서 할 행동의 개수, new = 처음 본 것. 둘 다면 숫자만 (0054) */
 export type HomeBadge = { kind: "count"; n: number } | { kind: "new" };
@@ -25,4 +25,6 @@ export interface HomeVM {
   title: string;
   primary: HomePrimaryVM;
   items: HomeItemVM[];
+  /** 구석에 적는 버전. 고정 장면에는 없어요 */
+  version?: string;
 }

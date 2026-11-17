@@ -57,6 +57,28 @@ describe("별과 낙하 (별의 정령)", () => {
     expect(b.stars.choice).toBeNull();
   });
 
+  it("고르고 안 쓴 낙하는 턴 끝에 사라져요 (0076)", () => {
+    const b = battleWith(PARTY, []);
+    b.offerFall();
+    b.chooseFall(["meteor"]);
+    b.endTurn();
+    expect(b.exhaust.some((c) => c.cardId === "meteor")).toBe(true);
+    expect([...b.hand, ...b.draw, ...b.discard].some((c) => c.cardId === "meteor")).toBe(false);
+  });
+
+  it("손패가 차면 남은 칸만큼만 고르고, 칸이 없으면 낙하가 사라져요 (0076)", () => {
+    const max = C.hand_max as number;
+    const fill = (n: number) => Array.from({ length: n }, () => ["stardust", "star_spirit"] as [string, string]);
+    const b = battleWith(PARTY, fill(max - 1));
+    b.addAura(b.spirit("star_spirit"), "astraea", 2);
+    b.offerFall();
+    expect(b.stars.choice?.picks).toBe(1);
+    const full = battleWith(PARTY, fill(max));
+    full.offerFall();
+    expect(full.stars.choice).toBeNull();
+    expect(full.drain().some((e) => e.k === "fallOffer")).toBe(false);
+  });
+
   it("유성은 대상의 별마다 세지고 별을 지워요", () => {
     const b = battleWith(PARTY, [["meteor", "star_spirit"]]);
     const star = b.spirit("star_spirit");
@@ -142,6 +164,21 @@ describe("품기 (진주조개)", () => {
     const [d] = enemyDamages(b.drain());
     const power = b.stat(b.spirit("pearl_oyster"), "power") / (C.stat_base as number);
     expect(d.amount).toBe(Math.round(6 * (C.hold_mult as number) * power));
+  });
+
+  it("화면이 물으면 품기 직전에 멈추고, 고른 카드를 품은 뒤 다음 턴으로 넘어가요 (0075)", () => {
+    const b = battleWith(PARTY, [["embrace", "pearl_oyster"], ["current", "pearl_oyster"], ["glare", "pearl_oyster"]]);
+    b.askHold = true;
+    b.play(100);
+    b.endTurn();
+    expect(b.turn).toBe(1);
+    expect(b.holdChoice?.n).toBe(1);
+    expect(b.holdChoice?.cards.slice().sort()).toEqual([101, 102]);
+    const other = b.holdChoice!.cards.find((uid) => uid !== b.holdChoice!.auto[0])!;
+    expect(b.confirmHold([other])).toBe(true);
+    expect(b.holdChoice).toBeNull();
+    expect(b.turn).toBe(2);
+    expect(b.hand.filter((c) => c.held).map((c) => c.uid)).toEqual([other]);
   });
 
   it("복사본과 쓰러진 정령의 카드는 못 품어요", () => {

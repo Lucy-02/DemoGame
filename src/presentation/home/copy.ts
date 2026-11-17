@@ -7,10 +7,13 @@ export const COPY = {
   /** 정령 관리 진입점. 낱말은 Lucy 확인 대기 (0054) */
   spirits: "정령 보기",
   codex: "도감",
+  /** 용어 모음 (0102). 이름은 임시예요 */
+  glossary: "용어 모음",
   settings: "설정",
   quit: "종료",
   new: "N",
   floor: (n: number) => `${n}층`,
+  version: (v: string) => `v${v}`,
   grow: (n: number) => `키우기 ${n}`,
   branch: (n: number) => `갈래 고르기 ${n}`,
   newSpirit: (n: number) => `새 정령 ${n}`,

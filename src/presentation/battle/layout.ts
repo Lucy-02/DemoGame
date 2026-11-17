@@ -40,7 +40,9 @@ export const ORDER = {
    *  시안 .disc>.bg: 판 색 바깥 테 box-shadow 0 0 0 1.5, 상태 테 border 1.5 (점선은 선 3 · 틈 2), 기호 68%, 글자(✦) 62% */
   badge: { ratio: OT.badge.ratio, deg: OT.badge.deg, outline: 1.5, border: 1.5, dash: [3, 2] as [number, number], icon: 0.68, glyph: 0.62 },
   /** 아군 묶음 (.rt .bun): gap 10, padding 6, 테 1 */
-  bundle: { gap: 10, pad: 6, ring: 1, max: OT.bundleMax },
+  bundle: { gap: 10, pad: 6, ring: 1, max: OT.bundleMax, reserve: 2 },
+  /** 방전 띠 (0096 시안 .band): 묶음 안의 어두운 홈. 머리 = 충격 기호 + 피해 수 (gap 2), 내용과 gap 6, 빈 띠는 토큰 한 자리 폭 */
+  band: { padX: 6, padY: 3, icon: 12, inGap: 2, gap: 6 },
   /** "+n" 칩 (.more): padding 2 7, 테 1 */
   more: { padX: 7, padY: 2, ring: 1 },
   /** 흐림: 지나간 토큰 (0074 8번) · 든 카드 자리 (시안 held .62) · 끊긴 적 얼굴 (시안 faceOp .4) */
@@ -54,6 +56,10 @@ export const ORDER = {
 export const ALLY = {
   xs: [198, 322, 446], feet: 338,
   body: { w: 94, h: 112 },
+  /** 정령 그림 맞춤 (0109, 임시 값): 높이는 칸 그대로, 이펙트가 넓은 성체 · 각성체 그림은 폭이 칸의 over배까지 넘쳐도 돼요.
+   *  가로는 얼굴(몸통) 가운데를 칸 가운데에 두되 칸 폭의 shift배까지만 옮겨요.
+   *  stages = 전투에 정령 그림을 세우는 성장 단계 (0146). 성체 · 각성체는 전투용 그림(SD 등)이 따로 올 때까지 자리표시예요. 되돌리려면 여기에 "adult", "awakened"를 넣어요 */
+  art: { over: 1.35, shift: 0.15, stages: ["baby"] as readonly string[] },
 };
 
 /** 적 가운데 x 805·941·1077 (간격 72%, 가운데 941), 의도 알약 top 212, 발 y 344.
@@ -61,6 +67,8 @@ export const ALLY = {
 export const ENEMY = {
   xs: [805, 941, 1077], top: 212, feet: 344,
   body: { w: 112, h: 90, mt: 14 }, art: { w: 102, h: 82 },
+  /** 땅속 (0096 시안 .sunk): 몸 윗부분만 이만큼 남아요 (시안 임시 값) */
+  buried: 0.4,
 };
 
 /** .ground 104×14, 발 y에 가운데. radial-gradient(closest-side, shade, transparent) */
@@ -95,6 +103,8 @@ export const INFO = {
   weak: { d: 24, line: 2, ring: 2, gap: 4, icon: 16, mix: 0.6, on: { scale: 1.25, ringOut: 5 } },
   /** .st height 20 radius 10 padding 0 6 0 3 gap 1, 기호 16 */
   status: { h: 20, pad: [0, 6, 0, 3] as [number, number, number, number], radius: 10, gap: 1, icon: 16 },
+  /** 특성 칩 (0072 7번, 0096 시안 .chip.sq): 상태 칩과 같은 높이 · 기호, 둥근 네모 */
+  trait: { pad: [0, 2, 0, 2] as [number, number, number, number], radius: 5 },
   /** .flag 22, left x + 47, top 발 - 21, 외곽선 1.5 (drop-shadow 네 방향) */
   flag: { x: 47, y: -21, icon: 22, outline: 1.5 },
 };
@@ -146,6 +156,9 @@ export const END = {
 };
 
 
+/** 첫 판 안내의 짚는 테 (0088): 굵기는 가리킨 의도 알약의 테(.intent.on), 대상과의 틈은 손패 카드 사이 틈 */
+export const GUIDE = { ring: INTENT.onRing, gap: HAND.group.gap };
+
 /** 집음·조준 미리보기 (.fld-pv, page.html·r5.css) */
 export const PREVIEW = {
   /** 대상 강조: 정본 .ring.aim의 바깥 빛(box-shadow 0 0 14)을 그림 뒤에 깔아요. 발밑 고리(타원)는 0013 후속으로 뺐어요 */
@@ -187,3 +200,11 @@ export const LIFT_STYLES: Record<string, LiftStyle> = {
   b: { lift: 30, scale: 1.4, shiftIn: 10, shiftGroup: 10 },
 };
 export const LIFT: LiftStyle = LIFT_STYLES.b;
+
+/** 가운데 고르기 창 (0075, 낙하 · 품기 공용). 화면 한가운데에 제목 · 카드 · 버튼을 한 덩어리로 놓아요.
+ *  Lucy 2026-11-16 "카드 크기 증가, 여백 증가, 더 어둡게, 가운데 정렬": 카드 = 보상 카드 크기(폭 166, result REWARD),
+ *  카드 사이 28(전투 위 창 열 사이), 제목 · 카드 · 버튼 사이 48(런 화면 격자 여백), 버튼 = 턴 종료 버튼, 말풍선 거리 = 보상 카드 말풍선. 모두 임시 값이에요 */
+export const PICK = {
+  cardW: 166, gap: 28, pad: 48, tipGap: 20,
+  cx: FRAME.w / 2, cy: FRAME.h / 2, button: { w: END.w, ...END.button }, depth: DRAG.depth - 1,
+};
