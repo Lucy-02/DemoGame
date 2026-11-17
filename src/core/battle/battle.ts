@@ -413,7 +413,7 @@ export class Battle implements Engine {
   }
 
   freezeEnemy(e: BEnemy, extraMs = 0) {
-    this.emit({ k: "freeze", uid: e.uid });
+    this.emit({ k: "freeze", uid: e.uid, ...this.by() });
     this.delayEnemy(e, C.freeze_delay_ms + extraMs, "빙결");
   }
 
@@ -1112,7 +1112,7 @@ export class Battle implements Engine {
       return;
     }
     const r = runStages<Incoming>(INCOMING_STAGES, { b: this, target: e, attacker: null, dmg, pierce, wall: 0, wallKeeper: null, blocked: 0, real: 0 });
-    this.emit({ k: "damage", ref: refOf(e), amount: r.real, blocked: r.blocked, ...extra });
+    this.emit({ k: "damage", ref: refOf(e), amount: r.real, blocked: r.blocked, ...extra, ...this.by() });
     if (e.hp > 0 && e.charging && !e.gapOpened && this.currentMove(e).big) {
       e.chargeDmg += r.real;
       if (e.chargeDmg >= e.maxHp * C.gap.burst_pct) this.openGap(e, "burst");
@@ -1144,7 +1144,7 @@ export class Battle implements Engine {
     const r = runStages<Incoming>(INCOMING_STAGES, {
       b: this, target: s, attacker: opts.attacker ?? null, dmg, pierce, wall: 0, wallKeeper: null, blocked: 0, real: 0,
     });
-    this.emit({ k: "damage", ref: refOf(s), amount: r.real, blocked: r.blocked, ...(r.wall ? { wall: r.wall } : {}) });
+    this.emit({ k: "damage", ref: refOf(s), amount: r.real, blocked: r.blocked, ...(r.wall ? { wall: r.wall } : {}), ...(r.wallKeeper ? { keeper: r.wallKeeper.id } : {}) });
     if (r.wallKeeper && opts.attacker) {
       const keeper = r.wallKeeper;
       this.log(`${keeper.def.name}의 벽이 ${r.wall} 막음`);
@@ -1293,6 +1293,11 @@ export class Battle implements Engine {
       return true;
     }
     return false;
+  }
+
+  /** 지금 재생 중인 카드의 주인 (이벤트의 출처 표시). 카드 밖에서 생긴 일(화상 · 턴 끝)에는 없어요 */
+  private by(): { by?: string } {
+    return this.resolving ? { by: this.resolving.owner } : {};
   }
 
   log(text: string) {
