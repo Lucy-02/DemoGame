@@ -1,6 +1,8 @@
 // 정령 관리 화면 (정본: 정령 관리 R4 v5, 탭 내용은 결정 0021). 정원 세션 상태 → 화면 데이터 → 그리기.
 // 상태가 바뀌거나 탭·정령을 고르면 화면을 통째로 다시 그려요(정지 화면이라 충분히 가벼워요).
 import * as Phaser from "phaser";
+import { STAGE_LABEL } from "./copy";
+import { EVOLUTION_SCENE, hasEvolutionCutscene, type EvolutionSceneData } from "../evolution/EvolutionScene";
 import { gardenSpirit, isBranching, type Garden } from "../../core/garden";
 import { GardenSession } from "../../session/garden";
 import { createPuppet, ensurePuppet } from "../puppet/loadPuppet";
@@ -195,9 +197,26 @@ export class SpiritsScene extends Phaser.Scene {
 
   /** 키우기: 갈래 고르기면 창을 열고, 아니면 바로 키워요 */
   private grow(id: string) {
-    if (!isBranching(gardenSpirit(this.session.state, id))) return this.session.dispatch({ kind: "evolve", id });
+    if (!isBranching(gardenSpirit(this.session.state, id))) return this.evolve(id);
     this.picking = { id };
     this.redraw();
+  }
+
+  /** 키우고, 유체 → 성체면 진화 컷신(0037)을 틀어요. 컷신이 끝나면 이 화면으로 돌아와요 */
+  private evolve(id: string, branch?: string) {
+    const before = gardenSpirit(this.session.state, id);
+    this.session.dispatch({ kind: "evolve", id, branch });
+    const after = gardenSpirit(this.session.state, id);
+    if (after.stage === before.stage || !hasEvolutionCutscene(id, before.stage, after.stage)) return;
+    if (!this.scene.manager.getScene(EVOLUTION_SCENE)) return;
+    this.scene.launch(EVOLUTION_SCENE, {
+      id, from: before.stage, to: after.stage, personality: after.personality, stageName: STAGE_LABEL[after.stage],
+      onDone: () => {
+        this.scene.stop(EVOLUTION_SCENE);
+        this.scene.wake();
+      },
+    } satisfies EvolutionSceneData);
+    this.scene.sleep();
   }
 
   /** 갈래 창이 있을 때만 쓰는 위 카메라 (아래 화면만 흐리게) */
@@ -227,9 +246,9 @@ export class SpiritsScene extends Phaser.Scene {
         const b = vm.selected !== undefined ? vm.branches[vm.selected] : undefined;
         if (!b) return;
         this.picking = undefined;
-        // 갈래 선택 → 진화 컷신(0037, 아직 연결 전) → 결과. 지금은 바로 키워요
-        this.session.dispatch({ kind: "evolve", id: p.id, branch: b.id });
+        // 갈래 선택 → 진화 컷신(0037) → 이 화면
         this.redraw();
+        this.evolve(p.id, b.id);
       },
       later: () => {
         this.picking = undefined;

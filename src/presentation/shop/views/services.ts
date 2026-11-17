@@ -8,13 +8,13 @@ import { render, size, type Node } from "../../style/flex";
 import { shadowTexture } from "../../style/shadow";
 import { LANE } from "../../run/layout";
 import { COPY } from "../copy";
-import { LEAVE, SERVICE, STOCK } from "../layout";
+import { SERVICE, STOCK } from "../layout";
 import type { ServiceVM } from "../viewmodel";
 
 const T = tokens.provisional.text.result;
 
 export const SERVICE_ICONS = [
-  ["fx-discard", SERVICE.icon], ["fx-heal", SERVICE.icon], ["i-coin", SERVICE.price.coin], ["i-coin", STOCK.price.coin], ["g-back", LEAVE.icon], ["g-close", LEAVE.icon],
+  ["fx-discard", SERVICE.icon], ["fx-heal", SERVICE.icon], ["i-coin", SERVICE.price.coin], ["i-coin", STOCK.price.coin],
 ] as const;
 
 type Kind = "remove" | "heal";
@@ -75,16 +75,4 @@ export function drawPrice(scene: Phaser.Scene, price: number, affordable: boolea
     ],
   };
   render(scene, node, x + (STOCK.w - size(node).w) / 2, y + K.dy);
-}
-
-/** 왼쪽 아래 조용한 버튼: 떠나기, 또는 빼기에서 돌아가기 */
-export function drawLeave(scene: Phaser.Scene, kind: "leave" | "cancel", onClick: () => void, y: number = LEAVE.y) {
-  const B = LEAVE;
-  const icon = kind === "leave" ? "g-back" : "g-close";
-  const node: Node = {
-    t: "row", w: B.w, h: B.h, radius: B.radius, gap: B.gap, justify: "center", align: "center",
-    style: { ring: { width: 1, color: P.glassLine } }, onClick,
-    children: [{ t: "icon", id: icon, w: B.icon, h: B.icon, tint: P.ink3Spirit }, text(COPY[kind], T.button, P.ink2)],
-  };
-  render(scene, node, B.x, y);
 }

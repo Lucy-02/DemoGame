@@ -1,9 +1,11 @@
 // 런 화면 공용 뼈대(0046: 왼쪽 열 + 오른쪽 정령 세 줄)의 배치 수치. 보상 라운드 E1 시안(0051)과 폴리싱 P1(0050)에서 잰 값이에요.
 // 전투 결과·상점이 함께 써요. 시안 값은 임시예요(TODO_TOKEN). 색·글자 크기는 토큰(tokens.provisional.palette, tokens.provisional.text.result)에서 가져와요.
+import { SYS } from "../battle/layout";
+
 export const FRAME = { w: 1280, h: 800 };
 
 /** 0050 격자: 바깥 여백 48, 왼쪽 열 48~612, 정령 줄 664~1232, 버튼 줄 660~708 */
-export const GRID = { gutter: 48, lanesX: 664, lanesW: 568, buttonY: 660, buttonH: 48 };
+export const GRID = { gutter: 48, colW: 564, lanesX: 664, lanesW: 568, buttonY: 660, buttonH: 48 };
 
 /** .bg radial-gradient(70% 80% at 28% 45%, stageHi 0, floor 58%, stageLo 100%) */
 export const BG = { rx: 0.7, ry: 0.8, cx: 0.28, cy: 0.45, mid: 0.58 };
@@ -99,4 +101,62 @@ export const EQUIP_TIP = {
   line: { mt: 7, lh: 1.6 },
   /** 내려놓는 장비: 위 선까지 12, 선 아래 12 · 그림 24 (.75) · 흐린 기호 .5 */
   drop: { mt: 12, pt: 12, thumb: 24, thumbAlpha: 0.75, dim: 0.5 },
+};
+
+/** .btn2.quiet.b3 떠나기: 166×48 radius 12 gap 10 기호 18 */
+/** 런 화면 위 띠의 골드: 오른쪽 위 기호 버튼 줄(SYS)과 같은 높이 (지도 · 이벤트 · 휴식 · 덱 고르기) */
+export const GOLD_AT = { x: GRID.gutter, y: SYS.top + (SYS.button - GOLD.h) / 2 };
+
+export const LEAVE = { x: GRID.gutter, y: GRID.buttonY, w: 166, h: GRID.buttonH, radius: 12, gap: 10, icon: 18 };
+
+/** 덱에서 고르기 (상점 빼기 · 휴식 강화 · 이벤트, Lucy 2026-11-17 공용 UI 기획 r6): 덱 보기 창 틀(DECK_VIEW)에서 골라요.
+ *  .rmmark 고른 카드 오른쪽 위 − 표식: 원 26 (바깥 테 3), 카드 밖으로 12 · 22
+ *  확인 줄: 마지막 줄 아래(줄 사이와 같은 간격), 높이 44 · 취소 132 + 12 + 확인 168, 오른쪽 끝 맞춤 */
+export const DECK_PICK = {
+  mark: { d: 26, ring: 3, dx: 12, dy: 22, bar: { w: 10, h: 2 } },
+  /** 강화 미리보기 (정리안 f7): 고른 카드 오른쪽에 화살표 칸을 두고 강화한 카드를 끼워요. 뒤 카드는 그만큼 밀려요 */
+  upgrade: { arrow: 22 },
+  confirm: { h: 44, radius: 12, gap: 12, cancelW: 132, okW: 168, icon: 18, inner: 10, coin: 14, coinGap: 5 },
+};
+
+/** 얇은 정령 줄 (0046 f9 슬림 파티 패널): 지도 · 이벤트 · 휴식이 같이 써요. 높이 52, 얼굴 고리 40, HP 막대 132
+ *  hot = 올린 선택지가 바꾸는 줄: 테 accHi + 바깥 4px accHi .14 (선택지 판 .opt.hov와 같은 값) */
+export const SLIM_LANE = {
+  x: GRID.lanesX, w: GRID.lanesW, h: 52, gap: LANE.gap, radius: LANE.radius,
+  ring: { x: 16, d: 40, r: 18, stroke: 3, faceInset: 5 },
+  name: { x: 73, gap: 10 },
+  hp: { x: 301, w: 132, h: 8, numX: 443, numGap: 2 },
+  hot: { outer: 4, alpha: 0.14 },
+  /** 상점: 집은 카드를 배울 수 있는 줄 = 받을 칸(SOCKET)과 같은 점선 accHi 테, 그 카드가 쓰는 능력치 하나 (기호 · 간격은 정령 줄 능력치와 같음) */
+  open: { dash: SOCKET.dash },
+  stat: { icon: INFO.stats.icon, gap: INFO.stats.iconGap },
+};
+
+/** 이벤트 · 휴식 (Lucy 2026-11-17, 공용 UI 기획 r5): 배경 위 왼쪽 판(이름 줄 · 상황 글 · 선택지) + 오른쪽 얇은 정령 줄.
+ *  판과 줄은 둘 다 화면 가운데 높이(A). 판 = 전투 결과 창과 같은 바탕 · 테 · 그림자 · padding 24, 폭은 왼쪽 열 */
+export const PANEL = { x: GRID.gutter, w: GRID.colW, pad: 24, radius: 18, ring: 1, shadow: { y: 18, blur: 48 } };
+
+/** 선택지 판 (정리안 .opts · .opt, 휴식 · 이벤트 같은 부품): 폭은 판(PANEL) 안쪽, 판 사이 14
+ *  padding 16 20 radius 12, 이름 · 효과문 gap 6 (효과문 줄 높이 1.5) · .opt.hov 테 accHi + 바깥 4px accHi .14 · 고를 수 없으면 .4 */
+export const CHOICE = {
+  gap: 14, pad: [16, 20, 16, 20] as [number, number, number, number],
+  radius: 12, inner: 8, textLh: 1.5, hot: { outer: 4, alpha: 0.14 }, offAlpha: 0.4,
+  /** 효과 칩 (Lucy 2026-11-17): 기호 16 · 기호와 글 8 · 칩 사이 14 (판 결과 안내 줄 · 판 사이 간격과 같은 임시 값) */
+  fx: { icon: 16, gap: 8, between: 14 },
+  /** HP · 최대 HP 효과 칩 = 영향받는 정령 얼굴 + a→b (Lucy 2026-11-17, 공용 UI 기획 r5 시안 값): 얼굴 30 · 얼굴과 숫자 7 · 칩 사이 18 */
+  face: { d: 30, inset: 2, gap: 7, between: 18 },
+};
+
+/** 이벤트 이름 줄 · 상황 글 (정리안 .evt · .evx): 줄 높이 1.6, 이름 줄과 gap 14 (A1 .event). 폭은 판(PANEL) 안쪽 */
+export const STORY = { gap: 14, lh: 1.6, titleLh: 1.35 };
+
+/** 판 결과 왼쪽 열 (정리안 .runleft · .rec · .keep · .onlybox): top 84, 줄 사이 22
+ *  "이번 판에서만" 점선 상자: 내용을 감싸요. 테 1.5 dashed veil .22, padding 사방 20 (디렉터 2026-11-16: 사방 같게), 줄 사이 12, radius 12 · 줄 높이 28 · 기호 18 gap 10
+ *  배운 카드 썸네일 .tcard 46×65 (카드 .5배) gap 6, 넘치면 겹쳐요 · 버튼 두 개 166×48 gap 16, 버튼 줄(660) */
+export const RUN_END = {
+  x: GRID.gutter, top: LANE.y, w: GRID.colW, gap: 22, recordLh: 1.35, keepGap: 8, keepIcon: 16,
+  only: { ring: 1.5, dash: 6, lineAlpha: 0.22, pad: [20, 20, 20, 20] as [number, number, number, number], gap: 12, radius: 12, rowH: 28, icon: 18, iconGap: 10 },
+  thumb: { w: 46, gap: 6 },
+  /** 버튼 아랫선 = 마지막 정령 줄 아랫선 (LANE.y + 3·h + 2·gap) */
+  button: { w: 166, h: GRID.buttonH, gap: 16, radius: 12, y: LANE.y + LANE.h * 3 + LANE.gap * 2 - GRID.buttonH },
 };

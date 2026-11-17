@@ -170,7 +170,11 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
           const cards = run.rollCards(3, C.reward.rarity_normal as Record<string, number>, o.rarity);
           if (cards.length) { const c = rng.pick(cards); run.addCard(c.id, rng.pick(run.learnersOf(c.id)).id); }
         } else if (o.type === "removeCard") removeOne(run, policy);
-        else run.applyMark(o);
+        else if (o.type === "upgradeCard" || o.type === "duplicateCard") {
+          // 피해 · 화상 카드 가운데 하나를 골라요
+          const good = run.deck.filter((c) => has(c.cardId, "damage", "burn") && (o.type === "duplicateCard" || run.canUpgrade(c.uid)));
+          if (good.length) { const c = rng.pick(good); if (o.type === "upgradeCard") run.upgradeCard(c.uid); else run.duplicateCard(c.uid); }
+        } else run.applyMark(o);
       }
     }
   }

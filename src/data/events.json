@@ -28,5 +28,15 @@
     "options": [
       { "label": "자국을 살핀다", "desc": "보스전에서 처음 열리는 틈이 1턴 길어집니다.", "outcome": [{ "type": "extendBossGap", "turns": 1 }] },
       { "label": "자국 곁에서 쉰다", "desc": "모든 정령이 최대 HP의 15%만큼 회복합니다.", "outcome": [{ "type": "healPct", "value": 0.15 }] }
+    ] },
+  { "id": "ev_training", "title": "수련 터", "text": "정령들이 다져 놓은 빈터에 기운이 고여 있어요.",
+    "options": [
+      { "label": "같은 기술을 한 번 더 익힌다", "desc": "덱에서 카드 1장을 골라 복제합니다.", "outcome": [{ "type": "duplicateCard" }] },
+      { "label": "버릇을 덜어 낸다", "desc": "덱에서 카드 1장을 골라 없앱니다.", "outcome": [{ "type": "removeCard" }] }
+    ] },
+  { "id": "ev_burnt", "title": "불탄 자리", "text": "까맣게 탄 자리에 재가 쌓였고, 그 사이로 새순이 올라와요.",
+    "options": [
+      { "label": "재를 뒤진다", "desc": "덱에서 카드 1장을 골라 강화합니다.", "outcome": [{ "type": "upgradeCard" }] },
+      { "label": "새순을 지킨다", "desc": "모든 정령의 최대 HP가 2 늘어납니다.", "outcome": [{ "type": "maxHpAll", "value": 2 }] }
     ] }
 ]

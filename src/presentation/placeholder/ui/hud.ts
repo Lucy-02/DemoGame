@@ -26,7 +26,7 @@ export function runHud(scene: Phaser.Scene) {
     x += 235;
   }
   c.add(button(scene, W - 70, 22, 110, 32, `덱 ${run.deck.length}장`, () => {
-    scene.scene.launch("DeckScene", { mode: "view", from: scene.scene.key });
+    scene.scene.launch("DeckScene", { from: scene.scene.key });
     scene.scene.pause();
   }, { size: 15, color: 0x3f3758 }));
   return c;

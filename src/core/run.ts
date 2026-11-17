@@ -1,4 +1,4 @@
-import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, cardDef, enemyDef, equipDef, partyScale } from "./data";
+import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, canUpgradeCard, cardDef, enemyDef, equipDef, partyScale, upgradedId } from "./data";
 import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
 import { Rng } from "./rng";
 import { equipSlots, maxHpOf, resonanceOf } from "./stats";
@@ -204,6 +204,25 @@ export class Run {
 
   removeCard(uid: number) {
     this.deck = this.deck.filter((c) => c.uid !== uid);
+  }
+
+  /** 강화할 수 있는 덱 카드 (0080): 아직 강화하지 않았고 숫자 효과가 있는 카드 */
+  canUpgrade(uid: number): boolean {
+    const card = this.deck.find((c) => c.uid === uid);
+    return !!card && !card.upgraded && canUpgradeCard(cardDef(card.cardId));
+  }
+
+  /** 덱 카드 한 장을 런 끝까지 강화해요 (휴식 · 이벤트, 0046 · 0080) */
+  upgradeCard(uid: number) {
+    if (!this.canUpgrade(uid)) throw new Error(`강화할 수 없는 카드: ${uid}`);
+    this.deck = this.deck.map((c) => (c.uid === uid ? { ...c, upgraded: true } : c));
+  }
+
+  /** 덱 카드 한 장을 같은 주인에게 한 장 더 (이벤트 복제). 강화도 따라와요 */
+  duplicateCard(uid: number) {
+    const card = this.deck.find((c) => c.uid === uid);
+    if (!card) throw new Error(`없는 카드: ${uid}`);
+    this.deck.push({ ...card, uid: this.nextUid++ });
   }
 
   spirit(id: string) {
@@ -525,7 +544,11 @@ export class Run {
         if (card) swap.set(card.uid, sw.to);
       }
     }
-    return this.deck.map((c) => (swap.has(c.uid) ? { ...c, cardId: swap.get(c.uid)! } : c));
+    // 강화한 카드는 강화한 카드 id로 들고 가요. 기술로 바뀌어도 강화는 남아요 (0080)
+    return this.deck.map((c) => {
+      const id = swap.get(c.uid) ?? c.cardId;
+      return { ...c, cardId: c.upgraded && canUpgradeCard(cardDef(id)) ? upgradedId(id) : id };
+    });
   }
 
   /** 보스를 이기면 런 결과에서 고를 보스 장비 3개 (0049 3절). 데이터가 모자라면 있는 만큼 */

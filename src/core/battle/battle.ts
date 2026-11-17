@@ -13,7 +13,7 @@ import {
 } from "./pipelines";
 import {
   STATUS_IDS, refOf, spendStatus, stackOf, statusN, statusStrength,
-  type BCard, type BEnemy, type BSpirit, type BattleEvent, type BattleResult, type EnemySlot, type HoldState, type Intent,
+  type BCard, type BEnemy, type BSpirit, type BattleEvent, type BattleResult, type EnemySlot, type HoldChoice, type HoldState, type Intent,
   type Planned, type Ref, type StarState, type StatusId,
 } from "./state";
 import { STATUSES, clearStatuses, readyMult, tickStatuses, vulnMult } from "./statuses";
@@ -54,6 +54,10 @@ export class Battle implements Engine {
   now = 0;
   stars: StarState = { count: 0, thresholdCut: 0, pendingFalls: 0, choice: null };
   hold: HoldState = { thisTurn: 0, picks: [], held: [], highTide: false, nextTurnDraw: 0 };
+  /** 품을 카드를 화면이 물어요 (전투 세션이 켜요, 0075). 켜면 턴 종료가 품기 직전에 멈추고 confirmHold를 기다려요. 꺼져 있으면 자동 규칙대로 품어요 */
+  askHold = false;
+  /** 턴 끝에 열린 품기 고르기 (askHold) */
+  holdChoice: HoldChoice | null = null;
   /** 적이 걸어 둔 다음 턴 손패 효과 */
   private pendingCostUp = 0;
   private pendingSeal = 0;
@@ -209,7 +213,7 @@ export class Battle implements Engine {
   }
 
   holdsHeldCard(s: BSpirit): boolean {
-    return this.hand.some((c) => c.held && c.owner === s.id) || this.planned.some((p) => p.card.held && p.owner === s.id);
+    return this.hand.some((c) => c.held && c.owner === s.id) || this.planned.some((p) => p.card?.held && p.owner === s.id);
   }
 
   private hookEach<K extends "turnStart" | "firstHand" | "afterHand" | "turnEnd" | "beforeDiscard">(s: BSpirit, hook: K) {
@@ -606,16 +610,26 @@ export class Battle implements Engine {
       if (this.checkEnd()) return;
     }
     // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
-    for (const p of allies.slice(ai)) this.discard.push(p.card);
+    for (const p of allies.slice(ai)) if (p.card) this.discard.push(p.card);
     this.planned = [];
-    this.runSteps(this.turnEndSteps);
+    this.finishTurn(0);
+  }
+
+  /** 턴 끝 처리(from번째부터) → 손 버리기 → 라운드 끝 → 다음 턴. 품을 카드를 물어야 하면 품기 직전에 멈춰요 */
+  private finishTurn(from: number) {
+    for (let i = from; i < this.turnEndSteps.length; i++) {
+      const st = this.turnEndSteps[i];
+      if (st.id === "hold" && this.openHoldChoice(i)) return;
+      st.run();
+    }
     if (this.checkEnd()) return;
     for (const c of this.hand) {
       c.tempCostDelta = 0;
       c.locked = false;
       c.held = false;
       c.heldFast = false;
-      (c.isCopy ? this.exhaust : this.discard).push(c);
+      // 고르고 안 쓴 낙하는 덱에 쌓이지 않고 사라져요 (0076)
+      (c.isCopy || C.star_falls.includes(c.cardId) ? this.exhaust : this.discard).push(c);
     }
     this.hand = [];
     this.runSteps(this.roundEndSteps);
@@ -728,6 +742,10 @@ export class Battle implements Engine {
   /** 재생: 계획한 카드 하나가 끝나는 시각에 들어가요. 주인이 쓰러졌으면 봉인돼요.
    *  효과 배율 = 품었다 돌아온 카드 × hold_mult, 받아칠 기회를 쓰면 × ready_mult */
   private resolvePlanned(p: Planned) {
+    if (!p.card) {
+      this.resolveRelease(p.owner);
+      return;
+    }
     const c = p.card;
     const def = cardDef(c.cardId);
     const owner = this.spirit(p.owner);
@@ -824,6 +842,9 @@ export class Battle implements Engine {
     }
     let picks = 1;
     for (const [p, v] of allPassives(this)) picks += p.fallPicksAny?.(v) ?? 0;
+    // 손패에 남은 칸만큼만 골라요. 칸이 없으면 이 낙하는 사라져요 (0076)
+    picks = Math.min(picks, C.hand_max - this.hand.length);
+    if (picks <= 0) return;
     this.stars.choice = { options: C.star_falls.slice(), picks, owner: owner.id };
     this.emit({ k: "fallOffer", owner: owner.id, picks });
   }
@@ -867,6 +888,37 @@ export class Battle implements Engine {
     return true;
   }
 
+  /** 품을 순서: 골라 둔 카드부터, 모자라면 비싸고 긴 카드부터 */
+  private holdOrder(picks: number[]): BCard[] {
+    const eligible = this.hand.filter((c) => this.canHold(c));
+    const chosen = picks.map((uid) => eligible.find((c) => c.uid === uid)).filter((c): c is BCard => !!c);
+    const rest = eligible
+      .filter((c) => !chosen.includes(c))
+      .sort((a, b) => cardDef(b.cardId).cost - cardDef(a.cardId).cost || cardDef(b.cardId).ms - cardDef(a.cardId).ms);
+    return [...chosen, ...rest];
+  }
+
+  /** 품을 카드를 물어야 하면 고르기를 열어요. 고를 것이 없으면(품을 장 수가 0이거나 남은 카드를 다 품으면) 열지 않아요 */
+  private openHoldChoice(at: number): boolean {
+    const n = this.hold.thisTurn;
+    if (!this.askHold || n <= 0) return false;
+    const order = this.holdOrder([]);
+    if (order.length <= n) return false;
+    this.holdChoice = { n, cards: order.map((c) => c.uid), auto: order.slice(0, n).map((c) => c.uid), at };
+    return true;
+  }
+
+  /** 열린 품기 고르기를 닫고 턴 끝 처리를 이어 가요. 모자라게 고르면 자동 규칙이 채워요 */
+  confirmHold(uids: number[]): boolean {
+    const ch = this.holdChoice;
+    if (!ch) return false;
+    this.holdChoice = null;
+    this.hold.picks = [...new Set(uids)].filter((uid) => ch.cards.includes(uid)).slice(0, ch.n);
+    this.holdCards();
+    this.finishTurn(ch.at + 1);
+    return true;
+  }
+
   /** 턴 끝: 골라 둔 카드부터, 모자라면 비싸고 긴 카드부터 품어요 */
   private holdCards() {
     const n = this.hold.thisTurn;
@@ -874,12 +926,7 @@ export class Battle implements Engine {
     const picks = this.hold.picks;
     this.hold.picks = [];
     if (n <= 0) return;
-    const eligible = this.hand.filter((c) => this.canHold(c));
-    const chosen = picks.map((uid) => eligible.find((c) => c.uid === uid)).filter((c): c is BCard => !!c);
-    const rest = eligible
-      .filter((c) => !chosen.includes(c))
-      .sort((a, b) => cardDef(b.cardId).cost - cardDef(a.cardId).cost || cardDef(b.cardId).ms - cardDef(a.cardId).ms);
-    for (const c of [...chosen, ...rest].slice(0, n)) {
+    for (const c of this.holdOrder(picks).slice(0, n)) {
       this.hand.splice(this.hand.indexOf(c), 1);
       for (const op of cardDef(c.cardId).effects) if (op.op === "growOnHold") c.grow += op.value;
       this.hold.held.push(c);
@@ -1063,20 +1110,35 @@ export class Battle implements Engine {
     this.emit({ k: "heal", ref: refOf(s), amount: amt });
   }
 
-  /** 해방할 수 있는지: 각성체만, 전투마다 한 번, 내 턴에. 놓는 즉시 켜져요. 칸 비용은 정령마다 다르게 정할 예정(0036 4절, `TODO_TOKEN`). */
+  /** 해방할 수 있는지: 각성체만, 전투마다 한 번, 내 턴에. 칸과 시간은 정령 공통 임시 값이에요 (0076, 정령별 값은 0036 4절). */
   canRelease(id: string): boolean {
     const s = this.spirit(id);
-    return this.result === "ongoing" && !this.replaying && !s.downed && !s.releaseUsed && s.run.stage === "awakened";
+    return this.result === "ongoing" && !this.replaying && !s.downed && !s.releaseUsed && s.run.stage === "awakened" && this.mana >= C.release_cost;
   }
 
+  /** 해방이 끝나는 시각 (미리보기) */
+  releaseEnd(id: string): number {
+    return this.laneEnd(id) + C.release_ms;
+  }
+
+  /** 해방을 그 정령 줄 끝에 계획해요. 끝나는 시각에 켜지고, 끊기지 않아요 (0036 4절). */
   release(id: string): boolean {
     if (!this.canRelease(id)) return false;
     const s = this.spirit(id);
     s.releaseUsed = true;
+    this.mana -= C.release_cost;
+    const start = this.laneEnd(id);
+    this.planned.push({ card: null, owner: id, start, end: start + C.release_ms, comboCount: this.playedThisTurn.length, repeat: false });
+    return true;
+  }
+
+  private resolveRelease(id: string) {
+    const s = this.spirit(id);
+    if (s.downed) return;
     s.release = C.release_duration;
+    this.emit({ k: "spiritAct", id: s.id, card: s.def.release.name });
     this.emit({ k: "release", id: s.id });
     this.log(`✦ ${s.def.name} 해방: ${s.def.release.name}`);
-    return true;
   }
 
   drawCards(n: number) {
