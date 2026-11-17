@@ -1,9 +1,9 @@
-import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, cardDef, equipDef, partyScale } from "./data";
+import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, canUpgradeCard, cardDef, enemyDef, equipDef, partyScale, upgradedId } from "./data";
 import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
 import { Rng } from "./rng";
 import { equipSlots, maxHpOf, resonanceOf } from "./stats";
 import { ENEMY_TRAITS } from "./types";
-import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, Obtain, Rarity, RunEquip, RunSpirit } from "./types";
+import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, EventOutcome, Obtain, Rarity, RunEquip, RunSpirit } from "./types";
 
 export type NodeType = "battle" | "elite" | "event" | "shop" | "rest" | "boss";
 
@@ -61,6 +61,32 @@ export interface BattleReward {
   equipDone: boolean;
 }
 
+/** 칸 사이 저장 (아키텍처 0001 PR 2). 모양이 바뀌면 RUN_SAVE_VERSION을 올려요 */
+export const RUN_SAVE_VERSION = 1;
+
+export interface RunSave {
+  version: number;
+  opts: RunOptions;
+  rng: number;
+  spirits: RunSpirit[];
+  deck: DeckCard[];
+  received: DeckCard[];
+  nextUid: number;
+  gold: number;
+  frontId: string;
+  map: MapNode[];
+  current: string | null;
+  visited: string[];
+  strongElement: Element;
+  recentEncounters: string[];
+  normalBattles: number;
+  strongEliteMet?: boolean;
+  bossPeeked?: boolean;
+  bossGapBonus?: number;
+  removals: number;
+  bossDefeated: boolean;
+}
+
 export const FLOORS = 7; // 보스 전 층 수. 보스는 FLOORS + 1층
 const COLS = 4;
 
@@ -79,6 +105,11 @@ export class Run {
   recentEncounters: string[] = [];
   /** 지금까지 치른 일반 전투 수 (처음 몇 번은 약한 풀) */
   normalBattles = 0;
+  /** 센 기운의 정예를 이미 만났는지. 이 판의 첫 정예는 센 기운 정예예요 (0079) */
+  strongEliteMet = false;
+  /** 이벤트로 얻은 표시 (0079): 보스의 큰 차징 미리 보기, 보스전 첫 틈이 길어지는 턴 수 */
+  bossPeeked = false;
+  bossGapBonus = 0;
   /** 이번 런에서 상점 카드 빼기를 쓴 횟수 (0049 4절: 쓸 때마다 값이 올라요) */
   removals = 0;
   bossDefeated = false;
@@ -115,8 +146,47 @@ export class Run {
     this.dealt = true;
     this.generateMap();
     const drawn = this.rng.pick(C.acts[0].elements as Element[]);
-    this.strongElement = opts.strongElement ?? drawn;
+    // 첫 판은 센 기운을 정해 둬요 (0079). 난수는 그대로 뽑아 둬서 지도 · 특성 순서가 안 바뀌어요
+    const first = garden && !(garden.runs ?? 0) ? (C.run_pool.first_run_strong as Element) : undefined;
+    this.strongElement = opts.strongElement ?? first ?? drawn;
     for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
+  }
+
+  /** 저장용 값. JSON으로 바꿔도 돼요 */
+  save(): RunSave {
+    const copy = <T>(v: T): T => structuredClone(v);
+    return {
+      version: RUN_SAVE_VERSION, opts: copy(this.opts), rng: this.rng.state,
+      spirits: copy(this.spirits), deck: copy(this.deck), received: copy(this.received), nextUid: this.nextUid,
+      gold: this.gold, frontId: this.frontId, map: copy([...this.map.values()]), current: this.current?.id ?? null, visited: [...this.visited],
+      strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet, bossPeeked: this.bossPeeked, bossGapBonus: this.bossGapBonus,
+      removals: this.removals, bossDefeated: this.bossDefeated,
+    };
+  }
+
+  /** 저장해 둔 판을 그 자리에서 이어요. 난수도 같은 자리에서 이어져요 (0052 같은 드로우) */
+  static load(s: RunSave): Run {
+    if (s.version !== RUN_SAVE_VERSION) throw new Error(`판 저장 형식이 달라요: ${s.version}`);
+    const run = new Run(structuredClone(s.opts));
+    run.rng = new Rng(s.rng);
+    run.spirits = structuredClone(s.spirits);
+    run.deck = structuredClone(s.deck);
+    run.received = structuredClone(s.received);
+    run.nextUid = s.nextUid;
+    run.gold = s.gold;
+    run.frontId = s.frontId;
+    run.map = new Map(structuredClone(s.map).map((n) => [n.id, n]));
+    run.current = s.current ? run.map.get(s.current) ?? null : null;
+    run.visited = [...s.visited];
+    run.strongElement = s.strongElement;
+    run.recentEncounters = [...s.recentEncounters];
+    run.normalBattles = s.normalBattles;
+    run.strongEliteMet = s.strongEliteMet ?? false;
+    run.bossPeeked = s.bossPeeked ?? false;
+    run.bossGapBonus = s.bossGapBonus ?? 0;
+    run.removals = s.removals;
+    run.bossDefeated = s.bossDefeated;
+    return run;
   }
 
   addCard(cardId: string, owner: string) {
@@ -134,6 +204,25 @@ export class Run {
 
   removeCard(uid: number) {
     this.deck = this.deck.filter((c) => c.uid !== uid);
+  }
+
+  /** 강화할 수 있는 덱 카드 (0080): 아직 강화하지 않았고 숫자 효과가 있는 카드 */
+  canUpgrade(uid: number): boolean {
+    const card = this.deck.find((c) => c.uid === uid);
+    return !!card && !card.upgraded && canUpgradeCard(cardDef(card.cardId));
+  }
+
+  /** 덱 카드 한 장을 런 끝까지 강화해요 (휴식 · 이벤트, 0046 · 0080) */
+  upgradeCard(uid: number) {
+    if (!this.canUpgrade(uid)) throw new Error(`강화할 수 없는 카드: ${uid}`);
+    this.deck = this.deck.map((c) => (c.uid === uid ? { ...c, upgraded: true } : c));
+  }
+
+  /** 덱 카드 한 장을 같은 주인에게 한 장 더 (이벤트 복제). 강화도 따라와요 */
+  duplicateCard(uid: number) {
+    const card = this.deck.find((c) => c.uid === uid);
+    if (!card) throw new Error(`없는 카드: ${uid}`);
+    this.deck.push({ ...card, uid: this.nextUid++ });
   }
 
   spirit(id: string) {
@@ -207,6 +296,12 @@ export class Run {
       pool = pool.filter((e) => e.pool === want);
       this.normalBattles++;
     }
+    if (tier === "elite" && !this.strongEliteMet) {
+      // 첫 정예는 센 기운의 정예
+      const own = pool.filter((e) => e.element === this.strongElement);
+      if (own.length) pool = own;
+      this.strongEliteMet = true;
+    }
     if (tier === "boss") {
       // 보스는 센 기운의 큰 정령
       const own = pool.filter((e) => e.element === this.strongElement);
@@ -225,6 +320,35 @@ export class Run {
   bossEncounter(): EncounterDef {
     const bosses = ENCOUNTERS.filter((e) => e.tier === "boss");
     return bosses.find((e) => e.element === this.strongElement) ?? bosses[0];
+  }
+
+  /** 판에 표시를 남기는 이벤트 결과를 적용해요. 이 종류가 아니면 false (0079) */
+  applyMark(o: EventOutcome): boolean {
+    if (o.type === "rerollEliteTraits") {
+      for (const n of this.map.values()) {
+        if (n.type !== "elite" || this.visited.includes(n.id)) continue;
+        n.trait = this.rng.pick(ENEMY_TRAITS.filter((t) => t !== n.trait));
+      }
+    } else if (o.type === "peekBossCharge") this.bossPeeked = true;
+    else if (o.type === "extendBossGap") this.bossGapBonus += o.turns;
+    else return false;
+    return true;
+  }
+
+  /** 미리 본 보스의 큰 차징: 이름과 차징을 시작하는 턴. 미리 보지 않았으면 null */
+  bossPeek(): { name: string; turn: number } | null {
+    if (!this.bossPeeked) return null;
+    const def = enemyDef(this.bossEncounter().enemies[0]);
+    const idx = def.pattern.findIndex((m) => m.big);
+    if (idx < 0) return null;
+    let turn = 0;
+    for (let used = 0; used <= idx; turn++) used += def.acts ? def.acts[turn % def.acts.length].length : 1;
+    return { name: def.pattern[idx].name, turn };
+  }
+
+  /** 지금 칸이 보스면 첫 틈에 더할 턴 수 */
+  battleGapBonus(): number {
+    return this.current?.type === "boss" ? this.bossGapBonus : 0;
   }
 
   /** 지금 칸의 전투에 붙는 거친 특성 */
@@ -420,7 +544,11 @@ export class Run {
         if (card) swap.set(card.uid, sw.to);
       }
     }
-    return this.deck.map((c) => (swap.has(c.uid) ? { ...c, cardId: swap.get(c.uid)! } : c));
+    // 강화한 카드는 강화한 카드 id로 들고 가요. 기술로 바뀌어도 강화는 남아요 (0080)
+    return this.deck.map((c) => {
+      const id = swap.get(c.uid) ?? c.cardId;
+      return { ...c, cardId: c.upgraded && canUpgradeCard(cardDef(id)) ? upgradedId(id) : id };
+    });
   }
 
   /** 보스를 이기면 런 결과에서 고를 보스 장비 3개 (0049 3절). 데이터가 모자라면 있는 만큼 */
@@ -451,13 +579,6 @@ export class Run {
     }
   }
 }
-
-let current: Run | null = null;
-export const getRun = () => {
-  if (!current) throw new Error("no run");
-  return current;
-};
-export const setRun = (r: Run) => (current = r);
 
 /**
  * 이 정령이 지닌 전용 무기가 바꾸는 카드 (0055 · 0056): 대표 카드 → 갈래의 기술.

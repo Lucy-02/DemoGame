@@ -44,5 +44,5 @@
 
 ## 6. 구현 상태 (`src/core` · `src/data`)
 
-- 됨: 하나로 시작(`startGarden`), 깃들기 후보 둘과 고르기(`joinOffer` · `join`), 첫 판 끝(`endRun`) · 첫 보스(`grantBattle`)에 깃들기, 가진 인원으로 출전, 인원별 적 세기(`Run.enemyScale`).
+- 됨: 하나로 시작(`startGarden`), 깃들기 후보 둘과 고르기(`joinOffer` · `join`), 후보마다 다른 성격(`joinCandidates`, 0076 12), 첫 판 끝(`endRun`) · 첫 보스(`grantBattle`)에 깃들기, 가진 인원으로 출전, 인원별 적 세기(`Run.enemyScale`).
 - 남음: 판 끝 · 깃들기 고르기를 화면에 잇기(런 밖 여정 스레드), 재료 · 먹이기 삭제(정령 관리 화면의 유대 탭과 함께), 막 보스 깃듦(0032, 줄이 늘 때).

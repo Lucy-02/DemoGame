@@ -47,6 +47,35 @@ function layoutBlock(skin: TipSkin, b: TipBlock, inner: number): { h: number; dr
     };
     return { h: size(node).h, draw: (scene, x, y) => { render(scene, node, x, y); } };
   }
+  if (b.kind === "chips") {
+    const t = skin.title;
+    if (!t) throw new Error("이 스킨에는 칩(title.tag) 모양이 없어요");
+    const node: Node = {
+      t: "row", align: "center", gap: t.gap,
+      children: b.items.map((c): Node => {
+        const color = c.tone ? skin.tone?.[c.tone] : undefined;
+        return {
+          t: "row", pad: [0, t.tag.padX, 0, t.tag.padX], radius: t.tag.radius,
+          style: { ring: { width: t.tag.ring, color: color ?? t.tag.ringColor } },
+          children: [{ t: "text", text: c.text, size: t.tag.size, color: color ?? t.tag.color, lh: t.lh }],
+        };
+      }),
+    };
+    return { h: size(node).h, draw: (scene, x, y) => { render(scene, node, x, y); } };
+  }
+  if (b.kind === "result") {
+    const r = skin.result;
+    if (!r) throw new Error("이 스킨에는 결과(result) 모양이 없어요");
+    const body = skin.roles.body;
+    const node: Node = {
+      t: "row", align: "center", gap: r.gap,
+      children: [
+        ...(b.who ? [{ t: "text", text: b.who, size: body.size, color: body.strongColor, lh: body.lh } as Node] : []),
+        { t: "text", text: b.value, size: r.size, color: r.color, lh: body.lh },
+      ],
+    };
+    return { h: size(node).h, draw: (scene, x, y) => { render(scene, node, x, y); } };
+  }
   const s = skin.roles[b.role];
   if (!s) throw new Error(`이 스킨에는 "${b.role}" 문단 모양이 없어요`);
   const lines = wrapSpans(spans(b.text, s, skin.termOffset), inner);

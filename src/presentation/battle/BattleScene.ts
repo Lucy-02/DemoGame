@@ -5,17 +5,44 @@ import * as Phaser from "phaser";
 import { gather } from "../style/gather";
 import { loadIcon } from "../style/icons";
 import { darken } from "../style/opacity";
+import type { BattleSession } from "../../session/battle";
+import { bakeSpiritFace, preloadSpiritArt } from "../spiritArt";
 import { canonRest } from "./fixtures/canonRest";
+import { battleVM, cardUid, refOf, releaseId } from "./fromBattle";
+import { tokens } from "../../design/tokens";
+import { ms } from "../style/ease";
+import { playbackFrames } from "./playback";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
-import { drawOrder, preloadOrder } from "./views/order";
-import { ALLY, BAND, DRAG, ENEMY, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { createPick, preloadPick, type PickView } from "./views/pick";
+import { drawOrder, drawOrderRing, preloadOrder, preloadOrderIcon, type OrderHit } from "./views/order";
+import { drawTooltip } from "../tooltip/Tooltip";
+import { GLASS } from "../tooltip/skins";
+import { ALLY, BAND, DRAG, ENEMY, FRAME, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { playOrderMotion, snapshotOrder, type OrderSnapshot } from "./views/orderMotion";
 import { SYS_ICONS, drawSys } from "./views/topbar";
 import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 
 export const BATTLE_SCENE = "battle";
+
+export interface BattleSceneData {
+  /** 고정 장면 (fixtures). session을 주면 무시해요 */
+  vm?: BattleVM;
+  /** 실제 전투. 주면 명령을 보내고 바뀐 상태로 다시 그려요 */
+  session?: BattleSession;
+  /** 전투가 끝났어요 (session이 있을 때) */
+  onOver?: (scene: Phaser.Scene) => void;
+  /** 덱 보기 열기 (오른쪽 위 덱 버튼) */
+  onDeck?: (scene: Phaser.Scene) => void;
+  /** 순서표 머리의 장소 글 (session이 있을 때) */
+  place?: string;
+  hover?: string;
+  lift?: string;
+  /** 턴 재생: 남은 장면들. 첫 장면을 그리고, 한 행동 시간 뒤 다음 장면으로 넘어가요 */
+  playback?: BattleVM[];
+}
 
 export class BattleScene extends Phaser.Scene {
   private vm: BattleVM = canonRest;
@@ -30,8 +57,34 @@ export class BattleScene extends Phaser.Scene {
   /** 들기 크기 바꿔 보기 (?lift=h1 정본) */
   private lift?: string;
 
-  init(data: { vm?: BattleVM; hover?: string; lift?: string }) {
-    if (data.vm) this.vm = data.vm;
+  private session?: BattleSession;
+  private playback?: BattleVM[];
+  private place?: string;
+  private onOver?: (scene: Phaser.Scene) => void;
+  private onDeck?: (scene: Phaser.Scene) => void;
+
+  init(data: BattleSceneData) {
+    this.session = data.session;
+    this.onOver = data.onOver;
+    this.onDeck = data.onDeck;
+    this.place = data.place;
+    this.playback = data.playback;
+    this.vm = data.playback?.[0] ?? (data.session ? battleVM(data.session.battle, data.place) : data.vm ?? canonRest);
+    this.previews.clear();
+    this.bounds = [];
+    this.units = [];
+    this.press = null;
+    this.dragging = null;
+    this.held = null;
+    this.onOtherCard = false;
+    this.hoverRef = null;
+    this.hoverMark = undefined;
+    this.hoverFx = null;
+    this.hoverTip = null;
+    this.orderHits = [];
+    this.orderHover = null;
+    this.orderFx = null;
+    this.pick = null;
     this.hover = data.hover;
     this.lift = data.lift;
   }
@@ -39,8 +92,11 @@ export class BattleScene extends Phaser.Scene {
   preload() {
     for (const id of SYS_ICONS) loadIcon(this, id, SYS.icon);
     preloadOrder(this, this.vm.order);
+    for (const p of Object.values(this.vm.plays)) if (p.slot) preloadOrderIcon(this, p.slot.token.icon);
     preloadUnits(this, this.vm);
     preloadHand(this, this.vm);
+    if (this.vm.pick) preloadPick(this, this.vm.pick);
+    if (this.session) preloadSpiritArt(this, this.session.battle.spirits.map((s) => s.id));
   }
 
   // 필드: 모든 필드 장은 이 층 안에 있어서, 나중에 그린 미리보기도 손패 띠 아래에 놓여요
@@ -58,23 +114,30 @@ export class BattleScene extends Phaser.Scene {
   private dragging: string | null = null;
   private held: string | null = null;
   private onOtherCard = false;
+  /** 열린 가운데 고르기 창 (0075). 보이는 동안 아래 화면의 조작은 쉬어요 */
+  private pick: PickView | null = null;
+  /** 앞 장면의 순서표 (장면을 다시 그려도 남아요) */
+  private orderPrev?: { session?: BattleSession; snap: OrderSnapshot };
 
   create() {
+    // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
+    for (const s of this.session?.battle.spirits ?? []) bakeSpiritFace(this, s.id, s.run.stage);
     drawBackdrop(this);
-    drawSys(this);
+    drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) });
     this.fieldLayer = this.add.container(0, 0);
     this.rest = this.drawField(null);
     this.shown = this.rest;
     drawBand(this);
     drawMana(this, this.vm.mana);
-    drawEnd(this, this.vm);
+    drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined);
+    if (this.playback) this.time.delayedCall(ms(tokens.provisional.motion.playback.step), () => this.step());
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
     this.showHover(hov < 0 ? null : { side: "enemy", i: hov });
     this.hand = createHand(this, this.vm.hand, {
       lift: this.lift ? LIFT_STYLES[this.lift] : undefined,
       onPress: (key, p) => {
-        if (p.rightButtonDown() || !this.vm.plays[key]) return;
+        if (p.rightButtonDown() || !this.vm.plays[key] || this.pick) return;
         this.press = { key, x: p.x, y: p.y };
       },
       onChange: (key, held) => {
@@ -91,6 +154,7 @@ export class BattleScene extends Phaser.Scene {
     this.input.on("pointerup", (p: Phaser.Input.Pointer) => this.release(p));
     this.input.keyboard?.on("keydown-ESC", () => this.cancel());
     this.begin();
+    if (this.vm.pick && !this.playback) this.pick = createPick(this, this.vm.pick, (keys) => this.picked(keys));
     Object.assign(window, { __screenReady: BATTLE_SCENE });
   }
 
@@ -140,6 +204,15 @@ export class BattleScene extends Phaser.Scene {
     this.hoverUnit(p.x, p.y);
   }
 
+  /** 고르기 창에서 고름: 낙하는 받고, 품기는 품고 턴 끝 처리를 이어 가요 */
+  private picked(keys: string[]) {
+    const s = this.session;
+    const kind = this.vm.pick?.kind;
+    if (!s || !kind) return console.info("[battle] 고르기", keys);
+    s.dispatch(kind === "fall" ? { kind: "fall", cards: keys } : { kind: "hold", uids: keys.map(cardUid) });
+    this.settle();
+  }
+
   // ── 가리킴 (캡슐 막대 V1): 유닛을 가리키면 묶음 아래에 풀이 한두 줄, 기호를 가리키면 그 기호의 한 줄 풀이.
   //    적을 가리키면 그 적이 노리는 아군의 깎일 구간이 깜빡이고, 아군을 가리키면 그 아군을 노리는 의도가 밝아져요.
   //    묶음은 커지지 않아요. 카드를 집거나 끄는 동안에는 뜨지 않아요 ──
@@ -157,8 +230,54 @@ export class BattleScene extends Phaser.Scene {
     return this.bounds.find(({ box: b }) => inside(b, x, y))?.ref ?? null;
   }
 
+  // ── 순서표 토큰 가리킴 (0038): 얼굴 원에 흰 테 + 토큰 아래 유리 말풍선. 적 토큰이면 그 적을 가리킨 것과 같은 강조 ──
+  private orderHits: OrderHit[] = [];
+  private orderHover: OrderHit | null = null;
+  private orderFx: Phaser.GameObjects.Container | null = null;
+
+  private hoverOrder(x: number, y: number): boolean {
+    const hit = this.orderHits.find((h) => inside(h, x, y)) ?? null;
+    if (hit === this.orderHover) return !!hit;
+    this.orderFx?.destroy();
+    this.orderFx = null;
+    this.orderHover = hit;
+    if (!hit) return false;
+    const slot = hit.kind === "enemy" ? this.vm.order.slots[hit.slot] : undefined;
+    const token = hit.kind === "ally" ? this.vm.order.bundles?.[hit.bundle]?.[hit.i] : undefined;
+    this.showHover(slot?.enemy === undefined ? null : { side: "enemy", i: slot.enemy });
+    // 풀이는 토큰 아래 말풍선 하나만: 유닛 아래 풀이는 지우고 강조만 남겨요
+    this.hoverTip?.destroy();
+    this.hoverTip = null;
+    const tip = token?.tip ?? slot?.tip;
+    this.orderFx = gather(this, 0, 0, () => {
+      const ring = drawOrderRing(this, hit);
+      // 같은 적의 다른 토큰도 함께 밝혀요 (0074)
+      if (slot?.enemy !== undefined) {
+        for (const h of this.orderHits) {
+          if (h !== hit && h.kind === "enemy" && this.vm.order.slots[h.slot]?.enemy === slot.enemy) drawOrderRing(this, h, true);
+        }
+      }
+      if (!tip) return;
+      // 화면 밖으로 나가면 말풍선만 안쪽으로 밀어요
+      const left = Math.max(SYS.right, Math.min(FRAME.w - SYS.right - GLASS.w, ring.cx - GLASS.w / 2));
+      drawTooltip(this, {
+        skin: GLASS, at: { left, top: ring.bottom + SYS.gap },
+        // 결과 먼저 (0074 9번): 이름 + 종류 칩 → 결과 → 효과문 → 순서 · 상태 칩
+        content: [
+          { kind: "title", text: tip.title, tag: tip.kind },
+          ...(tip.result ? [{ kind: "result" as const, ...tip.result }] : []),
+          { kind: "text", role: "body", text: tip.text },
+          ...(tip.chips?.length ? [{ kind: "chips" as const, items: tip.chips }] : []),
+        ],
+      });
+    });
+    this.fieldLayer.add(this.orderFx);
+    return true;
+  }
+
   private hoverUnit(x: number, y: number) {
-    if (this.dragging || this.held || this.press) return;
+    if (this.dragging || this.held || this.press || this.pick?.shown) return;
+    if (this.hoverOrder(x, y)) return;
     // 기호가 먼저: 깃발처럼 판정 영역 밖으로 나온 기호도 있어요
     for (const u of this.units) {
       const k = u.view.marks.findIndex((m) => inside(m, x, y));
@@ -244,6 +363,14 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private release(p: Phaser.Input.Pointer) {
+    if (this.pick) {
+      // "필드 보기"를 누르다 떼면 창이 돌아와요
+      if (!this.pick.shown) {
+        this.showHover(null);
+        this.pick.show();
+      }
+      return;
+    }
     if (p.rightButtonReleased()) return this.cancel();
     const over = this.overAt(p.x, p.y);
     if (this.dragging) {
@@ -282,9 +409,37 @@ export class BattleScene extends Phaser.Scene {
     this.showField(null);
   }
 
-  /** 카드 내기. 전투 규칙(session 층)이 아직 없어서 지금은 기록만 하고 쉬는 상태로 돌아가요 (TODO: session 층에 넘기기) */
+  /** 카드 내기: 세션에 명령을 보내고 바뀐 상태로 다시 그려요. 고정 장면이면 기록만 해요 */
   private play(card: string, target?: UnitRef) {
-    console.info("[battle] 카드 사용", card, target ?? "(대상 고르기 없음)");
+    const s = this.session;
+    if (!s) return console.info("[battle] 카드 사용", card, target ?? "(대상 고르기 없음)");
+    const release = releaseId(card);
+    const events = s.dispatch(release ? { kind: "release", id: release } : { kind: "play", uid: cardUid(card), target: refOf(s.battle, target) });
+    if (events.length || !s.over) this.settle();
+  }
+
+  private endTurn() {
+    const s = this.session;
+    if (!s || this.dragging || this.playback || this.pick) return;
+    const cast = { allies: s.battle.spirits.map((x) => x.id), enemies: s.battle.enemies.filter((e) => !e.dead).map((e) => e.uid) };
+    const frames = playbackFrames(this.vm, cast, s.dispatch({ kind: "endTurn" }));
+    this.scene.restart({ session: s, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: frames } satisfies BattleSceneData);
+  }
+
+  /** 재생: 다음 장면으로. 남은 장면이 없으면 확정된 상태로 */
+  private step() {
+    const rest = this.playback?.slice(1) ?? [];
+    if (!rest.length) return this.settle();
+    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: rest } satisfies BattleSceneData);
+  }
+
+  /**
+   * 명령 뒤: 확정된 상태로 다시 그려요. 턴 종료는 재생(playback.ts)을 거쳐 여기로 와요.
+   * 전투가 끝났으면 바로 나가요.
+   */
+  private settle() {
+    if (this.session?.over) return this.onOver?.(this);
+    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place } satisfies BattleSceneData);
   }
 
   // ── 대상 강조 ──────────────────────────────────────────
@@ -338,9 +493,24 @@ export class BattleScene extends Phaser.Scene {
       const c = gather(this, 0, 0, draw);
       if (f && dimmed(f, ref)) darken(c, TARGETING.dim);
     };
-    const cutOrders = new Set(this.vm.enemies.filter((_, i) => o?.enemies[i]?.cut).map((e) => e.intent.order));
+    const cutOrders = new Set(this.vm.enemies.filter((_, i) => o?.enemies[i]?.cut).flatMap((e) => (e.intent?.order !== undefined ? [e.intent.order] : [])));
     const root = gather(this, 0, 0, () => {
-      drawOrder(this, { ...this.vm.order, slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: true } : s)) });
+      // 든 카드: 들어갈 자리에 흰 점선 토큰, 끊을 적은 배지가 브레이크 기호로 (0074)
+      const held = card ? this.vm.plays[card]?.slot : undefined;
+      const bundles = held && this.vm.order.bundles
+        ? this.vm.order.bundles.map((l, k) => (k === held.bundle ? [...l.slice(0, held.i), held.token, ...l.slice(held.i)] : l))
+        : this.vm.order.bundles;
+      const order = drawOrder(this, {
+        ...this.vm.order, bundles,
+        slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: "plan" as const } : s)),
+      });
+      if (!f) {
+        this.orderHits = order.hits;
+        // 앞 장면의 토큰 자리에서 이어 움직여요 (0077). 다른 전투의 표와는 잇지 않아요
+        const prev = this.orderPrev;
+        if (prev && prev.session === this.session) playOrderMotion(this, prev.snap, order.marks, order.cursor);
+        this.orderPrev = { session: this.session, snap: snapshotOrder(order.marks, order.cursor) };
+      }
       this.vm.allies.forEach((a, i) => {
         const ref = { side: "ally", i } as const;
         unit(ref, () => {

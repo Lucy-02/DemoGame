@@ -56,7 +56,8 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
       loadIcon(scene, e.weakTo, I.weak.icon);
       loadIcon(scene, e.weakTo, WEAK_ON_ICON);
     }
-    loadIcon(scene, e.intent.icon, INTENT.icon);
+    if (e.intent) loadIcon(scene, e.intent.icon, INTENT.icon);
+    if (e.intent?.target === "random") loadIcon(scene, RANDOM_ICON, INTENT.face);
     statuses(e.statuses);
   }
   if (Object.keys(vm.plays).length > 0) loadIcon(scene, "fx-damage", PV.hits.icon);
@@ -498,6 +499,9 @@ function enemyInfo(scene: Phaser.Scene, e: EnemyVM, i: number, pv: EnemyOutcomeV
   return drawInfo(scene, ENEMY.xs[i], ENEMY.feet, { max: e.maxHp, keep: hp, gone: pv ? pv.hp.from - pv.hp.to : 0 }, { n: hp, pv: !!pv }, chips);
 }
 
+/** 무작위 대상 기호 (카드의 무작위 표식과 같음) */
+const RANDOM_ICON = "i-dice";
+
 /** 의도 알약. cut = 미리보기에서 끊김, on = 가리킨 유닛과 이어진 의도 (.intent.on) */
 function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false): Node {
   const charge = it.kind === "charge", debuff = it.kind === "debuff";
@@ -507,13 +511,18 @@ function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false):
     : debuff
       ? { width: INTENT.debuffRing, color: P.debuffLine }
       : { width: charge ? INTENT.chargeRing : INTENT.ring, color: charge ? P.warn : P.glassLine };
-  const order: Node = {
+  const order: Node | undefined = it.order === undefined ? undefined : {
     t: "row", w: INTENT.order, h: INTENT.order, round: !debuff, radius: INTENT.orderDebuffRadius,
     justify: "center", align: "center", style: { fill: P.chip },
     children: [text(String(it.order), T.intentOrder, P.ink2)],
   };
-  let target: Node;
-  if (it.target === "all") {
+  let target: Node | undefined;
+  if (it.target === "none") {
+    target = undefined;
+  } else if (it.target === "random") {
+    // 무작위 대상: 카드의 무작위 표식과 같은 기호 (작업 가정, Lucy 확인 전)
+    target = { t: "icon", id: RANDOM_ICON, w: INTENT.face, h: INTENT.face, tint: P.ink2 };
+  } else if (it.target === "all") {
     const dots = allDotsTexture(scene);
     const w = dots.w - dots.margin * 2, h = dots.h - dots.margin * 2;
     target = { t: "block", w, h, draw: (_g, x, y) => { scene.add.image(x - dots.margin, y - dots.margin, dots.key).setOrigin(0, 0); } };
@@ -532,9 +541,9 @@ function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false):
     t: "row", h: INTENT.h, pad: INTENT.pad, radius: debuff ? INTENT.debuffRadius : INTENT.radius, gap: INTENT.gap, align: "center",
     style: { fill: P.glassD, ring },
     children: [
-      order, { t: "icon", id: it.icon, w: INTENT.icon, h: INTENT.icon, tint: iconTint }, amountNode,
+      ...(order ? [order] : []), { t: "icon", id: it.icon, w: INTENT.icon, h: INTENT.icon, tint: iconTint }, amountNode,
       ...(mult.length ? [text(`×${mult.join("×")}`, T.intentMult, P.ink3)] : []),
-      target,
+      ...(target ? [target] : []),
     ],
   };
 }
@@ -731,10 +740,12 @@ export function drawAllyPulse(scene: Phaser.Scene, a: AllyVM, i: number) {
 export const losesHp = (a: AllyVM) => lossOf(a, a.incoming ?? 0) > 0;
 
 /** 이 적의 의도가 이 아군을 노리는지 */
-export const aimsAt = (e: EnemyVM, a: AllyVM) => e.intent.target === "all" || e.intent.target === a.face;
+/** 무작위는 누구든 맞을 수 있어서 모두를 노리는 것으로 봐요 */
+export const aimsAt = (e: EnemyVM, a: AllyVM) => !!e.intent && (e.intent.target === "all" || e.intent.target === "random" || e.intent.target === a.face);
 
 /** 적 머리 위 의도 알약. on = 가리킨 유닛과 이어진 의도 */
 export function drawIntent(scene: Phaser.Scene, e: EnemyVM, i: number, st: { cut?: boolean; on?: boolean } = {}) {
+  if (!e.intent) return { w: 0, h: 0 };
   const node = intentNode(scene, e.intent, st.cut, st.on);
   const s = size(node);
   render(scene, node, ENEMY.xs[i] - s.w / 2, ENEMY.top);

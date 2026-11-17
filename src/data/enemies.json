@@ -1,61 +1,61 @@
 [
-  { "id": "moss_slime", "name": "모스 슬라임", "tier": "normal", "element": "forest", "hp": 18,
+  { "id": "moss_slime", "name": "이끼 슬라임", "tier": "normal", "element": "forest", "hp": 25,
     "pattern": [
       { "name": "끈적이기", "actions": [{ "type": "weak", "turns": 1, "target": "front" }] },
-      { "name": "몸통박치기", "charge": true, "actions": [{ "type": "attack", "dmg": 10, "target": "front" }] }
+      { "name": "몸통박치기", "charge": true, "actions": [{ "type": "attack", "dmg": 14, "target": "front" }] }
     ] },
-  { "id": "bramble_rat", "name": "브램블 랫", "tier": "normal", "element": "forest", "hp": 14,
+  { "id": "bramble_rat", "name": "가시쥐", "tier": "normal", "element": "forest", "hp": 20,
     "pattern": [
-      { "name": "물어뜯기", "actions": [{ "type": "attack", "dmg": 3, "hits": 2, "target": "random" }] },
+      { "name": "물어뜯기", "actions": [{ "type": "attack", "dmg": 5, "hits": 2, "target": "random" }] },
       { "name": "숨기", "actions": [{ "type": "block", "value": 6 }] }
     ] },
-  { "id": "wisp", "name": "위스프", "tier": "normal", "element": "fire", "hp": 9,
+  { "id": "wisp", "name": "깜부기", "tier": "normal", "element": "fire", "hp": 13,
     "pattern": [
-      { "name": "찌르기", "actions": [{ "type": "attack", "dmg": 2, "target": "random", "pierce": true }] }
+      { "name": "찌르기", "actions": [{ "type": "attack", "dmg": 3, "target": "random", "pierce": true }] }
     ] },
-  { "id": "rubble_shell", "name": "러블 셸", "tier": "normal", "element": "none", "hp": 30,
+  { "id": "rubble_shell", "name": "돌집게", "tier": "normal", "element": "none", "hp": 42,
     "pattern": [
       { "name": "웅크리기", "actions": [{ "type": "block", "value": 10 }] },
-      { "name": "짓누르기", "charge": true, "actions": [{ "type": "attack", "dmg": 13, "target": "front" }] }
+      { "name": "짓누르기", "charge": true, "actions": [{ "type": "attack", "dmg": 19, "target": "front" }] }
     ] },
-  { "id": "tempest_crow", "name": "템페스트 크로우", "tier": "normal", "element": "wind", "hp": 18,
+  { "id": "tempest_crow", "name": "바람새", "tier": "normal", "element": "wind", "hp": 25,
     "pattern": [
-      { "name": "낚아채기", "at": 1000, "actions": [{ "type": "attack", "dmg": 4, "hits": 2, "target": "lowest" }] },
-      { "name": "깃털 날리기", "at": 1000, "actions": [{ "type": "attack", "dmg": 2, "target": "all" }] }
+      { "name": "낚아채기", "at": 1000, "actions": [{ "type": "attack", "dmg": 6, "hits": 2, "target": "lowest" }] },
+      { "name": "깃털 날리기", "at": 1000, "actions": [{ "type": "attack", "dmg": 3, "target": "all" }] }
     ] },
-  { "id": "whirl", "name": "회오리", "tier": "normal", "element": "wind", "hp": 16,
+  { "id": "whirl", "name": "돌개바람", "tier": "normal", "element": "wind", "hp": 22,
     "acts": [[900, 2100]],
     "pattern": [
-      { "name": "휘감기", "actions": [{ "type": "attack", "dmg": 3, "target": "random" }] },
-      { "name": "후려치기", "actions": [{ "type": "attack", "dmg": 4, "target": "front" }] }
+      { "name": "휘감기", "actions": [{ "type": "attack", "dmg": 5, "target": "random" }] },
+      { "name": "후려치기", "actions": [{ "type": "attack", "dmg": 6, "target": "front" }] }
     ] },
-  { "id": "rust_golem", "name": "러스트 골렘", "tier": "normal", "element": "fire", "hp": 26,
+  { "id": "rust_golem", "name": "녹슨 골렘", "tier": "normal", "element": "fire", "hp": 36,
     "pattern": [
-      { "name": "강타", "charge": true, "actions": [{ "type": "attack", "dmg": 14, "target": "front" }] },
+      { "name": "강타", "charge": true, "actions": [{ "type": "attack", "dmg": 20, "target": "front" }] },
       { "name": "잿불 뿜기", "actions": [{ "type": "burn", "value": 2, "target": "all" }] }
     ] },
-  { "id": "bog_witch", "name": "보그 위치", "tier": "elite", "element": "forest", "hp": 55,
+  { "id": "bog_witch", "name": "늪 두꺼비", "tier": "elite", "element": "forest", "hp": 66,
     "pattern": [
-      { "name": "혀 채찍", "actions": [{ "type": "attack", "dmg": 5, "hits": 3, "target": "random" }] },
+      { "name": "혀 채찍", "actions": [{ "type": "attack", "dmg": 6, "hits": 3, "target": "random" }] },
       { "name": "저주 울음", "actions": [{ "type": "vulnerable", "turns": 2, "target": "all" }] },
-      { "name": "삼키기", "charge": true, "actions": [{ "type": "attack", "dmg": 16, "target": "front", "pierce": true }] }
+      { "name": "삼키기", "charge": true, "actions": [{ "type": "attack", "dmg": 19, "target": "front", "pierce": true }] }
     ] },
-  { "id": "frostfang", "name": "프로스트팡", "tier": "elite", "element": "wind", "hp": 60,
+  { "id": "frostfang", "name": "칼바람 늑대", "tier": "elite", "element": "wind", "hp": 72,
     "pattern": [
       { "name": "울부짖기", "actions": [{ "type": "buffMinions", "value": 3 }] },
-      { "name": "찢기", "actions": [{ "type": "attack", "dmg": 6, "hits": 2, "target": "front" }] }
+      { "name": "찢기", "actions": [{ "type": "attack", "dmg": 7, "hits": 2, "target": "front" }] }
     ] },
-  { "id": "frost_pup", "name": "프로스트팡 새끼", "tier": "minion", "element": "wind", "hp": 12,
+  { "id": "frost_pup", "name": "칼바람 늑대 새끼", "tier": "minion", "element": "wind", "hp": 14,
     "pattern": [
-      { "name": "물기", "actions": [{ "type": "attack", "dmg": 5, "target": "random" }] }
+      { "name": "물기", "actions": [{ "type": "attack", "dmg": 6, "target": "random" }] }
     ] },
-  { "id": "cinder_imp", "name": "신더 임프", "tier": "elite", "element": "fire", "hp": 50,
+  { "id": "cinder_imp", "name": "그을음 도깨비", "tier": "elite", "element": "fire", "hp": 60,
     "pattern": [
       { "name": "도깨비불", "actions": [{ "type": "burn", "value": 3, "target": "all" }] },
-      { "name": "방망이", "charge": true, "actions": [{ "type": "attack", "dmg": 20, "target": "front" }] },
-      { "name": "장난", "actions": [{ "type": "costUp", "value": 1 }, { "type": "attack", "dmg": 6, "target": "random" }] }
+      { "name": "방망이", "charge": true, "actions": [{ "type": "attack", "dmg": 23, "target": "front" }] },
+      { "name": "장난", "actions": [{ "type": "costUp", "value": 1 }, { "type": "attack", "dmg": 7, "target": "random" }] }
     ] },
-  { "id": "grimbark", "name": "그림바크", "tier": "boss", "element": "forest", "hp": 200,
+  { "id": "grimbark", "name": "시듦", "tier": "boss", "element": "forest", "hp": 200,
     "desc": "시든 정원을 지키던 고목 정령",
     "pattern": [
       { "name": "가지 내리치기", "actions": [{ "type": "attack", "dmg": 14, "target": "front" }] },
@@ -83,7 +83,7 @@
       { "name": "번져 오름", "charge": true, "big": true, "onBreak": "clearBurn",
         "actions": [{ "type": "burnRamp", "value": 1, "step": 1, "target": "all" }, { "type": "detonateBurn", "mult": 2 }, { "type": "attack", "dmg": 4, "target": "all" }] }
     ] },
-  { "id": "gale", "name": "큰바람", "tier": "boss", "element": "wind", "hp": 145,
+  { "id": "gale", "name": "높새", "tier": "boss", "element": "wind", "hp": 145,
     "desc": "언덕을 쉬지 않고 도는 묵은 바람",
     "acts": [[700, 1500, 2300], [500, 1300, 2700], [900, 1700, 2500]],
     "pattern": [

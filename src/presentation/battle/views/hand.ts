@@ -217,7 +217,8 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
   return { setHover, setHeld, startDrag, moveDrag, endDrag };
 }
 
-export function drawEnd(scene: Phaser.Scene, vm: BattleVM) {
+/** onEnd: 턴 종료를 누르면 (고정 장면에서는 없어요) */
+export function drawEnd(scene: Phaser.Scene, vm: BattleVM, onEnd?: () => void) {
   const B = END.button;
   const pile = (id: string, n: number): Node => ({
     t: "row", align: "center", gap: END.piles.gap,
@@ -227,7 +228,7 @@ export function drawEnd(scene: Phaser.Scene, vm: BattleVM) {
     t: "col", w: END.w, gap: END.gap, align: "stretch",
     children: [
       {
-        t: "row", h: B.h, radius: B.radius, align: "center", justify: "center",
+        t: "row", h: B.h, radius: B.radius, align: "center", justify: "center", onClick: onEnd,
         style: { fill: P.endCalm, ring: { width: B.ring, color: P.endCalmLine } },
         children: [text(COPY.endTurn, T.endTurn, P.ink2)],
       },
