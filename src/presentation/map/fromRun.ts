@@ -16,9 +16,10 @@ export function mapVM(run: Run): MapVM {
   const state = (id: string): NodeState => (id === here ? "here" : visited.has(id) ? "past" : open.has(id) ? "open" : "far");
   const cols = Math.max(...all.filter((n) => n.type !== "boss").map((n) => n.col)) + 1;
   const firsts = all.filter((n) => n.floor === 1);
+  const peek = run.bossPeek();
   const nodes: MapNodeVM[] = [
     { id: START, kind: "start", floor: 0, col: (cols - 1) / 2, state: run.current ? "past" : "here" },
-    ...all.map((n) => ({ id: n.id, kind: n.type, floor: n.floor, col: n.col, state: state(n.id), trait: n.trait && TRAIT_NAME[n.trait] })),
+    ...all.map((n) => ({ id: n.id, kind: n.type, floor: n.floor, col: n.col, state: state(n.id), trait: n.trait && TRAIT_NAME[n.trait], peek: (n.type === "boss" && peek) || undefined })),
   ];
   const links: MapLinkVM[] = [
     ...firsts.map((n) => ({ from: START, to: n.id, walked: visited.has(n.id) })),

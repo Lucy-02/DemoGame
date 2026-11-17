@@ -33,6 +33,7 @@ import type { MapNodeVM, MapVM, SheetVM } from "./viewmodel";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.result;
+const CHARGE_ICON = "kw-charge";
 
 export const MAP_SCENE = "map";
 
@@ -91,6 +92,7 @@ export class MapScene extends Phaser.Scene {
     for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS]) loadIcon(this, id, w);
     for (const id of SYS_ICONS) loadIcon(this, id, SYS.icon);
     for (const id of Object.values(KIND_ICON)) loadIcon(this, id, PATH.node.icon);
+    loadIcon(this, CHARGE_ICON, PATH.badge.icon);
     for (const id of Object.values(EQUIP_STAT_ICON)) loadIcon(this, id, SHEET.stat.icon);
     loadIcon(this, "g-close", SLIM.close.icon);
     for (const l of this.vm.party) for (const c of sheetVM(this.run, l.id)?.cards ?? []) preloadHandCard(this, c, { showRarity: true });
@@ -147,6 +149,15 @@ export class MapScene extends Phaser.Scene {
       const d = N.d + (N.here.gap + N.here.width) * 2;
       circle(this.add.graphics(), x, y, d, { ring: { width: N.here.width, color: P.accHi } });
     }
+    if (n.peek) {
+      // 순서표의 차징 배지와 같은 말: 보라 테 + 보라 차징 기호
+      const B = PATH.badge;
+      const off = (N.d / 2) * Math.SQRT1_2;
+      const bg = this.add.graphics();
+      circle(bg, x + off, y + off, B.d + B.outline * 2, { fill: P.floor });
+      circle(bg, x + off, y + off, B.d, { fill: P.face, ring: { width: B.ring, color: P.accHi } });
+      icon(this, x + off - B.icon / 2, y + off - B.icon / 2, CHARGE_ICON, B.icon, B.icon, P.accHi);
+    }
     if (n.kind === "start") return;
     const zone = this.add.zone(x - N.d / 2, y - N.d / 2, N.d, N.d).setOrigin(0, 0);
     const can = n.state === "open" && !!this.onEnter;
@@ -159,7 +170,11 @@ export class MapScene extends Phaser.Scene {
           circle(this.add.graphics(), x, y, d, { ring: { width: N.hover.width, color: P.ink } });
         }
         const left = clampLeft(x - GLASS.w / 2, GLASS.w, FRAME.w, SYS.right);
-        drawTooltip(this, { skin: GLASS, at: { left, top: y + N.d / 2 + PATH.tipGap }, content: [{ kind: "title", text: COPY.kind[n.kind as keyof typeof COPY.kind], tag: n.trait }] });
+        drawTooltip(this, { skin: GLASS, at: { left, top: y + N.d / 2 + PATH.tipGap }, content: [
+            { kind: "title", text: COPY.kind[n.kind as keyof typeof COPY.kind], tag: n.trait },
+            ...(n.peek ? [{ kind: "chips" as const, items: [{ text: n.peek.name, tone: "acc" as const }, { text: COPY.turn(n.peek.turn) }] }] : []),
+          ],
+        });
       });
     });
     zone.on("pointerout", () => {

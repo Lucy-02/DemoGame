@@ -9,6 +9,8 @@ export const PATH = {
   /** 왼쪽 열(48~612) 가로 가운데에 네 줄 */
   cx: GRID.gutter + (GRID.lanesX - GRID.gutter * 2 - 4) / 2, colStep: 100, bottom: 716, rowStep: 78,
   /** 칸: 원판 40, 기호 18 · 지금 있는 칸은 바깥 테 4 띄워 2 */
+  /** 표지(미리 본 보스 차징): 칸 오른쪽 아래 둘레 45° 자리의 작은 원, 바깥 테는 바닥 색 */
+  badge: { d: 18, icon: 11, outline: 2, ring: 1 },
   node: { d: 40, icon: 18, ring: 1, here: { gap: 4, width: 2 }, hover: { gap: 3, width: 2 } },
   /** 지나온 길은 실선, 갈 길은 점선 */
   link: { walked: 3, ahead: 2, dash: 6, walkedAlpha: 0.5, aheadAlpha: 0.3 },

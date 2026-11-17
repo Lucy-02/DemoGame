@@ -15,6 +15,8 @@ export interface MapNodeVM {
   state: NodeState;
   /** 정예의 거친 특성 이름 (호버) */
   trait?: string;
+  /** 미리 본 보스의 큰 차징 (이벤트 "큰 정령의 흔적", 0079): 칸에 차징 표지, 이름과 턴은 호버에 */
+  peek?: { name: string; turn: number };
 }
 
 export interface MapLinkVM {
