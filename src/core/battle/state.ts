@@ -16,6 +16,8 @@ export const STATUS_IDS = [
   "delayed",
   // 보스의 틈 (0062)
   "gap",
+  // 땅속 숨기 (2막)
+  "burrow",
   // 카멜레온
   "hidden", "ready",
 ] as const;
@@ -96,6 +98,8 @@ export interface BEnemy extends StatusHolder {
   gapOpened: boolean;
   /** 세지는 화상을 쓴 횟수 */
   ramp: number;
+  /** 이번 턴 첫 타격을 이미 되돌렸는지 (2막) */
+  reflected: boolean;
 }
 
 export const isEnemy = (h: BSpirit | BEnemy): h is BEnemy => "uid" in h;
@@ -124,6 +128,14 @@ export interface Planned {
   repeat: boolean;
   /** 재생할 때 쓴 받아칠 기회가 끌어온 공격 피해 (안 썼으면 0) */
   pulled?: number;
+}
+
+/** 방전 칸: 이번 턴 시간축의 [from, to) 안에서 끝나는 카드의 주인이 dmg를 받아요. 깐 적이 쓰러지면 꺼져요 (2막) */
+export interface Zone {
+  uid: number;
+  from: number;
+  to: number;
+  dmg: number;
 }
 
 /** 이번 턴 시간축에 박힌 적 행동 */

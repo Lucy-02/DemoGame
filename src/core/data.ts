@@ -109,6 +109,7 @@ export function scaleEnemy(def: EnemyDef, k: EnemyScale): EnemyDef {
   const up = (v: number, m: number) => Math.max(1, Math.round(v * m));
   const move = (m: EnemyMove): EnemyMove => ({
     ...m,
+    ...(m.zoneDmg ? { zoneDmg: up(m.zoneDmg, k.dmg) } : {}),
     actions: m.actions.map((a) =>
       a.type === "attack" ? { ...a, dmg: up(a.dmg, k.dmg) }
       : a.type === "burn" || a.type === "buffMinions" || a.type === "burnRamp" ? { ...a, value: up(a.value, k.dmg) }
@@ -141,13 +142,13 @@ export function equipDef(id: string): EquipDef {
 export const personalityDef = (id: string) => must(persMap, id, "personality");
 
 export const ELEMENT_NAME: Record<Element, string> = {
-  fire: "불", water: "물", forest: "숲", wind: "바람", light: "빛", earth: "땅", none: "무",
+  fire: "불", water: "물", forest: "숲", wind: "바람", light: "빛", earth: "땅", electric: "전기", none: "무",
 };
 /** 거친 특성 이름 (후보, Lucy 확인 전) */
 export const TRAIT_NAME: Record<string, string> = { burning: "타오르는", sturdy: "단단한", swift: "재빠른", heavy: "묵직한" };
-/** 빛 · 땅은 임시값(TODO_TOKEN) */
+/** 빛 · 땅 · 전기는 임시값(TODO_TOKEN). 전기는 화면 토큰 el.electric과 같은 값 */
 export const ELEMENT_COLOR: Record<Element, number> = {
-  fire: 0xe8643a, water: 0x3d8fe0, forest: 0x4fae5c, wind: 0x8fb8c8, light: 0xe8d58a, earth: 0xb08a5a, none: 0x9a93a8,
+  fire: 0xe8643a, water: 0x3d8fe0, forest: 0x4fae5c, wind: 0x8fb8c8, light: 0xe8d58a, earth: 0xb08a5a, electric: 0xd3c57a, none: 0x9a93a8,
 };
 export const ROLE_NAME: Record<string, string> = {
   attack: "공격", guard: "수호", support: "보조", disrupt: "교란",

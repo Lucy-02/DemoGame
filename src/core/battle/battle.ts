@@ -14,7 +14,7 @@ import {
 import {
   STATUS_IDS, refOf, spendStatus, stackOf, statusN, statusStrength,
   type BCard, type BEnemy, type BSpirit, type BattleEvent, type BattleResult, type EnemySlot, type HoldChoice, type HoldState, type Intent,
-  type Planned, type Ref, type StarState, type StatusId,
+  type Planned, type Ref, type StarState, type StatusId, type Zone,
 } from "./state";
 import { STATUSES, clearStatuses, readyMult, tickStatuses, vulnMult } from "./statuses";
 
@@ -51,6 +51,8 @@ export class Battle implements Engine {
   planned: Planned[] = [];
   /** 이번 턴 적 행동 칸 */
   slots: EnemySlot[] = [];
+  /** 이번 턴 방전 칸 (2막) */
+  zones: Zone[] = [];
   now = 0;
   stars: StarState = { count: 0, thresholdCut: 0, pendingFalls: 0, choice: null };
   hold: HoldState = { thisTurn: 0, picks: [], held: [], highTide: false, nextTurnDraw: 0 };
@@ -90,7 +92,7 @@ export class Battle implements Engine {
       this.enemies.push({
         uid: i + 1, def, hp: def.hp, maxHp: def.hp, block: 0, status: {}, patternIdx: 0, phase: 1,
         charging: false, chargeTurn: 0, delayNext: 0, carryAt: null, dead: false,
-        traits: mine, chargeDmg: 0, gapOpened: false, ramp: 0,
+        traits: mine, chargeDmg: 0, gapOpened: false, ramp: 0, reflected: false,
       });
     });
     this.frontId = this.aliveSpirits().some((s) => s.id === frontId) ? frontId : this.aliveSpirits()[0].id;
@@ -165,11 +167,19 @@ export class Battle implements Engine {
     return Math.max(1, C.star_threshold - this.stars.thresholdCut);
   }
 
+  /** 이 시각에 이 적이 땅속에 있는지: 땅속이고, 그 전에 올라오는 행동이 없을 때 (2막) */
+  buriedAt(e: BEnemy, t: number): boolean {
+    if (statusN(e, "burrow") === 0) return false;
+    const rises = !this.currentMove(e).actions.some((a) => a.type === "burrow");
+    return !(rises && this.slots.some((x) => x.uid === e.uid && !x.done && x.at <= t));
+  }
+
   intent(e: BEnemy): Intent {
     const move = this.currentMove(e);
     const slot = this.slots.find((x) => x.uid === e.uid && !x.done);
     const at = slot ? slot.at : null;
-    const desc = move.actions.map((a) => ENEMY_ACTIONS[a.type].text(this, e, a as never)).join(", ");
+    const zone = move.zones?.length ? [`방전 칸 ${move.zones.length}곳 피해 ${move.zoneDmg ?? 0}`] : [];
+    const desc = [...zone, ...move.actions.map((a) => ENEMY_ACTIONS[a.type].text(this, e, a as never))].join(", ");
     if (!slot && move.charge && e.charging) return { name: move.name, at, text: `차징 중 → 다음 턴 ${desc}`, kind: "charge" };
     if (!slot) return { name: move.name, at, text: "이번 턴 행동 없음", kind: "skip" };
     if (move.charge && e.charging) return { name: move.name, at, text: `${desc} (끊기 가능)`, kind: "chargeReady" };
@@ -249,7 +259,9 @@ export class Battle implements Engine {
   /** 이번 턴 이 적이 움직이는 시각들. 한 번만 움직이는 적은 하나예요 (0062) */
   private moveTimes(e: BEnemy): number[] {
     const swift = e.traits.includes("swift") ? C.traits.swift_ms : 0;
-    const early = (t: number) => Math.max(200, t - swift);
+    // 살아 있는 다른 적이 재촉하면 그만큼 빨라져요 (2막)
+    const haste = this.aliveEnemies().reduce((a, x) => a + (x.uid === e.uid ? 0 : x.def.haste ?? 0), 0);
+    const early = (t: number) => Math.max(200, t - swift - haste);
     if (e.def.acts?.length) return e.def.acts[(this.turn - 1) % e.def.acts.length].map(early);
     const def = (C.enemy_at as Record<string, number>)[e.def.tier] ?? C.enemy_at.normal;
     return [early(this.currentMove(e).at ?? def)];
@@ -304,6 +316,7 @@ export class Battle implements Engine {
   /** 턴 시작: 적 행동을 시간축에 박아요. 차징을 시작하는 적은 이번 턴엔 행동하지 않아요. 취소된 행동은 건너뛰어요. */
   private placeEnemySlots() {
     this.slots = [];
+    this.zones = [];
     for (const e of this.aliveEnemies()) {
       if (statusN(e, "cancelNext") > 0) {
         delete e.status.cancelNext;
@@ -311,6 +324,8 @@ export class Battle implements Engine {
         continue;
       }
       const pat = this.patternOf(e);
+      const ahead = this.currentMove(e);
+      for (const [from, to] of ahead.zones ?? []) this.zones.push({ uid: e.uid, from, to, dmg: ahead.zoneDmg ?? 0 });
       const times = this.moveTimes(e);
       const delay = e.delayNext;
       e.delayNext = 0;
@@ -435,6 +450,7 @@ export class Battle implements Engine {
           this.runStatusHook(e, "turnStart");
           if (e.dead) continue;
           e.block = 0;
+          e.reflected = false;
           clearStatuses(e, "clearsAtTurnStart");
           const p2 = e.phase === 2 ? e.def.phase2 : undefined;
           const gain = this.inGap(e) ? 0 : (p2?.turnStartBlock ?? 0) + (e.traits.includes("sturdy") ? C.traits.sturdy_block : 0);
@@ -643,6 +659,8 @@ export class Battle implements Engine {
   private enemyAct(e: BEnemy) {
     const move = this.currentMove(e);
     e.charging = false;
+    // 땅속에 있던 적은 움직이면서 올라와요
+    if (statusN(e, "burrow") > 0 && !move.actions.some((a) => a.type === "burrow")) delete e.status.burrow;
     this.emit({ k: "enemyAct", uid: e.uid, move: move.name });
     this.log(`${e.def.name}: ${move.name}`);
     for (const a of move.actions) {
@@ -753,6 +771,16 @@ export class Battle implements Engine {
       this.sealed.push(c);
       return;
     }
+    // 방전 칸 안에서 끝난 카드: 주인이 피해를 받고, 카드는 그대로 나가요 (2막)
+    for (const z of this.zones) {
+      const src = this.enemy(z.uid);
+      if (src.dead || p.end < z.from || p.end >= z.to) continue;
+      this.hurtSpirit(owner, z.dmg, false, { src: "방전" });
+      if (owner.downed) {
+        this.sealed.push(c);
+        return;
+      }
+    }
     this.resolving = p;
     this.emit({ k: "spiritAct", id: owner.id, card: def.name });
     this.log(`${owner.def.name}: ${def.name}`);
@@ -780,7 +808,8 @@ export class Battle implements Engine {
   private cardTargets(def: CardDef, target: Ref | undefined, owner: BSpirit): Targets {
     if (def.target === "enemy") {
       let e = target?.side === "e" ? this.enemy(target.uid) : undefined;
-      if (!e || e.dead) e = this.aliveEnemies()[0];
+      // 고르지 않았으면 땅 위에 있는 적부터
+      if (!e || e.dead) e = this.aliveEnemies().find((x) => statusN(x, "burrow") === 0) ?? this.aliveEnemies()[0];
       return { enemies: e ? [e] : [], allies: [] };
     }
     if (def.target === "allEnemies") return { enemies: this.aliveEnemies(), allies: [] };
@@ -963,6 +992,14 @@ export class Battle implements Engine {
       amount: 0, crit: false, weakHit: false, resist: false, opening: false,
     });
     stackOf(owner, "struck").n = 1;
+    // 턴마다 처음 받은 타격을 되돌려요: 그 피해의 일부를 적 대신 때린 정령이 받아요 (2막)
+    if (e.def.reflectFirst && !e.reflected && statusN(e, "burrow") === 0) {
+      e.reflected = true;
+      const back = round(r.amount * e.def.reflectFirst);
+      r.amount -= back;
+      this.log(`${e.def.name}: 첫 타격을 되돌림`);
+      this.hurtSpirit(owner, back, false, { src: "되돌림" });
+    }
     this.hurtEnemy(e, r.amount, false, { crit: r.crit, weakHit: r.weakHit, resist: r.resist, ...(r.opening ? { opening: true } : {}) });
     if (statusN(owner, "starlight") > 0) {
       spendStatus(owner, "starlight");
@@ -993,6 +1030,11 @@ export class Battle implements Engine {
   }
 
   hurtEnemy(e: BEnemy, dmg: number, pierce: boolean, extra: { crit?: boolean; weakHit?: boolean; resist?: boolean; opening?: boolean } = {}) {
+    // 땅속에 있는 적은 피해를 받지 않아요 (2막)
+    if (statusN(e, "burrow") > 0) {
+      this.emit({ k: "damage", ref: refOf(e), amount: 0, blocked: 0 });
+      return;
+    }
     const r = runStages<Incoming>(INCOMING_STAGES, { b: this, target: e, attacker: null, dmg, pierce, wall: 0, wallKeeper: null, blocked: 0, real: 0 });
     this.emit({ k: "damage", ref: refOf(e), amount: r.real, blocked: r.blocked, ...extra });
     if (e.hp > 0 && e.charging && !e.gapOpened && this.currentMove(e).big) {

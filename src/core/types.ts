@@ -1,4 +1,4 @@
-export const ELEMENTS = ["fire", "water", "forest", "wind", "light", "earth", "none"] as const;
+export const ELEMENTS = ["fire", "water", "forest", "wind", "light", "earth", "electric", "none"] as const;
 export type Element = (typeof ELEMENTS)[number];
 /** 능력치. 스피드는 카드 시간을 나누는 값이에요 (시간 = 카드 기본 시간 ÷ 스피드, 0036). */
 export type StatKey = "hp" | "power" | "guard" | "focus" | "speed";
@@ -204,6 +204,8 @@ export type EnemyAction =
   | { type: "burnRamp"; value: number; step: number; target: EnemyTargetRule }
   /** 아군마다 쌓인 화상 × mult만큼 피해 */
   | { type: "detonateBurn"; mult: number }
+  /** 땅속으로 숨어요: 다음 행동 때까지 피해를 받지 않아요 (2막) */
+  | { type: "burrow" }
   /** 앞열을 HP가 가장 낮은 다른 정령으로 바꿔요 */
   | { type: "swapFront" };
 
@@ -216,6 +218,9 @@ export interface EnemyMove {
   big?: boolean;
   /** 끊겼을 때: clearBurn = 아군의 화상이 꺼지고 화상 세기가 처음으로 돌아가요 */
   onBreak?: "clearBurn";
+  /** 방전 칸: 이 행동을 앞둔 턴에 시간축에 깔리는 구간 [시작, 끝)(ms). 그 안에서 끝나는 카드의 주인이 zoneDmg를 받아요 (2막) */
+  zones?: [number, number][];
+  zoneDmg?: number;
   actions: EnemyAction[];
 }
 
@@ -234,6 +239,10 @@ export interface EnemyDef {
   desc?: string;
   /** 한 턴에 여러 번 움직이는 적: 턴마다 돌아가며 쓰는 행동 시각 목록(ms). 없으면 한 번 (0062) */
   acts?: number[][];
+  /** 살아 있는 동안 다른 적의 행동이 이만큼(ms) 빨라져요 (2막) */
+  haste?: number;
+  /** 턴마다 처음 받은 타격을 되돌려요: 그 피해의 이 비율을 적 대신 때린 정령이 받아요 (2막) */
+  reflectFirst?: number;
   pattern: EnemyMove[];
   phase2?: { hpBelow: number; turnStartBlock: number; pattern: EnemyMove[] };
 }
@@ -243,6 +252,8 @@ export interface EncounterDef {
   tier: "normal" | "elite" | "boss";
   /** 일반 편성: 처음 몇 전투는 weak, 그 뒤는 strong (0062) */
   pool?: "weak" | "strong";
+  /** 이 편성이 나오는 막 (1부터). 없으면 1막 */
+  act?: number;
   /** 이 편성의 기운. 오늘 센 기운과 같으면 더 자주 나오고, 보스는 센 기운의 보스가 나와요 */
   element: Element;
   enemies: string[];

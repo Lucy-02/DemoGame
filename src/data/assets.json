@@ -23,6 +23,19 @@
     "cinder_imp":   { "type": "shape", "shape": "imp", "color": "#e0452b", "size": 100 },
     "grimbark":     { "type": "shape", "shape": "tree", "color": "#6b4f2a", "size": 200 },
     "wildfire":     { "type": "shape", "shape": "orb", "color": "#e8643a", "size": 190 },
-    "gale":         { "type": "shape", "shape": "bird", "color": "#8fb8c8", "size": 190 }
+    "gale":         { "type": "shape", "shape": "bird", "color": "#8fb8c8", "size": 190 },
+    "rock_pile": { "type": "shape", "shape": "block", "color": "#b08a5a", "size": 100 },
+    "mole": { "type": "shape", "shape": "blob", "color": "#8a6a3f", "size": 70 },
+    "spark_bug": { "type": "shape", "shape": "orb", "color": "#e8d58a", "size": 55 },
+    "lightning_rod": { "type": "shape", "shape": "block", "color": "#a0b8c8", "size": 90 },
+    "firefly_swarm": { "type": "shape", "shape": "orb", "color": "#e8d58a", "size": 60 },
+    "mirror_shard": { "type": "shape", "shape": "block", "color": "#c6ecff", "size": 75 },
+    "wandering_armor": { "type": "shape", "shape": "block", "color": "#5b8fb9", "size": 110 },
+    "quake_turtle": { "type": "shape", "shape": "turtle", "color": "#b08a5a", "size": 130 },
+    "thunder_bird": { "type": "shape", "shape": "bird", "color": "#e8d58a", "size": 120 },
+    "lantern_keeper": { "type": "shape", "shape": "witch", "color": "#e8d58a", "size": 120 },
+    "landslide": { "type": "shape", "shape": "block", "color": "#6b4f2a", "size": 200 },
+    "thunderstorm": { "type": "shape", "shape": "bird", "color": "#a0b8c8", "size": 190 },
+    "high_noon": { "type": "shape", "shape": "orb", "color": "#e8d58a", "size": 190 }
   }
 }
