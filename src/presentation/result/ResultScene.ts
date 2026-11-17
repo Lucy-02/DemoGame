@@ -20,6 +20,7 @@ import { EQUIP_SLOT, FRAME, LANE } from "../run/layout";
 import { STAT_IDS } from "../run/viewmodel";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
+import { audioOf } from "../audio";
 import { DEFAULT_RESULT, RESULTS } from "./fixtures";
 import { resultVM } from "./fromReward";
 import { EQUIP_TIP, REWARD, STRIP, placeResult } from "./layout";
@@ -170,6 +171,7 @@ export class ResultScene extends Phaser.Scene {
   private giveEquip(spirit: string, option: EquipOptionVM) {
     if (this.phase !== "equip") return;
     if (this.session && !this.session.dispatch({ kind: "equip", spirit, replace: option.replace })) return;
+    audioOf(this)?.play("equip");
     this.vm = { ...this.vm, lanes: this.vm.lanes.map((l) => (l.id === spirit ? option.after : l)) };
     this.finishEquip({ spirit });
   }

@@ -1,5 +1,5 @@
 // 손패 띠: 유리 띠, 마력 동전, 정령별 카드 묶음, 턴 종료·더미. 정본 .band, .mana, .hand, .grp, .endw
-import { SFX_DATA } from "../../audio";
+import { SFX_DATA, type SfxId } from "../../audio";
 import * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { box, circle } from "../../style/draw";
@@ -309,7 +309,7 @@ export function drawEnd(scene: Phaser.Scene, vm: BattleVM, onEnd?: () => void, w
     children: [pile(PILE_ICONS[0], p.draw), pile(PILE_ICONS[1], p.discard), pile(PILE_ICONS[2], p.exhaust)],
   });
   const button = (lit: boolean, click?: () => void): Node => ({
-    t: "row", w: END.w, h: B.h, radius: B.radius, align: "center", justify: "center", onClick: click,
+    t: "row", w: END.w, h: B.h, radius: B.radius, align: "center", justify: "center", onClick: click, sfx: "turn.end" satisfies SfxId,
     style: lit ? { fill: P.veil["09"], ring: { width: B.ring, color: P.veil["50"] } } : { fill: P.endCalm, ring: { width: B.ring, color: P.endCalmLine } },
     children: [text(COPY.endTurn, T.endTurn, lit ? P.ink : P.ink2)],
   });

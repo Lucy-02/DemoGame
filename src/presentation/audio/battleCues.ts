@@ -18,8 +18,11 @@ export function cueOf(ev: BattleEvent): SfxId | undefined {
     case "damage": return hit(ev);
     case "block": return "block";
     case "status":
-    case "heal":
     case "freeze": return "status";
+    case "heal": return "heal";
+    case "release": return "release";
+    case "downed": return "down.ally";
+    case "enemyDead": return "down.enemy";
     case "charge": return "charge";
     case "cancel": return "break";
     default: return undefined;
