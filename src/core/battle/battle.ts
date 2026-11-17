@@ -657,6 +657,7 @@ export class Battle implements Engine {
     // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
     for (const p of left) if (p.card) this.discard.push(p.card);
     this.planned = [];
+    this.emit({ k: "turnEnd" });
     this.finishTurn(0);
   }
 

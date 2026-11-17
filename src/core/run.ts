@@ -94,7 +94,7 @@ export interface RunSave {
   bossDefeated: boolean;
 }
 
-export const FLOORS = 7; // 보스 전 층 수. 보스는 FLOORS + 1층
+export const FLOORS = 5; // 보스 전 층 수. 보스는 FLOORS + 1층
 const COLS = 4;
 
 export class Run {

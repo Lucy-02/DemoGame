@@ -4,7 +4,7 @@ import { tokens } from "../../../design/tokens";
 import { withAlpha } from "../../style/color";
 import { canvasTexture, ellipse } from "../../style/gradient";
 import { BG, FLOOR, FRAME } from "../layout";
-import { stageArt } from "../../stage";
+import { stageArt, stageImage } from "../../stage";
 
 const P = tokens.provisional.palette;
 const KEY = "battle:backdrop";
@@ -13,8 +13,8 @@ export function drawBackdrop(scene: Phaser.Scene, act?: number) {
   const art = stageArt(scene, act);
   if (art) {
     return scene.add.container(0, 0, [
-      scene.add.image(0, 0, art.far).setOrigin(0, 0),
-      scene.add.image(0, 0, art.ground).setOrigin(0, 0),
+      stageImage(scene, art.far),
+      stageImage(scene, art.ground),
     ]);
   }
   canvasTexture(scene, KEY, FRAME.w, FRAME.h, (ctx) => {
