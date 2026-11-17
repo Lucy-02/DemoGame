@@ -139,4 +139,40 @@ describe("게임 세션", () => {
     expect(game.garden.state.front).toBe(pick);
     expect(game.planRun().front).toBe(pick);
   });
+
+  it("탐험 포기는 패배와 같아요: 판이 닫히고 이긴 전투의 경험은 남아요 (0084)", async () => {
+    const store = new MemoryStore();
+    const game = await GameSession.load(store, seeds);
+    const run = game.startRun();
+    run.enter(run.run.reachable()[0].id);
+    game.finishBattle(outcome(run, true));
+    run.finishReward();
+    game.abandonRun();
+    expect(run.phase).toEqual({ kind: "over", victory: false });
+    expect(game.run).toBeUndefined();
+    expect(game.lastRun?.victory).toBe(false);
+    expect(game.garden.state.runs).toBe(1);
+    expect(game.garden.state.spirits[0].exp).toBe(GROWTH.exp.normal);
+    await game.flush();
+    expect(store.data.has(SAVE_KEYS.run)).toBe(false);
+  });
+
+  it("메인으로 나갔다 오면 그 칸의 처음부터예요: 전투가 같은 시드로 다시 열려요 (0084)", async () => {
+    const store = new MemoryStore();
+    const game = await GameSession.load(store, seeds);
+    const run = game.startRun();
+    run.enter(run.run.reachable()[0].id);
+    const rng = run.run.rng.state;
+    // 전투를 열면 판의 난수가 하나 나가요
+    run.run.rng.int(0, 1e9);
+    game.suspendRun();
+    const back = game.run!;
+    expect(back).not.toBe(run);
+    expect(back.phase).toEqual(run.phase);
+    expect(back.run.rng.state).toEqual(rng);
+    // 되돌린 판도 칸 사이에 저장해요
+    game.finishBattle(outcome(back, true));
+    await game.flush();
+    expect(JSON.parse(store.data.get(SAVE_KEYS.run)!).phase.kind).toBe("reward");
+  });
 });

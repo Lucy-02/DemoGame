@@ -214,3 +214,6 @@
 ## 2막 규칙 표시 (2026-11-17, 작업 가정 → 0096)
 - 방전 띠 · 땅속 · 되돌리기 칩: https://claude.ai/artifact/GaerMky9DQJuSMPa2XixY8
 - 사본: /mnt/project-files/design/act2-display/act2-display.html
+
+## 설정 · 판 안 메뉴 (2026-11-17, 0090)
+- 캡처: /mnt/project-files/settings-menu/ (A 가운데 창 = 채택, B 왼쪽 세로 메뉴 · C 메뉴와 설정 나란히 = 기각). 디렉터 판단, Lucy 확인 대기

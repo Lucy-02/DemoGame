@@ -1,10 +1,11 @@
 // 새 화면(정본 기준)으로 게임을 띄워요. 기준 해상도는 정본 프레임과 같은 1280×800.
-// 창 크기에 맞춰 늘이지 않고 1280×800 고정 뷰포트로 그려요.
+// 그리는 크기는 1280×800 그대로이고, 창에 맞춰 비율을 지키며 늘여요. 남는 곳은 바닥색이에요 (0084 4번).
 // screen이 없으면 저장에 이어진 게임(메인 화면에서 시작, flow.ts)이고, 화면 이름을 주면 그 화면의 고정 장면이에요.
 import * as Phaser from "phaser";
 import { tokens } from "../design/tokens";
 import type { GameSession } from "../session/game";
-import { defaultSettings, type Volume } from "../session/settings";
+import type { SettingsSession } from "../session/settings";
+import { defaultSettings } from "../session/settings";
 import { installAudio } from "./audio";
 import { GameFlow } from "./flow";
 import { LEGACY_SCENES, waitForLegacyFonts } from "./placeholder";
@@ -21,6 +22,9 @@ import { RUN_END_SCENE, RunEndScene, type RunEndSceneData } from "./runEnd/RunEn
 import { SHOP_SCENE, ShopScene, type ShopSceneData } from "./shop/ShopScene";
 import { DECK_SCENE, DeckScene, type DeckSceneData } from "./deck/DeckScene";
 import { MAP_SCENE, MapScene, type MapSceneData } from "./map/MapScene";
+import { SETTINGS_KEY } from "./menu/hooks";
+import { MENU_SCENE, MenuScene, type MenuSceneData } from "./menu/MenuScene";
+import { SETTINGS_SCENE, SettingsScene, type SettingsSceneData } from "./menu/SettingsScene";
 import { EVOLUTION_SCENE, EvolutionScene } from "./evolution/EvolutionScene";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
 import type { TabId } from "./spirits/viewmodel";
@@ -30,17 +34,17 @@ import { VEIL_SCENE, VeilScene } from "./veil";
 
 export interface GameOptions {
   /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
-  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd" | "deck" | "map" | "join" | "depart";
+  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd" | "deck" | "map" | "join" | "depart" | "menu" | "settings";
   /** 저장에 이어진 게임의 세션 (screen이 없을 때) */
   session?: GameSession;
   /** 시험 판: 메인 화면 없이 바로 떠나요 (?screen=legacy) */
   trial?: boolean;
   /** 메인 화면의 종료 */
   quit?: () => void;
+  /** 설정: 소리 볼륨과 재생 속도가 여기서 와요. 없으면 기본값 */
+  settings?: SettingsSession;
   /** 메인 화면 구석에 적는 버전 */
   version?: string;
-  /** 저장된 볼륨 묶음 셋. 없으면 기본값 */
-  volume?: Volume;
   /** 전투 결과: 받은 상태로 시작 (카드 key 또는 skip, 시각 검증용) */
   taken?: string;
   /** 정령 관리: 처음 고를 정령·탭, 패널 접힘 (?select=&tab=&closed) */
@@ -68,8 +72,8 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
     width: FRAME.w,
     height: FRAME.h,
     backgroundColor: tokens.provisional.palette.floor,
-    // 가운데 정렬은 index.html의 #game(flex)이 맡아요.
-    scale: { mode: Phaser.Scale.NONE },
+    // 부모(#game) 크기에 맞춰 비율을 지키며 늘여요. 가운데 정렬은 index.html의 #game(flex)이 맡고, 남는 곳은 그 바닥색이에요
+    scale: { mode: Phaser.Scale.FIT },
     scene: [],
     callbacks: {
       postBoot: (game) => {
@@ -85,15 +89,20 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           });
         }
         // 소리 (0084 1번). 화면은 audioOf(scene)로 꺼내 써요
-        installAudio(game, opts.volume ?? defaultSettings().volume);
+        const audio = installAudio(game, (opts.settings?.state ?? defaultSettings()).volume);
+        // 설정에서 바꾼 볼륨은 바로 들려요. 화면은 hooks의 settingsOf(scene)로 설정을 읽어요
+        if (opts.settings) {
+          game.registry.set(SETTINGS_KEY, opts.settings);
+          opts.settings.onChange((s) => audio?.setVolumes(s.volume));
+        }
         if (live) {
-          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene]] as const) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene], [MENU_SCENE, MenuScene], [SETTINGS_SCENE, SettingsScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
           // 화면 전환 막: 맨 나중에 더해 늘 맨 위에 있어요 (0086)
           game.scene.add(VEIL_SCENE, VeilScene, true);
-          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit, version: opts.version }).start();
+          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit, version: opts.version, settings: opts.settings }).start();
           return;
         }
         if (opts.screen === "spirits") {
@@ -148,6 +157,16 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           // 덱 보기는 다른 화면 위에 뜨는 창이라, 확인할 때는 전투 고정 장면 위에 띄워요
           game.scene.add(BATTLE_SCENE, BattleScene, true, {});
           game.scene.add(DECK_SCENE, DeckScene, true, { scene: opts.scene } satisfies DeckSceneData);
+          return;
+        }
+        if (opts.screen === "menu") {
+          game.scene.add(BATTLE_SCENE, BattleScene, true, {});
+          game.scene.add(MENU_SCENE, MenuScene, true, { hover: opts.hover, confirm: opts.scene === "confirm", onHome: () => {} } satisfies MenuSceneData);
+          return;
+        }
+        if (opts.screen === "settings") {
+          game.scene.add(BATTLE_SCENE, BattleScene, true, {});
+          game.scene.add(SETTINGS_SCENE, SettingsScene, true, { settings: opts.settings, hover: opts.hover } satisfies SettingsSceneData);
           return;
         }
         if (opts.screen === "shop") {

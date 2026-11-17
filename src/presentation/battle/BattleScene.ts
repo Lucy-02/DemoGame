@@ -11,6 +11,7 @@ import { canonRest } from "./fixtures/canonRest";
 import { battleVM, cardKey, cardUid, refOf, releaseId } from "./fromBattle";
 import { tokens } from "../../design/tokens";
 import { ms } from "../style/ease";
+import { openRunMenu, playbackScale } from "../menu/hooks";
 import { guideStep, type GuideSeen } from "./guide";
 import { reducedMotion } from "../style/motion";
 import { playbackFrames } from "./playback";
@@ -151,7 +152,7 @@ export class BattleScene extends Phaser.Scene {
     // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
     for (const s of this.session?.battle.spirits ?? []) bakeSpiritFace(this, s.id, s.run.stage);
     drawBackdrop(this);
-    drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) });
+    drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) }, false);
     this.fieldLayer = this.add.container(0, 0);
     this.rest = this.drawField(null);
     this.shown = this.rest;
@@ -161,6 +162,10 @@ export class BattleScene extends Phaser.Scene {
     const endWas = this.session && this.endPrev?.session === this.session ? this.endPrev.go : undefined;
     const endGo = drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined, endWas);
     if (this.session) this.endPrev = { session: this.session, go: endGo };
+    // 재생 속도(설정)는 턴 재생에만 걸려요 (0084 7번): 행동 사이 시간과 그동안의 움직임 · 소리 박자가 함께 빨라져요
+    const speed = this.playback ? playbackScale(this) : 1;
+    this.tweens.timeScale = speed;
+    this.time.timeScale = speed;
     // 재생 중 소리는 맞는 때(유닛이 밀리는 때)에 맞춰 나요 (0086 4번). 그 밖에는 바로
     const cues = this.cues?.[0] ?? [];
     const sound = () => { for (const id of cues) audioOf(this)?.play(id); };
@@ -193,7 +198,11 @@ export class BattleScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
     this.input.on("pointermove", (p: Phaser.Input.Pointer) => this.move(p));
     this.input.on("pointerup", (p: Phaser.Input.Pointer) => this.release(p));
-    this.input.keyboard?.on("keydown-ESC", () => this.cancel());
+    // Esc: 집은 카드가 있으면 내려놓고, 없으면 판 안 메뉴 (0084)
+    this.input.keyboard?.on("keydown-ESC", () => {
+      if (this.dragging || this.press || this.held) this.cancel();
+      else openRunMenu(this);
+    });
     this.begin();
     this.showGuide();
     if (this.vm.pick && !this.playback) this.pick = createPick(this, this.vm.pick, (keys) => this.picked(keys));

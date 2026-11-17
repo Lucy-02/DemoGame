@@ -5,6 +5,7 @@
 // 정예 보상은 카드 아래 장비 줄이 처음부터 보이고, 카드를 받거나 넘긴 뒤에 장비를 누구에게 줄지 골라요 (0051 · 0064 Q2-A).
 // 받을 수 있는 칸이 점선으로 밝아지고, 줄이나 칸에 올리면 장비가 비쳐 보이며 달라지는 것은 줄 왼쪽 말풍선에 나와요.
 // 세션을 주면 런에 연결돼요: 고르는 즉시 규칙에 적용하고 onDone으로 나가요. 세션이 없으면 고정 장면이에요.
+import { bindMenuKey } from "../menu/hooks";
 import { MOVE, fadeAway, fadeInScene, reducedMotion } from "../style/motion";
 import * as Phaser from "phaser";
 import type { RewardSession } from "../../session/reward";
@@ -114,6 +115,7 @@ export class ResultScene extends Phaser.Scene {
     // 다시 그리면 입력 대상이 새로 생겨요. 마우스를 움직이지 않아도 그 위의 상태를 유지해요
     this.input.setPollAlways();
     this.paint();
+    bindMenuKey(this);
     // 전투 위에 뜨는 창은 흐리게 나타나요 (0086)
     if (this.over) fadeInScene(this);
     Object.assign(window, { __screenReady: RESULT_SCENE });

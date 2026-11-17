@@ -32,6 +32,8 @@ export type TrialOptions = Omit<RunOptions, "seed" | "garden">;
 export class GameSession {
   private _run?: RunSession;
   private _last?: RunRecord;
+  /** 마지막으로 남긴 판 저장 (메인으로 나갔다 올 때 그 칸의 처음으로 되돌려요) */
+  private runText?: string;
   private writes: Promise<void> = Promise.resolve();
 
   private constructor(
@@ -51,7 +53,10 @@ export class GameSession {
     const game = new GameSession(garden, store, newSeed);
     if (fresh) game.write(SAVE_KEYS.garden, garden.snapshot());
     const runText = await store.read(SAVE_KEYS.run);
-    if (runText) game.attach(RunSession.restore(JSON.parse(runText) as RunSaveFile));
+    if (runText) {
+      game.attach(RunSession.restore(JSON.parse(runText) as RunSaveFile));
+      game.runText = runText;
+    }
     return game;
   }
 
@@ -116,6 +121,25 @@ export class GameSession {
   }
 
   /**
+   * 탐험 포기 (0084 5번): 패배와 같아요. 판이 그 자리에서 닫히고, 이긴 전투의 경험과 지닌 장비는 남아요.
+   * 끝난 판은 lastRun으로 결과를 그려요.
+   */
+  abandonRun() {
+    const run = this.need();
+    run.abandon();
+    this.close(run);
+  }
+
+  /**
+   * 메인으로 나가요 (0084 6번): 판을 마지막 저장(그 칸에 들어온 때)으로 되돌려요.
+   * 다시 이으면 그 칸의 처음부터예요. 전투는 같은 시드로 처음부터 다시 해요. 끈 뒤 다시 켠 것과 같아요.
+   */
+  suspendRun() {
+    if (!this._run || !this.runText) return;
+    this.attach(RunSession.restore(JSON.parse(this.runText) as RunSaveFile));
+  }
+
+  /**
    * 판을 닫고 정원으로 돌아가요. 판 수가 오르고, 이번 탐험에서 받은 카드로 갈래 조건이 쌓여요.
    * 지닌 장비는 모두 남겨요(0056: 남기는 수 = 지닌 수, 져도 남김). 남길지 고르는 화면은 아직 없어요(OPEN_QUESTIONS).
    */
@@ -130,6 +154,7 @@ export class GameSession {
     const victory = run.phase.kind === "over" && run.phase.victory;
     this._last = { run: run.run, victory, before, after: this.garden.state };
     this._run = undefined;
+    this.runText = undefined;
     if (this.store) this.queue(() => this.store!.remove(SAVE_KEYS.run));
   }
 
@@ -152,7 +177,8 @@ export class GameSession {
     const run = this._run;
     // 끝난 판은 남기지 않아요. close가 지워요
     if (!run || run.phase.kind === "over") return;
-    this.write(SAVE_KEYS.run, JSON.stringify(run.save()));
+    this.runText = JSON.stringify(run.save());
+    this.write(SAVE_KEYS.run, this.runText);
   }
 
   private write(key: string, text: string) {
