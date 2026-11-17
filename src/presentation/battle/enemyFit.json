@@ -1,0 +1,17 @@
+{
+  "moss_slime": { "h": 72, "sink": 5 },
+  "moss_slime_first": { "of": "moss_slime" },
+  "bramble_rat": { "h": 64, "sink": 2 },
+  "wisp": { "h": 46, "sink": -22 },
+  "rubble_shell": { "h": 70, "sink": 3 },
+  "tempest_crow": { "h": 80, "sink": -8 },
+  "whirl": { "h": 94 },
+  "rust_golem": { "h": 98, "sink": 2 },
+  "bog_witch": { "h": 96, "sink": 4 },
+  "frostfang": { "h": 92, "sink": 2 },
+  "frost_pup": { "h": 50, "sink": 2 },
+  "cinder_imp": { "h": 96, "sink": 2 },
+  "grimbark": { "h": 102, "sink": 3 },
+  "wildfire": { "h": 100, "sink": 5 },
+  "gale": { "h": 98, "sink": -2 }
+}

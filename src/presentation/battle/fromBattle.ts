@@ -352,7 +352,7 @@ function weakTo(element: string): string | undefined {
 
 function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[]): EnemyVM {
   return {
-    art: "", hp: e.hp, maxHp: e.maxHp, block: e.block || undefined,
+    art: e.def.id, hp: e.hp, maxHp: e.maxHp, block: e.block || undefined,
     element: ELEMENT_ICON[e.def.element] ?? ELEMENT_ICON.none, weakTo: weakTo(e.def.element),
     statuses: statusesOf(e),
     traits: traitsOf(e),
