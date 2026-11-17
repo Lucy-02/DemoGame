@@ -15,10 +15,12 @@ export type VolumeId = "master" | "music" | "sfx";
 /** 턴 재생 속도 두 단계 (0084 7번) */
 export type Speed = "normal" | "fast";
 
+/** 볼륨 묶음 셋 (0084 1번). 0 ~ 1. 실제 음량 = master × (music 또는 sfx) */
+export type Volume = Record<VolumeId, number>;
+
 export interface Settings {
   version: number;
-  /** 0~1 */
-  volume: Record<VolumeId, number>;
+  volume: Volume;
   fullscreen: boolean;
   speed: Speed;
   /** 화면 흔들림 · 번쩍임. false면 꺼요 */

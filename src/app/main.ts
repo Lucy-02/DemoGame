@@ -11,6 +11,7 @@
 // ?screen=join 은 깃들기(?scene=first|second&select=<후보 id>&hover=chip&taken=<후보 id>: 깃든 끝 상태).
 // ?screen=depart 는 출전 준비(?scene=three|two&select=<앞열로 바꿀 정령 id>&hover=<정령 id>|strong).
 // ?screen=menu 는 판 안 메뉴(?scene=menu|confirm&hover=settings|toHome|giveUp), ?screen=settings 는 설정 창(?hover=speed|shake). 둘 다 전투 고정 장면 위에 떠요.
+// ?slow=4 는 모션을 4배 느리게 (어느 화면이든).
 // ?screen=legacy 는 정원·저장 없이 바로 떠나는 시험 판(&party=a,b,c&adult&unlockAll&seed=). 칸마다 새 화면이 없으면 임시 장면이 맡아요.
 import { C, SPIRITS } from "../core/data";
 import { getPlatform } from "../platform";
@@ -29,13 +30,14 @@ async function start() {
   const get = (k: string) => params.get(k) ?? undefined;
   const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" || screen === "menu" || screen === "settings" ? screen : undefined;
   const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform);
-  // 설정은 저장에 이어진 게임에서만 읽고 남겨요. 전체화면은 설정이 정본이고, 창이 바뀌면(F11 · Esc) 설정이 따라가요 (0084 3 · 4번)
-  const settings = fixture || screen === "legacy" ? undefined : await SettingsSession.load(platform);
-  if (settings) followFullscreen(platform, settings);
+  // 설정은 어느 화면이든 읽어요(소리 볼륨). 전체화면은 저장에 이어진 게임에서만 창에 입혀요: 설정이 정본이고, 창이 바뀌면(F11 · Esc) 설정이 따라가요 (0084 3 · 4번)
+  const settings = await SettingsSession.load(platform);
+  if (!fixture && screen !== "legacy") followFullscreen(platform, settings);
   Object.assign(window, { session, settings });
   const game = await startGame("game", {
     screen: fixture, session, settings, trial: screen === "legacy", quit: () => void platform.quit(),
     hover: get("hover"), scene: get("scene"), lift: get("lift"), select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
+    slow: Number(params.get("slow")) || undefined,
   });
   Object.assign(window, { game });
 }

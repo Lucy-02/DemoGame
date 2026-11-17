@@ -5,6 +5,8 @@ import * as Phaser from "phaser";
 import { tokens } from "../design/tokens";
 import type { GameSession } from "../session/game";
 import type { SettingsSession } from "../session/settings";
+import { defaultSettings } from "../session/settings";
+import { installAudio } from "./audio";
 import { GameFlow } from "./flow";
 import { LEGACY_SCENES, waitForLegacyFonts } from "./placeholder";
 import { BATTLE_SCENE, BattleScene } from "./battle/BattleScene";
@@ -20,6 +22,7 @@ import { RUN_END_SCENE, RunEndScene, type RunEndSceneData } from "./runEnd/RunEn
 import { SHOP_SCENE, ShopScene, type ShopSceneData } from "./shop/ShopScene";
 import { DECK_SCENE, DeckScene, type DeckSceneData } from "./deck/DeckScene";
 import { MAP_SCENE, MapScene, type MapSceneData } from "./map/MapScene";
+import { SETTINGS_KEY } from "./menu/hooks";
 import { MENU_SCENE, MenuScene, type MenuSceneData } from "./menu/MenuScene";
 import { SETTINGS_SCENE, SettingsScene, type SettingsSceneData } from "./menu/SettingsScene";
 import { EVOLUTION_SCENE, EvolutionScene } from "./evolution/EvolutionScene";
@@ -27,6 +30,7 @@ import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/Sp
 import type { TabId } from "./spirits/viewmodel";
 import { installCursor } from "./style/cursor";
 import { loadFonts } from "./style/fonts";
+import { VEIL_SCENE, VeilScene } from "./veil";
 
 export interface GameOptions {
   /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
@@ -37,7 +41,7 @@ export interface GameOptions {
   trial?: boolean;
   /** 메인 화면의 종료 */
   quit?: () => void;
-  /** 설정 (저장에 이어진 게임) */
+  /** 설정: 소리 볼륨과 재생 속도가 여기서 와요. 없으면 기본값 */
   settings?: SettingsSession;
   /** 전투 결과: 받은 상태로 시작 (카드 key 또는 skip, 시각 검증용) */
   taken?: string;
@@ -53,6 +57,8 @@ export interface GameOptions {
   scene?: string;
   /** 들기 크기 바꿔 보기 (battle/layout LIFT_STYLES) */
   lift?: string;
+  /** 모션 느리게 보기 (?slow=4 는 4배 느리게). 모션을 확인할 때만 써요 */
+  slow?: number;
 }
 
 export async function startGame(parent: string, opts: GameOptions = {}): Promise<Phaser.Game> {
@@ -71,11 +77,29 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
       postBoot: (game) => {
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
+        if (opts.slow && opts.slow > 0) {
+          const k = 1 / opts.slow;
+          game.events.on(Phaser.Core.Events.PRE_STEP, () => {
+            for (const s of game.scene.getScenes(true)) {
+              s.tweens.timeScale = k;
+              s.time.timeScale = k;
+            }
+          });
+        }
+        // 소리 (0084 1번). 화면은 audioOf(scene)로 꺼내 써요
+        const audio = installAudio(game, (opts.settings?.state ?? defaultSettings()).volume);
+        // 설정에서 바꾼 볼륨은 바로 들려요. 화면은 hooks의 settingsOf(scene)로 설정을 읽어요
+        if (opts.settings) {
+          game.registry.set(SETTINGS_KEY, opts.settings);
+          opts.settings.onChange((s) => audio?.setVolumes(s.volume));
+        }
         if (live) {
           for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene], [MENU_SCENE, MenuScene], [SETTINGS_SCENE, SettingsScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
+          // 화면 전환 막: 맨 나중에 더해 늘 맨 위에 있어요 (0086)
+          game.scene.add(VEIL_SCENE, VeilScene, true);
           new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit, settings: opts.settings }).start();
           return;
         }
@@ -140,7 +164,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         }
         if (opts.screen === "settings") {
           game.scene.add(BATTLE_SCENE, BattleScene, true, {});
-          game.scene.add(SETTINGS_SCENE, SettingsScene, true, { hover: opts.hover } satisfies SettingsSceneData);
+          game.scene.add(SETTINGS_SCENE, SettingsScene, true, { settings: opts.settings, hover: opts.hover } satisfies SettingsSceneData);
           return;
         }
         if (opts.screen === "shop") {

@@ -26,11 +26,8 @@ export function bindMenuKey(scene: Phaser.Scene) {
 
 export const settingsOf = (scene: Phaser.Scene) => (scene.game.registry.get(SETTINGS_KEY) as SettingsSession | undefined)?.state;
 
-/** 턴 재생에서 행동 하나를 보여 주는 시간 (0084 7번: 속도는 턴 재생에만 걸려요) */
-export function playbackStep(scene: Phaser.Scene): number {
+/** 턴 재생에 거는 배속 (0084 7번: 속도는 턴 재생에만 걸려요). 보통 = 1, 빠르게 = 보통 시간 ÷ 빠른 시간 */
+export function playbackScale(scene: Phaser.Scene): number {
   const M = tokens.provisional.motion.playback;
-  return ms(settingsOf(scene)?.speed === "fast" ? M.fastStep : M.step);
+  return settingsOf(scene)?.speed === "fast" ? ms(M.step) / ms(M.fastStep) : 1;
 }
-
-/** 턴 재생 동안 움직임에 거는 배속 (보통 = 1) */
-export const playbackScale = (scene: Phaser.Scene) => ms(tokens.provisional.motion.playback.step) / playbackStep(scene);

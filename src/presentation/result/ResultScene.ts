@@ -6,6 +6,7 @@
 // 받을 수 있는 칸이 점선으로 밝아지고, 줄이나 칸에 올리면 장비가 비쳐 보이며 달라지는 것은 줄 왼쪽 말풍선에 나와요.
 // 세션을 주면 런에 연결돼요: 고르는 즉시 규칙에 적용하고 onDone으로 나가요. 세션이 없으면 고정 장면이에요.
 import { bindMenuKey } from "../menu/hooks";
+import { fadeInScene } from "../style/motion";
 import * as Phaser from "phaser";
 import type { RewardSession } from "../../session/reward";
 import { createHandCard, preloadHandCard } from "../card/HandCard";
@@ -113,6 +114,8 @@ export class ResultScene extends Phaser.Scene {
     this.input.setPollAlways();
     this.paint();
     bindMenuKey(this);
+    // 전투 위에 뜨는 창은 흐리게 나타나요 (0086)
+    if (this.over) fadeInScene(this);
     Object.assign(window, { __screenReady: RESULT_SCENE });
   }
 

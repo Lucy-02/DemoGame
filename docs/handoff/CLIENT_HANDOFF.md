@@ -18,7 +18,7 @@
 - **정본 값은 확정 토큰이 아니에요.** "정본을 따른다"와 "그 값을 확정한다"는 다른 일이라, 정본 값은 `provisional` 구역에만 둬요.
 - **정본 CSS는 실제로 적용되는 값만 옮겨요.** 정의 안 된 변수, 덮어쓰기, 무효 선언은 브라우저에서 그려지지 않아요(예: `.calc`의 `border-top`은 `--me`가 없어 선이 없음). 판단 기준은 CSS 원문이 아니라 정본 캡처(frame-*.png)예요.
 - 개발 서버 기본 화면은 저장에 이어진 게임(메인 화면)이에요. 새 전투 화면 고정 장면은 `?screen=battle`, 정원·저장 없는 시험 판은 `?screen=legacy`.
-- 1280×800 고정 뷰포트로 그리고, 브라우저에서는 개발용 창 틀(제목줄·전체 화면·닫기)을 씌워요. 창에 맞춰 확대하지 않아요.
+- 1280×800으로 그리고 창에 맞춰 비율을 지키며 늘여요(0084 4번 · 0089). 브라우저에서는 개발용 창 틀(제목줄·전체 화면·닫기)을 1280×800으로 씌워요.
 
 ### 결정이 필요한 것은 묻기
 - 새 레이아웃, 새 색, 새 모션 값, 새 그림, 네이밍은 만들지 않고 2~3개 선택지와 근거를 들고 Lucy에게 물어요. 결정 카드 하나에 추천 하나.
@@ -89,7 +89,7 @@
 ```
 src/app/main.ts                기본 = 저장에 이어진 게임(GameSession.load), ?screen=battle 등 = 고정 장면, ?screen=legacy = 시험 판, ?hover=<cardKey>
                                브라우저면 개발용 창 틀(index.html #dev-window, body.dev-window)을 켬
-src/presentation/game.ts       Phaser.Game (WEBGL, 1280×800, Scale.NONE). 글꼴 로드 후 시작, postBoot에서 BattleScene 추가
+src/presentation/game.ts       Phaser.Game (WEBGL, 1280×800, Scale.FIT). 글꼴 로드 후 시작, postBoot에서 BattleScene 추가
 src/presentation/faces.ts      IconId, FaceId, FACES, faceKey, preloadFaces (battle↔card 순환을 끊으려고 여기 둠)
 src/presentation/battle/
   BattleScene.ts               init({vm?, hover?}) → create()에서 views를 순서대로 그림
@@ -139,6 +139,8 @@ src/session/run.ts             판 세션: 판의 자리(phase) + enter·leave·
 src/session/game.ts            게임 세션: 정원 + 판 + platform 저장. 판 떠나기·경험(grantBattle)·판 닫기(endRun)
 src/presentation/flow.ts       게임 흐름: phase를 보고 그 칸을 맡은 화면을 열어요. 새 화면이 없는 칸은 임시 장면
 src/core/garden.ts             판 밖 정령 상태와 성장 규칙 (0021), 수치는 src/data/growth.json
+src/presentation/menu/         판 안 메뉴 · 포기 확인(MenuScene) · 설정 창(SettingsScene), 0089. hooks.ts: 톱니 · Esc로 메뉴 열기(openRunMenu · bindMenuKey), settingsOf(scene), playbackScale. 고정 장면 ?screen=menu|settings
+src/session/settings.ts        설정 값(볼륨 셋 · 전체화면 · 속도 · 흔들림)과 저장(키 settings). SettingsSession: state · set(patch) · onChange
 src/presentation/style/        CSS 재현 도우미 (6절). flex 노드에 onClick(클릭 영역)·wrap(줄바꿈 글자)
 src/presentation/placeholder/  예전 임시 장면. flow.ts에서 새 화면이 없는 칸만 맡아요. 새 화면이 규칙에 연결될 때마다 해당 화면을 지움
 src/core, src/data             게임 로직·데이터. UI 작업에서 건드리지 않음. 바꾸면 골든 스냅샷 이유를 PR에
@@ -184,8 +186,8 @@ scripts/                       build-tokens, check-literals, check-assets
 - 말풍선 문단: 본문 13px/1.5(강조 14.5, 용어 점선 밑줄 offset 3), 계산 12px(강조 13, padding-top 5, **선 없음**), 이유 12.5px, 주인 12px.
 
 ### 뷰포트
-- 1280×800 고정(`Scale.NONE`). 가운데 정렬은 Phaser autoCenter를 쓰지 않고 `index.html`의 flex가 맡아요(둘 다 쓰면 두 번 밀려요).
-- Electron 창도 1280×800(useContentSize). Windows 배율이 100%가 아니면 브라우저가 캔버스를 늘려서 살짝 흐릴 수 있어요. 고해상도 대응(devicePixelRatio)은 아직 안 했어요.
+- 1280×800으로 그리고 `Scale.FIT`으로 부모(#game)에 맞춰 늘여요. 가운데 정렬은 Phaser autoCenter를 쓰지 않고 `index.html`의 flex가 맡아요(둘 다 쓰면 두 번 밀려요).
+- Electron 창은 1280×800(useContentSize)으로 열리고 16:10으로만 늘어나요(최소 640×400). 늘이면 캔버스가 CSS로 커져서 글자가 조금 흐려요. Windows 배율이 100%가 아니면 브라우저가 캔버스를 늘려서 살짝 흐릴 수 있어요. 고해상도 대응(devicePixelRatio)은 아직 안 했어요.
 
 ---
 
@@ -231,7 +233,7 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 
 전투
 1. **session 층**: `src/session`에서 `src/core` 전투 상태 → `BattleVM` 변환, 카드 사용·턴 종료 명령. fixture 대신 실제 상태로 그리기. 의존 방향은 아키텍처 문서를 따라요.
-2. **모션 디테일**: 지금 모션 값은 `provisional.motion.hover` 하나뿐이에요. 들기·밀림·말풍선·카드 사용(0009 "가벼운 종이", 0010 "빛 한 번 쓸기")의 길이·곡선은 Lucy가 정할 값이에요. 선택지를 보여 주고 고르게 해요.
+2. **모션 디테일**: 공통 값은 `style/motion.ts`(FAST · MOVE · 창 뜸 · 차례로 나타남), 화면 전환은 `veil.ts`, 전투 재생 반응은 `battle/views/unitMotion.ts`예요 (0077 · 0086, 모두 `provisional.motion` 임시 값). 남은 빈 곳은 0086 "남은 빈 곳"에 순서대로 있어요. `?slow=4`로 느리게 봐요.
 3. 기믹·차징(`frame-gimmick.png`), H3.
 5. **순서표(0074)**: 토큰은 `battle/views/order.ts` 한 규칙(얼굴 → 테 → 배지)으로 그리고, Lucy가 고른 값은 `provisional.order` 토큰에 있어요. 상태 모음은 `?screen=battle&scene=order-plan|order-play`. 턴 재생은 `battle/playback.ts`가 턴 종료 이벤트를 턴 종료 직전 VM에 입혀 행동마다 한 장면을 만들고, 장면마다 다시 그려요(행동 하나 450ms, `provisional.motion.playback.step`). 남은 것: 재생 연출(타격·쓰러짐·상태 변화·늦춰진 행동의 자리 옮김), 아군 토큰 되돌리기(전투 규칙 필요), 말풍선의 아군 결과 값·썸네일·꼬리, 적 효과문을 문구 규칙 문장 틀로.
 4. 고해상도 화면(devicePixelRatio) 대응. 글자·구운 텍스처 해상도까지 같이 다뤄야 해요.

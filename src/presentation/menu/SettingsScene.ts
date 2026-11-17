@@ -1,8 +1,9 @@
-// 설정 창 (0084 3번 · 0085): 지금 화면 위에 창으로 떠요. 메인 화면의 설정과 판 안 메뉴의 설정이 같은 창이에요.
+// 설정 창 (0084 3번 · 0089): 지금 화면 위에 창으로 떠요. 메인 화면의 설정과 판 안 메뉴의 설정이 같은 창이에요.
 // 바꾸면 바로 반영하고 저장해요 (적용 버튼 없음). 닫기 · Esc · 창 밖을 누르면 닫혀요.
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { SettingsSession, type VolumeId } from "../../session/settings";
+import { audioOf } from "../audio";
 import { drawWindow } from "../result/views/window";
 import { render, size, type Node } from "../style/flex";
 import { loadIcon } from "../style/icons";
@@ -51,14 +52,17 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   create() {
-    this.scene.bringToTop();
     this.input.setPollAlways();
     this.paint();
     // 창 밖에서 바뀐 값(전체화면 단축키 등)도 따라 그려요
     this.off = this.settings.onChange(() => { this.dirty = true; });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.off?.());
     this.input.on("pointermove", (p: Phaser.Input.Pointer) => this.slide(p));
-    this.input.on("pointerup", () => { this.drag = undefined; });
+    this.input.on("pointerup", () => {
+      // 효과음 막대를 놓으면 그 크기로 한 번 들려줘요
+      if (this.drag === "sfx") audioOf(this)?.play("ui.click");
+      this.drag = undefined;
+    });
     this.input.keyboard?.on("keydown-ESC", () => this.onClose?.());
     Object.assign(window, { __screenReady: SETTINGS_SCENE });
   }

@@ -21,3 +21,4 @@ src/presentation/join/
 src/presentation/depart/
 src/presentation/flow.ts
 src/presentation/menu/
+src/presentation/audio/

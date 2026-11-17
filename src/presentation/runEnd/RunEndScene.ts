@@ -16,7 +16,10 @@ import { RUN_END } from "../run/layout";
 import { P, button, text } from "../spirits/views/parts";
 import { withAlpha } from "../style/color";
 import { box } from "../style/draw";
+import { ms } from "../style/ease";
 import { render, size, type Node } from "../style/flex";
+import { gather } from "../style/gather";
+import { revealInOrder } from "../style/motion";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
 import { COPY } from "./copy";
@@ -61,21 +64,25 @@ export class RunEndScene extends Phaser.Scene {
   create() {
     const vm = this.vm;
     drawBackdrop(this);
-    vm.lanes.forEach((l, i) => drawLane(this, l.lane, i, { noSocket: true, maxOnly: true, maxHpTo: l.maxHpTo }));
+    // 덩어리마다 모아 두고, 다 그린 뒤 차례로 나타나요 (0086): 기록 → 남는 것 → 이번 판에서만 → 정령 줄 → 버튼
+    const parts: Phaser.GameObjects.Container[] = [];
+    const part = (draw: () => void) => parts.push(gather(this, 0, 0, draw));
+    const lanes = vm.lanes.map((l, i) => gather(this, 0, 0, () => { drawLane(this, l.lane, i, { noSocket: true, maxOnly: true, maxHpTo: l.maxHpTo }); }));
 
     let y = R.top;
     const record = text(vm.record, T.record, P.ink3Spirit, { lh: R.recordLh });
-    render(this, record, R.x, y);
+    part(() => { render(this, record, R.x, y); });
     y += size(record).h + R.gap;
     if (vm.keep) {
       const keep: Node = {
         t: "row", gap: R.keepGap, align: "center",
         children: [{ t: "icon", id: "g-up", w: R.keepIcon, h: R.keepIcon, tint: P.accHi }, text(vm.keep, T.keep, P.ink2)],
       };
-      render(this, keep, R.x, y);
+      part(() => { render(this, keep, R.x, y); });
       y += size(keep).h + R.gap;
     }
-    this.drawOnly(y);
+    part(() => this.drawOnly(y));
+    parts.push(...lanes);
 
     // 버튼 둘: 같은 자리, 강조만 바뀌어요
     const B = R.button;
@@ -86,7 +93,8 @@ export class RunEndScene extends Phaser.Scene {
         button(COPY.again, { size: TR.button, h: B.h, w: B.w, radius: B.radius, plate: !vm.victory, onClick: () => this.data_?.onAgain?.(this) }),
       ],
     };
-    render(this, node, R.x, B.y);
+    part(() => { render(this, node, R.x, B.y); });
+    revealInOrder(this, parts, ms(tokens.provisional.motion.screen.out.duration));
     Object.assign(window, { __screenReady: RUN_END_SCENE });
   }
 
