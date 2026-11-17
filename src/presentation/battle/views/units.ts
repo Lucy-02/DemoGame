@@ -61,6 +61,7 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
     statuses(e.statuses);
   }
   if (Object.keys(vm.plays).length > 0) loadIcon(scene, "fx-damage", PV.hits.icon);
+  if (vm.acted) for (const id of POP_ICONS) loadIcon(scene, id, PV.hits.icon);
 }
 
 // ── 구워 두는 그림: 얇은 테·작은 원·빗금은 WebGL 도형 대신 canvas에 그려요 ──────────────
@@ -548,18 +549,55 @@ function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false):
   };
 }
 
-/** 대상 머리 위 타격 알약 (.hits): 왼쪽 위에서 아래로, 한 알마다 오른쪽으로 비켜요 */
-function drawHits(scene: Phaser.Scene, hits: number[], bodyX: number, bodyY: number) {
+/** 머리 위 알약 하나의 모양: 타격은 위험색, 회복은 HP색, 방어도는 가드색 (회복 · 방어도는 재생 중에만 떠요, 0086) */
+const POP = {
+  damage: { icon: "fx-damage", fill: P.danger, ink: P.onDanger },
+  heal: { icon: "fx-heal", fill: P.hp, ink: P.floor },
+  block: { icon: "fx-block", fill: P.stat.guard, ink: P.floor },
+} as const;
+export const POP_ICONS = Object.values(POP).map((p) => p.icon);
+
+export type PopKind = keyof typeof POP;
+
+/** 대상 머리 위 알약 (.hits): 왼쪽 위에서 아래로, 한 알마다 오른쪽으로 비켜요. 알약마다 한 덩어리로 돌려줘요 */
+export function drawPops(scene: Phaser.Scene, pops: { kind: PopKind; n: number }[], bodyX: number, bodyY: number): Phaser.GameObjects.Container[] {
   const H = PV.hits;
   let y = bodyY + H.top;
-  hits.forEach((n, d) => {
+  return pops.map(({ kind, n }, d) => {
+    const look = POP[kind];
     const pill: Node = {
-      t: "row", h: H.h, pad: H.pad, radius: H.radius, gap: H.inGap, align: "center", style: { fill: P.danger },
-      children: [{ t: "icon", id: "fx-damage", w: H.icon, h: H.icon, tint: P.onDanger }, text(String(n), T.hit, P.onDanger)],
+      t: "row", h: H.h, pad: H.pad, radius: H.radius, gap: H.inGap, align: "center", style: { fill: look.fill },
+      children: [{ t: "icon", id: look.icon, w: H.icon, h: H.icon, tint: look.ink }, text(String(n), T.hit, look.ink)],
     };
-    render(scene, pill, bodyX + H.left + d * H.step, y);
+    const at = y;
     y += H.h + H.gap;
+    return gather(scene, 0, 0, () => { render(scene, pill, bodyX + H.left + d * H.step, at); });
   });
+}
+
+const drawHits = (scene: Phaser.Scene, hits: number[], bodyX: number, bodyY: number) =>
+  drawPops(scene, hits.map((n) => ({ kind: "damage", n })), bodyX, bodyY);
+
+/** 알약이 뜨는 자리: 그 유닛 몸 상자의 왼쪽 위 */
+export const popAt = (side: "ally" | "enemy", i: number) => (side === "ally"
+  ? { x: ALLY.xs[i] - ALLY.body.w / 2, y: ALLY.feet - ALLY.body.h }
+  : { x: ENEMY.xs[i] - ENEMY.body.w / 2, y: ENEMY.feet - ENEMY.art.h });
+
+/** HP 막대의 깎인 구간 (from → to)만 위험색으로. 재생 중에 잠깐 남았다가 줄어들어요 (0086). 왼쪽 끝이 지금 HP 자리예요 */
+export function drawTrail(scene: Phaser.Scene, side: "ally" | "enemy", i: number, max: number, from: number, to: number): Phaser.GameObjects.Image | undefined {
+  const B = I.bar, inner = I.w - B.line * 2, ih = B.h - B.line * 2;
+  const k = Math.round((inner * to) / max), end = Math.round((inner * from) / max);
+  if (end <= k) return undefined;
+  const key = canvasTexture(scene, `battle:trail:${k}:${end}`, end - k, ih, (ctx) => {
+    // 막대 안쪽 캡슐로 잘라 끝이 둥글게 맞아요
+    ctx.beginPath();
+    ctx.roundRect(-k, 0, inner, ih, B.radius - B.line);
+    ctx.clip();
+    ctx.fillStyle = P.danger;
+    ctx.fillRect(0, 0, end - k, ih);
+  });
+  const [cx, feet] = side === "ally" ? [ALLY.xs[i], ALLY.feet] : [ENEMY.xs[i], ENEMY.feet];
+  return scene.add.image(Math.round(cx - I.w / 2) + B.line + k, feet + I.mt + B.top + B.line, key).setOrigin(0, 0);
 }
 
 // ── 풀이 ──────────────────────────────────────────────
@@ -706,8 +744,10 @@ export interface UnitView {
   bottom: number;
   /** 적 머리 위 의도 알약 */
   intent?: Phaser.GameObjects.Container;
-  /** 의도 알약의 자리 (첫 판 안내가 짚을 곳, 0085) */
+  /** 의도 알약의 자리 (첫 판 안내가 짚을 곳, 0088) */
   intentBox?: UnitBounds;
+  /** 유닛 그림 (재생 중 나섬 · 밀림은 그림만 움직여요, 0086) */
+  art: Phaser.GameObjects.Container;
 }
 
 /** 판정 영역 반 폭: 칩 줄이 넘칠 수 있는 폭까지 */
@@ -718,7 +758,9 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPrev
   const cx = ALLY.xs[i];
   const bodyX = cx - ALLY.body.w / 2, bodyTop = ALLY.feet - ALLY.body.h;
   if (pv.lit) glow(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, 0, true);
-  placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
+  const art = gather(scene, 0, 0, () => { placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3); });
+  // 쓰러진 아군은 그림이 흐려요 (0086)
+  if (a.hp <= 0) art.setAlpha(tokens.provisional.motion.hit.down.alpha);
   ground(scene, cx, ALLY.feet);
   const marks: Mark[] = [];
   if (a.front) {
@@ -730,7 +772,7 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPrev
   }
   let v!: InfoView;
   const info = gather(scene, 0, 0, () => { v = allyInfo(scene, a, i, pv.outcome); });
-  return { bounds: { x: cx - HALF, y: bodyTop, w: HALF * 2, h: v.bottom - bodyTop }, info, marks: [...marks, ...v.marks], bottom: v.bottom };
+  return { bounds: { x: cx - HALF, y: bodyTop, w: HALF * 2, h: v.bottom - bodyTop }, info, marks: [...marks, ...v.marks], bottom: v.bottom, art };
 }
 
 /** 가리킨 적이 노리는 아군의 묶음: 깎일 구간이 깜빡여요 (쉬는 묶음 자리에 덮어 그려요) */
@@ -762,10 +804,10 @@ export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPr
   const bodyTop = ENEMY.top + intentH + ENEMY.body.mt;
   const artX = cx - ENEMY.art.w / 2, artY = ENEMY.feet - ENEMY.art.h;
   if (pv.lit) glow(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, 0, true);
-  placeholderArt(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, P.ink3);
+  const art = gather(scene, 0, 0, () => { placeholderArt(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, P.ink3); });
   ground(scene, cx, ENEMY.feet);
   if (pv.outcome) drawHits(scene, pv.outcome.hits, cx - ENEMY.body.w / 2, bodyTop);
   let v!: InfoView;
   const info = gather(scene, 0, 0, () => { v = enemyInfo(scene, e, i, pv.outcome, !!pv.weakOn); });
-  return { bounds: { x: cx - HALF, y: ENEMY.top, w: HALF * 2, h: v.bottom - ENEMY.top }, info, marks: v.marks, bottom: v.bottom, intent, intentBox: { x: cx - intentW / 2, y: ENEMY.top, w: intentW, h: intentH } };
+  return { bounds: { x: cx - HALF, y: ENEMY.top, w: HALF * 2, h: v.bottom - ENEMY.top }, info, marks: v.marks, bottom: v.bottom, intent, art, intentBox: { x: cx - intentW / 2, y: ENEMY.top, w: intentW, h: intentH } };
 }

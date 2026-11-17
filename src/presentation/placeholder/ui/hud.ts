@@ -1,7 +1,6 @@
 // ⚠ 임시 플레이스홀더 UI: 레이아웃·디자인 미확정. 디자인 확정 후 교체 예정.
 import * as Phaser from "phaser";
 import { spiritDef, personalityDef } from "../../../core/data";
-import { FLOORS } from "../../../core/run";
 import { flowOf } from "../flow";
 import { maxHpOf } from "../../../core/stats";
 import { COLORS, W, bar, button, txt } from "./widgets";
@@ -12,7 +11,7 @@ export function runHud(scene: Phaser.Scene) {
   const c = scene.add.container(0, 0).setDepth(50);
   c.add(scene.add.rectangle(0, 0, W, 44, 0x0e0c15, 0.9).setOrigin(0, 0));
   const floor = run.current ? (run.current.type === "boss" ? "보스" : `${run.current.floor}층`) : "출발";
-  c.add(txt(scene, 16, 22, `1막 · ${floor} / ${FLOORS + 1}`, 17).setOrigin(0, 0.5));
+  c.add(txt(scene, 16, 22, `${run.act}막 · ${floor} / ${run.floors + 1}`, 17).setOrigin(0, 0.5));
   c.add(txt(scene, 170, 22, `골드 ${run.gold}`, 17, COLORS.gold).setOrigin(0, 0.5));
   let x = 300;
   for (const s of run.spirits) {

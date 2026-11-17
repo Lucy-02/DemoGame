@@ -10,11 +10,13 @@
 // ?screen=home 은 타이틀 겸 메인 화면(?scene=first|full|running&hover=<줄 id>).
 // ?screen=join 은 깃들기(?scene=first|second&select=<후보 id>&hover=chip&taken=<후보 id>: 깃든 끝 상태).
 // ?screen=depart 는 출전 준비(?scene=three|two&select=<앞열로 바꿀 정령 id>&hover=<정령 id>|strong).
+// ?slow=4 는 모션을 4배 느리게 (어느 화면이든).
 // ?screen=legacy 는 정원·저장 없이 바로 떠나는 시험 판(&party=a,b,c&adult&unlockAll&seed=). 칸마다 새 화면이 없으면 임시 장면이 맡아요.
 import { C, SPIRITS } from "../core/data";
 import { getPlatform } from "../platform";
 import { startGame } from "../presentation/game";
 import { GameSession } from "../session/game";
+import { loadSettings } from "../session/settings";
 
 async function start() {
   const platform = getPlatform();
@@ -26,9 +28,11 @@ async function start() {
   const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" ? screen : undefined;
   const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform);
   Object.assign(window, { session });
+  const settings = await loadSettings(platform);
   const game = await startGame("game", {
-    screen: fixture, session, trial: screen === "legacy", quit: () => void platform.quit(),
+    screen: fixture, session, trial: screen === "legacy", quit: () => void platform.quit(), volume: settings.volume,
     hover: get("hover"), scene: get("scene"), lift: get("lift"), select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
+    slow: Number(params.get("slow")) || undefined,
   });
   Object.assign(window, { game });
   if (platform.kind === "web") mountDevWindow(platform);

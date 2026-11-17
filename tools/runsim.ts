@@ -1,6 +1,6 @@
 // 헤드리스 런 시뮬레이터: 자동 플레이로 1막 한 판을 처음부터 보스까지 돌려요.
 // 인카운터 하나만 보는 sim.ts와 달리 덱이 자라고 HP가 깎인 채 보스를 만나요.
-// 사용: pnpm runsim [반복 수] [파티 a,b,c] [--adult] [--all] [--bot basic|smart|search|ladder] [--branch 정령:갈래,…] [--strong fire|forest|wind] [--acts 2]
+// 사용: pnpm runsim [반복 수] [파티 a,b,c] [--adult] [--all] [--bot basic|smart|search|ladder] [--branch 정령:갈래,…] [--strong fire|forest|wind] [--acts 5] [--awakened]
 // 봇은 실력이 다른 셋이에요. 숫자는 절댓값이 아니라 봇 사이 · 바꾸기 전후 비교로 읽어요 (`design/canon/BALANCE_BASELINE.md` 7절).
 //   basic  공격 카드부터 내고 보상은 아무거나 (골든 테스트와 같은 봇)
 //   smart  한 장씩 값을 매겨 놓고, 보상 · 이벤트 · 빼기를 가려 골라요 (기본)
@@ -17,8 +17,9 @@ import { smartPlayTurn } from "./bot";
 import { makeSearchBot, type Bot } from "./search";
 
 const MAX_TURNS = 40;
-/** 성체 문 레벨(Lv4)에 닿는 경험 (growth.json levels) */
+/** 성체 문 레벨(Lv4)과 각성체 문 레벨(Lv6)에 닿는 경험 (growth.json levels) */
 const ADULT_EXP = 150;
+const AWAKENED_EXP = 380;
 
 export type BotKind = "basic" | "smart" | "search";
 export const BOT_KINDS: BotKind[] = ["basic", "smart", "search"];
@@ -110,15 +111,16 @@ function removeOne(run: Run, policy: Policy) {
 }
 
 /** branches: 정령 id → 갈래. 갈래 고르기가 들어오기 전까지 무기 기술을 재는 데 써요 (0056) */
-export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false, branches: Record<string, string> = {}, strong?: Element, acts?: number): RunSimResult {
+export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false, branches: Record<string, string> = {}, strong?: Element, acts?: number, awakened = false): RunSimResult {
   const ids = party ?? (C.default_party as string[]);
   // 앞열은 가장 튼튼한 정령(HP + 방어)에게 맡겨요. 앞열을 잘못 세우면 같은 파티도 보스를 못 넘어요.
   const sturdy = (id: string) => { const st = spiritDef(id).stats; return st.hp + st.guard * 2; };
   const frontId = [...ids].sort((a, z) => sturdy(z) - sturdy(a))[0];
   // 성체는 정원을 만들어 넘겨요. Lv2 · Lv3 해금 카드도 보상에 나와야 실제 성체 판과 같아요.
   const base = newGarden(seed, ids);
-  const garden = adult ? { ...base, spirits: base.spirits.map((s) => ({ ...s, exp: ADULT_EXP, stage: "adult" as const })) } : undefined;
-  const run = new Run({ seed: 5000 + seed, frontId, party, garden, adult, unlockAll: false, strongElement: strong, acts });
+  const grown = awakened ? { exp: AWAKENED_EXP, stage: "awakened" as const } : { exp: ADULT_EXP, stage: "adult" as const };
+  const garden = adult || awakened ? { ...base, spirits: base.spirits.map((s) => ({ ...s, ...grown })) } : undefined;
+  const run = new Run({ seed: 5000 + seed, frontId, party, garden, adult: adult || awakened, unlockAll: false, strongElement: strong, acts });
   for (const s of run.spirits) s.branch ??= branches[s.id];
   // 전투와 판 단위 판단의 난수를 나눠요. 봇이 달라도 같은 시드면 같은 지도 · 같은 길 고르기 난수를 써요.
   const battleRng = new Rng(seed * 13 + 5);
@@ -197,8 +199,8 @@ export function wilson(k: number, n: number): [number, number] {
   return [(c - h) / d, (c + h) / d];
 }
 
-function report(label: string, n: number, kind: BotKind, party?: string[], adult = false, branches: Record<string, string> = {}, strong?: Element, acts?: number) {
-  const rs = Array.from({ length: n }, (_, i) => simulateRun(i, kind, party, adult, branches, strong, acts));
+function report(label: string, n: number, kind: BotKind, party?: string[], adult = false, branches: Record<string, string> = {}, strong?: Element, acts?: number, awakened = false) {
+  const rs = Array.from({ length: n }, (_, i) => simulateRun(i, kind, party, adult, branches, strong, acts, awakened));
   const boss = rs.filter((r) => r.bossDeck !== undefined);
   const wins = rs.filter((r) => r.won);
   const avg = (xs: number[]) => (xs.length ? xs.reduce((a, x) => a + x, 0) / xs.length : 0);
@@ -231,15 +233,16 @@ if (process.argv[1]?.endsWith("runsim.ts")) {
   const rest = args.filter((a) => !a.startsWith("--"));
   const n = Number(rest[0] ?? 2000);
   const adult = flags.has("--adult");
+  const awakened = flags.has("--awakened");
   const kinds = botArg === "ladder" ? BOT_KINDS : [botArg as BotKind];
   if (!kinds.every((k) => BOT_KINDS.includes(k))) throw new Error(`모르는 봇: ${botArg}`);
   // 탐색 봇은 한 판에 1초쯤 걸려서 판 수를 줄여요
   const runs = (k: BotKind) => (k === "search" ? Math.min(n, 300) : n);
   if (flags.has("--all")) {
     const { SPIRITS } = await import("../src/core/data");
-    for (const s of SPIRITS) for (const k of kinds) report(`혼자 ${s.id}${adult ? " (성체)" : ""}`, runs(k), k, [s.id], adult, branches, strong, acts);
+    for (const s of SPIRITS) for (const k of kinds) report(`혼자 ${s.id}${adult ? " (성체)" : ""}`, runs(k), k, [s.id], adult, branches, strong, acts, awakened);
   } else {
     const party = rest[1]?.split(",");
-    for (const k of kinds) report(`${party?.join(",") ?? "기본 파티"}${strong ? ` · ${strong}` : ""}${adult ? " (성체)" : ""}`, runs(k), k, party, adult, branches, strong, acts);
+    for (const k of kinds) report(`${party?.join(",") ?? "기본 파티"}${strong ? ` · ${strong}` : ""}${awakened ? " (각성체)" : adult ? " (성체)" : ""}`, runs(k), k, party, adult, branches, strong, acts, awakened);
   }
 }

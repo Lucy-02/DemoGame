@@ -138,6 +138,21 @@ export interface BattleVM {
   pick?: PickVM;
   /** 시각 검증용 시작 상태 (?scene=aim 등). 없으면 쉬는 상태 */
   start?: StartVM;
+  /** 턴 재생 중 이 장면에서 일어난 일 (유닛 반응 모션, 0086). 없으면 움직이지 않아요 */
+  acted?: ActedVM;
+}
+
+/** 재생 한 걸음: 행동한 유닛과, 그 행동으로 유닛마다 뜬 수 (일어난 순서대로) */
+export interface ActedVM {
+  actor?: UnitRef;
+  pops: PopVM[];
+}
+
+/** 유닛 머리 위에 잠깐 뜨는 알약. damage = HP가 깎임, heal = 회복, block = 방어도 얻음 */
+export interface PopVM {
+  ref: UnitRef;
+  kind: "damage" | "heal" | "block";
+  n: number;
 }
 
 /** 바뀌기 전 → 뒤 */

@@ -181,5 +181,233 @@
       { "name": "빛기둥", "actions": [{ "type": "attack", "dmg": 9, "target": "front" }] },
       { "name": "아지랑이", "actions": [{ "type": "weak", "turns": 1, "target": "all" }] },
       { "name": "정오", "charge": true, "big": true, "actions": [{ "type": "attack", "dmg": 14, "target": "all" }] }
-    ] }
+    ] },
+  { "id": "snowball", "name": "눈덩이", "tier": "normal", "element": "ice", "hp": 32,
+    "pattern": [
+      {"name": "구르기", "actions": [{"type": "attackRamp", "dmg": 6, "step": 3, "target": "front"}]}
+    ] },
+  { "id": "ice_rock", "name": "얼음 바위", "tier": "normal", "element": "ice", "hp": 55,
+    "pattern": [
+      {"name": "내리찍기", "actions": [{"type": "attack", "dmg": 10, "target": "front"}]},
+      {"name": "얼음 조각", "actions": [{"type": "attack", "dmg": 5, "target": "all"}]}
+    ] },
+  { "id": "droplet", "name": "물방울", "tier": "normal", "element": "water", "hp": 13,
+    "pattern": [
+      {"name": "튀기", "actions": [{"type": "attack", "dmg": 4, "target": "random"}]}
+    ] },
+  { "id": "rapids", "name": "급류", "tier": "normal", "element": "water", "hp": 36, "acts": [[700, 1500, 2300]],
+    "pattern": [
+      {"name": "휩쓸기", "actions": [{"type": "attack", "dmg": 4, "target": "random"}]},
+      {"name": "휩쓸기", "actions": [{"type": "attack", "dmg": 4, "target": "front"}]},
+      {"name": "휩쓸기", "actions": [{"type": "attack", "dmg": 4, "target": "lowest"}]}
+    ] },
+  { "id": "shade", "name": "그림자", "tier": "normal", "element": "shadow", "hp": 39,
+    "pattern": [
+      {"name": "도사리기", "actions": [{"type": "block", "value": 10}]},
+      {"name": "덮치기", "charge": true, "actions": [{"type": "attack", "dmg": 30, "target": "front"}]}
+    ] },
+  { "id": "dusk", "name": "어스름", "tier": "normal", "element": "shadow", "hp": 32,
+    "pattern": [
+      {"name": "스미기", "actions": [{"type": "attack", "dmg": 6, "target": "random"}, {"type": "weak", "turns": 1, "target": "random"}]},
+      {"name": "할퀴기", "actions": [{"type": "attack", "dmg": 8, "target": "lowest"}]}
+    ] },
+  { "id": "hollow_armor", "name": "빈 갑주", "tier": "normal", "element": "none", "hp": 58,
+    "pattern": [
+      {"name": "베기", "actions": [{"type": "attack", "dmg": 10, "target": "front"}]},
+      {"name": "휘두르기", "actions": [{"type": "attack", "dmg": 6, "target": "all"}]}
+    ] },
+  { "id": "ice_warden", "name": "빙벽지기", "tier": "elite", "element": "ice", "hp": 138,
+    "pattern": [
+      {"name": "얼음 창", "actions": [{"type": "attackRamp", "dmg": 8, "step": 4, "target": "front"}]},
+      {"name": "얼음 벽", "actions": [{"type": "block", "value": 14}]},
+      {"name": "얼음 창", "actions": [{"type": "attackRamp", "dmg": 8, "step": 4, "target": "lowest"}]}
+    ] },
+  { "id": "tidal_serpent", "name": "해일뱀", "tier": "elite", "element": "water", "hp": 108,
+    "pattern": [
+      {"name": "물어뜯기", "actions": [{"type": "attack", "dmg": 4, "target": "random", "hits": 3}]},
+      {"name": "똬리", "actions": [{"type": "block", "value": 12}]},
+      {"name": "해일", "charge": true, "big": true, "actions": [{"type": "attack", "dmg": 19, "target": "all"}]},
+      {"name": "꼬리치기", "actions": [{"type": "attack", "dmg": 4, "target": "front", "hits": 2}]}
+    ] },
+  { "id": "twin_shade", "name": "쌍둥이 그림자", "tier": "elite", "element": "shadow", "hp": 50, "acts": [[900, 2100]],
+    "pattern": [
+      {"name": "스미기", "actions": [{"type": "attack", "dmg": 4, "target": "random"}, {"type": "weak", "turns": 1, "target": "random"}]},
+      {"name": "할퀴기", "actions": [{"type": "attack", "dmg": 5, "target": "front"}]}
+    ] },
+  { "id": "small_shade", "name": "작은 그림자", "tier": "minion", "element": "shadow", "hp": 13,
+    "pattern": [
+      {"name": "스미기", "actions": [{"type": "attack", "dmg": 3, "target": "random"}, {"type": "weak", "turns": 1, "target": "random"}]},
+      {"name": "할퀴기", "actions": [{"type": "attack", "dmg": 4, "target": "lowest"}]}
+    ] },
+  { "id": "cold_snap", "name": "한파", "tier": "boss", "element": "ice", "hp": 237,
+    "pattern": [
+      {"name": "서리", "actions": [{"type": "attackRamp", "dmg": 5, "step": 3, "target": "all"}]},
+      {"name": "고드름", "actions": [{"type": "attack", "dmg": 11, "target": "front"}]},
+      {"name": "서리", "actions": [{"type": "attackRamp", "dmg": 5, "step": 3, "target": "all"}]},
+      {"name": "얼음 벽", "actions": [{"type": "block", "value": 18}]},
+      {"name": "눈보라", "charge": true, "big": true, "onBreak": "resetRamp", "actions": [{"type": "attackRamp", "dmg": 5, "step": 3, "target": "all"}, {"type": "attack", "dmg": 8, "target": "front"}]}
+    ] },
+  { "id": "flood_tide", "name": "밀물", "tier": "boss", "element": "water", "hp": 265,
+    "pattern": [
+      {"name": "잔물결", "actions": [{"type": "attack", "dmg": 4, "target": "random", "hits": 4}]},
+      {"name": "큰 물결", "charge": true, "big": true, "actions": [{"type": "attack", "dmg": 18, "target": "all"}]},
+      {"name": "잔물결", "actions": [{"type": "attack", "dmg": 4, "target": "random", "hits": 4}]},
+      {"name": "소용돌이", "actions": [{"type": "vulnerable", "turns": 1, "target": "all"}]},
+      {"name": "만조", "charge": true, "big": true, "actions": [{"type": "attack", "dmg": 23, "target": "front"}]}
+    ] },
+  { "id": "eclipse", "name": "월식", "tier": "boss", "element": "shadow", "hp": 189,
+    "pattern": [
+      {"name": "그늘 드리우기", "actions": [{"type": "weak", "turns": 1, "target": "all"}]},
+      {"name": "베어 내기", "actions": [{"type": "attack", "dmg": 10, "target": "front"}]},
+      {"name": "부르기", "actions": [{"type": "buffMinions", "value": 3}]},
+      {"name": "그늘 드리우기", "actions": [{"type": "weak", "turns": 1, "target": "all"}, {"type": "attack", "dmg": 4, "target": "all"}]},
+      {"name": "개기", "charge": true, "big": true, "actions": [{"type": "attack", "dmg": 18, "target": "all"}]}
+    ] },
+  { "id": "sand_gust", "name": "모래바람", "tier": "normal", "element": "wind", "hp": 38, "acts": [[700, 1500, 2300]],
+    "pattern": [
+      {"name": "흩뿌리기", "zones": [[1000, 1500]], "zoneDmg": 5, "actions": [{"type": "attack", "dmg": 3, "target": "random"}]},
+      {"name": "흩뿌리기", "actions": [{"type": "attack", "dmg": 3, "target": "front"}]},
+      {"name": "흩뿌리기", "actions": [{"type": "attack", "dmg": 3, "target": "lowest"}]}
+    ] },
+  { "id": "pinwheel", "name": "바람개비", "tier": "normal", "element": "wind", "hp": 33, "haste": 400,
+    "pattern": [
+      {"name": "돌기", "actions": [{"type": "block", "value": 10}]},
+      {"name": "날 세우기", "actions": [{"type": "attack", "dmg": 7, "target": "random"}]}
+    ] },
+  { "id": "glass_mole", "name": "유리 두더지", "tier": "normal", "element": "light", "hp": 32, "reflectFirst": 0.4,
+    "pattern": [
+      {"name": "파고들기", "at": 2400, "actions": [{"type": "burrow"}]},
+      {"name": "솟구치기", "at": 1500, "actions": [{"type": "attack", "dmg": 13, "target": "lowest"}]}
+    ] },
+  { "id": "halo", "name": "빛무리", "tier": "normal", "element": "light", "hp": 33, "reflectFirst": 0.4,
+    "pattern": [
+      {"name": "눈부심", "actions": [{"type": "weak", "turns": 1, "target": "all"}]},
+      {"name": "빛 쏘기", "actions": [{"type": "attack", "dmg": 8, "target": "front"}]}
+    ] },
+  { "id": "shade_claw", "name": "그늘 발톱", "tier": "normal", "element": "shadow", "hp": 31,
+    "pattern": [
+      {"name": "숨어들기", "at": 2400, "actions": [{"type": "burrow"}]},
+      {"name": "덮치기", "at": 1300, "actions": [{"type": "attack", "dmg": 9, "target": "lowest", "hits": 2}]}
+    ] },
+  { "id": "gloam", "name": "땅거미", "tier": "normal", "element": "shadow", "hp": 33,
+    "pattern": [
+      {"name": "내려앉기", "zones": [[900, 1500]], "zoneDmg": 5, "actions": [{"type": "attack", "dmg": 5, "target": "random"}, {"type": "weak", "turns": 1, "target": "random"}]},
+      {"name": "내려앉기", "zones": [[1700, 2300]], "zoneDmg": 5, "actions": [{"type": "attack", "dmg": 6, "target": "random"}]}
+    ] },
+  { "id": "old_statue", "name": "낡은 석상", "tier": "normal", "element": "none", "hp": 66,
+    "pattern": [
+      {"name": "버티기", "actions": [{"type": "block", "value": 16}]},
+      {"name": "무너져 내리기", "charge": true, "actions": [{"type": "attack", "dmg": 26, "target": "front"}]}
+    ] },
+  { "id": "storm_hawk", "name": "폭풍 매", "tier": "elite", "element": "wind", "hp": 120, "acts": [[2000], [1200, 2300], [700, 1500, 2300]],
+    "pattern": [
+      {"name": "쪼기", "actions": [{"type": "attackRamp", "dmg": 4, "step": 1, "target": "random"}]},
+      {"name": "날갯짓", "zones": [[1000, 1600]], "zoneDmg": 6, "actions": [{"type": "attack", "dmg": 4, "target": "lowest"}]},
+      {"name": "내리꽂기", "actions": [{"type": "attackRamp", "dmg": 4, "step": 1, "target": "front"}]}
+    ] },
+  { "id": "mirror_knight", "name": "거울 기사", "tier": "elite", "element": "light", "hp": 130, "reflectFirst": 0.4,
+    "pattern": [
+      {"name": "방패 들기", "actions": [{"type": "block", "value": 16}]},
+      {"name": "베기", "actions": [{"type": "attack", "dmg": 10, "target": "front"}]},
+      {"name": "빛의 일격", "charge": true, "big": true, "actions": [{"type": "attack", "dmg": 21, "target": "all"}]}
+    ] },
+  { "id": "gloom_twin_a", "name": "쌍둥이 그늘", "tier": "elite", "element": "shadow", "hp": 62,
+    "pattern": [
+      {"name": "숨어들기", "at": 2400, "actions": [{"type": "burrow"}]},
+      {"name": "덮치기", "at": 1400, "actions": [{"type": "attack", "dmg": 13, "target": "lowest"}]}
+    ] },
+  { "id": "gloom_twin_b", "name": "쌍둥이 그늘", "tier": "elite", "element": "shadow", "hp": 62,
+    "pattern": [
+      {"name": "할퀴기", "at": 1800, "actions": [{"type": "attack", "dmg": 8, "target": "front"}, {"type": "weak", "turns": 1, "target": "front"}]},
+      {"name": "숨어들기", "at": 2400, "actions": [{"type": "burrow"}]},
+      {"name": "덮치기", "at": 1400, "actions": [{"type": "attack", "dmg": 13, "target": "lowest"}]}
+    ] },
+  { "id": "typhoon", "name": "태풍", "tier": "boss", "element": "wind", "hp": 221, "acts": [[1500], [900, 2100], [600, 1400, 2200]],
+    "pattern": [
+      {"name": "비바람", "zones": [[1000, 1500]], "zoneDmg": 5, "actions": [{"type": "attackRamp", "dmg": 3, "step": 1, "target": "random"}]},
+      {"name": "휘몰이", "zones": [[1300, 1800]], "zoneDmg": 5, "actions": [{"type": "attack", "dmg": 3, "target": "all"}]},
+      {"name": "비바람", "actions": [{"type": "attackRamp", "dmg": 3, "step": 1, "target": "lowest"}]},
+      {"name": "돌풍", "zones": [[900, 1300], [1700, 2100]], "zoneDmg": 5, "actions": [{"type": "attack", "dmg": 5, "target": "front"}]},
+      {"name": "휘몰이", "actions": [{"type": "attack", "dmg": 3, "target": "all"}]},
+      {"name": "비바람", "actions": [{"type": "attackRamp", "dmg": 3, "step": 1, "target": "random"}]},
+      {"name": "태풍의 눈", "charge": true, "big": true, "onBreak": "resetRamp", "actions": [{"type": "attack", "dmg": 17, "target": "all"}]}
+    ] },
+  { "id": "white_night", "name": "백야", "tier": "boss", "element": "light", "hp": 186, "reflectFirst": 0.4,
+    "pattern": [
+      {"name": "내리쬠", "actions": [{"type": "attack", "dmg": 6, "target": "all"}]},
+      {"name": "눈부심", "actions": [{"type": "sealCards", "count": 2}]},
+      {"name": "빛기둥", "actions": [{"type": "attack", "dmg": 10, "target": "front"}]},
+      {"name": "아지랑이", "actions": [{"type": "weak", "turns": 1, "target": "all"}, {"type": "vulnerable", "turns": 1, "target": "all"}]},
+      {"name": "지지 않는 해", "charge": true, "big": true, "actions": [{"type": "attack", "dmg": 17, "target": "all"}]}
+    ],
+    "phase2": {
+      "hpBelow": 0.5, "turnStartBlock": 8,
+      "pattern": [
+        {"name": "내리쬠", "actions": [{"type": "attack", "dmg": 6, "target": "all"}]},
+        {"name": "빛기둥", "actions": [{"type": "attack", "dmg": 12, "target": "front", "pierce": true}]},
+        {"name": "눈부심", "actions": [{"type": "sealCards", "count": 2}]},
+        {"name": "지지 않는 해", "charge": true, "big": true, "actions": [{"type": "attack", "dmg": 19, "target": "all"}]}
+      ]
+    } },
+  { "id": "dark_moon", "name": "그믐", "tier": "boss", "element": "shadow", "hp": 204,
+    "pattern": [
+      {"name": "그늘 드리우기", "actions": [{"type": "weak", "turns": 1, "target": "all"}]},
+      {"name": "숨어들기", "at": 2600, "actions": [{"type": "burrow"}]},
+      {"name": "덮치기", "at": 1400, "actions": [{"type": "attack", "dmg": 13, "target": "all"}]},
+      {"name": "부르기", "actions": [{"type": "buffMinions", "value": 3}]},
+      {"name": "베어 내기", "actions": [{"type": "attack", "dmg": 11, "target": "front"}]},
+      {"name": "삭", "charge": true, "big": true, "actions": [{"type": "attack", "dmg": 21, "target": "all"}]}
+    ] },
+  { "id": "ember_shard", "name": "불 조각", "tier": "normal", "element": "fire", "hp": 37,
+    "pattern": [
+      {"name": "불티", "actions": [{"type": "burn", "value": 2, "target": "all"}]},
+      {"name": "지지기", "actions": [{"type": "attack", "dmg": 8, "target": "front"}]}
+    ] },
+  { "id": "tide_shard", "name": "물 조각", "tier": "normal", "element": "water", "hp": 37, "acts": [[700, 1500, 2300]],
+    "pattern": [
+      {"name": "튀기", "actions": [{"type": "attack", "dmg": 4, "target": "random"}]},
+      {"name": "튀기", "actions": [{"type": "attack", "dmg": 4, "target": "front"}]},
+      {"name": "튀기", "actions": [{"type": "attack", "dmg": 4, "target": "lowest"}]}
+    ] },
+  { "id": "stone_shard", "name": "땅 조각", "tier": "normal", "element": "earth", "hp": 56,
+    "pattern": [
+      {"name": "굳기", "actions": [{"type": "block", "value": 18}]},
+      {"name": "짓누르기", "charge": true, "actions": [{"type": "attack", "dmg": 25, "target": "front"}]}
+    ] },
+  { "id": "spark_shard", "name": "전기 조각", "tier": "normal", "element": "electric", "hp": 32, "haste": 400,
+    "pattern": [
+      {"name": "찌릿", "zones": [[900, 1500]], "zoneDmg": 5, "actions": [{"type": "attack", "dmg": 5, "target": "random"}]},
+      {"name": "찌릿", "zones": [[1800, 2400]], "zoneDmg": 5, "actions": [{"type": "attack", "dmg": 7, "target": "random"}]}
+    ] },
+  { "id": "gate_keeper", "name": "문지기", "tier": "elite", "element": "none", "hp": 182, "reflectFirst": 0.4,
+    "pattern": [
+      {"name": "내려치기", "actions": [{"type": "attackRamp", "dmg": 10, "step": 4, "target": "front"}]},
+      {"name": "막아서기", "actions": [{"type": "block", "value": 20}]},
+      {"name": "닫기", "charge": true, "big": true, "onBreak": "resetRamp", "actions": [{"type": "attack", "dmg": 25, "target": "all"}]}
+    ] },
+  { "id": "echo", "name": "메아리", "tier": "elite", "element": "none", "hp": 154, "acts": [[2000], [1200, 2300], [700, 1500, 2300]],
+    "pattern": [
+      {"name": "울림", "zones": [[1000, 1600]], "zoneDmg": 7, "actions": [{"type": "attack", "dmg": 5, "target": "random"}]},
+      {"name": "울림", "actions": [{"type": "attack", "dmg": 5, "target": "lowest"}, {"type": "weak", "turns": 1, "target": "lowest"}]},
+      {"name": "울림", "actions": [{"type": "attack", "dmg": 6, "target": "front"}]}
+    ] },
+  { "id": "origin", "name": "근원", "tier": "boss", "element": "none", "hp": 195, "acts": [[1200, 2300]], "reflectFirst": 0.3,
+    "pattern": [
+      {"name": "첫 불", "zones": [[1000, 1500]], "zoneDmg": 3, "actions": [{"type": "burnRamp", "value": 1, "step": 1, "target": "all"}]},
+      {"name": "첫 물", "actions": [{"type": "attack", "dmg": 3, "target": "random", "hits": 3}]},
+      {"name": "첫 땅", "zones": [[900, 1300], [1700, 2100]], "zoneDmg": 3, "actions": [{"type": "block", "value": 20}, {"type": "attack", "dmg": 7, "target": "front"}]},
+      {"name": "첫 바람", "actions": [{"type": "swapFront"}, {"type": "attack", "dmg": 4, "target": "front"}]},
+      {"name": "첫 빛", "actions": [{"type": "sealCards", "count": 2}]},
+      {"name": "첫 숨", "charge": true, "big": true, "onBreak": "clearBurn", "actions": [{"type": "attack", "dmg": 13, "target": "all"}]}
+    ],
+    "phase2": {
+      "hpBelow": 0.5, "turnStartBlock": 10,
+      "pattern": [
+        {"name": "뒤섞임", "zones": [[800, 1300], [1800, 2300]], "zoneDmg": 3, "actions": [{"type": "attackRamp", "dmg": 3, "step": 3, "target": "all"}]},
+        {"name": "뒤섞임", "actions": [{"type": "weak", "turns": 1, "target": "all"}, {"type": "vulnerable", "turns": 1, "target": "all"}]},
+        {"name": "뒤섞임", "actions": [{"type": "attackRamp", "dmg": 3, "step": 3, "target": "front"}]},
+        {"name": "뒤섞임", "actions": [{"type": "attack", "dmg": 3, "target": "random", "hits": 3}]},
+        {"name": "마지막 숨", "charge": true, "big": true, "onBreak": "resetRamp", "actions": [{"type": "attack", "dmg": 17, "target": "all"}]}
+      ]
+    } }
 ]

@@ -16,3 +16,18 @@ TTI(NovelAI Diffusion V5 / V4.5)가 들어간 파일은 모두 `assets/provenanc
 | `note` | 기타 |
 
 검사: `npm run check:assets` (보고), `npm run check:assets -- --release` (기록 없음·임시 에셋이 있으면 실패).
+
+## 소리
+
+소리 파일(`public/assets/audio/`)도 한 줄씩 기록해요 (0087). TTI 필드 대신 아래를 써요.
+
+| 필드 | 내용 |
+| --- | --- |
+| `path`, `sha256`, `status` | 위와 같음 |
+| `source` | 팩 이름과 받은 페이지 주소 |
+| `author` | 제작자 |
+| `license` | 라이선스 이름과 그 글이 있는 주소. 표기 의무가 있으면 `credit`에 표기 문구 |
+| `source_file` | 팩 안의 원본 파일 이름 |
+| `human_work` | 자르기 · 음량 맞추기 · 변환 |
+
+저장소가 공개라서 원본 재배포를 막는 라이선스의 파일은 넣지 않아요.

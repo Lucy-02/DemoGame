@@ -10,7 +10,7 @@ export type RunPhase =
   /** 지도에서 다음 칸을 고를 차례 */
   | { kind: "map" }
   /** 전투 칸에 들어왔어요. 편성은 들어올 때 뽑아 둬요 */
-  | { kind: "battle"; tier: BattleTier; enemies: string[]; /** 첫 판의 첫 전투 (고정 편성, 처음 한 번 짚어 줘요 0085) */ first?: true }
+  | { kind: "battle"; tier: BattleTier; enemies: string[]; /** 첫 판의 첫 전투 (고정 편성, 처음 한 번 짚어 줘요 0088) */ first?: true }
   /** 이벤트 칸. 이벤트는 들어올 때 뽑아 둬요 (이어하기에도 같은 이벤트) */
   | { kind: "event"; eventId?: string }
   | { kind: "shop" }

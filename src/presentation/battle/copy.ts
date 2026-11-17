@@ -41,13 +41,10 @@ export const COPY = {
   rank: { elite: "정예", boss: "보스" } as Record<string, string | undefined>,
 };
 
-/** 코어 데이터에 아직 없는 속성 이름 (0028 상성 고리의 이름 그대로) */
-const ELEMENT_NAME_LATER: Record<string, string> = { electric: "전기", ice: "얼음", shadow: "그림자" };
-
 /** 속성 기호(el-*) → 이름 */
 export const elementName = (icon: string): string | undefined => {
   const id = icon.replace(/^el-/, "");
-  return (ELEMENT_NAME as Record<string, string>)[id] ?? ELEMENT_NAME_LATER[id];
+  return (ELEMENT_NAME as Record<string, string>)[id];
 };
 
 /** 상태 기호(kw-*) → 이름 (코어 상태 정의). 정의가 없는 기호는 풀이를 띄우지 않아요 */

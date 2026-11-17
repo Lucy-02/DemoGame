@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { guideStep } from "./guide";
 
-describe("첫 판 안내: 짚는 차례 (0085)", () => {
+describe("첫 판 안내: 짚는 차례 (0088)", () => {
   it("첫 턴에 아무것도 안 놓았으면 손패를 짚어요", () => {
     expect(guideStep({ turn: 1, placed: false, charging: true, spent: false }, {})).toBe("place");
   });

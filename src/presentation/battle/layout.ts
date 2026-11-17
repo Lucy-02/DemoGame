@@ -146,7 +146,7 @@ export const END = {
 };
 
 
-/** 첫 판 안내의 짚는 테 (0085): 굵기는 가리킨 의도 알약의 테(.intent.on), 대상과의 틈은 손패 카드 사이 틈 */
+/** 첫 판 안내의 짚는 테 (0088): 굵기는 가리킨 의도 알약의 테(.intent.on), 대상과의 틈은 손패 카드 사이 틈 */
 export const GUIDE = { ring: INTENT.onRing, gap: HAND.group.gap };
 
 /** 집음·조준 미리보기 (.fld-pv, page.html·r5.css) */

@@ -99,6 +99,7 @@ src/presentation/battle/
   views/backdrop.ts            배경 방사 그라데이션 + 바닥
   views/topbar.ts, order.ts    위치·시스템 버튼, 행동 순서 띠
   views/units.ts               아군·적(그림 자리, 그림자, 발밑 정보 묶음 "캡슐 막대 V1": HP 막대 + 기호 칩 줄, 의도 알약). drawAlly/drawEnemy → { bounds, info, marks, bottom, intent? }. 가리키면 drawUnitTip(유닛 풀이)·drawMarkTip(기호 한 줄 풀이)·drawAllyPulse(깎일 구간 깜빡임)·drawIntent(이어진 의도 밝게)
+  guide.ts, views/guide.ts     첫 판 안내 (0088): 첫 판의 첫 전투에서 카드 놓기 → 차징 → 턴 종료를 테 하나로 한 번씩 짚어요. flow.ts가 phase.first일 때 guide를 넘겨요
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
   HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }. 몸(drawBody)과 비용 동전·자물쇠 꼬리표(drawSignals, CardVM.need)를 나눠 그림
@@ -231,7 +232,7 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 
 전투
 1. **session 층**: `src/session`에서 `src/core` 전투 상태 → `BattleVM` 변환, 카드 사용·턴 종료 명령. fixture 대신 실제 상태로 그리기. 의존 방향은 아키텍처 문서를 따라요.
-2. **모션 디테일**: 지금 모션 값은 `provisional.motion.hover` 하나뿐이에요. 들기·밀림·말풍선·카드 사용(0009 "가벼운 종이", 0010 "빛 한 번 쓸기")의 길이·곡선은 Lucy가 정할 값이에요. 선택지를 보여 주고 고르게 해요.
+2. **모션 디테일**: 공통 값은 `style/motion.ts`(FAST · MOVE · 창 뜸 · 차례로 나타남), 화면 전환은 `veil.ts`, 전투 재생 반응은 `battle/views/unitMotion.ts`예요 (0077 · 0086, 모두 `provisional.motion` 임시 값). 남은 빈 곳은 0086 "남은 빈 곳"에 순서대로 있어요. `?slow=4`로 느리게 봐요.
 3. 기믹·차징(`frame-gimmick.png`), H3.
 5. **순서표(0074)**: 토큰은 `battle/views/order.ts` 한 규칙(얼굴 → 테 → 배지)으로 그리고, Lucy가 고른 값은 `provisional.order` 토큰에 있어요. 상태 모음은 `?screen=battle&scene=order-plan|order-play`. 턴 재생은 `battle/playback.ts`가 턴 종료 이벤트를 턴 종료 직전 VM에 입혀 행동마다 한 장면을 만들고, 장면마다 다시 그려요(행동 하나 450ms, `provisional.motion.playback.step`). 남은 것: 재생 연출(타격·쓰러짐·상태 변화·늦춰진 행동의 자리 옮김), 아군 토큰 되돌리기(전투 규칙 필요), 말풍선의 아군 결과 값·썸네일·꼬리, 적 효과문을 문구 규칙 문장 틀로.
 4. 고해상도 화면(devicePixelRatio) 대응. 글자·구운 텍스처 해상도까지 같이 다뤄야 해요.

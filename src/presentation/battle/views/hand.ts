@@ -1,4 +1,5 @@
 // 손패 띠: 유리 띠, 마력 동전, 정령별 카드 묶음, 턴 종료·더미. 정본 .band, .mana, .hand, .grp, .endw
+import { SFX_DATA } from "../../audio";
 import * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { box, circle } from "../../style/draw";
@@ -6,6 +7,8 @@ import { cubicBezier, ms } from "../../style/ease";
 import { place, render, size, type Node } from "../../style/flex";
 import { gather } from "../../style/gather";
 import { loadIcon } from "../../style/icons";
+import { FAST, MOVE, reducedMotion } from "../../style/motion";
+import { opacityOf } from "../../style/opacity";
 import { cardTipContent } from "../../card/cardTip";
 import { createHandCard, preloadHandCard, type HandCardView } from "../../card/HandCard";
 import { HAND_CARD } from "../../card/layout";
@@ -61,7 +64,12 @@ export interface HandView {
   moveDrag(x: number, y: number, at: { field: boolean; target: boolean }, instant?: boolean): void;
   /** 끌기 끝: 카드가 제자리로 돌아가요 (지금은 내도 손패로 돌아와요. session 층이 생기면 낸 카드는 버린 더미로) */
   endDrag(): void;
+  /** 지금 손패의 카드 자리 (다음 장면이 이어서 움직여요, 0086) */
+  snap: HandSnapshot;
 }
+
+/** 앞 장면의 손패: 카드 key마다 자리와 카드 */
+export type HandSnapshot = Record<string, { x: number; y: number; vm: CardVM }>;
 
 export interface HandOptions {
   /** 앞에 나선 카드가 바뀔 때. held = 그 카드가 집은 카드인지 (필드를 미리보기로 바꾸려고) */
@@ -70,12 +78,46 @@ export interface HandOptions {
   onPress?: (key: string, pointer: Phaser.Input.Pointer) => void;
   /** 들기 크기·밀림 (없으면 Lucy가 고른 LIFT) */
   lift?: LiftStyle;
+  /** 앞 장면의 손패. 주면 이어서 움직여요: 남은 카드는 자리를 좁히고, 새 카드는 흐리게 나타나고, 빠진 카드는 제자리에서 흐려져요 (0086) */
+  prev?: HandSnapshot;
+  /** 새 손패 (전투 시작 · 새 턴): 모든 카드가 왼쪽부터 차례로 나타나요 */
+  deal?: boolean;
 }
 
 const ease = cubicBezier(tokens.provisional.motion.hover.easing);
 const duration = ms(tokens.provisional.motion.hover.duration);
+const HM = tokens.provisional.motion.hand;
 
-/** 손패 묶음과 카드의 쉬는 자리 (첫 판 안내가 짚을 곳, 0085) */
+/** 앞 장면에서 이어 움직여요 (0086). 자리 옮김은 카드만, 묶음 판은 바로 바뀌어요 */
+function playHandMotion(scene: Phaser.Scene, cards: { vm: CardVM; view: HandCardView; x: number; y: number }[], opts: HandOptions) {
+  const prev = opts.prev ?? {};
+  const still = reducedMotion();
+  const fadeIn = (view: HandCardView, delay: number) => {
+    view.opacity = 0;
+    scene.tweens.add({ targets: view, opacity: 1, delay, ...FAST });
+  };
+  let fresh = 0;
+  for (const c of cards) {
+    const was = prev[c.vm.key];
+    if (!was) {
+      if (opts.deal || opts.prev) fadeIn(c.view, opts.deal ? fresh++ * ms(HM.stagger) : 0);
+      continue;
+    }
+    if (was.x !== c.x && !still) {
+      c.view.root.x = was.x;
+      scene.tweens.add({ targets: c.view.root, x: c.x, ...MOVE });
+    }
+  }
+  // 빠진 카드 (낸 카드 · 턴 끝에 버린 카드): 제자리에서 흐려져요
+  const now = new Set(cards.map((c) => c.vm.key));
+  for (const [key, was] of Object.entries(prev)) {
+    if (now.has(key)) continue;
+    const ghost = createHandCard(scene, was.vm, was.x - HAND_CARD.w / 2, was.y - HAND_CARD.h);
+    scene.tweens.add({ targets: ghost, opacity: 0, duration: ms(HM.leave), ease, onComplete: () => ghost.root.destroy() });
+  }
+}
+
+/** 손패 묶음과 카드의 쉬는 자리 (첫 판 안내가 짚을 곳, 0088) */
 export function handBoxes(hand: BattleVM["hand"]) {
   const G = HAND.group;
   const groups: { x: number; y: number; w: number; h: number; radius: number }[] = [];
@@ -117,6 +159,10 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
     groups.push({ root, face, cards });
     x += w + HAND.gap;
   }
+
+  const all = groups.flatMap((g) => g.cards);
+  playHandMotion(scene, all, opts);
+  const snap: HandSnapshot = Object.fromEntries(all.map((c) => [c.vm.key, { x: c.x, y: c.y, vm: c.vm }]));
 
   const L = opts.lift ?? LIFT;
   const tips = new TooltipHost(scene);
@@ -178,6 +224,8 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
   for (const g of groups) {
     for (const c of g.cards) {
       c.view.root.setInteractive(new Phaser.Geom.Rectangle(-HAND_CARD.w / 2, -HAND_CARD.h, HAND_CARD.w, HAND_CARD.h), Phaser.Geom.Rectangle.Contains);
+      // 누르는 소리는 집었을 때 전투 화면이 내요
+      c.view.root.setData(SFX_DATA, false);
       c.view.root.on("pointerover", () => { leave?.remove(); leave = null; setHover(c.vm.key); });
       c.view.root.on("pointerdown", (p: Phaser.Input.Pointer) => opts.onPress?.(c.vm.key, p));
       c.view.root.on("pointerout", () => { leave?.remove(); leave = scene.time.delayedCall(1, () => setHover(null)); });
@@ -230,24 +278,30 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
     current = undefined;
     setHover(null);
   };
-  return { setHover, setHeld, startDrag, moveDrag, endDrag };
+  return { setHover, setHeld, startDrag, moveDrag, endDrag, snap };
 }
 
-/** onEnd: 턴 종료를 누르면 (고정 장면에서는 없어요) */
-export function drawEnd(scene: Phaser.Scene, vm: BattleVM, onEnd?: () => void) {
+/**
+ * onEnd: 턴 종료를 누르면 (고정 장면에서는 없어요).
+ * 낼 수 있는 카드가 없으면 버튼이 밝은 유리 판으로 바뀌어요 (0084 8번 · 0086 11번: 확인 창 대신 모양으로. 보라 채움은 0054에서 기각).
+ * wasGo = 앞 장면의 모양. 달라졌으면 앞 모양이 흐려지며 바뀌어요. 지금 모양(go)을 돌려줘요.
+ */
+export function drawEnd(scene: Phaser.Scene, vm: BattleVM, onEnd?: () => void, wasGo?: boolean): boolean {
   const B = END.button;
+  const go = !!onEnd && vm.playable === 0;
   const pile = (id: string, n: number): Node => ({
     t: "row", align: "center", gap: END.piles.gap,
     children: [{ t: "icon", id, w: END.piles.icon, h: END.piles.icon, tint: P.ink3 }, text(String(n), T.pile, P.ink2)],
   });
+  const button = (lit: boolean, click?: () => void): Node => ({
+    t: "row", w: END.w, h: B.h, radius: B.radius, align: "center", justify: "center", onClick: click,
+    style: lit ? { fill: P.veil["09"], ring: { width: B.ring, color: P.veil["50"] } } : { fill: P.endCalm, ring: { width: B.ring, color: P.endCalmLine } },
+    children: [text(COPY.endTurn, T.endTurn, lit ? P.ink : P.ink2)],
+  });
   const col: Node = {
     t: "col", w: END.w, gap: END.gap, align: "stretch",
     children: [
-      {
-        t: "row", h: B.h, radius: B.radius, align: "center", justify: "center", onClick: onEnd,
-        style: { fill: P.endCalm, ring: { width: B.ring, color: P.endCalmLine } },
-        children: [text(COPY.endTurn, T.endTurn, P.ink2)],
-      },
+      button(go, onEnd),
       {
         t: "row", justify: "between", pad: END.piles.pad,
         children: [pile(PILE_ICONS[0], vm.piles.draw), pile(PILE_ICONS[1], vm.piles.discard), pile(PILE_ICONS[2], vm.piles.exhaust)],
@@ -255,4 +309,14 @@ export function drawEnd(scene: Phaser.Scene, vm: BattleVM, onEnd?: () => void) {
     ],
   };
   render(scene, col, END.x, END.y);
+  if (wasGo !== undefined && wasGo !== go && !reducedMotion()) {
+    // 앞 모양을 위에 겹쳐 두고 흐려 보내요 (바닥색으로 가려 두 모양이 섞여 보이지 않게)
+    const old = gather(scene, 0, 0, () => {
+      box(scene.add.graphics(), END.x, END.y, END.w, B.h, B.radius, { fill: P.floor });
+      render(scene, button(wasGo), END.x, END.y);
+    });
+    const fade = opacityOf(old);
+    scene.tweens.addCounter({ from: 1, to: 0, ...FAST, onUpdate: (t) => { fade.value = t.getValue() ?? 0; }, onComplete: () => old.destroy() });
+  }
+  return go;
 }
