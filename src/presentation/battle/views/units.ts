@@ -807,6 +807,14 @@ export function drawAllyPulse(scene: Phaser.Scene, a: AllyVM, i: number) {
   allyInfo(scene, a, i, undefined, true);
 }
 
+/** 유닛의 정보 묶음만 다시 그려요 (재생 중 맞기 전 값으로 잠깐 덮어 그릴 때, 0086) */
+export function drawUnitInfo(scene: Phaser.Scene, side: "ally" | "enemy", unit: AllyVM | EnemyVM, i: number): Phaser.GameObjects.Container {
+  return gather(scene, 0, 0, () => {
+    if (side === "ally") allyInfo(scene, unit as AllyVM, i);
+    else enemyInfo(scene, unit as EnemyVM, i, undefined, false);
+  });
+}
+
 /** 이 아군이 받을 피해로 HP가 깎이는지 */
 export const losesHp = (a: AllyVM) => lossNow(a) > 0;
 
