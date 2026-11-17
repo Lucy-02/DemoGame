@@ -24,14 +24,30 @@ const peek = (page: Page) => page.evaluate((): Peek => {
   };
 });
 
+/**
+ * 누른 것이 화면에 반영될 때까지: 게임이 몇 프레임 더 돌고, 만들어지는 중인 장면이 없을 때까지 기다려요.
+ * 시간으로 기다리면 느린 기계(CI)에서 다음 창이 그려지기 전에 눌러 버려요.
+ */
+const settle = (page: Page) => page.evaluate(() => new Promise<void>((done) => {
+  const game = (window as unknown as { game: Phaser.Game }).game;
+  let left = 4;
+  const step = () => {
+    const busy = game.scene.getScenes(false).some((s) => s.sys.settings.status > 0 && s.sys.settings.status < 5);
+    if (busy || --left > 0) return;
+    game.events.off("poststep", step);
+    done();
+  };
+  game.events.on("poststep", step);
+}));
+
 /** 그 장면만 떠 있고 화면 전환 막이 걷힐 때까지 */
 async function on(page: Page, key: string) {
-  await expect.poll(async () => (await peek(page)).active, { timeout: 20_000 }).toEqual([key]);
+  await expect.poll(async () => (await peek(page)).active, { timeout: 60_000 }).toEqual([key]);
   await page.waitForFunction(() => {
     const veil = (window as unknown as { game: Phaser.Game }).game.scene.getScene("veil") as unknown as { rect?: { input?: { enabled: boolean } } } | null;
     return !veil?.rect?.input?.enabled;
   });
-  await page.waitForTimeout(250);
+  await settle(page);
 }
 
 test("판 안 메뉴: 설정 · 메인으로 · 탐험 포기", async ({ page }) => {
@@ -51,7 +67,7 @@ test("판 안 메뉴: 설정 · 메인으로 · 탐험 포기", async ({ page })
   // 누른 뒤 화면이 다시 그려질 틈을 줘요
   const click = async (p: { x: number; y: number }) => {
     await page.mouse.click(box.x + (p.x * box.width) / 1280, box.y + (p.y * box.height) / 800);
-    await page.waitForTimeout(250);
+    await settle(page);
   };
 
   // 메인 화면의 설정: 바꾸면 바로 저장돼요
@@ -100,7 +116,7 @@ test("판 안 메뉴: 설정 · 메인으로 · 탐험 포기", async ({ page })
   await on(page, "runMenu");
   await click(AT.menuGiveUp);
   await page.keyboard.press("Escape");
-  await page.waitForTimeout(300);
+  await settle(page);
   expect((await peek(page)).active).toEqual(["runMenu"]);
   await click(AT.menuGiveUp);
   await click(AT.confirmGiveUp);

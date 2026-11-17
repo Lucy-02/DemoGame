@@ -7,6 +7,8 @@ export default defineConfig({
   testDir: "tests/run",
   timeout: 30 * 60_000,
   reporter: "list",
+  // 한 번에 하나씩: 소프트웨어 렌더러로 여러 화면을 같이 그리면 코어가 적은 CI에서 프레임이 크게 느려져요
+  workers: 1,
   use: {
     baseURL: `http://localhost:${PORT}`,
     viewport: { width: 1400, height: 950 },
