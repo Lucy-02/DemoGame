@@ -1,6 +1,6 @@
 // 상점 화면이 그리는 값 (0046 뼈대 + 0050 격자).
 import type { CardVM } from "../card/viewmodel";
-import type { LaneVM, StatId } from "../run/viewmodel";
+import type { DeckCardVM, LaneVM, StatId } from "../run/viewmodel";
 
 export interface ShopCardVM {
   card: CardVM;
@@ -27,9 +27,4 @@ export interface ShopVM {
   lanes: LaneVM[];
   /** 빼기에서 고를 덱: 정령 줄(LaneVM.id)마다 그 정령의 카드 */
   deck: Record<string, DeckCardVM[]>;
-}
-
-export interface DeckCardVM {
-  uid: number;
-  card: CardVM;
 }

@@ -13,9 +13,8 @@ export const canonRest: BattleVM = {
     slots: [
       { n: 1, art: "en-1", action: "i-claw" },
       { n: 2, art: "en-2", action: "kw-weak" },
-      { n: 3, art: "en-3", action: "kw-charge", state: "now" },
+      { n: 3, art: "en-3", action: "kw-charge", charge: true },
     ],
-    nextTurn: 4,
   },
   allies: [
     { face: "star", name: "별 정령", element: "el-none", art: "sil-star", hp: 19, maxHp: 34, incoming: 18, statuses: [{ icon: "kw-burn", n: 2 }] },
