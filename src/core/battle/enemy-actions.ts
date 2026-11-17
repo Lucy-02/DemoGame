@@ -95,6 +95,18 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
       for (const s of b.pickTargets(a.target)) b.addStatus(s, "burn", v);
     },
   },
+  attackRamp: {
+    kind: "attack",
+    text(b, e, a) {
+      const d = b.enemyDmgPreview(e, a.dmg + e.ramp * a.step);
+      return `${TARGET_NAME[a.target]} 피해 ${a.hits && a.hits > 1 ? `${d}×${a.hits}` : d} (쓸 때마다 +${a.step})`;
+    },
+    run(b, e, a) {
+      const dmg = a.dmg + e.ramp * a.step;
+      e.ramp++;
+      ENEMY_ACTIONS.attack.run(b, e, { type: "attack", dmg, hits: a.hits, target: a.target });
+    },
+  },
   detonateBurn: {
     kind: "attack",
     text: (_b, _e, a) => `전체 화상 ×${a.mult} 피해`,

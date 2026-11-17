@@ -43,8 +43,8 @@ function readThreat(b: Battle): Plan {
           plan.firstHit = Math.min(plan.firstHit, at);
           for (const s of spirits) add(s, e, (s.status.burn?.n ?? 0) * a.mult);
         }
-        if (a.type !== "attack") continue;
-        const dmg = b.enemyDmgPreview(e, a.dmg) * (a.hits ?? 1);
+        if (a.type !== "attack" && a.type !== "attackRamp") continue;
+        const dmg = b.enemyDmgPreview(e, a.dmg + (a.type === "attackRamp" ? e.ramp * a.step : 0)) * (a.hits ?? 1);
         plan.firstHit = Math.min(plan.firstHit, at);
         if (a.target === "all") for (const s of spirits) add(s, e, dmg);
         else if (a.target === "front") add(spirits.find((s) => s.id === b.frontId) ?? spirits[0], e, dmg);
