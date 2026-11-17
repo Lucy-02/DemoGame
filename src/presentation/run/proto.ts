@@ -60,7 +60,7 @@ export function drawProtoPanel(scene: Phaser.Scene, p: ProtoPanel) {
   const win = {
     w: innerW + W.pad * 2, h: innerH + W.pad * 2,
     x: p.layout === "2" ? GRID.gutter : Math.round((FRAME.w - innerW) / 2) - W.pad,
-    y: Math.round((FRAME.h - innerH) / 2) - W.pad,
+    y: new URLSearchParams(location.search).has("top") ? 84 : Math.round((FRAME.h - innerH) / 2) - W.pad,
   };
   if (p.layout === "2") {
     const sh = shadowTexture(scene, win.w, win.h, W.radius, { y: W.shadow.y, blur: W.shadow.blur, color: P.tipShadow });

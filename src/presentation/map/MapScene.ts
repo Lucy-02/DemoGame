@@ -225,7 +225,7 @@ export class MapScene extends Phaser.Scene {
 
   private drawParty(pv?: MapPreview) {
     const hide = this.under?.hide;
-    let y = hide === "mini" || (this.whole && !hide) ? MINI.y : hide === "bothc" ? Math.round((FRAME.h - (this.vm.party.length * (SLIM.h + SLIM.gap) - SLIM.gap)) / 2) : SLIM.y;
+    let y = hide === "mini" || hide === "bg" || (this.whole && !hide) ? MINI.y : hide === "bothc" ? Math.round((FRAME.h - (this.vm.party.length * (SLIM.h + SLIM.gap) - SLIM.gap)) / 2) : SLIM.y;
     this.vm.party.forEach((l, i) => {
       if (l.id !== this.open) {
         const hpTo = pv?.hp[l.id], maxTo = pv?.maxHp[l.id];
