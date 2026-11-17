@@ -108,7 +108,7 @@ export class GameFlow implements LegacyFlow {
         return this.go(REST_SCENE, data);
       }
       case "shop": {
-        const data: ShopSceneData = { session: new ShopSession(run.run), onLeave: () => this.leave() };
+        const data: ShopSceneData = { session: new ShopSession(run.run), onLeave: () => this.leave(), onDeck: (scene) => this.deck(scene) };
         return this.go(SHOP_SCENE, data);
       }
       case "reward": {

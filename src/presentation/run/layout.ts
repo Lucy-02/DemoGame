@@ -127,6 +127,9 @@ export const SLIM_LANE = {
   name: { x: 73, gap: 10 },
   hp: { x: 301, w: 132, h: 8, numX: 443, numGap: 2 },
   hot: { outer: 4, alpha: 0.14 },
+  /** 상점: 집은 카드를 배울 수 있는 줄 = 받을 칸(SOCKET)과 같은 점선 accHi 테, 그 카드가 쓰는 능력치 하나 (기호 · 간격은 정령 줄 능력치와 같음) */
+  open: { dash: SOCKET.dash },
+  stat: { icon: INFO.stats.icon, gap: INFO.stats.iconGap },
 };
 
 /** 이벤트 · 휴식 (Lucy 2026-11-17, 공용 UI 기획 r5): 배경 위 왼쪽 판(이름 줄 · 상황 글 · 선택지) + 오른쪽 얇은 정령 줄.
