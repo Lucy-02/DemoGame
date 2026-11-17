@@ -494,11 +494,13 @@ function drawInfo(scene: Phaser.Scene, cx: number, feet: number, bar: Bar, hp: {
 
 /** 받을 피해로 깎일 HP (방어도를 뺀 만큼, 남은 HP까지) */
 const lossOf = (a: AllyVM, incoming: number) => Math.min(a.hp, Math.max(0, incoming - (a.block ?? 0)));
+/** 지금 놓은 카드대로면 깎일 HP */
+const lossNow = (a: AllyVM) => a.loss ?? lossOf(a, a.incoming ?? 0);
 
 /** pv = 이 아군의 받을 피해 a→b (조준 결과). 바뀐 값만 강조색으로 보여요 */
 function allyInfo(scene: Phaser.Scene, a: AllyVM, i: number, pv?: Change, pulse = false): InfoView {
   const incoming = pv ? pv.to : (a.incoming ?? 0);
-  const loss = lossOf(a, incoming);
+  const loss = pv ? lossOf(a, incoming) : lossNow(a);
   const lethal = loss > 0 && loss >= a.hp;
   const showInc = a.incoming !== undefined && (a.incoming > 0 || !!pv);
   const chips: Chip[] = [
@@ -806,7 +808,7 @@ export function drawAllyPulse(scene: Phaser.Scene, a: AllyVM, i: number) {
 }
 
 /** 이 아군이 받을 피해로 HP가 깎이는지 */
-export const losesHp = (a: AllyVM) => lossOf(a, a.incoming ?? 0) > 0;
+export const losesHp = (a: AllyVM) => lossNow(a) > 0;
 
 /** 이 적의 의도가 이 아군을 노리는지 */
 /** 무작위는 누구든 맞을 수 있어서 모두를 노리는 것으로 봐요 */
