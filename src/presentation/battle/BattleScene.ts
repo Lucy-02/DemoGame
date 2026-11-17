@@ -18,7 +18,7 @@ import { playbackFrames } from "./playback";
 import { audioOf, type SfxId } from "../audio";
 import { cuesOf, playbackCues } from "../audio/battleCues";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
-import { preloadStage } from "./stage";
+import { preloadStage } from "../stage";
 import { drawBackdrop } from "./views/backdrop";
 import { drawGuide, type GuideBox } from "./views/guide";
 import { createHand, drawBand, drawEnd, drawMana, handBoxes, preloadHand, type EndSnapshot, type HandSnapshot, type HandView } from "./views/hand";

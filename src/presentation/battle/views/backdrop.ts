@@ -4,7 +4,7 @@ import { tokens } from "../../../design/tokens";
 import { withAlpha } from "../../style/color";
 import { canvasTexture, ellipse } from "../../style/gradient";
 import { BG, FLOOR, FRAME } from "../layout";
-import { stageArt } from "../stage";
+import { stageArt } from "../../stage";
 
 const P = tokens.provisional.palette;
 const KEY = "battle:backdrop";
