@@ -1,4 +1,4 @@
-// 판 안 메뉴 (0084 3번 · 0090): Esc와 톱니로 지금 화면 위에 떠요. 계속 · 설정 · 메인으로 · 탐험 포기.
+// 판 안 메뉴 (0084 3번 · 0090 · 0102): Esc와 톱니로 지금 화면 위에 떠요. 계속 · 용어 모음 · 설정 · 메인으로 · 탐험 포기.
 // 탐험 포기는 같은 자리에서 확인 창으로 바뀌어요 (제목 `~할까요?`, 버튼은 행동 이름). 줄은 메인 화면 메뉴 줄을 그대로 써요.
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
@@ -16,11 +16,12 @@ const T = tokens.provisional.text.result;
 
 export const MENU_SCENE = "runMenu";
 
-type RowId = "settings" | "toHome" | "giveUp";
+type RowId = "glossary" | "settings" | "toHome" | "giveUp";
 
 export interface MenuSceneData {
   onResume?: () => void;
   onSettings?: () => void;
+  onGlossary?: () => void;
   /** 없으면 줄을 빼요 (정원 없는 시험 판) */
   onHome?: () => void;
   onGiveUp?: () => void;
@@ -43,7 +44,7 @@ export class MenuScene extends Phaser.Scene {
 
   init(data: MenuSceneData) {
     this.data_ = data;
-    this.hover = data.hover === "settings" || data.hover === "toHome" || data.hover === "giveUp" ? data.hover : undefined;
+    this.hover = data.hover === "glossary" || data.hover === "settings" || data.hover === "toHome" || data.hover === "giveUp" ? data.hover : undefined;
     this.confirm = !!data.confirm;
   }
 
@@ -88,6 +89,7 @@ export class MenuScene extends Phaser.Scene {
   private paintMenu() {
     const d = this.data_;
     const rows: { id: RowId; label: string; icon?: string; tip?: string; click?: () => void; mt?: number }[] = [
+      { id: "glossary", label: COPY.glossary, icon: "g-book", click: d.onGlossary },
       { id: "settings", label: COPY.settings, icon: "i-gear", click: d.onSettings },
       ...(d.onHome ? [{ id: "toHome" as const, label: COPY.toHome, icon: "g-back", tip: COPY.tip.toHome, click: d.onHome }] : []),
       // 되돌릴 수 없는 줄은 한 칸 띄워 맨 아래에

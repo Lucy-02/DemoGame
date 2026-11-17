@@ -31,3 +31,11 @@ export const SETTINGS = {
   seg: { w: 84, h: 34, gap: 6, radius: 10 },
   tip: TIP,
 };
+
+/** 용어 모음 창 (0102): 설정 창과 같은 틀 · 같은 머리. 칸은 기호 + 이름, 세 줄 격자(칸 폭 = 안쪽 폭 ÷ 3), 묶음 사이는 가는 선. 풀이는 창 오른쪽 말풍선 */
+export const GLOSSARY = {
+  w: SETTINGS.w, pad: SETTINGS.pad, head: SETTINGS.head, close: SETTINGS.close,
+  cols: 3, cell: { h: SETTINGS.row.h, radius: MENU.row.radius, padX: 12, gap: MENU.row.gap, icon: SETTINGS.head.icon },
+  rule: SETTINGS.rule, todo: MENU.todo,
+  tip: TIP,
+};
