@@ -45,7 +45,10 @@ export const COPY = {
     hasteSub: "다른 적이 더 빨리 행동합니다.",
   },
   /** 방전 띠 풀이 */
-  band: { chip: (n: number) => `방전 ${n}` },
+  band: {
+    title: "방전", chip: (n: number) => `방전 ${n}`,
+    sub: (n: number) => `이 구간에서 끝나는 카드의 주인에게 피해를 ${n} 입힙니다.`,
+  },
   /** 적 이름 옆 등급 꼬리표 */
   rank: { elite: "정예", boss: "보스" } as Record<string, string | undefined>,
 };

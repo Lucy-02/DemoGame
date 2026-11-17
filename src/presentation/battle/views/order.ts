@@ -185,6 +185,8 @@ function textTopInLine(size: string) {
 export type OrderHit = { x: number; y: number; w: number; h: number; badge: () => void } & (
   | { kind: "ally"; bundle: number; i: number }
   | { kind: "enemy"; slot: number }
+  /** 방전 띠 (0096): 테 없이 풀이만 */
+  | { kind: "band"; band: BandVM }
 );
 
 /** 그린 토큰 하나 (모션용, 0077): 이름 · 얼굴 가운데 · 상태와 그 덩어리 */
@@ -215,6 +217,8 @@ export interface OrderCursor {
  */
 export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phaser.GameObjects.Graphics; hits: OrderHit[]; marks: OrderMark[]; cursor?: OrderCursor } {
   const hits: OrderHit[] = [];
+  /** 띠는 토큰 뒤에 깔려 있어서 토큰이 먼저 잡혀요 */
+  const bandHits: OrderHit[] = [];
   const marks: OrderMark[] = [];
   let cursorMark: OrderCursor | undefined;
   const phaseText = vm.playing ? COPY.playing : COPY.myTurn;
@@ -304,6 +308,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
       // 띠는 옅은 테로 묶음과 나뉘고, 든 카드가 들어오면 테가 위험색으로 켜져요 (0096)
       const lit = list.slice(r.band.at, r.band.at + r.band.n).some((t) => t.mark === "held");
       box(g, x + r.x, cy - bh / 2, r.w, bh, bh / 2, { fill: P.floor, ring: { width: O.bundle.ring, color: lit ? P.danger : P.glassLine } });
+      bandHits.push({ kind: "band", band: r.band, x: x + r.x, y: cy - bh / 2, w: r.w, h: bh, badge: () => {} });
       if (r.band.head) {
         const hx = x + r.x + B.padX;
         icon(scene, hx, cy - B.icon / 2, BAND_ICON, B.icon, B.icon, P.danger);
@@ -365,12 +370,13 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     line(O.line.w);
   }
   cell(vm.slots.length);
-  return { g, hits, marks, cursor: cursorMark };
+  return { g, hits: [...hits, ...bandHits], marks, cursor: cursorMark };
 }
 
 /** 가리킨 토큰: 얼굴 원에 흰 테 (0038 호버). 같은 적의 다른 토큰(soft)은 옅은 테 (0074 5번). 테 위에 배지를 다시 얹어요 */
 export function drawOrderRing(scene: Phaser.Scene, hit: OrderHit, soft = false) {
   const cx = hit.x + hit.w / 2;
+  if (hit.kind === "band") return { cx, bottom: O.top + O.h };
   drawRing(scene, cx, hit.y + hit.h / 2, hit.w, { color: soft ? P.veil["50"] : P.ink });
   hit.badge();
   return { cx, bottom: O.top + O.h };

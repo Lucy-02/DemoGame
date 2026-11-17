@@ -234,7 +234,10 @@ function bandsOf(b: Battle, cells: Lane[][]): BandVM[] | undefined {
       if (!(z.from <= hi && z.to > lo + 1)) return;
       const at = list.filter((p) => p.end < z.from).length;
       const n = list.filter((p) => p.end >= z.from && p.end < z.to).length;
-      out.push({ cell: k, at, n, dmg: z.dmg, head: head || undefined, enemy: alive.findIndex((e) => e.uid === z.uid) });
+      out.push({
+        cell: k, at, n, dmg: z.dmg, head: head || undefined, enemy: alive.findIndex((e) => e.uid === z.uid),
+        tip: { title: COPY.band.title, text: [{ text: COPY.band.sub(z.dmg) }] },
+      });
       head = false;
     });
   }

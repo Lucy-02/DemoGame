@@ -68,6 +68,7 @@ export interface BandVM {
   head?: boolean;
   /** 띠를 까는 적 (enemies 인덱스) */
   enemy?: number;
+  tip?: OrderTipVM;
 }
 
 /** 적의 특성 칩 (0072 7번): 둥근 네모, 늘 보임. off = 이번 턴에 이미 쓰임 (0096) */
