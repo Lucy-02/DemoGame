@@ -1,5 +1,5 @@
 {
- "$description": "게임에 들어가는 카드 일러스트 목록 (0042, 0063). id = 에셋 이름(public/assets/cards/<id>.webp). composition: object·symbol은 fit_size로 크기를 맞추고, scene·backdrop은 창을 채워요(fit_size null). tools/art/import_card_art.py가 읽어요.",
+ "$description": "게임에 들어가는 카드 일러스트 목록 (0042, 0063, 0118). id = 에셋 이름(public/assets/cards/<id>.webp). composition: object·symbol은 fit_size로 크기를 맞추고, scene·backdrop은 창을 채워요(fit_size null). tools/art/import_card_art.py가 읽어요.",
  "cards": [
   {
    "id": "starlight",
@@ -540,6 +540,618 @@
    "case_id": "rainbow-S-o-s3901",
    "fit_size": null,
    "decision": "0063"
+  },
+  {
+   "id": "backfire",
+   "name": "맞불",
+   "owner": "fire_fox",
+   "composition": "scene",
+   "case_id": "backfire-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "basic_block",
+   "name": "막기",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "basic_block-S-o-s4203",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "basic_claw",
+   "name": "할퀴기",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "basic_claw-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "blaze_aura",
+   "name": "불길 기운",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "blaze_aura-M-o-s4102",
+   "fit_size": 0.56,
+   "decision": "0118"
+  },
+  {
+   "id": "breeze",
+   "name": "산들바람",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "breeze-M-o-s4102",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "bubble_shield",
+   "name": "물거품 막",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "bubble_shield-M-o-s4102",
+   "fit_size": 0.46,
+   "decision": "0118"
+  },
+  {
+   "id": "catch_breath",
+   "name": "한숨 돌리기",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "catch_breath-S-o-s4203",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "cheer",
+   "name": "응원",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "cheer-M-o-s4101",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "chill_wave",
+   "name": "수염 서릿발",
+   "owner": "mist_cat",
+   "composition": "scene",
+   "case_id": "chill_wave-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "comet",
+   "name": "혜성",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "comet-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "creep",
+   "name": "살금",
+   "owner": "mist_cat",
+   "composition": "scene",
+   "case_id": "creep-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "crosswind",
+   "name": "맞바람",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "crosswind-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "deep_breath",
+   "name": "깊은 숨",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "deep_breath-M-o-s4102",
+   "fit_size": 0.52,
+   "decision": "0118"
+  },
+  {
+   "id": "deep_freeze",
+   "name": "깊은 빙결",
+   "owner": "mist_cat",
+   "composition": "scene",
+   "case_id": "deep_freeze-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "double_strike",
+   "name": "두 번 할퀴기",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "double_strike-M-o-s4102",
+   "fit_size": 0.56,
+   "decision": "0118"
+  },
+  {
+   "id": "ember_flick",
+   "name": "불티",
+   "owner": "fire_fox",
+   "composition": "scene",
+   "case_id": "ember_flick-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "ember_scatter",
+   "name": "불씨 뿌리기",
+   "owner": "fire_fox",
+   "composition": "scene",
+   "case_id": "ember_scatter-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "eternal_ice",
+   "name": "만년설",
+   "owner": "mist_cat",
+   "composition": "scene",
+   "case_id": "eternal_ice-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "eternal_lamp",
+   "name": "장명등",
+   "owner": "fire_fox",
+   "composition": "symbol",
+   "case_id": "eternal_lamp-M-o-s4102",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "eye_of_storm",
+   "name": "태풍의 눈",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "eye_of_storm-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "find_weakness",
+   "name": "빈틈 찾기",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "find_weakness-M-o-s4101",
+   "fit_size": 0.52,
+   "decision": "0118"
+  },
+  {
+   "id": "fire_claw",
+   "name": "불꽃 발톱",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "fire_claw-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "fire_storm",
+   "name": "꼬리 불바다",
+   "owner": "fire_fox",
+   "composition": "scene",
+   "case_id": "fire_storm-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "first_frost",
+   "name": "상강",
+   "owner": "mist_cat",
+   "composition": "symbol",
+   "case_id": "first_frost-M-o-s4102",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "flame_pass",
+   "name": "불꽃 옮기기",
+   "owner": "fire_fox",
+   "composition": "scene",
+   "case_id": "flame_pass-S-o-s4203",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "fog",
+   "name": "안개 이불",
+   "owner": "mist_cat",
+   "composition": "scene",
+   "case_id": "fog-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "foxfire",
+   "name": "여우불",
+   "owner": "fire_fox",
+   "composition": "symbol",
+   "case_id": "foxfire-M-o-s4102",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "frost_bite",
+   "name": "찬 발톱",
+   "owner": "mist_cat",
+   "composition": "scene",
+   "case_id": "frost_bite-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "frost_breath",
+   "name": "찬 입김",
+   "owner": "mist_cat",
+   "composition": "scene",
+   "case_id": "frost_breath-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "gust",
+   "name": "돌풍",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "gust-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "ice_wall",
+   "name": "물벽",
+   "owner": "mist_cat",
+   "composition": "symbol",
+   "case_id": "ice_wall-M-o-s4102",
+   "fit_size": 0.46,
+   "decision": "0118"
+  },
+  {
+   "id": "ignite",
+   "name": "불붙이기",
+   "owner": "fire_fox",
+   "composition": "symbol",
+   "case_id": "ignite-M-o-s4101",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "kindling",
+   "name": "장작",
+   "owner": "fire_fox",
+   "composition": "symbol",
+   "case_id": "kindling-M-o-s4101",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "mend",
+   "name": "보살핌",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "mend-M-o-s4102",
+   "fit_size": 0.52,
+   "decision": "0118"
+  },
+  {
+   "id": "meteor",
+   "name": "유성",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "meteor-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "meteor_shower",
+   "name": "유성우",
+   "owner": "star_spirit",
+   "composition": "scene",
+   "case_id": "meteor_shower-S-o-s4202",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "mist_breath",
+   "name": "입김",
+   "owner": "mist_cat",
+   "composition": "scene",
+   "case_id": "mist_breath-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "mist_veil",
+   "name": "안개 장막",
+   "owner": "mist_cat",
+   "composition": "symbol",
+   "case_id": "mist_veil-M-o-s4101",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "molten_stance",
+   "name": "불길 앞막이",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "molten_stance-M-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "paw_splash",
+   "name": "물장구",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "paw_splash-S-o-s4202",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "phoenix_breath",
+   "name": "불사의 숨결",
+   "owner": "fire_fox",
+   "composition": "scene",
+   "case_id": "phoenix_breath-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "ride_the_wind",
+   "name": "바람길",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "ride_the_wind-M-o-s4101",
+   "fit_size": 0.54,
+   "decision": "0118"
+  },
+  {
+   "id": "second_wind",
+   "name": "숨 고르기",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "second_wind-M-o-s4102",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "sparks",
+   "name": "불똥",
+   "owner": "fire_fox",
+   "composition": "scene",
+   "case_id": "sparks-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "star_veil",
+   "name": "별의 장막",
+   "owner": "star_spirit",
+   "composition": "symbol",
+   "case_id": "star_veil-M-o-s4101",
+   "fit_size": 0.52,
+   "decision": "0118"
+  },
+  {
+   "id": "step_forward",
+   "name": "앞으로 나서기",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "step_forward-S-o-s4203",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "tailwind",
+   "name": "뒷바람",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "tailwind-M-o-s4101",
+   "fit_size": 0.52,
+   "decision": "0118"
+  },
+  {
+   "id": "glass_wall_hold_1",
+   "name": "크리스털 월",
+   "owner": "glass_salamander",
+   "composition": "symbol",
+   "case_id": "tech_crystal_wall-M-c-s4101",
+   "fit_size": 0.48,
+   "decision": "0118"
+  },
+  {
+   "id": "glass_wall_hold_2",
+   "name": "크리스털 월",
+   "owner": "glass_salamander",
+   "composition": "symbol",
+   "case_id": "tech_crystal_wall-M-c-s4101",
+   "fit_size": 0.48,
+   "decision": "0118"
+  },
+  {
+   "id": "glass_wall_hold_3",
+   "name": "크리스털 월",
+   "owner": "glass_salamander",
+   "composition": "symbol",
+   "case_id": "tech_crystal_wall-M-c-s4101",
+   "fit_size": 0.48,
+   "decision": "0118"
+  },
+  {
+   "id": "ember_scatter_burst_1",
+   "name": "플레어",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "tech_flare-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "ember_scatter_burst_2",
+   "name": "플레어",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "tech_flare-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "ember_scatter_burst_3",
+   "name": "플레어",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "tech_flare-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "glass_wall_return_1",
+   "name": "글래스 엣지",
+   "owner": "glass_salamander",
+   "composition": "scene",
+   "case_id": "tech_glass_edge-S-c-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "glass_wall_return_2",
+   "name": "글래스 엣지",
+   "owner": "glass_salamander",
+   "composition": "scene",
+   "case_id": "tech_glass_edge-S-c-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "glass_wall_return_3",
+   "name": "글래스 엣지",
+   "owner": "glass_salamander",
+   "composition": "scene",
+   "case_id": "tech_glass_edge-S-c-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "mist_breath_guard_1",
+   "name": "미스트 베일",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "tech_mist_veil-M-o-s4101",
+   "fit_size": 0.46,
+   "decision": "0118"
+  },
+  {
+   "id": "mist_breath_guard_2",
+   "name": "미스트 베일",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "tech_mist_veil-M-o-s4101",
+   "fit_size": 0.46,
+   "decision": "0118"
+  },
+  {
+   "id": "mist_breath_guard_3",
+   "name": "미스트 베일",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "tech_mist_veil-M-o-s4101",
+   "fit_size": 0.46,
+   "decision": "0118"
+  },
+  {
+   "id": "mist_breath_freeze_1",
+   "name": "화이트아웃",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "tech_whiteout-M-o-s4102",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "mist_breath_freeze_2",
+   "name": "화이트아웃",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "tech_whiteout-M-o-s4102",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "mist_breath_freeze_3",
+   "name": "화이트아웃",
+   "owner": "common",
+   "composition": "symbol",
+   "case_id": "tech_whiteout-M-o-s4102",
+   "fit_size": 0.5,
+   "decision": "0118"
+  },
+  {
+   "id": "ember_scatter_spread_1",
+   "name": "와일드파이어",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "tech_wildfire-S-o-s4202",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "ember_scatter_spread_2",
+   "name": "와일드파이어",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "tech_wildfire-S-o-s4202",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "ember_scatter_spread_3",
+   "name": "와일드파이어",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "tech_wildfire-S-o-s4202",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "whirl_slash",
+   "name": "회오리 베기",
+   "owner": "common",
+   "composition": "scene",
+   "case_id": "whirl_slash-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "whisker_twitch",
+   "name": "잔물결",
+   "owner": "mist_cat",
+   "composition": "scene",
+   "case_id": "whisker_twitch-S-o-s4102",
+   "fit_size": null,
+   "decision": "0118"
+  },
+  {
+   "id": "wildfire",
+   "name": "요원지화",
+   "owner": "fire_fox",
+   "composition": "scene",
+   "case_id": "wildfire-S-o-s4101",
+   "fit_size": null,
+   "decision": "0118"
   }
  ]
 }
