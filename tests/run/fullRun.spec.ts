@@ -4,7 +4,7 @@
 // 같은 시드로 두 번 돌아요: 한 번씩 누르기, 그리고 누른 버튼을 빠르게 다시 누르기. 두 판의 상태가 칸마다 같아야 해요(같은 명령이 두 번 나가지 않음).
 import { expect, test, type Browser } from "@playwright/test";
 
-interface Tick { scene?: string; did?: string; runs: number; wins: number; act?: number; endedAct?: number; marks?: string[] }
+interface Tick { scene?: string; did?: string; wait?: string; runs: number; wins: number; act?: number; endedAct?: number; marks?: string[] }
 
 /** 같은 시드면 같은 판이에요 */
 const SEED = 7;
@@ -43,6 +43,9 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
   /** 지도에서 칸을 고를 때마다의 판 상태 */
   const prints: string[] = [];
   let last = Date.now();
+  let waitingFor: string | undefined;
+  /** 가장 길게 아무 변화가 없던 시간 (기계가 얼마나 느린지 기록에 남겨요) */
+  let longest = 0;
   let state: Tick = { runs: 0, wins: 0 };
   const tail = () => `${name}: ${trail.slice(-12).join(" → ")}`;
   /** 끝난 판 가운데 가장 멀리 간 막 */
@@ -51,8 +54,13 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
   while (!(reached >= 2 && state.scene === "home" && MUST.every((k) => seen.has(k)))) {
     state = await page.evaluate(() => (window as unknown as { __tick: () => Tick }).__tick());
     expect(errors, tail()).toEqual([]);
-    if (state.did) {
+    // 누르지 않아도 기다리는 것이 바뀌면(턴 재생의 걸음, 전환 막, 장면 만들기) 나아가는 중이에요
+    if (state.did || state.wait !== waitingFor) {
+      longest = Math.max(longest, Date.now() - last);
       last = Date.now();
+      waitingFor = state.wait;
+    }
+    if (state.did) {
       if (state.scene) seen.add(state.scene);
       if (state.scene === "battle" && state.act === 2) seen.add("2막 전투");
       for (const m of state.marks ?? []) marks.add(m);
@@ -62,7 +70,7 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
     } else {
       if (Date.now() - last > STUCK_MS) {
         await page.screenshot({ path: shot("stuck") });
-        throw new Error(`막혔어요 (${state.scene ?? "장면 없음"}) ${tail()}`);
+        throw new Error(`막혔어요 (${state.scene ?? "장면 없음"}, ${state.wait}) ${tail()}`);
       }
       await page.waitForTimeout(15);
     }
@@ -70,7 +78,7 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
     if (state.did === "판 결과 승리" || state.did === "판 결과 패배") await page.screenshot({ path: shot(`runEnd-${state.runs}-${state.endedAct}막`) });
     if (state.did?.startsWith("지도 보임") && (state.act ?? 1) > 1) await page.screenshot({ path: shot(`map-${state.runs}-${state.act}막`) });
   }
-  console.log(`${name}: 판 ${state.runs}번(가장 멀리 ${reached}막), 누름 ${trail.length}번(다시 ${trail.filter((t) => t.endsWith("(다시)")).length}번), 거친 장면: ${[...seen].join(" · ")}, 2막 규칙: ${[...marks].join(" · ") || "없음"}`);
+  console.log(`${name}: 판 ${state.runs}번(가장 멀리 ${reached}막), 누름 ${trail.length}번(다시 ${trail.filter((t) => t.endsWith("(다시)")).length}번), 가장 긴 멈춤 ${(longest / 1000).toFixed(1)}초, 거친 장면: ${[...seen].join(" · ")}, 2막 규칙: ${[...marks].join(" · ") || "없음"}`);
   await page.context().close();
   return prints;
 }

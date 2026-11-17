@@ -19,6 +19,8 @@ export interface Tick {
   scene?: string;
   /** 이번에 한 일. 없으면 기다리는 중 */
   did?: string;
+  /** 기다리는 중일 때 무엇을 기다리는지. 이 값이 바뀌면 나아가고 있는 거예요 (턴 재생의 남은 걸음, 전환 막, 만들어지는 장면) */
+  wait?: string;
   /** 끝난 판 수와 이긴 판 수 */
   runs: number;
   wins: number;
@@ -69,6 +71,12 @@ function top(game: Phaser.Game): Loose | undefined {
   return all[all.length - 1];
 }
 
+/** 기다리는 것의 이름. 느린 기계에서도 걸음마다 바뀌어요 */
+function waiting(game: Phaser.Game, s: Loose | undefined): string {
+  const states = game.scene.getScenes(false).map((x) => `${x.sys.settings.key}${x.sys.settings.status}`).join(",");
+  return `${states} 막${veiled(game) ? 1 : 0} 재생${s?.playback?.length ?? "-"} 누름${pressedAt}`;
+}
+
 /** 한 번 눌러요. 누를 것이 없으면 did 없이 돌아와요 */
 export function tick(): Tick {
   const w = window as unknown as { game: Phaser.Game; session: GameSession };
@@ -88,9 +96,11 @@ export function tick(): Tick {
   }
   const s = top(w.game);
   const out: Tick = { scene: s?.sys.settings.key, runs: w.session.garden.state.runs ?? 0, wins };
+  out.wait = waiting(w.game, s);
   if (!s || frame - pressedAt < 2) return out;
   const p = act(s, w.session);
   if (!p) return out;
+  out.wait = undefined;
   p.press();
   pressedAt = frame;
   if (double && p.again) again = { scene: s, press: p, left: [...AGAIN_AFTER], from: frame };
