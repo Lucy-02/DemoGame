@@ -16,7 +16,7 @@ export const CHOICE_ICONS = FX_ICONS.map((id) => [id, CHOICE.fx.icon] as const);
 
 export interface ChoiceVM {
   label: string;
-  /** 효과 칩. 비면 '변화 없음' 같은 한 조각을 화면이 넣어요 */
+  /** 효과 칩. 비면 none 글(있을 때)만, 없으면 이름만 */
   fx: FxVM[];
   enabled: boolean;
 }
@@ -48,7 +48,7 @@ export function drawChoices(scene: Phaser.Scene, items: ChoiceVM[], top: number,
       t: "col", w: K.w, pad: K.pad, gap: K.inner,
       children: [
         text(c.label, T.optLabel, fade(P.ink)),
-        c.fx.length ? chips(c.fx, fade, inner) : text(none ?? "", T.optText, fade(P.ink3Spirit)),
+        ...(c.fx.length ? [chips(c.fx, fade, inner)] : none ? [text(none, T.optText, fade(P.ink3Spirit))] : []),
       ],
     };
     const h = size(node).h;

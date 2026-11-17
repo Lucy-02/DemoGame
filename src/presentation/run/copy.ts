@@ -26,7 +26,8 @@ export const COPY = {
     maxHpAll: (n: number) => `모든 정령 최대 HP +${n}`,
     cardReward: (n: number, rarity?: string) => `${rarity ? `${rarity} ` : ""}카드 ${n}장 중 1장 받기`,
     removeCard: "카드 1장 빼기",
-    upgradeCard: "카드 1장 강화",
+    /** 강화는 이름과 겹치지 않게 무엇이 오르는지만 (0080 규칙) */
+    upgradeCard: (p: string) => `카드 1장 숫자 +${p}`,
     duplicateCard: "카드 1장 복제",
     /** 아무 일도 없는 선택지 */
     none: "변화 없음",

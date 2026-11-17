@@ -1,6 +1,6 @@
 // 선택지 효과 칩 (Lucy 2026-11-17: 기호를 쓰고 글은 짧게). 효과 하나 = 기호 + 짧은 명사구 한 조각.
 // 효과문 전체(합니다체)는 쓰지 않아요. 대상 · 수치는 정령 줄 미리보기가 함께 보여줘요.
-import { RARITY_NAME } from "../../core/data";
+import { C, RARITY_NAME } from "../../core/data";
 import type { EventOutcome } from "../../core/types";
 import { EVENT_CARD_CHOICES } from "../../session/event";
 import { COPY } from "./copy";
@@ -25,7 +25,7 @@ export function outcomeFx(o: EventOutcome): FxVM | undefined {
     case "maxHpAll": return { icon: "g-up", text: F.maxHpAll(o.value) };
     case "cardReward": return { icon: "g-cardnew", text: F.cardReward(EVENT_CARD_CHOICES, o.rarity ? RARITY_NAME[o.rarity] : undefined) };
     case "removeCard": return { icon: "fx-discard", text: F.removeCard };
-    case "upgradeCard": return { icon: "g-up", text: F.upgradeCard };
+    case "upgradeCard": return { icon: "g-up", text: F.upgradeCard(pct(C.card_upgrade.pct)) };
     case "duplicateCard": return { icon: "g-cardnew", text: F.duplicateCard };
     default: return undefined;
   }
