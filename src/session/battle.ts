@@ -18,9 +18,12 @@ export type BattleCommand =
 
 export class BattleSession {
   readonly battle: Battle;
+  /** 싸우는 막 (배경 그림을 고를 때 써요) */
+  readonly act: number;
 
   /** 판의 지금 상태로 전투를 열어요. 난수는 판의 난수에서 하나 뽑아 써요 (legacy와 같은 자리) */
   constructor(run: Run, enemies: string[]) {
+    this.act = run.act;
     this.battle = new Battle(run.spirits, run.battleDeck(), enemies, run.frontId, new Rng(run.rng.int(0, 1e9)), run.enemyScale(), run.battleTraits());
     this.battle.firstGapBonus = run.battleGapBonus();
     // 품을 카드는 재생 뒤 고르기 창에서 물어요 (0075)
