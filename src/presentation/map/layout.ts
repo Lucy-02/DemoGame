@@ -1,8 +1,8 @@
 // 지도 화면 배치 (한 막 전체 지도 + 오른쪽 열 맨 위 슬림 파티 줄, Lucy 2026-11-17. 0076 18번의 R2 지도 C를 대체해요). 값은 묶음 A 정리안 f9(0046)에서 잰 임시 값이에요 (TODO_TOKEN).
 import { SYS } from "../battle/layout";
-import { FRAME, GOLD, GRID, LANE } from "../run/layout";
+import { FRAME, GOLD_AT, GRID, LANE, SLIM_LANE } from "../run/layout";
 
-export { FRAME };
+export { FRAME, GOLD_AT };
 
 /** 큰 지도: 한 막 전체(출발 + 층들 + 보스)를 줄 간격을 줄여 한 번에 보여요 (Lucy 2026-11-17, 미니맵 없음). 아래가 출발, 위가 보스 */
 export const PATH = {
@@ -17,15 +17,10 @@ export const PATH = {
   tipGap: 8,
 };
 
-/** 골드: 오른쪽 위 버튼 줄과 같은 높이 */
-export const GOLD_AT = { x: GRID.gutter, y: SYS.top + (SYS.button - GOLD.h) / 2 };
 
 /** 슬림 파티 줄: 정령 줄(0046)의 접힌 상태. 고른 줄만 같은 자리에서 정령 줄 높이로 펼쳐요 */
 export const SLIM = {
-  x: GRID.lanesX, y: LANE.y, w: GRID.lanesW, h: 52, gap: LANE.gap, radius: LANE.radius,
-  ring: { x: 16, d: 40, r: 18, stroke: 3, faceInset: 5 },
-  name: { x: 73, gap: 10 },
-  hp: { x: 301, w: 132, h: 8, numX: 443, numGap: 2 },
+  ...SLIM_LANE, y: LANE.y,
   /** 펼친 줄의 닫기: 오른쪽 위, 덱 보기와 같은 기호 버튼 */
   close: { right: 18, top: 14, h: 26, icon: 18, gap: 6 },
 };

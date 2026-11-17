@@ -95,6 +95,7 @@
     "card_count": 5
   },
   "rest_heal_pct": 0.3,
+  "card_upgrade": { "pct": 0.3, "min": 1 },
   "start_gold": 60,
   "release_taunt": [
     "glass_salamander"

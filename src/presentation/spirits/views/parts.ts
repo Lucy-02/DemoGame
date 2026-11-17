@@ -40,9 +40,13 @@ export function bar(h: number, value: number, track: string, fillColor: string, 
   };
 }
 
-/** 버튼 (.btn.go 강조 / .btn 보통). 끌 수 없으면 흐리게 */
+/** 주 버튼 판 (0054 밝은 유리 판, 보라 채움 기각): 강조 = 밝은 채움 + 밝은 테, 보통 = 테만 */
+export const plateStyle = (emph: boolean) =>
+  emph ? { fill: P.veil["09"], ring: { width: 1, color: P.veil["50"] } } : { ring: { width: 1, color: P.glassLine } };
+
+/** 버튼 (.btn.go 강조 / .btn 보통, plate = 런 · 메인의 밝은 유리 판 강조). 끌 수 없으면 흐리게 */
 export function button(label: string, opts: {
-  size: string; h: number; radius: number; padX?: number; go?: boolean; enabled?: boolean; w?: number; grow?: boolean;
+  size: string; h: number; radius: number; padX?: number; go?: boolean; plate?: boolean; enabled?: boolean; w?: number; grow?: boolean;
   badgeIcon?: string; onClick?: () => void;
 }): BoxNode {
   const enabled = opts.enabled ?? true;
@@ -52,7 +56,7 @@ export function button(label: string, opts: {
   return {
     t: "row", h: opts.h, w: opts.w, grow: opts.grow, radius: opts.radius, justify: "center", align: "center",
     pad: [0, padX, 0, padX],
-    style: opts.go ? { fill } : { ring: { width: 1, color: P.glassLine } },
+    style: opts.go ? { fill } : plateStyle(!!opts.plate && enabled),
     onClick: enabled ? opts.onClick : undefined,
     children: [text(label, opts.size, ink)],
   };

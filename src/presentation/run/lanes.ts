@@ -6,7 +6,7 @@ import { createHandCard } from "../card/HandCard";
 import type { CardVM } from "../card/viewmodel";
 import { faceTexture } from "../spiritArt";
 import { P, badge, bar, text } from "../spirits/views/parts";
-import { withAlpha } from "../style/color";
+import { rgba, withAlpha } from "../style/color";
 import { box, circle } from "../style/draw";
 import { hitArea, render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
@@ -42,6 +42,10 @@ export interface LaneState {
   deckTo?: number;
   /** HP가 이만큼 찰 예정 (치료 미리보기): 막대에 연두 구간 */
   heal?: number;
+  /** 최대 HP가 이 값이 될 예정 (판 결과) */
+  maxHpTo?: number;
+  /** 지금 HP 대신 최대 HP만 보여요 (판 결과: 다음 판은 가득 찬 채로 떠나요). 바뀌면 a→b */
+  maxOnly?: boolean;
   /** 장비를 받는 미리보기 (0064) */
   equip?: LaneEquipState;
   /** 빈 카드 칸을 그리지 않아요 (카드를 고르는 때가 아니면 빈 칸은 뜻이 없어요). 받은 카드는 그대로 보여요 */
@@ -122,7 +126,7 @@ function drawFace(scene: Phaser.Scene, l: LaneVM, x: number, y: number) {
   });
 }
 
-function info(l: LaneVM, lit?: StatId, heal = 0, equip?: LaneEquipState, noStats = false): Node {
+function info(l: LaneVM, lit?: StatId, hpTo = l.hp, equip?: LaneEquipState, maxTo?: number, maxOnly = false, noStats = false): Node {
   const U = INFO.levelUp, S = INFO.stats, C = INFO.chip;
   const level: Node = l.levelUp
     ? {
@@ -154,18 +158,25 @@ function info(l: LaneVM, lit?: StatId, heal = 0, equip?: LaneEquipState, noStats
         children: [
           {
             t: "row", gap: INFO.hp.numGap, align: "baseline",
-            children: [
-              text(String(l.hp), T.hp, low ? P.danger : P.ink, { lh: 1 }),
+            children: maxOnly ? [
+              ...(maxTo !== undefined && maxTo !== l.maxHp
+                ? [text(`${l.maxHp}${COPY.arrow}`, T.level, P.ink3Spirit), text(String(maxTo), T.hp, P.accHi, { lh: 1 })]
+                : [text(String(l.maxHp), T.hp, P.ink, { lh: 1 })]),
+            ] : [
+              // 치료 · 쉬기 미리보기: 지금 HP는 작고 흐리게, 찰 HP가 주인공이에요 (0046 "HP a→b")
+              ...(hpTo !== l.hp
+                ? [text(`${l.hp}${COPY.arrow}`, T.level, P.ink3Spirit), text(String(hpTo), T.hp, hpTo > l.hp ? P.ok : P.danger, { lh: 1 })]
+                : [text(String(l.hp), T.hp, low ? P.danger : P.ink, { lh: 1 })]),
               // 바뀌기 전 값은 작고 흐리게, 바뀐 값이 주인공이에요
-              ...(equip?.maxHpTo === undefined
+              ...(maxTo === undefined || maxTo === l.maxHp
                 ? [text(`/${l.maxHp}`, T.hpMax, P.ink3Spirit)]
                 : [
                   text(`/${l.maxHp}${COPY.arrow}`, T.level, P.ink3Spirit),
-                  text(String(equip.maxHpTo), T.hpMax, equip.maxHpTo < l.maxHp ? P.danger : P.accHi),
+                  text(String(maxTo), T.hpMax, maxTo < l.maxHp ? P.danger : P.accHi),
                 ]),
             ],
           },
-          { t: "row", children: [hpBar(l, heal)] },
+          { t: "row", children: [maxOnly ? hpBar({ ...l, hp: l.maxHp }, l.maxHp, l.maxHp) : hpBar(l, hpTo, maxTo ?? l.maxHp)] },
         ],
       },
       ...(noStats ? [] : [{ t: "row", gap: S.gap, align: "center", children: STAT_IDS.map(stat) } as Node]),
@@ -180,19 +191,28 @@ function info(l: LaneVM, lit?: StatId, heal = 0, equip?: LaneEquipState, noStats
   };
 }
 
-/** HP 막대. heal이 있으면 지금 HP 뒤에 찰 만큼을 연두로 깔아요 (.hpbar3 i.gain) */
-function hpBar(l: LaneVM, heal: number): Node {
-  const B = INFO.hp.bar;
-  const now = Math.max(INFO.hp.minFill, l.hp / l.maxHp);
+/** HP 막대. 바뀔 HP(to)가 있으면 오르는 만큼은 연두(.hpbar3 i.gain), 깎이는 만큼은 붉게 깔아요 */
+function hpBar(l: LaneVM, to: number, max: number): Node {
+  return hpBarNode(l, to, max, INFO.hp.bar);
+}
+
+/** HP 막대 (정령 줄 · 얇은 줄 같이 씀). to · max가 지금과 다르면 오르는 만큼 연두, 깎이는 만큼 붉게 */
+export function hpBarNode(l: Pick<LaneVM, "hp" | "maxHp" | "down">, to: number, max: number, B: { w: number; h: number }): Node {
+  const fill = (v: number) => Math.max(INFO.hp.minFill, Math.min(1, v / max));
+  const now = fill(l.hp);
   const base = bar(B.h, now, P.wallLo, l.down ? P.danger : P.ink2, { w: B.w, grow: false });
-  if (heal <= 0) return base;
-  const after = Math.min(1, (l.hp + heal) / l.maxHp);
+  if (to === l.hp && max === l.maxHp) return base;
+  const after = fill(to);
   return {
     ...base,
     draw: (g, x, y, w, h) => {
       box(g, x, y, w, h, h / 2, { fill: P.wallLo });
-      box(g, x, y, Math.max(h, w * after), h, h / 2, { fill: P.ok });
-      box(g, x, y, Math.max(h, w * now), h, h / 2, { fill: P.ink2 });
+      // 남은 HP와 오르는/깎이는 구간의 이음새는 곧은 세로선 (Lucy 2026-11-17). 둥근 끝은 막대 양 끝에만
+      const [far, near, color] = after >= now ? [after, now, P.ok] : [now, after, P.danger];
+      box(g, x, y, Math.max(h, w * far), h, h / 2, { fill: color });
+      const nw = Math.max(h / 2, w * near), r = h / 2;
+      const c = rgba(P.ink2);
+      g.fillStyle(c.color, c.alpha).fillRoundedRect(x, y, nw, h, nw >= w ? r : { tl: r, bl: r, tr: 0, br: 0 });
     },
   };
 }
@@ -233,7 +253,8 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
 
   const body = gather(scene, 0, 0, () => {
     drawFace(scene, l, x + RING.x, y + RING.y);
-    const node = info(l, st.stat, st.heal, st.equip, st.noStats);
+    const hpTo = st.heal ? Math.min(l.maxHp, l.hp + st.heal) : l.hp;
+    const node = info(l, st.stat, hpTo, st.equip, st.equip?.maxHpTo ?? st.maxHpTo, st.maxOnly, st.noStats);
     render(scene, node, x + INFO.x, y + (h - size(node).h) / 2);
     l.slots.forEach((item, k) => {
       const at = slotAt(i, l.slots.length, k, y);

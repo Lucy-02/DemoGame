@@ -7,11 +7,9 @@ import { runStats } from "../ui/preview";
 import { CARD_H, CARD_W, COLORS, H, W, button, cardView, txt } from "../ui/widgets";
 
 export interface DeckSceneData {
-  mode: "view" | "remove";
   from: string;
   title?: string;
   cards?: DeckCard[];
-  onPick?: (uid: number) => void;
 }
 
 export class DeckScene extends Phaser.Scene {
@@ -24,14 +22,14 @@ export class DeckScene extends Phaser.Scene {
     const cards = (data.cards ?? run.deck).slice().sort((a, b) =>
       a.owner === b.owner ? cardDef(a.cardId).cost - cardDef(b.cardId).cost : a.owner.localeCompare(b.owner));
     this.add.rectangle(0, 0, W, H, 0x000000, 0.85).setOrigin(0, 0).setInteractive();
-    const title = data.title ?? (data.mode === "remove" ? "제거할 카드를 고르세요" : `덱 (${cards.length}장)`);
+    const title = data.title ?? `덱 (${cards.length}장)`;
     txt(this, W / 2, 34, title, 24).setOrigin(0.5);
 
     const close = () => {
       this.scene.stop();
       this.scene.resume(data.from);
     };
-    button(this, W - 90, 34, 140, 40, data.mode === "remove" ? "취소" : "닫기", close, { color: 0x5a4f72 });
+    button(this, W - 90, 34, 140, 40, "닫기", close, { color: 0x5a4f72 });
 
     const content = this.add.container(0, 0);
     const scale = 0.78;
@@ -43,16 +41,6 @@ export class DeckScene extends Phaser.Scene {
       const v = cardView(this, c.cardId, c.owner, runStats(run, c.owner));
       v.setScale(scale).setPosition(x0 + (i % cols) * cw, 150 + Math.floor(i / cols) * ch);
       content.add(v);
-      if (data.mode === "remove") {
-        const hit = this.add.rectangle(v.x, v.y, CARD_W * scale, CARD_H * scale, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-        hit.on("pointerover", () => v.setScale(scale * 1.08));
-        hit.on("pointerout", () => v.setScale(scale));
-        hit.on("pointerdown", () => {
-          data.onPick?.(c.uid);
-          close();
-        });
-        content.add(hit);
-      }
     });
     if (!cards.length) txt(this, W / 2, H / 2, "카드가 없어요", 18, COLORS.dim).setOrigin(0.5);
     const rows = Math.ceil(cards.length / cols);
