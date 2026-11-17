@@ -5,6 +5,10 @@ import { returnHp } from "../core/stats";
 import { RUN_SAVE_VERSION, Run, type BattleReward, type MapNode, type RunOptions, type RunSave } from "../core/run";
 import type { BattleTier } from "../core/garden";
 import type { DeedTally } from "./deeds";
+import { upgradeSave, type SaveStep } from "./migrate";
+
+/** 옛 판 저장을 올리는 함수 (버전 n → n + 1). 지금은 버전 1뿐이라 비어 있어요 */
+const RUN_STEPS: Readonly<Record<number, SaveStep>> = {};
 
 /** 판 안에서 지금 있는 자리 */
 export type RunPhase =
@@ -142,8 +146,9 @@ export class RunSession {
     return { version: RUN_SAVE_VERSION, run: this.run.save(), phase: structuredClone(this._phase) };
   }
 
-  static restore(file: RunSaveFile): RunSession {
-    if (file.version !== RUN_SAVE_VERSION) throw new Error(`판 저장 형식이 달라요: ${file.version}`);
+  static restore(raw: unknown): RunSession {
+    const file = upgradeSave(raw, RUN_SAVE_VERSION, RUN_STEPS, "판") as unknown as RunSaveFile;
+    if (typeof file.phase?.kind !== "string") throw new Error("판 저장에 자리가 없어요");
     return new RunSession(Run.load(file.run), structuredClone(file.phase));
   }
 }

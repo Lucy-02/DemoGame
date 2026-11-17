@@ -4,8 +4,23 @@ import {
   addDeed, endRun, evolve, feed, grantBattle, join, keepEquipment, markGuide, markSeen, setFront, openBranches, startGarden, seeEpisode, spiritUnlocks, gardenSpirit, GARDEN_VERSION,
   type BattleTier, type Garden,
 } from "../core/garden";
-import type { RunSpirit } from "../core/types";
+import { SPIRITS } from "../core/data";
+import { STAGES, type RunSpirit } from "../core/types";
 import type { DeedKind, DeedTally } from "./deeds";
+import { upgradeSave, type SaveStep } from "./migrate";
+
+/** 옛 정원 저장을 올리는 함수 (버전 n → n + 1). 지금은 버전 1뿐이라 비어 있어요 */
+const GARDEN_STEPS: Readonly<Record<number, SaveStep>> = {};
+
+/** 저장에서 읽은 정원이 쓸 수 있는 모양인지 봐요. 아니면 던져요 (GameSession.load가 복구해요) */
+function checkGarden(g: Garden): Garden {
+  if (!Array.isArray(g.spirits) || g.spirits.length === 0) throw new Error("정원 저장에 정령이 없어요");
+  for (const s of g.spirits) {
+    const ok = typeof s === "object" && s !== null && SPIRITS.some((d) => d.id === s.id) && Number.isFinite(s.exp) && STAGES.includes(s.stage) && Array.isArray(s.seen);
+    if (!ok) throw new Error(`정원 저장의 정령을 읽을 수 없어요: ${JSON.stringify(s)?.slice(0, 80)}`);
+  }
+  return g;
+}
 
 export type GardenCommand =
   /** 키우기. 갈래 고르기면 고른 갈래 id (0027) */
@@ -87,8 +102,7 @@ export class GardenSession {
   }
 
   static restore(text: string): GardenSession {
-    const g = JSON.parse(text) as Garden;
-    if (g.version !== GARDEN_VERSION) throw new Error(`정원 저장 형식이 달라요: ${g.version}`);
-    return new GardenSession(g);
+    const g = upgradeSave(JSON.parse(text), GARDEN_VERSION, GARDEN_STEPS, "정원") as unknown as Garden;
+    return new GardenSession(checkGarden(g));
   }
 }
