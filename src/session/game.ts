@@ -117,11 +117,16 @@ export class GameSession {
 
   /**
    * 판을 닫고 정원으로 돌아가요. 판 수가 오르고, 이번 탐험에서 받은 카드로 갈래 조건이 쌓여요.
-   * 장비 남기기(keepEquipment)는 런 결과 화면(0046, Lucy 결정 대기)에서 고르므로 아직 부르지 않아요: 판에서 얻은 장비는 사라지고 정원의 장비는 그대로예요.
+   * 지닌 장비는 모두 남겨요(0056: 남기는 수 = 지닌 수, 져도 남김). 남길지 고르는 화면은 아직 없어요(OPEN_QUESTIONS).
    */
   private close(run: RunSession) {
     const before = run.run.opts.garden ?? this.garden.state;
-    if (!this.trialOpts) this.garden.dispatch({ kind: "endRun", received: run.run.receivedBySpirit() });
+    if (!this.trialOpts) {
+      const party = run.run.spirits;
+      const keep = Object.fromEntries(party.map((s) => [s.id, s.equipment.map((e) => e.id)]));
+      this.garden.dispatch({ kind: "keepEquipment", party, keep });
+      this.garden.dispatch({ kind: "endRun", received: run.run.receivedBySpirit() });
+    }
     const victory = run.phase.kind === "over" && run.phase.victory;
     this._last = { run: run.run, victory, before, after: this.garden.state };
     this._run = undefined;

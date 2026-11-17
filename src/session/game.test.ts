@@ -59,6 +59,22 @@ describe("게임 세션", () => {
     expect(() => game.startRun()).not.toThrow();
   });
 
+  it("판이 끝나면 지닌 장비가 정원에 남고 다음 판에도 지녀요 (0056)", async () => {
+    const game = await GameSession.load(new MemoryStore(), seeds);
+    const id = game.garden.state.spirits[0].id;
+    const lose = () => {
+      const run = game.startRun();
+      const had = run.run.spirits[0].equipment.length;
+      if (!had) run.run.giveEquipment("bone_sword", id);
+      run.enter(run.run.reachable()[0].id);
+      game.finishBattle(outcome(run, false));
+    };
+    lose();
+    expect(game.garden.state.spirits[0].equipment).toEqual([{ id: "bone_sword", resonance: 1 }]);
+    lose();
+    expect(game.garden.state.spirits[0].equipment?.[0].id).toBe("bone_sword");
+  });
+
   it("다시 켜면 같은 자리, 같은 드로우로 이어요 (0047 · 0052)", async () => {
     const store = new MemoryStore();
     const a = await GameSession.load(store, seeds);

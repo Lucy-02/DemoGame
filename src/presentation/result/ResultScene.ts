@@ -181,6 +181,8 @@ export class ResultScene extends Phaser.Scene {
     let tip: (() => void) | undefined;
     const lane = (id?: string) => vm.lanes.find((l) => l.id === id);
     const at = placeResult(vm.lanes.length, !!vm.equip);
+    /** 정령 줄 말풍선이 가리면 안 되는 장비 줄 (주는 수치가 여기 보여요) */
+    const strip = { top: at.stripY, bottom: at.stripY + STRIP.h };
     this.cameras.main.setScroll(at.scroll.x, at.scroll.y);
     if (!this.over) drawStage(this).setScrollFactor(0);
     drawWindow(this, at.win);
@@ -249,7 +251,7 @@ export class ResultScene extends Phaser.Scene {
             st.equip.delta = Object.fromEntries(STAT_IDS.map((k) => [k, over.after.stats[k] - l.stats[k]]).filter(([, d]) => d !== 0));
             if (over.after.maxHp !== l.maxHp) st.equip.maxHpTo = over.after.maxHp;
             const at = slotAt(i, l.slots.length, over.slot);
-            tip = () => drawEquipTip(this, over.tip, { kind: "lane", right: LANE.x - EQUIP_TIP.gapToLane, pointY: at.y + EQUIP_SLOT.size / 2 }, l);
+            tip = () => drawEquipTip(this, over.tip, { kind: "lane", right: LANE.x - EQUIP_TIP.gapToLane, pointY: at.y + EQUIP_SLOT.size / 2, avoid: strip }, l);
           }
         }
       }
