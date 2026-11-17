@@ -190,7 +190,8 @@ export class BattleScene extends Phaser.Scene {
       prev: handPrev?.snap, deal: !!this.session && (!handPrev || handPrev.turn !== turn),
       lift: this.lift ? LIFT_STYLES[this.lift] : undefined,
       onPress: (key, p) => {
-        if (p.rightButtonDown() || !this.vm.plays[key] || this.pick) return;
+        if (p.rightButtonDown() || this.pick) return;
+        if (!this.vm.plays[key]) return void audioOf(this)?.play("card.deny");
         this.press = { key, x: p.x, y: p.y };
       },
       onChange: (key, held) => {
@@ -553,7 +554,11 @@ export class BattleScene extends Phaser.Scene {
   /** 재생: 다음 장면으로. 남은 장면이 없으면 확정된 상태로 */
   private step() {
     const rest = this.playback?.slice(1) ?? [];
-    if (!rest.length) return this.settle();
+    if (!rest.length) {
+      // 재생이 끝나고 새 손패가 들어와요
+      if (this.session && !this.session.over) audioOf(this)?.play("hand.new");
+      return this.settle();
+    }
     this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide, playback: rest, cues: this.cues?.slice(1) } satisfies BattleSceneData);
   }
 

@@ -1,6 +1,7 @@
 // 정령 관리 화면 (정본: 정령 관리 R4 v5, 탭 내용은 결정 0021). 정원 세션 상태 → 화면 데이터 → 그리기.
 // 상태가 바뀌거나 탭·정령을 고르면 화면을 통째로 다시 그려요(정지 화면이라 충분히 가벼워요).
 import * as Phaser from "phaser";
+import { audioOf } from "../audio";
 import { STAGE_LABEL } from "./copy";
 import { EVOLUTION_SCENE, hasEvolutionCutscene, type EvolutionSceneData } from "../evolution/EvolutionScene";
 import { gardenSpirit, isBranching, type Garden } from "../../core/garden";
@@ -206,6 +207,7 @@ export class SpiritsScene extends Phaser.Scene {
   private evolve(id: string, branch?: string) {
     const before = gardenSpirit(this.session.state, id);
     this.session.dispatch({ kind: "evolve", id, branch });
+    audioOf(this)?.play("evolve");
     const after = gardenSpirit(this.session.state, id);
     if (after.stage === before.stage || !hasEvolutionCutscene(id, before.stage, after.stage)) return;
     if (!this.scene.manager.getScene(EVOLUTION_SCENE)) return;
