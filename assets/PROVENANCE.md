@@ -19,7 +19,7 @@ TTI(NovelAI Diffusion V5 / V4.5)가 들어간 파일은 모두 `assets/provenanc
 
 ## 소리
 
-소리 파일(`public/assets/audio/`)도 한 줄씩 기록해요 (0087). TTI 필드 대신 아래를 써요.
+소리 파일(public/assets/audio/, 아직 없는 폴더)도 한 줄씩 기록해요 (0087). TTI 필드 대신 아래를 써요.
 
 | 필드 | 내용 |
 | --- | --- |
