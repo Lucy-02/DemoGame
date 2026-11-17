@@ -188,7 +188,7 @@ export class EventScene extends Phaser.Scene {
   private paintPick(mode: "removeCard" | "upgradeCard" | "duplicateCard") {
     const run = this.session.run;
     const ok = new Set(this.session.candidates(mode));
-    drawGold(this, run.gold);
+    drawGold(this, run.gold, {}, protoLayout() ? { x: 48, y: 9 } : undefined);
     const rows: Record<string, DeckCardVM[]> = Object.fromEntries(run.spirits.map((rs) => [rs.id, run.deck.filter((c) => c.owner === rs.id).map((c): DeckCardVM => ({
       uid: c.uid, card: deckCardVM(c),
       // 강화는 강화한 모습, 복제는 같은 카드 한 장이 옆에 끼어요

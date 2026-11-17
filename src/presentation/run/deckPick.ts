@@ -20,8 +20,6 @@ import { WINDOW } from "../result/layout";
 import { faceTexture } from "../spiritArt";
 import { shadowTexture } from "../style/shadow";
 import { drawSys } from "../battle/views/topbar";
-import { drawGold } from "./gold";
-import { GOLD_AT } from "../map/layout";
 
 const T = tokens.provisional.text.result;
 const C = DECK_PICK.confirm;
@@ -194,8 +192,6 @@ export function drawQuietButton(scene: Phaser.Scene, icon: string, label: string
 function drawDeckPickWindow(scene: Phaser.Scene, o: DeckPickOptions) {
   const V = DECK_VIEW, W = WINDOW;
   const focus = o.pick ?? o.hover;
-  const gold = (scene as unknown as { session?: { run?: { gold?: number } } }).session?.run?.gold;
-  if (gold !== undefined) drawGold(scene, gold, {}, GOLD_AT);
   drawSys(scene);
   scene.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive().on("pointerup", () => {
     if (o.pick !== undefined) o.on.clear();
