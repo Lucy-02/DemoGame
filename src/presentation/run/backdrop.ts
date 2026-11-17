@@ -4,7 +4,7 @@ import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { box } from "../style/draw";
 import { canvasTexture, ellipse } from "../style/gradient";
-import { placeArt, stageArt, type Place } from "../stage";
+import { placeArt, stageArt, stageImage, type Place } from "../stage";
 import { BG, FRAME } from "./layout";
 
 const P = tokens.provisional.palette;
@@ -14,7 +14,7 @@ export function drawBackdrop(scene: Phaser.Scene, where?: number | Place) {
   if (art) {
     const layers = typeof art === "string" ? [art] : [art.far, art.ground];
     return scene.add.container(0, 0, [
-      ...layers.map((key) => scene.add.image(0, 0, key).setOrigin(0, 0)),
+      ...layers.map((key) => stageImage(scene, key)),
       box(scene.add.graphics(), 0, 0, FRAME.w, FRAME.h, 0, { fill: P.scrim }),
     ]);
   }
