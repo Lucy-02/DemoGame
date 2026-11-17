@@ -99,8 +99,14 @@ export class GameFlow implements LegacyFlow {
       this.game.scene.run(DEPART_SCENE, data);
     };
     if (this.game.scene.isActive(HOME_SCENE)) return open();
+    // 메인 화면이 다 뜬 뒤에 띄워요 (장면을 다시 시작하면 그 장면의 이벤트 구독이 지워져서 게임 단계로 기다려요)
     this.home();
-    this.game.scene.getScene(HOME_SCENE).events.once(Phaser.Scenes.Events.CREATE, open);
+    const wait = () => {
+      if (!this.game.scene.isActive(HOME_SCENE)) return;
+      this.game.events.off(Phaser.Core.Events.POST_STEP, wait);
+      open();
+    };
+    this.game.events.on(Phaser.Core.Events.POST_STEP, wait);
   }
 
   /** 깃들기: 판 끝에 꼭 골라요. 둘이면 연달아 골라요 (0076 9 · 10). prev = 바로 앞에 고른 정령 */
