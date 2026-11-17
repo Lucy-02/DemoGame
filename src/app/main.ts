@@ -15,6 +15,7 @@ import { C, SPIRITS } from "../core/data";
 import { getPlatform } from "../platform";
 import { startGame } from "../presentation/game";
 import { GameSession } from "../session/game";
+import { loadSettings } from "../session/settings";
 
 async function start() {
   const platform = getPlatform();
@@ -26,8 +27,9 @@ async function start() {
   const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" ? screen : undefined;
   const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform);
   Object.assign(window, { session });
+  const settings = await loadSettings(platform);
   const game = await startGame("game", {
-    screen: fixture, session, trial: screen === "legacy", quit: () => void platform.quit(),
+    screen: fixture, session, trial: screen === "legacy", quit: () => void platform.quit(), volume: settings.volume,
     hover: get("hover"), scene: get("scene"), lift: get("lift"), select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
   });
   Object.assign(window, { game });

@@ -4,6 +4,8 @@
 import * as Phaser from "phaser";
 import { tokens } from "../design/tokens";
 import type { GameSession } from "../session/game";
+import { defaultSettings, type Volume } from "../session/settings";
+import { installAudio } from "./audio";
 import { GameFlow } from "./flow";
 import { LEGACY_SCENES, waitForLegacyFonts } from "./placeholder";
 import { BATTLE_SCENE, BattleScene } from "./battle/BattleScene";
@@ -34,6 +36,8 @@ export interface GameOptions {
   trial?: boolean;
   /** 메인 화면의 종료 */
   quit?: () => void;
+  /** 저장된 볼륨 묶음 셋. 없으면 기본값 */
+  volume?: Volume;
   /** 전투 결과: 받은 상태로 시작 (카드 key 또는 skip, 시각 검증용) */
   taken?: string;
   /** 정령 관리: 처음 고를 정령·탭, 패널 접힘 (?select=&tab=&closed) */
@@ -66,6 +70,8 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
       postBoot: (game) => {
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
+        // 소리 (0084 1번). 화면은 audioOf(scene)로 꺼내 써요
+        installAudio(game, opts.volume ?? defaultSettings().volume);
         if (live) {
           for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene]] as const) {
             game.scene.add(key, scene, false);

@@ -12,6 +12,8 @@ import { battleVM, cardUid, refOf, releaseId } from "./fromBattle";
 import { tokens } from "../../design/tokens";
 import { ms } from "../style/ease";
 import { playbackFrames } from "./playback";
+import { audioOf, type SfxId } from "../audio";
+import { cuesOf, playbackCues } from "../audio/battleCues";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
 import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
@@ -42,6 +44,8 @@ export interface BattleSceneData {
   lift?: string;
   /** 턴 재생: 남은 장면들. 첫 장면을 그리고, 한 행동 시간 뒤 다음 장면으로 넘어가요 */
   playback?: BattleVM[];
+  /** 턴 재생: 남은 장면마다 날 소리 (playback과 같은 순서) */
+  cues?: SfxId[][];
 }
 
 export class BattleScene extends Phaser.Scene {
@@ -59,6 +63,7 @@ export class BattleScene extends Phaser.Scene {
 
   private session?: BattleSession;
   private playback?: BattleVM[];
+  private cues?: SfxId[][];
   private place?: string;
   private onOver?: (scene: Phaser.Scene) => void;
   private onDeck?: (scene: Phaser.Scene) => void;
@@ -69,6 +74,7 @@ export class BattleScene extends Phaser.Scene {
     this.onDeck = data.onDeck;
     this.place = data.place;
     this.playback = data.playback;
+    this.cues = data.cues;
     this.vm = data.playback?.[0] ?? (data.session ? battleVM(data.session.battle, data.place) : data.vm ?? canonRest);
     this.previews.clear();
     this.bounds = [];
@@ -130,6 +136,7 @@ export class BattleScene extends Phaser.Scene {
     drawBand(this);
     drawMana(this, this.vm.mana);
     drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined);
+    for (const id of this.cues?.[0] ?? []) audioOf(this)?.play(id);
     if (this.playback) this.time.delayedCall(ms(tokens.provisional.motion.playback.step), () => this.step());
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
@@ -196,6 +203,7 @@ export class BattleScene extends Phaser.Scene {
   private move(p: Phaser.Input.Pointer) {
     if (this.press && !this.dragging && Math.hypot(p.x - this.press.x, p.y - this.press.y) >= DRAG.threshold) {
       this.dragging = this.press.key;
+      if (this.held !== this.dragging) audioOf(this)?.play("card.pick");
       this.held = null;
       this.hand.startDrag(this.dragging);
       this.showHover(null);
@@ -380,6 +388,7 @@ export class BattleScene extends Phaser.Scene {
       this.press = null;
       this.hand.endDrag();
       if (f.ready) this.play(card, f.ready.target);
+      else audioOf(this)?.play("card.place");
       this.showField(null);
       return;
     }
@@ -388,6 +397,7 @@ export class BattleScene extends Phaser.Scene {
       const key = this.press.key;
       this.press = null;
       this.held = this.held === key ? null : key;
+      audioOf(this)?.play(this.held ? "card.pick" : "card.place");
       this.hand.setHeld(this.held);
       return;
     }
@@ -396,6 +406,7 @@ export class BattleScene extends Phaser.Scene {
       const card = this.held;
       const f = this.focus(card, over);
       if (f.ready) this.play(card, f.ready.target);
+      else audioOf(this)?.play("card.place");
       this.cancel();
     }
   }
@@ -414,7 +425,9 @@ export class BattleScene extends Phaser.Scene {
     const s = this.session;
     if (!s) return console.info("[battle] 카드 사용", card, target ?? "(대상 고르기 없음)");
     const release = releaseId(card);
+    audioOf(this)?.play("card.play");
     const events = s.dispatch(release ? { kind: "release", id: release } : { kind: "play", uid: cardUid(card), target: refOf(s.battle, target) });
+    for (const id of cuesOf(events)) audioOf(this)?.play(id);
     if (events.length || !s.over) this.settle();
   }
 
@@ -422,15 +435,16 @@ export class BattleScene extends Phaser.Scene {
     const s = this.session;
     if (!s || this.dragging || this.playback || this.pick) return;
     const cast = { allies: s.battle.spirits.map((x) => x.id), enemies: s.battle.enemies.filter((e) => !e.dead).map((e) => e.uid) };
-    const frames = playbackFrames(this.vm, cast, s.dispatch({ kind: "endTurn" }));
-    this.scene.restart({ session: s, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: frames } satisfies BattleSceneData);
+    const events = s.dispatch({ kind: "endTurn" });
+    const frames = playbackFrames(this.vm, cast, events);
+    this.scene.restart({ session: s, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: frames, cues: playbackCues(events) } satisfies BattleSceneData);
   }
 
   /** 재생: 다음 장면으로. 남은 장면이 없으면 확정된 상태로 */
   private step() {
     const rest = this.playback?.slice(1) ?? [];
     if (!rest.length) return this.settle();
-    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: rest } satisfies BattleSceneData);
+    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: rest, cues: this.cues?.slice(1) } satisfies BattleSceneData);
   }
 
   /**
