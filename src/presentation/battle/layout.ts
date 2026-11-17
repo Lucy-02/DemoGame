@@ -146,6 +146,9 @@ export const END = {
 };
 
 
+/** 첫 판 안내의 짚는 테 (0088): 굵기는 가리킨 의도 알약의 테(.intent.on), 대상과의 틈은 손패 카드 사이 틈 */
+export const GUIDE = { ring: INTENT.onRing, gap: HAND.group.gap };
+
 /** 집음·조준 미리보기 (.fld-pv, page.html·r5.css) */
 export const PREVIEW = {
   /** 대상 강조: 정본 .ring.aim의 바깥 빛(box-shadow 0 0 14)을 그림 뒤에 깔아요. 발밑 고리(타원)는 0013 후속으로 뺐어요 */

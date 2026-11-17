@@ -117,6 +117,22 @@ function playHandMotion(scene: Phaser.Scene, cards: { vm: CardVM; view: HandCard
   }
 }
 
+/** 손패 묶음과 카드의 쉬는 자리 (첫 판 안내가 짚을 곳, 0088) */
+export function handBoxes(hand: BattleVM["hand"]) {
+  const G = HAND.group;
+  const groups: { x: number; y: number; w: number; h: number; radius: number }[] = [];
+  const cards = new Map<string, { x: number; y: number; w: number; h: number; radius: number }>();
+  let x = HAND.x;
+  for (const grp of hand) {
+    const n = grp.cards.length;
+    const w = G.pad * 2 + n * HAND_CARD.w + (n - 1) * G.gap;
+    groups.push({ x, y: HAND.y, w, h: G.pad * 2 + HAND_CARD.h, radius: G.radius });
+    grp.cards.forEach((c, i) => cards.set(c.key, { x: x + G.pad + i * (HAND_CARD.w + G.gap), y: HAND.y + G.pad, w: HAND_CARD.w, h: HAND_CARD.h, radius: HAND_CARD.radius }));
+    x += w + HAND.gap;
+  }
+  return { groups, cards };
+}
+
 export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: HandOptions = {}): HandView {
   const { group: G, face: F } = HAND;
   const groups: { root: Phaser.GameObjects.Container; face: Phaser.GameObjects.GameObject[]; cards: { vm: CardVM; view: HandCardView; x: number; y: number }[] }[] = [];

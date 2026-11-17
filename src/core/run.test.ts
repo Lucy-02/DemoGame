@@ -1,6 +1,7 @@
 // 전투 보상 구조 (결정 0049): 정령마다 1장 · 넘기기 골드 · 정예 장비 · 보스 장비 3택 · 카드 빼기 누진
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { C, EQUIPMENT, cardDef } from "./data";
+import { newGarden } from "./garden";
 import { Run } from "./run";
 import type { EquipDef } from "./types";
 
@@ -256,5 +257,23 @@ describe("카드 강화 (0080)", () => {
     r.duplicateCard(card.uid);
     expect(r.deck.length).toBe(n + 1);
     expect(r.deck.at(-1)).toMatchObject({ cardId: card.cardId, owner: card.owner, upgraded: true });
+  });
+});
+
+describe("첫 판 (0088)", () => {
+  const first = (id: string, runs = 0) => new Run({ seed: 7, frontId: id, adult: false, unlockAll: false, garden: { ...newGarden(7, [id]), runs } });
+
+  it("첫 판의 첫 일반 전투는 고정 편성이고, 그 뒤와 다음 판은 평소대로예요", () => {
+    const r = first("fire_fox");
+    expect(r.pickEncounter("battle").id).toBe(C.run_pool.first_battle);
+    expect(r.pickEncounter("battle").pool).toBe("weak");
+    expect(first("fire_fox", 1).pickEncounter("battle").pool).toBe("weak");
+    expect(run().pickEncounter("battle").pool).toBe("weak");
+  });
+
+  it("주인이 정해진 시작 카드는 같은 속성의 다른 정령에게 가지 않아요", () => {
+    const ids = (id: string) => first(id).deck.map((c) => c.cardId).sort();
+    expect(ids("fire_fox")).toEqual(["basic_block", "basic_claw", "ember_scatter", "ember_scatter"]);
+    expect(ids("glass_salamander")).toEqual(["basic_block", "basic_claw", "glass_wall", "glass_wall"]);
   });
 });
