@@ -1,18 +1,21 @@
-// 화면으로 한 판을 끝까지: 메인 → 출전 → 지도 → 전투 … → 보스 → 승리 결과 → 깃들기 → 메인 (0084 9번).
-// 봇(tools/screenBot.ts)이 떠 있는 장면의 손잡이를 눌러요. 이길 때까지 판을 거듭하고, 장면 전환이 막히거나 콘솔 오류가 나면 실패해요.
-import { expect, test } from "@playwright/test";
+// 화면으로 한 판을 끝까지: 메인 → 출전 → 지도 → 전투 … → 1막 보스 → 막 넘기기 → 2막 … → 판 결과 → 깃들기 → 메인 (0084 9번 · 0099 4번).
+// 봇(tools/screenBot.ts)이 떠 있는 장면의 손잡이를 눌러요. 막을 넘긴 판이 끝날 때까지 판을 거듭하고, 장면 전환이 막히거나 콘솔 오류가 나면 실패해요.
+// 같은 시드로 두 번 돌아요: 한 번씩 누르기, 그리고 누른 버튼을 빠르게 다시 누르기. 두 판의 상태가 칸마다 같아야 해요(같은 명령이 두 번 나가지 않음).
+import { expect, test, type Browser } from "@playwright/test";
 
-interface Tick { scene?: string; did?: string; runs: number; wins: number }
+interface Tick { scene?: string; did?: string; runs: number; wins: number; act?: number; endedAct?: number; marks?: string[] }
 
 /** 같은 시드면 같은 판이에요 */
 const SEED = 7;
 /** 한 번은 거쳐야 하는 장면 */
-const MUST = ["home", "depart", "map", "battle", "result", "event", "rest", "shop", "runEnd", "join"];
+const MUST = ["home", "depart", "map", "battle", "result", "event", "rest", "shop", "runEnd", "join", "2막 전투"];
 const MAX_RUNS = 12;
 /** 이만큼 아무것도 못 누르면 막힌 것으로 봐요 */
 const STUCK_MS = 20_000;
 
-test("화면으로 한 판을 끝까지 돌아요", async ({ page }) => {
+async function play(browser: Browser, double: boolean, shot: (name: string) => string) {
+  const page = await (await browser.newContext()).newPage();
+  const name = double ? "두 번 누르기" : "한 번 누르기";
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
   page.on("console", (m) => {
@@ -26,33 +29,52 @@ test("화면으로 한 판을 끝까지 돌아요", async ({ page }) => {
   await page.goto(`/?seed=${SEED}`);
   await expect(page.locator("#game canvas")).toBeVisible({ timeout: 30_000 });
   await page.waitForFunction(() => "game" in window && "session" in window);
-  await page.evaluate(async () => {
+  await page.evaluate(async (double) => {
     const bot = await import(/* @vite-ignore */ "/tools/screenBot.ts" as string);
-    Object.assign(window, { __tick: bot.tick });
-  });
+    bot.setDouble(double);
+    Object.assign(window, { __tick: bot.tick, __fingerprint: bot.fingerprint });
+  }, double);
 
   const seen = new Set<string>();
+  const marks = new Set<string>();
   const trail: string[] = [];
+  /** 지도에서 칸을 고를 때마다의 판 상태 */
+  const prints: string[] = [];
   let last = Date.now();
   let state: Tick = { runs: 0, wins: 0 };
-  // 보스를 이기고 모든 장면을 거친 뒤 메인 화면으로 돌아올 때까지 판을 거듭해요
-  while (!(state.wins > 0 && state.scene === "home" && MUST.every((k) => seen.has(k)))) {
+  const tail = () => `${name}: ${trail.slice(-12).join(" → ")}`;
+  /** 끝난 판 가운데 가장 멀리 간 막 */
+  let reached = 0;
+  // 막을 한 번 이상 넘긴 판이 끝나고(승리든 패배든, 0108) 모든 장면을 거친 뒤 메인 화면으로 돌아올 때까지 판을 거듭해요
+  while (!(reached >= 2 && state.scene === "home" && MUST.every((k) => seen.has(k)))) {
     state = await page.evaluate(() => (window as unknown as { __tick: () => Tick }).__tick());
-    expect(errors, trail.slice(-12).join(" → ")).toEqual([]);
+    expect(errors, tail()).toEqual([]);
     if (state.did) {
       last = Date.now();
       if (state.scene) seen.add(state.scene);
+      if (state.scene === "battle" && state.act === 2) seen.add("2막 전투");
+      for (const m of state.marks ?? []) marks.add(m);
+      reached = Math.max(reached, state.endedAct ?? 0);
       trail.push(`${state.scene}:${state.did}`);
+      if (state.did.startsWith("지도 ") && !state.did.startsWith("지도 보임") && !state.did.endsWith("(다시)")) prints.push(await page.evaluate(() => (window as unknown as { __fingerprint: () => string }).__fingerprint()));
     } else {
       if (Date.now() - last > STUCK_MS) {
-        await page.screenshot({ path: test.info().outputPath("stuck.png") });
-        throw new Error(`막혔어요 (${state.scene ?? "장면 없음"}): ${trail.slice(-12).join(" → ")}`);
+        await page.screenshot({ path: shot("stuck") });
+        throw new Error(`막혔어요 (${state.scene ?? "장면 없음"}) ${tail()}`);
       }
       await page.waitForTimeout(15);
     }
-    expect(state.runs, `이기지 못했거나 못 거친 장면이 있어요: ${MUST.filter((k) => !seen.has(k)).join(" · ")}`).toBeLessThanOrEqual(MAX_RUNS);
-    if (state.did?.startsWith("판 결과 승리") || state.did?.startsWith("판 결과 패배")) await page.screenshot({ path: test.info().outputPath(`runEnd-${state.runs}.png`) });
+    expect(state.runs, `${name}: 막을 넘긴 판이 없거나 못 거친 장면이 있어요: ${MUST.filter((k) => !seen.has(k)).join(" · ")}`).toBeLessThanOrEqual(MAX_RUNS);
+    if (state.did === "판 결과 승리" || state.did === "판 결과 패배") await page.screenshot({ path: shot(`runEnd-${state.runs}-${state.endedAct}막`) });
+    if (state.did?.startsWith("지도 보임") && (state.act ?? 1) > 1) await page.screenshot({ path: shot(`map-${state.runs}-${state.act}막`) });
   }
+  console.log(`${name}: 판 ${state.runs}번(가장 멀리 ${reached}막), 누름 ${trail.length}번(다시 ${trail.filter((t) => t.endsWith("(다시)")).length}번), 거친 장면: ${[...seen].join(" · ")}, 2막 규칙: ${[...marks].join(" · ") || "없음"}`);
+  await page.context().close();
+  return prints;
+}
 
-  console.log(`판 ${state.runs}번, 누름 ${trail.length}번, 거친 장면: ${[...seen].join(" · ")}`);
+test("화면으로 한 판을 끝까지 돌고, 빠르게 두 번 눌러도 같은 판이에요", async ({ browser }) => {
+  const shot = (kind: string) => (name: string) => test.info().outputPath(`${kind}-${name}.png`);
+  const [once, twice] = await Promise.all([play(browser, false, shot("once")), play(browser, true, shot("twice"))]);
+  expect(twice).toEqual(once);
 });

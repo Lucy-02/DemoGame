@@ -231,3 +231,10 @@
 - ✅ Lucy 11/13 (R1 피드백): 발이 먼 풍경 위에 놓이면 원근이 깨짐, 나무 앞에 서 있으면 어색, 배경이 너무 또렷함 → 가까운 평평한 땅이 아래를 채우고 풍경은 위에 작고 흐리게. 흐림 · 그림자는 후처리로.
 - ✅ Lucy 11/13: 유닛 85% · 간격 72% (0067).
 - 디렉터 판단 11/18(Lucy 확인 대기): 1막 = B3 숲속 빈터 8703, 레이어 둘, 그림자는 화면이 그림 → 0103. 후보 시트 https://claude.ai/artifact/Y8sXTfrybUkWUmGgyyPDo1
+
+## 용어 모음 (2026-11-18, 0102)
+- 캡처: /mnt/project-files/glossary/ (B 기호 격자 + 호버 풀이 = 채택, A 한 장 목록 · C 목록 + 풀이 판 = 기각). 디렉터 판단, Lucy 확인 대기
+- 검사 항목 결과: 가장 작은 글자 12px로 맞춤. 색만으로 뜻을 전하는 곳은 상점의 모자란 카드 값 하나(Lucy 확인 대기)
+
+## 용어 기호 후보 (2026-11-18, 0105)
+- 벽 · 품기 · 낙하 · 틈 후보 세 개씩: https://claude.ai/artifact/TjwuPx7M8WDyzwcYgZnm5e (사본 /mnt/project-files/glossary/icon-candidates.html). Lucy 선택 대기

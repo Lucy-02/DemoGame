@@ -1,5 +1,6 @@
 // 판 안 메뉴 · 포기 확인 · 설정 창 배치 (0084 · 0090). 줄 · 강조 줄 · 창 틀은 메인 화면과 전투 위 창의 값을 그대로 쓰고,
 // 여기 값은 실제 화면에서 견준 임시 값이에요 (Lucy 확인 전, 토큰 아님).
+import { ORDER } from "../battle/layout";
 import { MENU, PRIMARY, TIP } from "../home/layout";
 import { WINDOW } from "../result/layout";
 import { FRAME } from "../run/layout";
@@ -29,5 +30,17 @@ export const SETTINGS = {
   toggle: { w: 44, h: 24, knob: 16 },
   /** 둘 중 하나: 칸 84×34 사이 6 */
   seg: { w: 84, h: 34, gap: 6, radius: 10 },
+  tip: TIP,
+};
+
+/** 용어 모음 창 (0102): 설정 창과 같은 틀 · 같은 머리. 칸은 기호 + 이름, 세 줄 격자(칸 폭 = 안쪽 폭 ÷ 3), 묶음 사이는 가는 선. 풀이는 창 오른쪽 말풍선 */
+export const GLOSSARY = {
+  w: SETTINGS.w, pad: SETTINGS.pad, head: SETTINGS.head, close: SETTINGS.close,
+  cols: 3, cell: { h: SETTINGS.row.h, radius: MENU.row.radius, padX: 12, gap: MENU.row.gap, icon: SETTINGS.head.icon },
+  rule: SETTINGS.rule, todo: MENU.todo,
+  /** 허점 표지: 순서표 토큰의 노란 테와 같은 굵기 */
+  ring: ORDER.ring.w,
+  /** 쓰러짐 표지: 붉은 점선 테를 호 여섯 조각으로 */
+  downArcs: 6,
   tip: TIP,
 };

@@ -4,7 +4,7 @@
 // 빼기 칸을 누르면 덱 고르기 창(0082)이 열려요: 카드를 고른 뒤 확인해야 빠져요(두 단계, 0046).
 // 세션을 받으면 런에 연결되고(레거시 지도에서 열어요), 없으면 씨앗을 정한 런 위의 고정 장면이에요.
 import type { CardVM } from "../card/viewmodel";
-import { fadeAway } from "../style/motion";
+import { crossPaint, fadeAway } from "../style/motion";
 import * as Phaser from "phaser";
 import { ShopSession } from "../../session/shop";
 import { createHandCard, preloadHandCard } from "../card/HandCard";
@@ -18,7 +18,6 @@ import { STAT_ICON } from "../run/copy";
 import { drawSlimLane, type SlimState } from "../run/slimLane";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
-import { adjustColor } from "../style/opacity";
 import { shopSession } from "./fixtures";
 import { shopVM } from "./fromShop";
 import { SHOP_LANE, STOCK } from "./layout";
@@ -93,7 +92,8 @@ export class ShopScene extends Phaser.Scene {
   update() {
     if (!this.dirty) return;
     this.dirty = false;
-    this.paint();
+    // 호버 · 누름으로 다시 그릴 때 앞 모습이 흐려지며 바뀌어요 (0092)
+    crossPaint(this, () => this.paint());
   }
 
   private redraw() {
@@ -190,13 +190,13 @@ export class ShopScene extends Phaser.Scene {
         return;
       }
       const owner = c.learners.length === 1 ? vm.lanes.find((l) => l.id === c.learners[0]) : undefined;
-      const card = cardWithFace(this, c.card, owner, STOCK.scale);
+      // 골드가 모자란 카드는 손패의 못 내는 카드와 같은 모양: 카드째 회색, 값은 붉게 (0050 · 0105)
+      const card = cardWithFace(this, c.affordable ? c.card : { ...c.card, off: true }, owner, STOCK.scale);
       const view = createHandCard(this, card, x + (STOCK.w - HAND_CARD.w) / 2, y + STOCK.h - HAND_CARD.h, { showRarity: true, scale: STOCK.scale });
       const on = focusSlot === slot;
       const dim = focusSlot !== undefined && !on;
       view.setHeld(on);
       view.setLifted(on);
-      if (!c.affordable) adjustColor(view.root, { grayscale: STOCK.poor.grayscale });
       if (dim) view.opacity = CARD_FOCUS.dim;
       drawPrice(this, c.price, c.affordable, x, y, dim && c.affordable ? CARD_FOCUS.dim : 1);
       this.add.zone(x, y, STOCK.w, STOCK.h).setOrigin(0, 0).setInteractive({ useHandCursor: c.affordable })

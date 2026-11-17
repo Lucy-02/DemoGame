@@ -111,7 +111,7 @@ function removeOne(run: Run, policy: Policy) {
 }
 
 /** branches: 정령 id → 갈래. 갈래 고르기가 들어오기 전까지 무기 기술을 재는 데 써요 (0056) */
-export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false, branches: Record<string, string> = {}, strong?: Element, acts?: number, awakened = false): RunSimResult {
+export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false, branches: Record<string, string> = {}, strong?: Element, acts?: number, awakened = false, startAct?: number): RunSimResult {
   const ids = party ?? (C.default_party as string[]);
   // 앞열은 가장 튼튼한 정령(HP + 방어)에게 맡겨요. 앞열을 잘못 세우면 같은 파티도 보스를 못 넘어요.
   const sturdy = (id: string) => { const st = spiritDef(id).stats; return st.hp + st.guard * 2; };
@@ -120,7 +120,7 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
   const base = newGarden(seed, ids);
   const grown = awakened ? { exp: AWAKENED_EXP, stage: "awakened" as const } : { exp: ADULT_EXP, stage: "adult" as const };
   const garden = adult || awakened ? { ...base, spirits: base.spirits.map((s) => ({ ...s, ...grown })) } : undefined;
-  const run = new Run({ seed: 5000 + seed, frontId, party, garden, adult: adult || awakened, unlockAll: false, strongElement: strong, acts });
+  const run = new Run({ seed: 5000 + seed, frontId, party, garden, adult: adult || awakened, unlockAll: false, strongElement: strong, acts, startAct });
   for (const s of run.spirits) s.branch ??= branches[s.id];
   // 전투와 판 단위 판단의 난수를 나눠요. 봇이 달라도 같은 시드면 같은 지도 · 같은 길 고르기 난수를 써요.
   const battleRng = new Rng(seed * 13 + 5);
@@ -129,6 +129,21 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
   let battles = 0;
   const mobTurns: number[] = [], eliteTurns: number[] = [];
   const bosses: RunSimResult["bosses"] = [];
+  const takeReward = (reward: ReturnType<Run["rollBattleReward"]>) => {
+    if (!reward.cardsDone) {
+      const id = policy.reward(reward.cards, rng);
+      if (id) run.takeRewardCard(reward, id);
+      else run.skipRewardCards(reward);
+    }
+    if (reward.equipment && !reward.equipDone) {
+      // 받을 수 있는 정령 중 하나에게. 칸이 꽉 찼으면 먼저 지닌 것을 내려놓아요
+      const equipId = reward.equipment.equipId;
+      const taker = rng.pick(run.equipTakers(equipId));
+      run.giveRewardEquipment(reward, taker.id, run.needsReplace(equipId, taker.id) ? taker.equipment[0].id : undefined);
+    }
+  };
+  // 뒤 막에서 출발한 판은 출발 묶음부터 받아요 (0108)
+  for (let r = run.rollBundleReward(); r; r = run.rollBundleReward()) takeReward(r);
   for (let guard = 0; guard < 30 * run.lastAct; guard++) {
     const node = pickNode(run, rng);
     run.enter(node);
@@ -143,18 +158,7 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
       const tail = { battles, mobTurns, eliteTurns, act: run.act, actsCleared: run.act - (won && node.type === "boss" ? 0 : 1), bosses };
       if (node.type === "boss" && !(won && run.hasNextAct())) return { won, endedAt: won ? "clear" : enc.id, floor: node.floor, reachedBoss: true, ...before, bossTurns: turns, ...tail };
       if (!won) return { won: false, endedAt: enc.id, floor: node.floor, reachedBoss: bosses.length > 0, ...tail };
-      const reward = run.rollBattleReward(node.type === "boss" ? "elite" : node.type);
-      if (!reward.cardsDone) {
-        const id = policy.reward(reward.cards, rng);
-        if (id) run.takeRewardCard(reward, id);
-        else run.skipRewardCards(reward);
-      }
-      if (reward.equipment && !reward.equipDone) {
-        // 받을 수 있는 정령 중 하나에게. 칸이 꽉 찼으면 먼저 지닌 것을 내려놓아요
-        const equipId = reward.equipment.equipId;
-        const taker = rng.pick(run.equipTakers(equipId));
-        run.giveRewardEquipment(reward, taker.id, run.needsReplace(equipId, taker.id) ? taker.equipment[0].id : undefined);
-      }
+      takeReward(run.rollBattleReward(node.type === "boss" ? "elite" : node.type));
       if (node.type === "boss") run.nextAct();
     } else if (node.type === "rest") {
       run.healAllPct(C.rest_heal_pct as number);

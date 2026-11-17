@@ -19,6 +19,7 @@ import type { DeckCardVM, LaneVM } from "../run/viewmodel";
 import { upgradedId } from "../../core/data";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
+import { crossPaint } from "../style/motion";
 import { PICK_CONFIRM } from "./copy";
 import { eventSession } from "./fixtures";
 
@@ -81,7 +82,8 @@ export class EventScene extends Phaser.Scene {
   update() {
     if (!this.dirty) return;
     this.dirty = false;
-    this.paint();
+    // 호버 · 누름으로 다시 그릴 때 앞 모습이 흐려지며 바뀌어요 (0092)
+    crossPaint(this, () => this.paint());
   }
 
   private redraw() {
