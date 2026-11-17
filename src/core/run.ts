@@ -29,8 +29,10 @@ export interface RunOptions {
   unlockAll: boolean;
   /** 오늘 센 기운을 정해 두고 시작해요 (시험 · 자동 플레이). 없으면 뽑아요 */
   strongElement?: Element;
-  /** 몇 막까지 가는지. 없으면 constants.acts_enabled (지금 2: Lucy 2026-11-17) */
+  /** 몇 막까지 가는지. 없으면 constants.acts_enabled (지금 5: 0108) */
   acts?: number;
+  /** 이 막에서 출발해요 (0108: 키운 정원은 3막에서). 건너뛴 막의 몫은 출발 묶음으로 받아요 */
+  startAct?: number;
 }
 
 /** 정원 없이 "성체로 시작"할 때의 레벨 (성체 문 = Lv4, growth.json evolutions) */
@@ -83,6 +85,7 @@ export interface RunSave {
   recentEncounters: string[];
   normalBattles: number;
   act?: number;
+  bundleLeft?: { battle: number; elite: number };
   fights?: number;
   strongEliteMet?: boolean;
   bossPeeked?: boolean;
@@ -159,6 +162,26 @@ export class Run {
     const first = this.firstRun ? (C.run_pool.first_run_strong as Element) : undefined;
     this.strongElement = opts.strongElement ?? first ?? drawn;
     for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
+    // 뒤 막에서 출발: 그 막의 지도 · 센 기운으로 바꾸고, 건너뛴 막의 몫을 출발 묶음으로 남겨 둬요 (0108)
+    const start = Math.min(opts.startAct ?? 1, this.lastAct);
+    if (start > 1) {
+      while (this.act < start) this.advanceAct();
+      if (opts.strongElement && (C.acts[this.act - 1].elements as string[]).includes(opts.strongElement)) this.strongElement = opts.strongElement;
+      const b = C.deep_start.bundle;
+      this.bundleLeft = { battle: b.battle, elite: b.elite };
+      this.gold += b.gold;
+    }
+  }
+
+  /** 출발 묶음에서 아직 안 받은 보상 수 (0108). 일반 · 정예 보상과 같은 굴림이에요 */
+  bundleLeft: { battle: number; elite: number } = { battle: 0, elite: 0 };
+
+  /** 출발 묶음의 다음 보상을 굴려요. 다 받았으면 undefined */
+  rollBundleReward(): BattleReward | undefined {
+    const kind = this.bundleLeft.elite > 0 ? "elite" : this.bundleLeft.battle > 0 ? "battle" : undefined;
+    if (!kind) return undefined;
+    this.bundleLeft[kind]--;
+    return this.rollBattleReward(kind);
   }
 
   /** 정원의 첫 판인지 (정원 없이 도는 시험 판은 아니에요) */
@@ -183,6 +206,11 @@ export class Run {
   /** 보스를 이기고 다음 막으로: 새 지도와 그 막의 센 기운을 뽑고, 막에 묶인 표시를 지우고, 조금 회복해요 */
   nextAct() {
     if (!this.hasNextAct()) throw new Error("다음 막이 없어요");
+    this.advanceAct();
+    this.healAllPct(C.act_heal_pct);
+  }
+
+  private advanceAct() {
     this.act++;
     this.map = new Map();
     this.current = null;
@@ -195,7 +223,6 @@ export class Run {
     this.strongEliteMet = false;
     this.bossPeeked = false;
     this.bossGapBonus = 0;
-    this.healAllPct(C.act_heal_pct);
   }
 
   /** 저장용 값. JSON으로 바꿔도 돼요 */
@@ -206,7 +233,7 @@ export class Run {
       spirits: copy(this.spirits), deck: copy(this.deck), received: copy(this.received), nextUid: this.nextUid,
       gold: this.gold, frontId: this.frontId, map: copy([...this.map.values()]), current: this.current?.id ?? null, visited: [...this.visited],
       act: this.act, fights: this.fights, strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet, bossPeeked: this.bossPeeked, bossGapBonus: this.bossGapBonus,
-      removals: this.removals, bossDefeated: this.bossDefeated,
+      removals: this.removals, bossDefeated: this.bossDefeated, bundleLeft: { ...this.bundleLeft },
     };
   }
 
@@ -235,6 +262,7 @@ export class Run {
     run.bossGapBonus = s.bossGapBonus ?? 0;
     run.removals = s.removals;
     run.bossDefeated = s.bossDefeated;
+    run.bundleLeft = { ...(s.bundleLeft ?? { battle: 0, elite: 0 }) };
     return run;
   }
 

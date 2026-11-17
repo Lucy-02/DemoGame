@@ -404,3 +404,13 @@ export function todos(s: GardenSpirit): Todo[] {
   if (episodesOpen(s) > s.episodes) out.push({ kind: "episode" });
   return out;
 }
+
+/** 뒤 막에서 출발할 수 있나 (0108): 그 막이 켜져 있고, 출전 정령이 모두 기준 단계(성체) 이상일 때 */
+export function deepStartOpen(g: Garden, party: string[]): boolean {
+  const d = C.deep_start;
+  if (C.acts_enabled < d.act || !party.length) return false;
+  return party.every((id) => {
+    const s = g.spirits.find((x) => x.id === id);
+    return !!s && stageRank(s.stage) >= stageRank(d.stage as Stage);
+  });
+}
