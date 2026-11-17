@@ -4,7 +4,8 @@ import { C, cardDef } from "../../core/data";
 import { statusN, type BCard, type BEnemy, type BSpirit, type Battle, type Forecast, type Planned, type Ref, type StatusId } from "../../core/battle";
 import type { EnemyAction, EnemyTargetRule } from "../../core/types";
 import { ELEMENT_ICON, faceKey } from "../faces";
-import { cardVM, equipVM, releaseVM, type CardStats } from "../run/fromCore";
+import { cardVM, equipVM, releaseVM, richText, type CardStats } from "../run/fromCore";
+import type { RichText } from "../tooltip/content";
 import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
 import type { AllyTokenVM, AllyVM, BandVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, OutcomeVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
@@ -122,7 +123,7 @@ function orderOf(b: Battle): OrderEntry[] {
     const tip: OrderTipVM = {
       title: e.def.name, kind: charge && COPY.order.charge,
       result: main?.type === "attack" ? { who: whoOf(b, main), value: amountOf(b, e, main) } : undefined,
-      text: [{ text: b.intent(e).text }],
+      text: richText(b.intent(e).text),
       chips: [{ text: COPY.order.n(i + 1) }, ...(charge ? [{ text: COPY.order.breakable, tone: "acc" as const }] : [])],
     };
     return { uid: x.uid, slot: { key: `t${b.turn}:s${b.slots.indexOf(x)}`, n: i + 1, art: e.def.id, action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
@@ -305,9 +306,17 @@ function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[]): EnemyVM {
     traits: traitsOf(e),
     buried: statusN(e, "burrow") > 0 || undefined,
     intent: intentOf(b, e, order),
-    tip: { name: e.def.name, rank: COPY.rank[e.def.tier], lines: [[{ text: b.intent(e).text }]] },
+    tip: { name: e.def.name, rank: COPY.rank[e.def.tier], lines: tipLines(b, e) },
   };
 }
+
+/** 유닛 풀이 (정본 H1): 행동 이름 · 효과문, 차징 중이면 이름 줄에 `브레이크 가능` (0067) */
+function tipLines(b: Battle, e: BEnemy): RichText[] {
+  const it = b.intent(e);
+  const action = it.kind === "skip" ? richText(it.text) : [{ text: `${it.name} · ` }, ...richText(it.text)];
+  return e.charging ? [action, BREAKABLE] : [action];
+}
+const BREAKABLE: RichText = richText(COPY.order.breakable);
 
 /** 특성 칩 (0072 7번): 되돌리기는 이번 턴 첫 타격을 받으면 꺼져요 (0096) */
 function traitsOf(e: BEnemy): EnemyVM["traits"] {

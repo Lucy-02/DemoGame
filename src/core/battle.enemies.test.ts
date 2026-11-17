@@ -1,7 +1,7 @@
 // 적 규칙 (0062): 틈, 한 턴에 여러 번 행동, 거친 특성, 오늘 센 기운과 편성 풀
 import { describe, expect, it } from "vitest";
 import { Battle, statusN, type BattleEvent } from "./battle";
-import { C, ENCOUNTERS, applyTraits, enemyDef, partyScale } from "./data";
+import { C, ENCOUNTERS, ENEMIES, applyTraits, enemyDef, partyScale } from "./data";
 import { newGarden } from "./garden";
 import { Rng } from "./rng";
 import { Run } from "./run";
@@ -239,5 +239,20 @@ describe("혼자 떠난 판의 적 세기 (0098)", () => {
     const run = new Run({ seed: 1, frontId: PARTY[0], adult: false, unlockAll: true, party: [PARTY[0]] });
     const b = new Battle(run.spirits, [], ["frostfang"], run.frontId, new Rng(1), partyScale(1), ["sturdy"]);
     expect(b.enemy(1).block).toBe(Math.round(C.traits.sturdy_block * C.party_scale["1"].hp));
+  });
+});
+
+describe("적 효과문 (TEXT_RULES 1절)", () => {
+  it("모든 적의 모든 행동이 합니다체 완결문이고 기호 줄임이 없어요", () => {
+    for (const def of ENEMIES) {
+      const b = battle([def.id]);
+      const e = b.enemies[0];
+      for (let i = 0; i < def.pattern.length; i++) {
+        e.patternIdx = i;
+        const text = b.intent(e).text;
+        expect(text, `${def.id} ${i}`).toMatch(/니다\.$/);
+        expect(text, `${def.id} ${i}`).not.toMatch(/[×()]|끊기/);
+      }
+    }
   });
 });
