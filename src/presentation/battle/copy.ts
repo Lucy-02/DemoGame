@@ -37,7 +37,7 @@ export const COPY = {
     n: (n: number) => String.fromCharCode(CIRCLED_ONE + n - 1),
     before: (n: number) => `${String.fromCharCode(CIRCLED_ONE + n - 1)} 앞`,
   },
-  /** 특성 칩 풀이 (0086, 이름은 임시: TODO_NAMES 2절). 효과문은 합니다체 (TEXT_RULES 1절) */
+  /** 특성 칩 풀이 (0096, 이름은 임시: TODO_NAMES 2절). 효과문은 합니다체 (TEXT_RULES 1절) */
   trait: {
     reflect: "되돌리기",
     reflectSub: (pct: number) => `턴마다 처음 받는 피해의 ${pct}%를 공격한 정령에게 되돌립니다.`,

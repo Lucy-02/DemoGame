@@ -43,7 +43,7 @@ export function playbackFrames(before: BattleVM, cast: PlaybackCast, events: rea
       if (k < 0) continue;
       cur.order.slots.splice(k, 1);
       const b = cur.order.bundles;
-      // 쓰러진 적의 띠는 사라지고, 합쳐진 칸의 띠는 한 칸 당겨요 (0086)
+      // 쓰러진 적의 띠는 사라지고, 합쳐진 칸의 띠는 한 칸 당겨요 (0096)
       const left = b?.[k]?.length ?? 0;
       cur.order.bands = cur.order.bands
         ?.filter((z) => z.enemy !== s.enemy)

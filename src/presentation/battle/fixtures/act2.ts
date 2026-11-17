@@ -1,4 +1,4 @@
-// 예시: 2막 새 규칙 표시 (0086). 실제 전투 규칙으로 만든 장면이에요.
+// 예시: 2막 새 규칙 표시 (0096). 실제 전투 규칙으로 만든 장면이에요.
 import { Run } from "../../../core/run";
 import { BattleSession } from "../../../session/battle";
 import { battleVM } from "../fromBattle";

@@ -418,7 +418,7 @@ function statusChip(s: StatusVM): Chip {
   }, { fill: P.floor, radius: S.radius }, name ? { title: `${name} ${s.n}` } : undefined);
 }
 
-/** 특성 칩 (0072 7번): 둥근 네모에 기호만. off = 이번 턴에 이미 쓰여 흐려요 (0086) */
+/** 특성 칩 (0072 7번): 둥근 네모에 기호만. off = 이번 턴에 이미 쓰여 흐려요 (0096) */
 function traitChip(t: TraitVM): Chip {
   const S = I.status, R = I.trait;
   return pill({
@@ -771,7 +771,7 @@ export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPr
   const bodyTop = ENEMY.top + intentH + ENEMY.body.mt;
   const artX = cx - ENEMY.art.w / 2, artY = ENEMY.feet - ENEMY.art.h;
   if (pv.lit) glow(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, 0, true);
-  // 땅속: 몸 윗부분만 남아요 (0086). 그림이 생기면 발 선에서 잘라요
+  // 땅속: 몸 윗부분만 남아요 (0096). 그림이 생기면 발 선에서 잘라요
   const artH = e.buried ? ENEMY.art.h * ENEMY.buried : ENEMY.art.h;
   placeholderArt(scene, artX, ENEMY.feet - artH, ENEMY.art.w, artH, P.ink3);
   ground(scene, cx, ENEMY.feet);

@@ -405,7 +405,7 @@ export class Run {
 
   /** 지금 인원에 맞춘 적 세기 (0053). 셋이면 undefined */
   enemyScale(): EnemyScale | undefined {
-    return partyScale(this.spirits.length);
+    return partyScale(this.spirits.length, this.current?.type === "boss");
   }
 
   pickEvent(): EventDef {

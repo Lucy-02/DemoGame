@@ -23,7 +23,7 @@ describe("전투 화면 VM", () => {
   });
 });
 
-describe("2막 규칙 표시 (0086)", () => {
+describe("2막 규칙 표시 (0096)", () => {
   const act2 = (enemies: string[]) => new BattleSession(new Run({ seed: 7, frontId: "fire_fox", adult: false, unlockAll: false, party: ["fire_fox", "mist_cat", "glass_salamander"], acts: 2 }), enemies).battle;
 
   it("방전 칸은 띠 조각으로, 띠에 놓은 카드는 받을 피해에 더해요", () => {

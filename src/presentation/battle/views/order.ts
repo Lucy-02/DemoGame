@@ -107,7 +107,7 @@ const moreText = (n: number) => `+${n - shownOf(n)}`;
 const moreW = (n: number) => (n > O.bundle.max ? O.bundle.gap + measure(moreText(n), MORE) + O.more.padX * 2 : 0);
 const bundleWidth = (n: number) => O.bundle.pad * 2 + shownOf(n) * O.allyFace + (shownOf(n) - 1) * O.bundle.gap + moreW(n);
 
-// ── 방전 띠 (0086): 묶음 안의 어두운 홈. 머리 = 위험색 충격 기호 + 피해 수 (조준 피해 알약과 같은 문법, 0072 1번) ──
+// ── 방전 띠 (0096): 묶음 안의 어두운 홈. 머리 = 위험색 충격 기호 + 피해 수 (조준 피해 알약과 같은 문법, 0072 1번) ──
 
 const B = O.band;
 const BAND_ICON = "fx-damage";
@@ -301,7 +301,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     if (list.length) box(g, x, cy - h / 2, bw, h, h / 2, { fill: P.glass, ring: { width: O.bundle.ring, color: P.manaLine } });
     for (const r of plan?.bands ?? []) {
       const bh = d + B.padY * 2;
-      // 띠는 옅은 테로 묶음과 나뉘고, 든 카드가 들어오면 테가 위험색으로 켜져요 (0086)
+      // 띠는 옅은 테로 묶음과 나뉘고, 든 카드가 들어오면 테가 위험색으로 켜져요 (0096)
       const lit = list.slice(r.band.at, r.band.at + r.band.n).some((t) => t.mark === "held");
       box(g, x + r.x, cy - bh / 2, r.w, bh, bh / 2, { fill: P.floor, ring: { width: O.bundle.ring, color: lit ? P.danger : P.glassLine } });
       if (r.band.head) {

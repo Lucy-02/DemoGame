@@ -58,7 +58,7 @@ export interface OrderTipVM {
   chips?: { text: string; tone?: "warn" | "acc" }[];
 }
 
-/** 방전 띠 조각 (0086): 묶음 칸 안에서 at번째 토큰부터 n장이 띠 위에 있어요. 적 칸을 걸친 띠는 조각 둘, 머리(충격 기호 + 피해)는 첫 조각에만 */
+/** 방전 띠 조각 (0096): 묶음 칸 안에서 at번째 토큰부터 n장이 띠 위에 있어요. 적 칸을 걸친 띠는 조각 둘, 머리(충격 기호 + 피해)는 첫 조각에만 */
 export interface BandVM {
   /** 묶음 칸 번호 (bundles 인덱스) */
   cell: number;
@@ -70,7 +70,7 @@ export interface BandVM {
   enemy?: number;
 }
 
-/** 적의 특성 칩 (0072 7번): 둥근 네모, 늘 보임. off = 이번 턴에 이미 쓰임 (0086) */
+/** 적의 특성 칩 (0072 7번): 둥근 네모, 늘 보임. off = 이번 턴에 이미 쓰임 (0096) */
 export interface TraitVM {
   icon: IconId;
   off?: boolean;
@@ -121,7 +121,7 @@ export interface EnemyVM {
   statuses: StatusVM[];
   /** 특성 칩: 기호 줄 맨 앞 (0072 7번) */
   traits?: TraitVM[];
-  /** 땅속: 몸이 가라앉아요 (0086) */
+  /** 땅속: 몸이 가라앉아요 (0096) */
   buried?: boolean;
   /** 이번 턴 행동. 없으면 의도 알약을 그리지 않아요 */
   intent?: IntentVM;
@@ -144,7 +144,7 @@ export interface BattleVM {
   /** bundles: 적 칸마다 그 앞에 묶인 아군 토큰, 마지막은 꼬리 묶음 (길이 = slots + 1, 0038). 없으면 적 칸만 */
   order: {
     slots: OrderSlotVM[]; bundles?: AllyTokenVM[][]; head?: OrderHeadVM;
-    /** 방전 띠 (0086) */
+    /** 방전 띠 (0096) */
     bands?: BandVM[];
     /** 턴 재생 중: 머리가 "재생 중"(빈 점), 지나가지 않은 첫 칸 앞에 흰 재생 위치 선 (0074) */
     playing?: boolean;
@@ -185,7 +185,7 @@ export interface TargetRule {
   side: Side;
   /** pick: 이 인덱스만 고를 수 있어요 (해방 카드는 그 정령에게만) */
   only?: number;
-  /** pick: 이 인덱스는 고를 수 없어요 (이 카드가 끝날 때 땅속인 적, 0086) */
+  /** pick: 이 인덱스는 고를 수 없어요 (이 카드가 끝날 때 땅속인 적, 0096) */
   not?: number[];
 }
 

@@ -74,7 +74,7 @@ export class Battle implements Engine {
     frontId: string,
     readonly rng: Rng,
     /** 출전 인원에 맞춘 적 세기 (0053). 없으면 데이터 그대로 */
-    scale?: EnemyScale,
+    readonly scale?: EnemyScale,
     /** 정예에 붙는 거친 특성 (0062). 새끼에는 붙지 않아요 */
     traits: readonly EnemyTrait[] = [],
   ) {
@@ -165,6 +165,11 @@ export class Battle implements Engine {
   /** 낙하에 필요한 별 수 */
   starThreshold(): number {
     return Math.max(1, C.star_threshold - this.stars.thresholdCut);
+  }
+
+  /** 단단한 특성의 방어도: 적 세기(HP 몫)를 따라가요. 혼자 온 정령도 기본 공격으로 뚫을 수 있게요 */
+  sturdyBlock(): number {
+    return Math.max(1, Math.round(C.traits.sturdy_block * (this.scale?.hp ?? 1)));
   }
 
   /** 이 시각에 이 적이 땅속에 있는지: 땅속이고, 그 전에 올라오는 행동이 없을 때 (2막) */
@@ -454,7 +459,7 @@ export class Battle implements Engine {
           e.reflected = false;
           clearStatuses(e, "clearsAtTurnStart");
           const p2 = e.phase === 2 ? e.def.phase2 : undefined;
-          const gain = this.inGap(e) ? 0 : (p2?.turnStartBlock ?? 0) + (e.traits.includes("sturdy") ? C.traits.sturdy_block : 0);
+          const gain = this.inGap(e) ? 0 : (p2?.turnStartBlock ?? 0) + (e.traits.includes("sturdy") ? this.sturdyBlock() : 0);
           if (gain) {
             e.block = gain;
             this.emit({ k: "block", ref: refOf(e), amount: gain });

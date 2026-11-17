@@ -9,7 +9,7 @@ import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
 import type { AllyTokenVM, AllyVM, BandVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
 
-/** 2막 규칙의 임시 기호 (0086: 새 기호를 그릴 때까지 있는 기호를 빌려 써요, TODO_ICON) */
+/** 2막 규칙의 임시 기호 (0096: 새 기호를 그릴 때까지 있는 기호를 빌려 써요, TODO_ICON) */
 const BURROW_ICON = "i-veil";
 const REFLECT_ICON = "kw-counter";
 const HASTE_ICON = "i-bolt";
@@ -219,7 +219,7 @@ function slotOf(b: Battle, c: BCard | Lane): PlayVM["slot"] {
 const liveZones = (b: Battle) => b.zones.filter((z) => !b.enemy(z.uid).dead);
 
 /**
- * 방전 띠 (0086): 방전 칸마다, 그 구간이 걸치는 묶음 칸에 조각 하나씩.
+ * 방전 띠 (0096): 방전 칸마다, 그 구간이 걸치는 묶음 칸에 조각 하나씩.
  * 묶음 칸 k는 앞 적 행동 뒤부터 k번째 적 행동까지에 끝나는 카드 자리예요. 띠 안에서 끝나는 카드가 그 조각 위에 올라가요.
  */
 function bandsOf(b: Battle, cells: Lane[][]): BandVM[] | undefined {
@@ -322,7 +322,7 @@ function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[]): EnemyVM {
   };
 }
 
-/** 특성 칩 (0072 7번): 되돌리기는 이번 턴 첫 타격을 받으면 꺼져요 (0086) */
+/** 특성 칩 (0072 7번): 되돌리기는 이번 턴 첫 타격을 받으면 꺼져요 (0096) */
 function traitsOf(e: BEnemy): EnemyVM["traits"] {
   const out: NonNullable<EnemyVM["traits"]> = [];
   if (e.def.reflectFirst) out.push({ icon: REFLECT_ICON, off: e.reflected || undefined, tip: { title: COPY.trait.reflect, sub: COPY.trait.reflectSub(Math.round(e.def.reflectFirst * PERCENT)) } });
@@ -383,7 +383,7 @@ function handCard(b: Battle, c: BCard) {
 function targetRule(b: Battle, c: BCard): PlayVM["target"] {
   const need = b.needsTarget(c);
   if (need === "enemy") {
-    // 이 카드가 끝날 때 아직 땅속인 적은 고를 수 없어요 (0086)
+    // 이 카드가 끝날 때 아직 땅속인 적은 고를 수 없어요 (0096)
     const end = b.previewEnd(c);
     const not = b.enemies.filter((e) => !e.dead).flatMap((e, i) => (b.buriedAt(e, end) ? [i] : []));
     return { kind: "pick", side: "enemy", not: not.length ? not : undefined };
