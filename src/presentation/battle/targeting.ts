@@ -51,6 +51,13 @@ export function focusFor(card: string, play: PlayVM, over: Over, counts: Counts)
   };
 }
 
+/** 이 카드가 i번째 적을 대상으로 삼을 수 있나 (약점 배지는 이때만 켜요) */
+export function aimsAtEnemy(play: PlayVM | undefined, i: number): boolean {
+  if (!play || play.target.side !== "enemy") return false;
+  const { only, not } = play.target;
+  return (only === undefined || only === i) && !not?.includes(i);
+}
+
 /** 이 캐릭터를 흐리게 할지: 흐림 상태에서 강조·고리·결과가 없는 캐릭터만 */
 export function dimmed(f: Focus, u: UnitRef): boolean {
   if (!f.dim) return false;
