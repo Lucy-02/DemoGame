@@ -23,3 +23,23 @@ jobs:
       - run: pnpm check:docs
       - name: Electron smoke test
         run: xvfb-run -a pnpm test:e2e
+
+  # 화면으로 한 판을 도는 점검. 크로미움 설치와 실행이 길어서 따로 돌려요
+  screen-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:run
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screen-run-results
+          path: test-results/
