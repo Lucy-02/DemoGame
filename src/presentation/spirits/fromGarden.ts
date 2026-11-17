@@ -1,7 +1,7 @@
 // 정원 상태 → 정령 관리 화면 데이터. 규칙 판단(키울 수 있나, 할 일)은 모두 core/garden 함수에 맡겨요.
 import { C, CARDS, ELEMENT_NAME, GROWTH, ROLE_NAME, personalityDef, spiritDef } from "../../core/data";
 import {
-  canEvolve, canFeed, episodesOpen, evolveChoices, branchProgress, isBranchAdultCard, feedGain, gardenSpirit, isFinalStage, levelOf, levelProgress,
+  canEvolve, evolveChoices, branchProgress, isBranchAdultCard, gardenSpirit, isFinalStage, levelOf, levelProgress,
   spiritUnlocks, todos, toRunSpirit, type Garden, type GardenSpirit, type Todo,
 } from "../../core/garden";
 import { baseStat, equipSlots, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
@@ -15,11 +15,14 @@ import { COPY, DEED_LABEL, STAGE_LABEL, TAB_LABEL } from "./copy";
 import { MOCK_ELEMENT_ICON, type Mockup } from "./mockups";
 import { tokens } from "../../design/tokens";
 import type {
-  BranchPickVM, EpisodeVM, FactVM, GateVM, GrowthRowVM, RingVM, SpiritDetailVM, SpiritsVM, StatRowVM, TabVM, TileVM,
+  BranchPickVM, FactVM, GateVM, GrowthRowVM, RingVM, SpiritDetailVM, SpiritsVM, StatRowVM, TabVM, TileVM,
 } from "./viewmodel";
 
 /** 할 일 종류별 배지 기호 (정본: 새 카드 = g-cardnew) */
-export const TODO_ICON: Record<Todo["kind"], string> = { evolve: "g-up", unlock: "g-cardnew", episode: "g-book" };
+/** 유대(이야기)는 MVP 밖이라 화면에 없어요 (0052 2번 · 0053 6번) */
+type ShownTodo = Exclude<Todo["kind"], "episode">;
+export const TODO_ICON: Record<ShownTodo, string> = { evolve: "g-up", unlock: "g-cardnew" };
+const shownTodos = (s: GardenSpirit) => todos(s).filter((t): t is Todo & { kind: ShownTodo } => t.kind !== "episode");
 
 const STAT_ORDER: StatKey[] = ["hp", "power", "guard", "focus", "speed"];
 const STAT_LABEL: Record<StatKey, string> = { hp: "HP", power: "파워", guard: "가드", focus: "포커스", speed: "스피드" };
@@ -72,7 +75,7 @@ function tile(s: GardenSpirit, deployed: boolean): TileVM {
   const def = spiritDef(s.id);
   return {
     id: s.id, name: def.name, element: ELEMENT_ICON[def.element], chip: chip(s), ring: ring(s),
-    todo: todos(s).length, deployed, face: face(s.id, s.stage),
+    todo: shownTodos(s).length, deployed, face: face(s.id, s.stage),
   };
 }
 
@@ -120,16 +123,6 @@ function gate(s: GardenSpirit): GateVM | undefined {
   };
 }
 
-function episodes(s: GardenSpirit): EpisodeVM[] {
-  const open = episodesOpen(s);
-  return GROWTH.episodes.map((ep, i) => ({
-    n: i + 1,
-    state: i < s.episodes ? "seen" : i < open ? "open" : "locked",
-    need: i < open ? undefined
-      : s.affinity < ep.affinity ? `${COPY.affinity} ${ep.affinity}` : ep.stage && STAGE_LABEL[ep.stage],
-  }));
-}
-
 /** 남긴 장비 칸: 단계의 칸 수만큼, 빈 칸은 null */
 function equipSlotsOf(s: GardenSpirit): SpiritDetailVM["equip"] {
   const rs = toRunSpirit(s);
@@ -139,11 +132,11 @@ function equipSlotsOf(s: GardenSpirit): SpiritDetailVM["equip"] {
   });
 }
 
-function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
+function detail(s: GardenSpirit): SpiritDetailVM {
   const def = spiritDef(s.id);
   const level = levelOf(s.exp);
   const rows = statRows(s);
-  const todo = todos(s);
+  const todo = shownTodos(s);
   const cards = exclusiveCards(s.id);
   const open = new Set(spiritUnlocks(s));
   const progress = levelProgress(s.exp);
@@ -156,7 +149,6 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
       id: "growth", label: TAB_LABEL.growth, count: COPY.lv(level),
       badge: has("evolve") ? TODO_ICON.evolve : has("unlock") ? TODO_ICON.unlock : undefined,
     },
-    { id: "bond", label: TAB_LABEL.bond, count: `${s.episodes}/${GROWTH.episodes.length}`, badge: has("episode") ? TODO_ICON.episode : undefined },
   ];
   const facts: FactVM[] = [
     final
@@ -166,18 +158,14 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
       kind: "cells", label: COPY.exclusive, total: cards.length,
       have: cards.filter((c) => open.has(c.key)).length, fresh: todo.filter((t) => t.kind === "unlock").length,
     },
-    { kind: "bond", label: COPY.bond, have: s.episodes, total: GROWTH.episodes.length },
   ];
   const first = todo[0];
   if (first) {
     facts.push({
-      kind: "todo", label: COPY.todo, badge: TODO_ICON[first.kind],
-      tab: first.kind === "episode" ? "bond" : "growth",
-      action: first.kind === "evolve" ? COPY.grow : first.kind === "unlock" ? COPY.newCard : COPY.newEpisode,
+      kind: "todo", label: COPY.todo, badge: TODO_ICON[first.kind], tab: "growth",
+      action: first.kind === "evolve" ? COPY.grow : COPY.newCard,
     });
   }
-  // 호감도 막대의 목표: 아직 못 넘은 다음 문턱 (이미 넘었지만 단계가 모자란 이야기는 목록에서 보여요)
-  const next = GROWTH.episodes.find((ep) => ep.affinity > s.affinity);
   return {
     id: s.id, name: def.name, art: art(s.id, s.stage), stage: STAGE_LABEL[s.stage], level, final,
     tags: [
@@ -202,12 +190,6 @@ function detail(g: Garden, s: GardenSpirit): SpiritDetailVM {
       exp: progress.next === undefined ? undefined : { have: s.exp - progress.from, need: progress.next - progress.from },
       rows: growthRows(s),
       gate: final ? undefined : gate(s),
-    },
-    bond: {
-      affinity: s.affinity,
-      next: next?.affinity,
-      episodes: episodes(s),
-      feed: { gain: feedGain(s), cost: GROWTH.feed.cost, can: canFeed(g) },
     },
   };
 }
@@ -241,7 +223,6 @@ function mockDetail(m: Mockup, stage: Stage): SpiritDetailVM {
     tabs: [
       { id: "overview", label: TAB_LABEL.overview },
       { id: "growth", label: TAB_LABEL.growth },
-      { id: "bond", label: TAB_LABEL.bond, count: `0/${GROWTH.episodes.length}` },
     ],
     facts: [{ kind: "next", label: COPY.next, final: COPY.undecided }],
     overview: {
@@ -254,30 +235,27 @@ function mockDetail(m: Mockup, stage: Stage): SpiritDetailVM {
         chips: [], notes: i === rank ? [] : [COPY.pickStage],
       })),
     },
-    bond: {
-      affinity: 0,
-      next: GROWTH.episodes[0]?.affinity,
-      episodes: GROWTH.episodes.map((ep, i) => ({ n: i + 1, state: "locked", need: `${COPY.affinity} ${ep.affinity}` })),
-      feed: { gain: 0, cost: GROWTH.feed.cost, can: false },
-    },
   };
 }
 
+/** 목업 가운데 정원에 없는 것만. 정원에 있는 정령은 늘 실제 값으로 보여요 */
+export const mockList = (g: Garden, mocks?: MockView) => mocks?.list.filter((m) => !g.spirits.some((s) => s.id === m.id)) ?? [];
+
 /** 화면 데이터. 고른 정령이 정원(또는 목업)에 없으면 첫 정령을 보여 줘요. 목업은 정원 정령 뒤에 붙어요 */
 export function spiritsVM(g: Garden, selected: string, mocks?: MockView): SpiritsVM {
-  const mock = mocks?.list.find((m) => m.id === selected);
+  const list = mockList(g, mocks);
+  const mock = list.find((m) => m.id === selected);
   const sel = mock || g.spirits.some((s) => s.id === selected) ? selected : g.spirits[0].id;
   const partySize = C.party_size;
   return {
-    material: g.material,
     roster: [
       ...g.spirits.map((s, i) => tile(s, i < partySize)),
-      ...(mocks?.list.map((m) => mockTile(m, mocks.stage(m.id))) ?? []),
+      ...list.map((m) => mockTile(m, mocks!.stage(m.id))),
     ],
     deployed: Math.min(partySize, g.spirits.length),
     partySize,
     selected: sel,
-    detail: mock ? mockDetail(mock, mocks!.stage(mock.id)) : detail(g, gardenSpirit(g, sel)),
+    detail: mock ? mockDetail(mock, mocks!.stage(mock.id)) : detail(gardenSpirit(g, sel)),
   };
 }
 

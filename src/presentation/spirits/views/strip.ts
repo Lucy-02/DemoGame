@@ -10,7 +10,7 @@ import { faceTexture } from "../../spiritArt";
 import { COPY } from "../copy";
 import { FRAME, STRIP } from "../layout";
 import type { RingVM, SpiritsVM, TileVM } from "../viewmodel";
-import { P, T, button, glass, rule, text } from "./parts";
+import { P, T, glass, rule, text } from "./parts";
 
 const S = STRIP;
 export const STRIP_ICONS = [
@@ -73,18 +73,12 @@ function head(vm: SpiritsVM): Node {
         children: [
           rule(S.party.line),
           {
-            t: "row", mt: S.party.pt, justify: "between", align: "center", gap: S.party.gap,
+            // 편성은 출전 준비 한 곳에서만 해요 (0052 4번)
+            t: "row", mt: S.party.pt, align: "baseline",
             children: [
-              {
-                t: "row", align: "baseline",
-                children: [
-                  text(COPY.deployed, T.tool, P.ink2),
-                  text(String(vm.deployed), T.partyNum, P.ink, { ml: S.party.numMl }),
-                  text(`/${vm.partySize}`, T.tool, P.ink2),
-                ],
-              },
-              // 편성은 출전 준비 화면(장부 §7 Q4)이 생기면 연결해요
-              button(COPY.partyEdit, { size: T.tool, h: S.party.button.h, radius: S.party.button.radius, padX: S.party.button.padX }),
+              text(COPY.deployed, T.tool, P.ink2),
+              text(String(vm.deployed), T.partyNum, P.ink, { ml: S.party.numMl }),
+              text(`/${vm.partySize}`, T.tool, P.ink2),
             ],
           },
         ],

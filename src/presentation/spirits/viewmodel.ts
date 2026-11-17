@@ -4,7 +4,7 @@ import type { IconId } from "../faces";
 import type { EquipTipVM, EquipVM } from "../run/viewmodel";
 import type { Crop, Fit, Frame } from "./artFit";
 
-export type TabId = "overview" | "growth" | "bond";
+export type TabId = "overview" | "growth";
 
 /** 띠 타일의 링 (0021 6절): 진행 중 / 키우기 가능 / 최종 단계 */
 export interface RingVM {
@@ -47,7 +47,6 @@ export interface TabVM {
 export type FactVM =
   | { kind: "next"; label: string; percent?: number; final?: string; ready?: boolean }
   | { kind: "cells"; label: string; have: number; total: number; fresh: number }
-  | { kind: "bond"; label: string; have: number; total: number }
   /** 할 일이 있을 때만 (장부 §3-2 C). 버튼은 그 탭을 열어요 (타일 → 탭 → 행동) */
   | { kind: "todo"; label: string; action: string; tab: TabId; badge: IconId };
 
@@ -89,13 +88,6 @@ export interface GateVM {
   ready: boolean;
 }
 
-export interface EpisodeVM {
-  n: number;
-  state: "seen" | "open" | "locked";
-  /** 잠겼으면 무엇이 더 필요한지 */
-  need?: string;
-}
-
 export interface SpiritDetailVM {
   id: string;
   name: string;
@@ -129,16 +121,9 @@ export interface SpiritDetailVM {
     rows: GrowthRowVM[];
     gate?: GateVM;
   };
-  bond: {
-    affinity: number;
-    next?: number;
-    episodes: EpisodeVM[];
-    feed: { gain: number; cost: number; can: boolean };
-  };
 }
 
 export interface SpiritsVM {
-  material: number;
   roster: TileVM[];
   deployed: number;
   partySize: number;

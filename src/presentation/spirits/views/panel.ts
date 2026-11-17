@@ -1,11 +1,11 @@
-// 오른쪽 패널: 탭 줄(개요 · 성장 길 · 유대) + 닫기, 탭 내용. 정본 .q-panel, .q-tabs, .q-body (탭 구성은 결정 0021 5절)
+// 오른쪽 패널: 탭 줄(개요 · 성장 길) + 닫기. 유대 탭은 내용이 생기면 다시 넣어요(0052 2번), 탭 내용. 정본 .q-panel, .q-tabs, .q-body (탭 구성은 결정 0021 5절)
 import type * as Phaser from "phaser";
 import { box, circle } from "../../style/draw";
 import { render, size, type BoxNode, type Node } from "../../style/flex";
 import { COPY } from "../copy";
 import { BIG_BUTTON, FRAME, PANEL } from "../layout";
 import type { Stage } from "../../../core/types";
-import type { EpisodeVM, GrowthRowVM, SpiritDetailVM, StatRowVM, TabId, TabVM } from "../viewmodel";
+import type { GrowthRowVM, SpiritDetailVM, StatRowVM, TabId, TabVM } from "../viewmodel";
 import { swapDuration, swapEase } from "./artSwap";
 import { personalityPill } from "./idCard";
 import { P, T, badge, bar, button, glass, rule, text } from "./parts";
@@ -14,15 +14,12 @@ export interface PanelActions {
   tab(id: TabId): void;
   close(): void;
   evolve(): void;
-  feed(): void;
-  seeEpisode(): void;
   /** 목업: 성장 길에서 단계를 눌러 그 단계 그림 보기 */
   pickStage(stage: Stage): void;
 }
 
 export const PANEL_ICONS = [
-  ["g-close", PANEL.close.icon], ["g-up", PANEL.tabs.badgeIcon], ["g-cardnew", PANEL.tabs.badgeIcon], ["g-book", PANEL.tabs.badgeIcon],
-  ["g-lock", PANEL.episode.num / 2],
+  ["g-close", PANEL.close.icon], ["g-up", PANEL.tabs.badgeIcon], ["g-cardnew", PANEL.tabs.badgeIcon],
 ] as const;
 
 const X = FRAME.w - PANEL.right - PANEL.w;
@@ -221,64 +218,16 @@ function gateFoot(d: SpiritDetailVM, act: PanelActions): Node | undefined {
   };
 }
 
-// ───────────────────────── 유대 ─────────────────────────
-
-function episodeRow(e: EpisodeVM, act: PanelActions): Node {
-  const E = PANEL.episode;
-  const locked = e.state === "locked";
-  const right: Node = e.state === "seen" ? text(COPY.seen, T.epSide, P.ink3Spirit)
-    : e.state === "open" ? button(COPY.watch, { size: T.tool, h: PANEL.small.h, radius: PANEL.small.radius, padX: PANEL.small.padX, go: true, onClick: act.seeEpisode })
-    : {
-      t: "row", gap: B.headGap, align: "center",
-      children: [{ t: "icon", id: "g-lock", w: E.num / 2, h: E.num / 2, tint: P.ink3Spirit }, text(e.need ?? "", T.epSide, P.ink3Spirit)],
-    };
-  return {
-    t: "col",
-    children: [
-      rule(),
-      {
-        t: "row", h: E.h, gap: E.gap, align: "center",
-        children: [
-          {
-            t: "row", round: true, w: E.num, h: E.num, justify: "center", align: "center", style: { fill: P.veil["08"] },
-            children: [text(String(e.n), T.epNum, locked ? P.ink3Spirit : P.ink)],
-          },
-          text(COPY.episode(e.n), T.ep, locked ? P.ink3Spirit : P.ink),
-          { ...right, ml: "auto" } as Node,
-        ],
-      },
-    ],
-  };
-}
-
-function bond(d: SpiritDetailVM, act: PanelActions): Node[] {
-  const b = d.bond;
-  const feed = button(`${COPY.feed} · ${COPY.cost(b.feed.cost)}`, {
-    size: T.tool, h: PANEL.small.h, radius: PANEL.small.radius, padX: PANEL.small.padX, enabled: b.feed.can, onClick: act.feed,
-  });
-  return [
-    {
-      t: "col", gap: B.secGap,
-      children: [
-        head(COPY.affinity, b.next ? numPair(b.affinity, b.next) : text(String(b.affinity), T.secNum, P.ink)),
-        bar(PANEL.growth.exp, b.next ? b.affinity / b.next : 1, P.veil["16"], P.ink2),
-        { t: "row", gap: B.headGap, align: "center", children: [feed, text(`+${b.feed.gain}`, T.sbValue, P.ok)] },
-      ],
-    },
-    { t: "col", children: [...b.episodes.map((e) => episodeRow(e, act)), rule()] },
-  ];
-}
-
 // ───────────────────────── 패널 ─────────────────────────
 
 export function drawPanel(scene: Phaser.Scene, d: SpiritDetailVM, tab: TabId, act: PanelActions, statsFrom?: StatRowVM[]) {
   box(scene.add.graphics(), X, PANEL.y, PANEL.w, PANEL.h, PANEL.radius, glass(true));
   drawTabs(scene, d, tab, act);
-  const body = tab === "overview" ? overview(d, statsFrom) : tab === "growth" ? growth(d, act) : bond(d, act);
+  const body = tab === "overview" ? overview(d, statsFrom) : growth(d, act);
   if (tab === "growth") drawSpine(scene, body);
   render(scene, { t: "col", w: BODY.w, gap: B.gap, children: body }, BODY.x, BODY.y);
   // 아래에 붙는 줄 (.q-awk margin-top auto, 위 1px 선)
-  const foot = tab === "overview" ? releaseFoot(d) : tab === "growth" ? gateFoot(d, act) : undefined;
+  const foot = tab === "overview" ? releaseFoot(d) : gateFoot(d, act);
   if (foot) {
     const node: BoxNode = { t: "col", w: BODY.w, children: [rule(PANEL.foot.line), { ...foot, mt: PANEL.foot.pt } as Node] };
     render(scene, node, BODY.x, BODY_BOTTOM - size(node).h);
