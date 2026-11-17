@@ -564,7 +564,7 @@
    "name": "할퀴기",
    "owner": "common",
    "composition": "scene",
-   "case_id": "basic_claw-S-o-s4102",
+   "case_id": "basic_claw-S-o-s4304",
    "fit_size": null,
    "decision": "0118"
   },
@@ -610,7 +610,7 @@
    "owner": "common",
    "composition": "symbol",
    "case_id": "cheer-M-o-s4101",
-   "fit_size": 0.5,
+   "fit_size": 0.62,
    "decision": "0118"
   },
   {
@@ -627,7 +627,7 @@
    "name": "혜성",
    "owner": "star_spirit",
    "composition": "scene",
-   "case_id": "comet-S-o-s4101",
+   "case_id": "comet-S-o-s4304",
    "fit_size": null,
    "decision": "0118"
   },
@@ -645,7 +645,7 @@
    "name": "맞바람",
    "owner": "common",
    "composition": "scene",
-   "case_id": "crosswind-S-o-s4102",
+   "case_id": "crosswind-S-o-s4302",
    "fit_size": null,
    "decision": "0118"
   },
@@ -771,7 +771,7 @@
    "name": "안개 이불",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "fog-S-o-s4102",
+   "case_id": "fog-S-o-s4304",
    "fit_size": null,
    "decision": "0118"
   },
@@ -844,7 +844,7 @@
    "owner": "common",
    "composition": "symbol",
    "case_id": "mend-M-o-s4102",
-   "fit_size": 0.52,
+   "fit_size": 0.62,
    "decision": "0118"
   },
   {
@@ -943,16 +943,16 @@
    "owner": "star_spirit",
    "composition": "symbol",
    "case_id": "star_veil-M-o-s4101",
-   "fit_size": 0.52,
+   "fit_size": 0.6,
    "decision": "0118"
   },
   {
    "id": "step_forward",
    "name": "앞으로 나서기",
    "owner": "common",
-   "composition": "scene",
-   "case_id": "step_forward-S-o-s4203",
-   "fit_size": null,
+   "composition": "symbol",
+   "case_id": "step_forward-M-o-s4302",
+   "fit_size": 0.5,
    "decision": "0118"
   },
   {
