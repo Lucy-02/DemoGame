@@ -243,6 +243,38 @@ function playTurn(b: Battle, watch?: Planned) {
   return { hit, lost, downedBefore, card };
 }
 
+describe("놓은 카드 되돌리기 (0127)", () => {
+  it("되돌리면 받을 피해 · 조준 결과 · 카드 숫자 미리보기가 놓기 전 값으로 돌아와요", () => {
+    let undone = 0;
+    for (const enc of ENCOUNTERS) {
+      const s = new BattleSession(run(), enc.enemies);
+      const b = s.battle;
+      for (let turn = 1; turn <= 3 && b.result === "ongoing"; turn++) {
+        const shots: string[] = [];
+        for (let n = 0; n < 4; n++) {
+          const was = JSON.stringify(battleVM(b));
+          const c = b.hand.filter((x) => b.canPlay(x).ok)[(turn + n) % Math.max(1, b.hand.filter((x) => b.canPlay(x).ok).length)];
+          if (!c) break;
+          const need = b.needsTarget(c), foes = b.aliveEnemies(), mine = b.aliveSpirits();
+          s.dispatch({ kind: "play", uid: c.uid, target: need === "enemy" ? { side: "e", uid: foes[n % foes.length].uid } : need === "ally" ? { side: "s", id: mine[n % mine.length].id } : undefined });
+          if (b.canUndo()) shots.push(was);
+          else shots.length = 0;
+        }
+        // 마지막 토큰에만 되돌리기 표시가 있어요
+        const marks = (battleVM(b).order.bundles ?? []).flat().filter((t) => t.undo);
+        expect(marks.length).toBe(shots.length ? 1 : 0);
+        while (shots.length) {
+          s.dispatch({ kind: "undo" });
+          expect(JSON.stringify(battleVM(b))).toBe(shots.pop());
+          undone++;
+        }
+        playTurn(b);
+      }
+    }
+    expect(undone).toBeGreaterThan(ENCOUNTERS.length);
+  });
+});
+
 describe("2막 규칙 표시 (0096)", () => {
   const act2 = (enemies: string[]) => new BattleSession(new Run({ seed: 7, frontId: "fire_fox", adult: false, unlockAll: false, party: ["fire_fox", "mist_cat", "glass_salamander"], acts: 2 }), enemies).battle;
 
