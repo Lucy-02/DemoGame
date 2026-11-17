@@ -16,7 +16,9 @@ import { inlineLine, lineBox, measure, type Span } from "../../style/text";
 import type { RichText } from "../../tooltip/content";
 import { faceKey, preloadFaces } from "../../faces";
 import { miniSlotNode, preloadEquipArt } from "../../run/equip";
+import { drawAllyArt } from "../allyArt";
 import { drawEnemyArt, preloadEnemyArt } from "../enemyArt";
+import { preloadSpiritArt } from "../../spiritArt";
 import { EQUIP_MINI } from "../../run/layout";
 import { TERMS, termOfIcon } from "../../glossary/terms";
 import { COPY, elementName, statusName } from "../copy";
@@ -41,6 +43,7 @@ const WEAK_ON_ICON = Math.round(I.weak.icon * I.weak.on.scale);
 export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
   preloadFaces(scene);
   const statuses = (list: StatusVM[]) => list.forEach((s) => loadIcon(scene, s.icon, I.status.icon));
+  preloadSpiritArt(scene, vm.allies.filter((a) => a.stage).map((a) => a.face));
   for (const a of vm.allies) {
     statuses(a.statuses);
     a.statuses.forEach((s) => loadIcon(scene, s.icon, TIP.unit.stat.icon));
@@ -778,7 +781,9 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPrev
   const cx = ALLY.xs[i];
   const bodyX = cx - ALLY.body.w / 2, bodyTop = ALLY.feet - ALLY.body.h;
   if (pv.lit) glow(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, 0, true);
-  const art = gather(scene, 0, 0, () => { placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3); });
+  const art = gather(scene, 0, 0, () => {
+    if (!(a.stage && drawAllyArt(scene, a.face, a.stage, cx, ALLY.feet, ALLY.body))) placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
+  });
   // 쓰러진 아군은 그림이 흐려요 (0086)
   if (a.hp <= 0) art.setAlpha(tokens.provisional.motion.hit.down.alpha);
   ground(scene, cx, ALLY.feet);

@@ -259,7 +259,7 @@ function zoneDamageTo(b: Battle, s: BSpirit): number {
 
 function allyVM(b: Battle, s: BSpirit, incoming: Map<string, number>): AllyVM {
   return {
-    face: s.id, name: s.def.name, element: ELEMENT_ICON[s.def.element] ?? ELEMENT_ICON.none, art: "",
+    face: s.id, name: s.def.name, element: ELEMENT_ICON[s.def.element] ?? ELEMENT_ICON.none, art: "", stage: s.run.stage,
     hp: s.hp, maxHp: s.maxHp, block: s.block || undefined,
     incoming: incoming.get(s.id) || undefined,
     statuses: statusesOf(s),
