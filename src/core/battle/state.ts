@@ -81,6 +81,8 @@ export interface BEnemy extends StatusHolder {
   maxHp: number;
   block: number;
   patternIdx: number;
+  /** 지금 하는 행동의 남은 무작위 대상 차례 (행동할 때 칸에서 받아 와요, 0128) */
+  aim?: string[];
   phase: 1 | 2;
   charging: boolean;
   /** 차징을 시작한 턴. 그 턴에는 행동하지 않고 다음 턴 박힌 시각에 터져요. */
@@ -143,6 +145,8 @@ export interface EnemySlot {
   uid: number;
   at: number;
   done: boolean;
+  /** 이 행동의 무작위 대상: 턴 시작에 미리 뽑은 정령 id를 고르는 차례대로 (0128) */
+  aim?: string[];
 }
 
 /** 별 정령: 새긴 별을 세고 낙하를 내줘요 */
