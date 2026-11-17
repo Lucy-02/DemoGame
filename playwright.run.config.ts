@@ -14,7 +14,7 @@ export default defineConfig({
     viewport: { width: 1400, height: 950 },
     // GPU 없는 곳에서도 WebGL이 돌게 소프트웨어 렌더러를 써요
     // 깔린 크로미움을 쓰려면 PW_CHROMIUM에 실행 파일 경로를 줘요
-    launchOptions: { args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader"], executablePath: process.env.PW_CHROMIUM || undefined },
+    launchOptions: { args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--enable-precise-memory-info"], executablePath: process.env.PW_CHROMIUM || undefined },
   },
   webServer: { command: `pnpm dev:web --port ${PORT} --strictPort`, url: `http://localhost:${PORT}`, reuseExistingServer: true, timeout: 60_000 },
 });

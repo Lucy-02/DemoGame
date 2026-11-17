@@ -44,6 +44,8 @@ export interface AllyTokenVM {
   mark?: "gap" | "held" | "release";
   /** 재생 중 지나감 (흐림) */
   past?: boolean;
+  /** 마지막에 놓은 카드: 오른쪽 위에 되돌리기 배지, 누르면 손패로 돌아와요 (0074 7번) */
+  undo?: boolean;
   tip?: OrderTipVM;
 }
 
@@ -175,8 +177,11 @@ export interface BattleVM {
 
 /** 재생 한 걸음: 행동한 유닛과, 그 행동으로 유닛마다 뜬 수 (일어난 순서대로) */
 export interface ActedVM {
+  /** 없으면 행동자 없는 걸음 (턴 끝 효과) */
   actor?: UnitRef;
   pops: PopVM[];
+  /** 이 걸음에서 바뀐 유닛의 바뀌기 전 값. 맞는 때까지는 이 값으로 보여요 */
+  was?: { ref: UnitRef; hp: number; block?: number }[];
 }
 
 /** 유닛 머리 위에 잠깐 뜨는 알약. damage = HP가 깎임, heal = 회복, block = 방어도 얻음 */
@@ -223,12 +228,17 @@ export interface PickVM {
 
 /** 카드를 낼 때 필드에 그리는 결과 (결정 0007 "미리보기 예산", 0013 끌어 대기).
  *  필드엔 ① 대상의 결과 ② 아군마다 받을 피해 a→b 두 가지만. 연쇄·지연·다음 턴 효과는 카드 설명에만.
- *  값은 아직 전투 규칙(src/core)에서 계산하지 않아요. session 층이 생기면 거기서 채워요. */
+ *  실제 전투에서는 그 카드를 더 놓고 이번 턴을 미리 돌려 본 값이에요 (0123). 무작위로 고르는 대상의 결과는 없어요. */
 export interface OutcomeVM {
   /** 적마다 결과 (enemies 인덱스). 없는 적은 그대로 */
   enemies: Partial<Record<number, EnemyOutcomeVM>>;
   /** 아군마다 받을 피해 a→b (allies 순서). 비어 있으면 그 아군은 그대로 */
-  incoming: (Change | undefined)[];
+  incoming: (IncomingChange | undefined)[];
+}
+
+/** 받을 피해 a→b. loss = 그 카드를 놓으면 깎일 HP (없으면 받을 피해에서 방어도를 뺀 만큼) */
+export interface IncomingChange extends Change {
+  loss?: number;
 }
 
 export interface EnemyOutcomeVM {

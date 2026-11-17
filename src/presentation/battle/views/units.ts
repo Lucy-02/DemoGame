@@ -23,7 +23,7 @@ import { EQUIP_MINI } from "../../run/layout";
 import { TERMS, termOfIcon } from "../../glossary/terms";
 import { COPY, elementName, statusName } from "../copy";
 import { ALLY, ENEMY, FRAME, GROUND, INFO as I, INTENT, PREVIEW as PV, TIP } from "../layout";
-import type { AllyVM, BattleVM, Change, EnemyOutcomeVM, EnemyVM, IntentVM, StatusVM, TraitVM } from "../viewmodel";
+import type { AllyVM, BattleVM, EnemyOutcomeVM, EnemyVM, IncomingChange, IntentVM, StatusVM, TraitVM } from "../viewmodel";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
@@ -498,15 +498,15 @@ const lossOf = (a: AllyVM, incoming: number) => Math.min(a.hp, Math.max(0, incom
 const lossNow = (a: AllyVM) => a.loss ?? lossOf(a, a.incoming ?? 0);
 
 /** pv = 이 아군의 받을 피해 a→b (조준 결과). 바뀐 값만 강조색으로 보여요 */
-function allyInfo(scene: Phaser.Scene, a: AllyVM, i: number, pv?: Change, pulse = false): InfoView {
+function allyInfo(scene: Phaser.Scene, a: AllyVM, i: number, pv?: IncomingChange, pulse = false): InfoView {
   const incoming = pv ? pv.to : (a.incoming ?? 0);
-  const loss = pv ? lossOf(a, incoming) : lossNow(a);
+  const loss = pv ? Math.min(a.hp, pv.loss ?? lossOf(a, incoming)) : lossNow(a);
   const lethal = loss > 0 && loss >= a.hp;
-  const showInc = a.incoming !== undefined && (a.incoming > 0 || !!pv);
+  const showInc = incoming > 0 || (!!pv && pv.to !== pv.from);
   const chips: Chip[] = [
     ...(a.element ? [elementChip(scene, a.element)] : []),
     ...(a.block ? [blockChip(a.block)] : []),
-    ...(showInc ? [incomingChip(scene, incoming, lethal, !!pv)] : []),
+    ...(showInc ? [incomingChip(scene, incoming, lethal, !!pv && pv.to !== pv.from)] : []),
     ...a.statuses.map(statusChip),
   ];
   return drawInfo(scene, ALLY.xs[i], ALLY.feet, { max: a.maxHp, keep: a.hp - loss, loss, lethal }, { n: a.hp }, chips, pulse && loss > 0);
@@ -779,12 +779,12 @@ export interface UnitView {
 const HALF = I.w / 2 + I.chips.over;
 
 /** pv.outcome: 이 아군의 받을 피해 a→b */
-export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<Change> = {}): UnitView {
+export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<IncomingChange> = {}): UnitView {
   const cx = ALLY.xs[i];
   const bodyX = cx - ALLY.body.w / 2, bodyTop = ALLY.feet - ALLY.body.h;
   if (pv.lit) glow(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, 0, true);
   const art = gather(scene, 0, 0, () => {
-    if (!(a.stage && drawAllyArt(scene, a.face, a.stage, cx, ALLY.feet, ALLY.body, ALLY.art))) placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
+    if (!(a.stage && ALLY.art.stages.includes(a.stage) && drawAllyArt(scene, a.face, a.stage, cx, ALLY.feet, ALLY.body, ALLY.art))) placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
   });
   // 쓰러진 아군은 그림이 흐려요 (0086)
   if (a.hp <= 0) art.setAlpha(tokens.provisional.motion.hit.down.alpha);
@@ -805,6 +805,14 @@ export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPrev
 /** 가리킨 적이 노리는 아군의 묶음: 깎일 구간이 깜빡여요 (쉬는 묶음 자리에 덮어 그려요) */
 export function drawAllyPulse(scene: Phaser.Scene, a: AllyVM, i: number) {
   allyInfo(scene, a, i, undefined, true);
+}
+
+/** 유닛의 정보 묶음만 다시 그려요 (재생 중 맞기 전 값으로 잠깐 덮어 그릴 때, 0086) */
+export function drawUnitInfo(scene: Phaser.Scene, side: "ally" | "enemy", unit: AllyVM | EnemyVM, i: number): Phaser.GameObjects.Container {
+  return gather(scene, 0, 0, () => {
+    if (side === "ally") allyInfo(scene, unit as AllyVM, i);
+    else enemyInfo(scene, unit as EnemyVM, i, undefined, false);
+  });
 }
 
 /** 이 아군이 받을 피해로 HP가 깎이는지 */

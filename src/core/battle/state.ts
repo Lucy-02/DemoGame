@@ -208,6 +208,8 @@ export type BattleEvent =
   | { k: "charge"; uid: number; move: string }
   | { k: "enemyAct"; uid: number; move: string }
   | { k: "spiritAct"; id: string; card: string }
+  /** 시간축 재생이 끝나고 턴 끝 처리(화상 등)가 시작돼요. 이 뒤의 피해는 누구의 행동도 아니에요 */
+  | { k: "turnEnd" }
   | { k: "release"; id: string }
   | { k: "releaseEnd"; id: string }
   | { k: "downed"; id: string }
@@ -223,7 +225,7 @@ export interface Intent {
   name: string;
   /** 이번 턴 이 행동이 일어나는 시각(ms). 이번 턴에 행동하지 않으면 null */
   at: number | null;
-  /** "피해 6", "4×2" 같은 짧은 표기 */
+  /** 호버 풀이: 효과문 문장 틀의 완결문 (TEXT_RULES 1절) */
   text: string;
   kind: "attack" | "defend" | "debuff" | "buff" | "charge" | "chargeReady" | "skip";
 }

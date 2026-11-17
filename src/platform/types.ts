@@ -7,6 +7,10 @@ export interface Platform {
   read(key: string): Promise<string | null>;
   write(key: string, text: string): Promise<void>;
   remove(key: string): Promise<void>;
+  /** 덮어쓰기 직전에 남겨 둔 저장. 없으면 null (웹은 늘 null) */
+  readBackup(key: string): Promise<string | null>;
+  /** 못 읽는 저장을 옆에 치워 둬요. 그 키는 비어요 */
+  setAside(key: string): Promise<void>;
   setFullscreen(on: boolean): Promise<void>;
   isFullscreen(): Promise<boolean>;
   /** 웹에서는 아무 일도 하지 않아요. */

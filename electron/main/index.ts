@@ -10,8 +10,24 @@ const SCHEME = "app";
 const rendererDir = resolve(import.meta.dirname, "../renderer");
 const devServerUrl = process.env.ELECTRON_RENDERER_URL;
 
+/**
+ * 저장 폴더 이름. 앱 이름(productName)이 바뀌어도 저장이 따라 옮겨 가지 않게 고정해요.
+ * 데모와 본편이 같은 곳을 쓰고(0101), 스팀 클라우드 경로도 이 이름으로 잡아요. 한 번 밖에 내면 바꾸지 않아요.
+ */
+const USER_DATA_DIR = "demogame";
 // e2e 테스트가 실제 사용자 폴더를 건드리지 않게 저장 위치를 바꿀 수 있어요.
-if (process.env.DEMOGAME_USER_DATA) app.setPath("userData", process.env.DEMOGAME_USER_DATA);
+app.setPath("userData", process.env.DEMOGAME_USER_DATA ?? join(app.getPath("appData"), USER_DATA_DIR));
+
+// 두 번 실행 막기: 같은 저장 파일을 두 창이 번갈아 덮어쓰지 않게 해요. 이미 떠 있으면 그 창을 앞으로 가져와요.
+// e2e는 저장 폴더가 저마다 달라서 서로 막지 않아요 (잠금은 userData에 걸려요).
+const single = app.requestSingleInstanceLock();
+if (!single) app.quit();
+app.on("second-instance", () => {
+  const win = BrowserWindow.getAllWindows()[0];
+  if (!win) return;
+  if (win.isMinimized()) win.restore();
+  win.focus();
+});
 
 // file:// 대신 app:// 로 빌드 결과를 서빙해요. fetch·XHR(Phaser 로더)이 웹과 똑같이 동작해요.
 protocol.registerSchemesAsPrivileged([
@@ -38,6 +54,8 @@ function openErrorLog() {
   const log = createErrorLog(join(app.getPath("userData"), "logs", "error.log"));
   // 기록만 하고 기본 동작(종료)은 그대로 둬요
   process.on("uncaughtExceptionMonitor", (e) => void log.append(`v${app.getVersion()} main ${e.stack ?? e.message}`));
+  // 화면 프로세스가 죽으면 까닭을 남겨요
+  app.on("render-process-gone", (_e, _contents, details) => void log.append(`v${app.getVersion()} render-process-gone ${details.reason} ${details.exitCode}`));
   return log;
 }
 
@@ -50,6 +68,8 @@ function registerIpc() {
     return storage.write(key, text);
   });
   ipcMain.handle(IPC.remove, (_e, key: string) => storage.remove(key));
+  ipcMain.handle(IPC.readBackup, (_e, key: string) => storage.readBackup(key));
+  ipcMain.handle(IPC.setAside, (_e, key: string) => storage.setAside(key));
   ipcMain.handle(IPC.setFullscreen, (e, on: boolean) => {
     BrowserWindow.fromWebContents(e.sender)?.setFullScreen(Boolean(on));
   });
@@ -94,6 +114,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  if (!single) return;
   serveRenderer();
   registerIpc();
   createWindow();

@@ -5,6 +5,8 @@
 - 측정 스크립트·변형 소스·diff: 스크래치패드 `/tmp/claude-0/-home-user/ead81b34-edc1-5864-bca2-7f3183f72ecc/scratchpad/`
   (`bench.ts`, `deep.ts`, `vbench.tmpl.ts`, `adult.tmpl.ts`, `v/v5~v7/`, `proposal_v5.diff` · `proposal_v6.diff` · `proposal_v7.diff`)
 
+> 화면 쪽 숫자(첫 화면까지 시간 · 전투 프레임 시간 · 한 판 뒤 메모리)는 이 문서가 아니라 점검이 찍어요: `docs/release/STEAM.md` "성능 숫자" (0139). 아래는 규칙 엔진만 잰 값이고, 측정 스크립트는 남아 있지 않아요.
+
 ## 결론 먼저
 
 **지금 규모에서 최적화는 필요 없어요.** 한 턴(플레이어 계획 + 재생) 규칙 계산이 약 30~80µs예요.

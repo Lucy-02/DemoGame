@@ -4,10 +4,11 @@ import { C, cardDef } from "../../core/data";
 import { statusN, type BCard, type BEnemy, type BSpirit, type Battle, type Forecast, type Planned, type Ref, type StatusId } from "../../core/battle";
 import type { EnemyAction, EnemyTargetRule } from "../../core/types";
 import { ELEMENT_ICON, faceKey } from "../faces";
-import { cardVM, equipVM, releaseVM, type CardStats } from "../run/fromCore";
+import { cardVM, equipVM, releaseVM, richText, type CardStats } from "../run/fromCore";
+import type { RichText } from "../tooltip/content";
 import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
-import type { AllyTokenVM, AllyVM, BandVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
+import type { AllyTokenVM, AllyVM, BandVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, OutcomeVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
 
 /** 2막 규칙의 임시 기호 (0096: 새 기호를 그릴 때까지 있는 기호를 빌려 써요, TODO_ICON) */
 const BURROW_ICON = "i-veil";
@@ -54,7 +55,11 @@ export function battleVM(b: Battle, place?: string): BattleVM {
     .filter((g) => g.cards.length > 0);
   const plays: Record<string, PlayVM> = {};
   if (!pick) {
-    for (const c of b.hand) if (b.canPlay(c).ok) plays[cardKey(c)] = { target: targetRule(b, c), slot: slotOf(b, c) };
+    for (const c of b.hand) {
+      if (!b.canPlay(c).ok) continue;
+      const target = targetRule(b, c);
+      plays[cardKey(c)] = { target, slot: slotOf(b, c), outcomes: outcomesOf(b, c, target, incoming) };
+    }
   }
   const playable = Object.keys(plays).length;
   if (!pick) {
@@ -118,7 +123,7 @@ function orderOf(b: Battle): OrderEntry[] {
     const tip: OrderTipVM = {
       title: e.def.name, kind: charge && COPY.order.charge,
       result: main?.type === "attack" ? { who: whoOf(b, main), value: amountOf(b, e, main) } : undefined,
-      text: [{ text: b.intent(e).text }],
+      text: richText(b.intent(e).text),
       chips: [{ text: COPY.order.n(i + 1) }, ...(charge ? [{ text: COPY.order.breakable, tone: "acc" as const }] : [])],
     };
     return { uid: x.uid, slot: { key: `t${b.turn}:s${b.slots.indexOf(x)}`, n: i + 1, art: e.def.id, action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
@@ -188,7 +193,7 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
       title: b.spirit(p.owner).def.release.name, kind: vm.name, text: vm.detail.text,
       chips: k < slots ? [{ text: COPY.order.before(k + 1) }] : [],
     };
-    return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", tip }, owner: p.owner };
+    return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", undo: undoOf(b, p), tip }, owner: p.owner };
   }
   const icon = cardVM(p.card.cardId, p.owner).values[0]?.icon ?? CHARGE_ICON;
   const vm = handCard(b, p.card, p.n === undefined ? undefined : b.planned[p.n]);
@@ -197,8 +202,11 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
     title: vm.name, kind: COPY.order.card, text: vm.detail.text,
     chips: [...(k < slots ? [{ text: COPY.order.before(k + 1) }] : []), ...(gap ? [{ text: COPY.order.gap, tone: "warn" as const }] : []), ...liveZones(b).filter((z) => p.end >= z.from && p.end < z.to).map((z) => ({ text: COPY.band.chip(z.dmg) }))],
   };
-  return { token: { key: keyOf(b, p), face: p.owner, icon, mark: gap ? "gap" : undefined, tip }, cardId: p.card.cardId, owner: p.owner };
+  return { token: { key: keyOf(b, p), face: p.owner, icon, mark: gap ? "gap" : undefined, undo: undoOf(b, p), tip }, cardId: p.card.cardId, owner: p.owner };
 }
+
+/** 마지막에 놓은 토큰이고 되돌릴 수 있으면 표시해요 (0074 7번) */
+const undoOf = (b: Battle, p: Lane) => (p.n === b.planned.length - 1 && b.canUndo()) || undefined;
 
 const lanesOf = (b: Battle): Lane[] => b.planned.map((p, n) => ({ end: p.end, owner: p.owner, card: p.card, target: p.target, n }));
 
@@ -298,9 +306,17 @@ function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[]): EnemyVM {
     traits: traitsOf(e),
     buried: statusN(e, "burrow") > 0 || undefined,
     intent: intentOf(b, e, order),
-    tip: { name: e.def.name, rank: COPY.rank[e.def.tier], lines: [[{ text: b.intent(e).text }]] },
+    tip: { name: e.def.name, rank: COPY.rank[e.def.tier], lines: tipLines(b, e) },
   };
 }
+
+/** 유닛 풀이 (정본 H1): 행동 이름 · 효과문, 차징 중이면 이름 줄에 `브레이크 가능` (0067) */
+function tipLines(b: Battle, e: BEnemy): RichText[] {
+  const it = b.intent(e);
+  const action = it.kind === "skip" ? richText(it.text) : [{ text: `${it.name} · ` }, ...richText(it.text)];
+  return e.charging ? [action, BREAKABLE] : [action];
+}
+const BREAKABLE: RichText = richText(COPY.order.breakable);
 
 /** 특성 칩 (0072 7번): 되돌리기는 이번 턴 첫 타격을 받으면 꺼져요 (0096) */
 function traitsOf(e: BEnemy): EnemyVM["traits"] {
@@ -366,7 +382,38 @@ function handCard(b: Battle, c: BCard, planned?: Planned) {
   };
 }
 
+/**
+ * 조준 결과 (0007 · 0013): 이 카드를 더 놓고 이번 턴을 미리 돌려 본 값. 고르는 카드는 고를 수 있는 대상마다, 그 밖에는 한 가지예요.
+ * rest = 지금 놓은 카드까지의 결과 (받을 피해 a→b의 a)
+ */
+function outcomesOf(b: Battle, c: BCard, rule: PlayVM["target"], rest: Forecast): PlayVM["outcomes"] {
+  const one = (target?: Ref) => outcomeVM(b, rest, b.forecast({ uid: c.uid, target }));
+  if (rule.kind !== "pick") return { all: one() };
+  const out: NonNullable<PlayVM["outcomes"]> = {};
+  if (rule.side === "enemy") b.aliveEnemies().forEach((e, i) => { if (!rule.not?.includes(i)) out[i] = one({ side: "e", uid: e.uid }); });
+  else b.spirits.forEach((s, i) => { if (!s.downed) out[i] = one({ side: "s", id: s.id }); });
+  return out;
+}
+
+function outcomeVM(b: Battle, rest: Forecast, f: Forecast): OutcomeVM {
+  const enemies: OutcomeVM["enemies"] = {};
+  b.aliveEnemies().forEach((e, i) => {
+    const o = f.card?.get(e.uid);
+    if (o) enemies[i] = { hits: o.hits, hp: o.hp, block: o.block.from === o.block.to ? undefined : o.block, cut: o.cut || undefined };
+  });
+  const incoming = b.spirits.map((s) => {
+    const from = rest.hit.get(s.id) ?? 0, to = f.hit.get(s.id) ?? 0;
+    const loss = f.lost.get(s.id) ?? 0;
+    return from === to && loss === (rest.lost.get(s.id) ?? 0) ? undefined : { from, to, loss };
+  });
+  return { enemies, incoming };
+}
+
+/** 무작위 적을 때리는 카드: 적이 여럿이면 누가 맞을지 몰라요 */
+const hitsAtRandom = (b: Battle, c: BCard) => b.aliveEnemies().length > 1 && cardDef(c.cardId).effects.some((op) => op.op === "randomHits");
+
 function targetRule(b: Battle, c: BCard): PlayVM["target"] {
+  if (hitsAtRandom(b, c)) return { kind: "random", side: "enemy" };
   const need = b.needsTarget(c);
   if (need === "enemy") {
     // 이 카드가 끝날 때 아직 땅속인 적은 고를 수 없어요 (0096)

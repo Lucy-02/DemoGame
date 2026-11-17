@@ -190,9 +190,8 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       const base = ctx.main(op.value);
       const burn = b.burnAmount(owner, scale(op.burn, b.stat(owner, "focus")));
       for (let i = 0; i < op.hits; i++) {
-        const alive = b.aliveEnemies();
-        if (!alive.length) return;
-        const e = b.rng.pick(alive);
+        const e = b.randomEnemy();
+        if (!e) return;
         b.hit(owner, e, base, ctx.def.element, false);
         if (!e.dead) b.addStatus(e, "burn", burn);
       }

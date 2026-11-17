@@ -501,6 +501,7 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
     if (p.rightButtonReleased()) return this.cancel();
+    if (!this.dragging && !this.press && !this.held && this.undoAt(p.x, p.y)) return;
     const over = this.overAt(p.x, p.y);
     if (this.dragging) {
       const card = this.dragging;
@@ -539,6 +540,18 @@ export class BattleScene extends Phaser.Scene {
     this.held = null;
     this.hand.setHeld(null);
     this.showField(null);
+  }
+
+  /** 마지막에 놓은 토큰을 누르면 그 카드를 되돌려요 (0074 7번) */
+  private undoAt(x: number, y: number): boolean {
+    const s = this.session;
+    const hit = this.orderHits.find((h) => inside(h, x, y));
+    if (!s || this.playback || hit?.kind !== "ally" || !this.vm.order.bundles?.[hit.bundle]?.[hit.i]?.undo) return false;
+    if (!s.battle.canUndo()) return false;
+    s.dispatch({ kind: "undo" });
+    audioOf(this)?.play("card.place");
+    this.settle();
+    return true;
   }
 
   /** 카드 내기: 세션에 명령을 보내고 바뀐 상태로 다시 그려요. 고정 장면이면 기록만 해요 */

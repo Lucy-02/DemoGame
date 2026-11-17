@@ -96,7 +96,7 @@ src/presentation/battle/
   layout.ts                    FRAME BG FLOOR SYS ORDER ALLY ENEMY GROUND INFO TIP INTENT BAND MANA HAND END HOVER
   viewmodel.ts, copy.ts        BattleVM 타입, 화면 문구
   fixtures/canonRest.ts        정본 고정 장면
-  ../stage.ts                  막마다 까는 배경 그림 (0103, 0110~0113). 전투와 이벤트 · 휴식(0119)이 함께 써요. public/assets/stages/act<N>/far.webp · ground.webp, 만들기 tools/art/stage-bg.py, 보기 ?screen=battle&stage=1
+  ../stage.ts                  막마다 까는 배경 그림 (0103, 0110~0113). 전투와 이벤트 · 휴식(0119)이 함께 써요. public/assets/stages/act<N>/far.webp · ground.webp, 만들기 tools/art/stage-bg.py, 보기 ?screen=battle&stage=1. 장소 그림(상점, 0122)은 한 장: public/assets/stages/shop.webp, 만들기 tools/art/place-bg.py. 그림 파일은 화면의 2배(0149, --scale 2)라서 stageImage()로 화면 너비에 맞춰 놓아요
   views/backdrop.ts            배경: 막의 그림이 있으면 그걸, 없으면 방사 그라데이션 + 바닥
   views/topbar.ts, order.ts    위치·시스템 버튼, 행동 순서 띠
   views/units.ts               아군·적(그림 자리, 그림자, 발밑 정보 묶음 "캡슐 막대 V1": HP 막대 + 기호 칩 줄, 의도 알약). drawAlly/drawEnemy → { bounds, info, marks, bottom, intent? }. 가리키면 drawUnitTip(유닛 풀이)·drawMarkTip(기호 한 줄 풀이)·drawAllyPulse(깎일 구간 깜빡임)·drawIntent(이어진 의도 밝게)
@@ -119,7 +119,7 @@ src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/can
 src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오른쪽 정령 세 줄, 0050 격자). 전투 결과·상점이 함께 씀
   layout.ts                    FRAME GRID BG GOLD CARD_FOCUS LANE RING INFO SOCKET (E1·P1 시안에서 잰 임시 값)
   lanes.ts                     drawLane(scene, LaneVM, i, LaneState): 링·얼굴·이름·HP·능력치·카드 칸. 상태(hot·stat·card·open·deckTo·heal·on)는 화면이 줌
-  gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경 (막을 주면 그 막의 전투 배경 + scrim 덮개, 0119)
+  gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경 (막을 주면 그 막의 전투 배경, "shop"을 주면 상점 그림 + scrim 덮개, 0119 · 0122)
   cards.ts                     cardWithFace(초상 홈 얼굴 굽기), drawCardTip(카드 위 말풍선)
   fromCore.ts                  cardVM(cardId, owner?), deckCardVM(DeckCard), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 인쇄값보다 오르면 ▲)
   deckPick.ts                  drawDeckPick: 덱 보기 창 틀(얼굴 머리 + 카드 줄)에서 고르기 → 확인 (상점 빼기 · 휴식 강화 · 이벤트 빼기·강화·복제, 0082). drawQuietButton
@@ -237,7 +237,7 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 1. **session 층**: `src/session`에서 `src/core` 전투 상태 → `BattleVM` 변환, 카드 사용·턴 종료 명령. fixture 대신 실제 상태로 그리기. 의존 방향은 아키텍처 문서를 따라요.
 2. **모션 디테일**: 공통 값은 `style/motion.ts`(FAST · MOVE · 창 뜸 · 차례로 나타남), 화면 전환은 `veil.ts`, 전투 재생 반응은 `battle/views/unitMotion.ts`예요 (0077 · 0086, 모두 `provisional.motion` 임시 값). 남은 빈 곳은 0086 "남은 빈 곳"에 순서대로 있어요. `?slow=4`로 느리게 봐요.
 3. 기믹·차징(`frame-gimmick.png`), H3.
-5. **순서표(0074)**: 토큰은 `battle/views/order.ts` 한 규칙(얼굴 → 테 → 배지)으로 그리고, Lucy가 고른 값은 `provisional.order` 토큰에 있어요. 상태 모음은 `?screen=battle&scene=order-plan|order-play`. 턴 재생은 `battle/playback.ts`가 턴 종료 이벤트를 턴 종료 직전 VM에 입혀 행동마다 한 장면을 만들고, 장면마다 다시 그려요(행동 하나 450ms, `provisional.motion.playback.step`). 남은 것: 재생 연출(타격·쓰러짐·상태 변화·늦춰진 행동의 자리 옮김), 아군 토큰 되돌리기(전투 규칙 필요), 말풍선의 아군 결과 값·썸네일·꼬리, 적 효과문을 문구 규칙 문장 틀로.
+5. **순서표(0074)**: 토큰은 `battle/views/order.ts` 한 규칙(얼굴 → 테 → 배지)으로 그리고, Lucy가 고른 값은 `provisional.order` 토큰에 있어요. 상태 모음은 `?screen=battle&scene=order-plan|order-play`. 턴 재생은 `battle/playback.ts`가 턴 종료 이벤트를 턴 종료 직전 VM에 입혀 행동마다 한 장면을 만들고, 장면마다 다시 그려요(행동 하나 450ms, `provisional.motion.playback.step`). 남은 것: 재생 연출(타격·쓰러짐·상태 변화·늦춰진 행동의 자리 옮김), 말풍선의 아군 결과 값·썸네일·꼬리, 적 효과문을 문구 규칙 문장 틀로.
 4. 고해상도 화면(devicePixelRatio) 대응. 글자·구운 텍스처 해상도까지 같이 다뤄야 해요.
 
 정령 관리·정원
