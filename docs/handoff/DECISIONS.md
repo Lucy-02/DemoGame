@@ -1,6 +1,6 @@
 # 지금 유효한 결정
 
-- 정리: **0074까지 반영** (2026-11-16), 0076 디렉터 판단 반영(2026-11-17). 유효한 것만 적어요. 근거·이력은 `docs/design-decisions/`, 열린 질문은 `docs/handoff/OPEN_QUESTIONS.md`.
+- 정리: **0085까지 반영** (2026-11-17). 유효한 것만 적어요. 근거·이력은 `docs/design-decisions/`, 열린 질문은 `docs/handoff/OPEN_QUESTIONS.md`.
 - 표현 규칙은 `CLAUDE.md` "꼭 지킬 표현 규칙", 게임 안 문구는 `design/canon/text/TEXT_RULES.md`.
 - ⏳ = Lucy 확인 대기. 괄호 숫자는 결정 기록 번호예요.
 
