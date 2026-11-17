@@ -17,6 +17,20 @@ export const COPY = {
   /** 강화한 카드의 말풍선 주인 줄 꼬리 (TEXT_RULES 5절 명사형, 0080) */
   upgraded: "강화됨",
   cancel: "취소",
+  /** 선택지 효과 칩 (Lucy 2026-11-17 "모든 정령 HP 30% 회복"처럼 명사구, TEXT_RULES 5절 명사형). 부호는 수에 붙여요 */
+  fx: {
+    healAll: (p: string) => `모든 정령 HP ${p} 회복`,
+    gold: (n: number) => `골드 ${n > 0 ? "+" : ""}${n}`,
+    hurtAll: (n: number) => `모든 정령 HP -${n}`,
+    hurtFront: (n: number) => `앞열 정령 HP -${n}`,
+    maxHpAll: (n: number) => `모든 정령 최대 HP +${n}`,
+    cardReward: (n: number, rarity?: string) => `${rarity ? `${rarity} ` : ""}카드 ${n}장 중 1장 받기`,
+    removeCard: "카드 1장 빼기",
+    upgradeCard: "카드 1장 강화",
+    duplicateCard: "카드 1장 복제",
+    /** 아무 일도 없는 선택지 */
+    none: "변화 없음",
+  },
   /** 안내 (TEXT_RULES 8절 해요체) */
   noBranch: "갈래를 고르면 대표 카드가 기술로 바뀌어요",
 };

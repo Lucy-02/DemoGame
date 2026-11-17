@@ -119,7 +119,9 @@ export const DECK_PICK = {
  *  padding 16 20 radius 12, 이름 · 효과문 gap 6 (효과문 줄 높이 1.5) · .opt.hov 테 accHi + 바깥 4px accHi .14 · 고를 수 없으면 .4 */
 export const CHOICE = {
   x: GRID.gutter, w: GRID.colW, top: 316, gap: 14, pad: [16, 20, 16, 20] as [number, number, number, number],
-  radius: 12, inner: 6, textLh: 1.5, hot: { outer: 4, alpha: 0.14 }, offAlpha: 0.4,
+  radius: 12, inner: 8, textLh: 1.5, hot: { outer: 4, alpha: 0.14 }, offAlpha: 0.4,
+  /** 효과 칩 (Lucy 2026-11-17): 기호 16 · 기호와 글 8 · 칩 사이 14 (판 결과 안내 줄 · 판 사이 간격과 같은 임시 값) */
+  fx: { icon: 16, gap: 8, between: 14 },
 };
 
 /** 이벤트 이름 줄 · 상황 글 (정리안 .evt · .evx): 상황 글 top 206 폭 564 줄 높이 1.6, 이름 줄은 그 위 gap 14 (A1 .event) */

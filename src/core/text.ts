@@ -118,8 +118,3 @@ export function describeEquipTier(tier: EquipTier): string[] {
 export const describeSignatureSwap = (from: string, to: string) =>
   `${josa(cardName(from), "이/가")} ${josa(cardName(to), "으로/로")} 바뀝니다.`;
 
-/** 휴식 쉬기 (0046): 모든 정령이 최대 HP의 일부를 회복 */
-export const describeRestHeal = (pct: number) => `모든 정령이 최대 HP의 ${Math.round(pct * 100)}%만큼 회복합니다.`;
-
-/** 휴식 강화 (0046 · 0080) */
-export const describeUpgradePick = () => "덱에서 카드를 1장 골라 강화합니다.";

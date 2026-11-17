@@ -5,16 +5,16 @@
 // 둘 다 할 것이 없을 때(모두 HP가 가득하고 강화할 카드도 없음)만 떠나기가 보여요.
 import * as Phaser from "phaser";
 import { C, cardDef, upgradedId } from "../../core/data";
-import { describeRestHeal, describeUpgradePick } from "../../core/text";
 import type { RestSession } from "../../session/rest";
 import { preloadHandCard } from "../card/HandCard";
 import { drawBackdrop } from "../run/backdrop";
-import { drawChoices, type ChoiceVM } from "../run/choices";
+import { CHOICE_ICONS, drawChoices, type ChoiceVM } from "../run/choices";
 import { COPY as RUN_COPY } from "../run/copy";
 import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
 import { cardVM, deckCardVM, lane, statOf } from "../run/fromCore";
 import { LANE_ICONS, drawLane } from "../run/lanes";
 import { CHOICE } from "../run/layout";
+import { outcomeFx } from "../run/outcomes";
 import type { DeckCardVM, LaneVM } from "../run/viewmodel";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
@@ -62,7 +62,7 @@ export class RestScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const [id, w] of [...LANE_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...LANE_ICONS, ...DECK_PICK_ICONS, ...CHOICE_ICONS]) loadIcon(this, id, w);
     for (const row of Object.values(this.rows())) for (const c of row) {
       preloadHandCard(this, c.card, { showRarity: true });
       if (c.after) preloadHandCard(this, c.after, { showRarity: true });
@@ -123,8 +123,8 @@ export class RestScene extends Phaser.Scene {
     const gain = this.hover === Pick.Rest ? s.healPreview() : {};
     this.lanes().forEach((l, i) => drawLane(this, l, i, { noSocket: true, heal: gain[l.id] }));
     const items: ChoiceVM[] = [
-      { label: COPY.rest, text: describeRestHeal(C.rest_heal_pct), enabled: s.canRest() },
-      { label: COPY.upgrade, text: describeUpgradePick(), enabled: s.canUpgrade() },
+      { label: COPY.rest, fx: [outcomeFx({ type: "healPct", value: C.rest_heal_pct })!], enabled: s.canRest() },
+      { label: COPY.upgrade, fx: [outcomeFx({ type: "upgradeCard" })!], enabled: s.canUpgrade() },
     ];
     drawChoices(this, items, CHOICE.top, this.hover, {
       click: (i) => this.choose(i),

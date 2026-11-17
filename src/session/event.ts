@@ -34,6 +34,9 @@ export interface EventPreview {
   pick?: DeckPickOutcome;
 }
 
+/** 카드 보상에서 보여 주는 장수 */
+export const EVENT_CARD_CHOICES = 3;
+
 const PICK: readonly DeckPickOutcome[] = ["removeCard", "upgradeCard", "duplicateCard"];
 const pickOf = (outs: readonly EventOutcome[]) => outs.find((o): o is Extract<EventOutcome, { type: DeckPickOutcome }> => PICK.includes(o.type as DeckPickOutcome))?.type;
 
@@ -122,7 +125,7 @@ function apply(run: Run, outs: readonly EventOutcome[], uid?: number): string[] 
       case "damageAll": for (const s of run.spirits) s.hp = Math.max(1, s.hp - o.value); break;
       case "damageFront": { const s = run.spirit(run.frontId); s.hp = Math.max(1, s.hp - o.value); break; }
       case "maxHpAll": for (const s of run.spirits) { s.maxHpBonus += o.value; s.hp = Math.min(maxHpOf(s), s.hp + o.value); } break;
-      case "cardReward": cards = run.rollCards(3, C.reward.rarity_normal, o.rarity).map((c) => c.id); break;
+      case "cardReward": cards = run.rollCards(EVENT_CARD_CHOICES, C.reward.rarity_normal, o.rarity).map((c) => c.id); break;
       case "removeCard": if (uid !== undefined) run.removeCard(uid); break;
       case "upgradeCard": if (uid !== undefined && canUpgradeCard(cardDef(run.deck.find((c) => c.uid === uid)!.cardId))) run.upgradeCard(uid); break;
       case "duplicateCard": if (uid !== undefined) run.duplicateCard(uid); break;

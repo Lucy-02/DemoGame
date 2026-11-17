@@ -7,13 +7,14 @@ import { tokens } from "../../design/tokens";
 import type { EventSession } from "../../session/event";
 import { preloadHandCard } from "../card/HandCard";
 import { drawBackdrop } from "../run/backdrop";
-import { drawChoices } from "../run/choices";
+import { CHOICE_ICONS, drawChoices } from "../run/choices";
 import { COPY as RUN_COPY } from "../run/copy";
 import { DECK_PICK_ICONS, drawDeckPick } from "../run/deckPick";
 import { cardVM, deckCardVM, lane } from "../run/fromCore";
 import { GOLD_ICONS, drawGold } from "../run/gold";
 import { LANE_ICONS, drawLane, type LaneState } from "../run/lanes";
 import { CHOICE, STORY } from "../run/layout";
+import { outcomesFx } from "../run/outcomes";
 import type { DeckCardVM, LaneVM } from "../run/viewmodel";
 import { P, text } from "../spirits/views/parts";
 import { render, size, type Node } from "../style/flex";
@@ -63,7 +64,7 @@ export class EventScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
+    for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...DECK_PICK_ICONS, ...CHOICE_ICONS]) loadIcon(this, id, w);
     for (const c of this.session.run.deck) {
       preloadHandCard(this, deckCardVM(c), { showRarity: true });
       if (this.session.run.canUpgrade(c.uid)) preloadHandCard(this, cardVM(upgradedId(c.cardId), c.owner), { showRarity: true });
@@ -133,11 +134,11 @@ export class EventScene extends Phaser.Scene {
     const top = STORY.top - titleH;
     render(this, story, STORY.x, top);
     const choicesTop = top + size(story).h + CHOICE.gap;
-    drawChoices(this, s.event.options.map((o, i) => ({ label: o.label, text: o.desc, enabled: s.canChoose(i) })), choicesTop, this.hover, {
+    drawChoices(this, s.event.options.map((o, i) => ({ label: o.label, fx: outcomesFx(o.outcome), enabled: s.canChoose(i) })), choicesTop, this.hover, {
       click: (i) => { if (this.session.choose(i)) { this.hover = undefined; this.advance(); } },
       over: (i) => { this.hover = i; this.redraw(); },
       out: (i) => { if (this.hover === i) { this.hover = undefined; this.redraw(); } },
-    });
+    }, RUN_COPY.fx.none);
   }
 
   private paintPick(mode: "removeCard" | "upgradeCard" | "duplicateCard") {

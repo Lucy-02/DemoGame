@@ -36,9 +36,8 @@ function laneOf(r: RunRecord, id: string): RunEndLaneVM {
 
 export function runEndVM(r: RunRecord): RunEndVM {
   const run = r.run;
-  const party = run.spirits.length;
   const floor = run.current?.floor ?? 0;
-  const record = [COPY.act(1), COPY.floor(floor), r.victory ? COPY.victory : COPY.defeat(party)].join(" · ");
+  const record = [COPY.act(1), COPY.floor(floor), r.victory ? COPY.victory : COPY.defeat].join(" · ");
   // 이긴 전투 = 들어간 전투 칸 수 - 진 전투 하나
   const fights = run.visited.filter((id) => ["battle", "elite", "boss"].includes(run.map.get(id)?.type ?? "")).length;
   const wins = Math.max(0, fights - (r.victory ? 0 : 1));

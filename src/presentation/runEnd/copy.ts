@@ -4,9 +4,9 @@ export const COPY = {
   act: (n: number) => `${n}막`,
   floor: (n: number) => `${n}층`,
   victory: "승리",
-  defeat: (party: number) => (party > 1 ? `패배: ${["두", "세"][party - 2] ?? party} 정령 모두 쓰러짐` : "패배: 정령 쓰러짐"),
-  /** 첫 판 전멸 안내 (0046 A1) */
-  keep: (wins: number) => `이긴 전투 ${wins}번만큼 경험이 남았어요`,
+  defeat: "패배",
+  /** 첫 판 전멸 안내 (0046 A1). 기호 g-up 옆 명사구 (Lucy 2026-11-17 글 줄이기) */
+  keep: (wins: number) => `이긴 전투 ${wins}번 경험 유지`,
   garden: "정원으로",
   again: "다시 떠나기",
 };
