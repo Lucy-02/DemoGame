@@ -12,6 +12,7 @@ import { LEGACY_SCENES, waitForLegacyFonts } from "./placeholder";
 import { BATTLE_SCENE, BattleScene } from "./battle/BattleScene";
 import { FIXTURES } from "./battle/fixtures";
 import { FRAME } from "./battle/layout";
+import { DEMO_END_SCENE, DemoEndScene, type DemoEndSceneData } from "./demoEnd/DemoEndScene";
 import { DEPART_SCENE, DepartScene, type DepartSceneData } from "./depart/DepartScene";
 import { HOME_SCENE, HomeScene, type HomeSceneData } from "./home/HomeScene";
 import { JOIN_SCENE, JoinScene, type JoinSceneData } from "./join/JoinScene";
@@ -35,7 +36,7 @@ import { VEIL_SCENE, VeilScene } from "./veil";
 
 export interface GameOptions {
   /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
-  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd" | "deck" | "map" | "join" | "depart" | "menu" | "settings" | "glossary";
+  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd" | "demoEnd" | "deck" | "map" | "join" | "depart" | "menu" | "settings" | "glossary";
   /** 저장에 이어진 게임의 세션 (screen이 없을 때) */
   session?: GameSession;
   /** 시험 판: 메인 화면 없이 바로 떠나요 (?screen=legacy) */
@@ -46,6 +47,8 @@ export interface GameOptions {
   settings?: SettingsSession;
   /** 메인 화면 구석에 적는 버전 */
   version?: string;
+  /** 데모 빌드: 데모 끝 화면을 켜요 (0101) */
+  demo?: boolean;
   /** 전투 결과: 받은 상태로 시작 (카드 key 또는 skip, 시각 검증용) */
   taken?: string;
   /** 정령 관리: 처음 고를 정령·탭, 패널 접힘 (?select=&tab=&closed) */
@@ -97,13 +100,13 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           opts.settings.onChange((s) => audio?.setVolumes(s.volume));
         }
         if (live) {
-          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene], [MENU_SCENE, MenuScene], [SETTINGS_SCENE, SettingsScene], [GLOSSARY_SCENE, GlossaryScene]] as const) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [DEMO_END_SCENE, DemoEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene], [MENU_SCENE, MenuScene], [SETTINGS_SCENE, SettingsScene], [GLOSSARY_SCENE, GlossaryScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
           // 화면 전환 막: 맨 나중에 더해 늘 맨 위에 있어요 (0086)
           game.scene.add(VEIL_SCENE, VeilScene, true);
-          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit, version: opts.version, settings: opts.settings }).start();
+          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit, version: opts.version, settings: opts.settings, demo: opts.demo }).start();
           return;
         }
         if (opts.screen === "spirits") {
@@ -178,6 +181,11 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         if (opts.screen === "shop") {
           const data: ShopSceneData = { scene: opts.scene, hover: opts.hover };
           game.scene.add(SHOP_SCENE, ShopScene, true, data);
+          return;
+        }
+        if (opts.screen === "demoEnd") {
+          const data: DemoEndSceneData = { next: opts.scene === "again" ? "again" : "garden" };
+          game.scene.add(DEMO_END_SCENE, DemoEndScene, true, data);
           return;
         }
         if (opts.screen === "runEnd") {

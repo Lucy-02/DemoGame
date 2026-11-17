@@ -44,7 +44,7 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 - `src/platform`, `electron/`: 저장·창 같은 바깥 세계. 렌더러는 Electron을 직접 import하지 않아요.
 - `src/design/tokens.ts`: `design/tokens/tokens.json`에서 `pnpm tokens`로 생성. 손으로 고치지 않아요.
 - `pnpm check:design`: 리터럴 값 검사. `design/strict-paths.txt`에 적힌 경로는 위반 시 실패해요.
-- `pnpm check`: 타입·의존 규칙·테스트·리터럴을 한 번에. `pnpm test:e2e`: Electron 스모크. `pnpm test:run`: 봇이 화면으로 막을 넘긴 한 판을 끝까지 돌고, 같은 버튼을 빠르게 다시 눌러도 같은 판인지 봐요(`tools/screenBot.ts`, 약 10분, CI는 별도 잡 `screen-run`. 깔린 크로미움을 쓰려면 `PW_CHROMIUM`).
+- `pnpm check`: 타입·의존 규칙·테스트·리터럴을 한 번에. `pnpm test:e2e`: Electron 스모크(창 크기 · 전체화면 포함, `DEMOGAME_EXE`로 패키지된 앱). `pnpm dist`(`--mac` · `--win`): `release/`에 패키징, `pnpm dist:demo`: 데모 빌드(0101). `pnpm test:run`: 봇이 화면으로 막을 넘긴 한 판을 끝까지 돌고, 같은 버튼을 빠르게 다시 눌러도 같은 판인지 봐요(`tools/screenBot.ts`, 약 10분, CI는 별도 잡 `screen-run`. 깔린 크로미움을 쓰려면 `PW_CHROMIUM`).
 
 ## 에셋
 - TTI(NovelAI Diffusion V5/V4.5)로 만든 파일은 모두 `assets/provenance.jsonl`에 기록해요 (`assets/PROVENANCE.md` 참고). 생성은 Lucy가 하고, Claude는 프롬프트 시트·후처리·기록을 맡아요.

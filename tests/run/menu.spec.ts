@@ -6,9 +6,9 @@ import type * as Phaser from "phaser";
 const SEED = 7;
 /** 1280×800 화면 좌표 */
 const AT = {
-  homePrimary: { x: 200, y: 300 }, homeSettings: { x: 200, y: 452 },
+  homePrimary: { x: 200, y: 300 }, homeSettings: { x: 200, y: 512 },
   gear: { x: 1247, y: 27 },
-  menuSettings: { x: 640, y: 383 }, menuHome: { x: 640, y: 443 }, menuGiveUp: { x: 640, y: 511 },
+  menuSettings: { x: 640, y: 413 }, menuHome: { x: 640, y: 473 }, menuGiveUp: { x: 640, y: 541 },
   confirmGiveUp: { x: 740, y: 420 },
   shakeToggle: { x: 833, y: 490 }, speedFast: { x: 815, y: 553 },
 };

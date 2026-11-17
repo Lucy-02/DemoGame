@@ -185,6 +185,7 @@ function act(s: Loose, game: GameSession): Press | undefined {
       }
       return { did: "판 결과 넘기기", press: () => s.data_.onGarden(s), again: true };
     }
+    case "demoEnd": return { did: "데모 끝 넘기기", press: () => s.next(), again: true };
     case "join": {
       if (s.picked === undefined) return { did: "깃들기 고르기", press: () => { s.select(0); s.confirm(); }, again: true };
       return { did: "깃들기 계속", press: () => s.onDone(s), again: true };

@@ -1,5 +1,6 @@
 // 화면으로 한 판을 끝까지: 메인 → 출전 → 지도 → 전투 … → 1막 보스 → 막 넘기기 → 2막 … → 판 결과 → 깃들기 → 메인 (0084 9번 · 0099 4번).
 // 봇(tools/screenBot.ts)이 떠 있는 장면의 손잡이를 눌러요. 막을 넘긴 판이 끝날 때까지 판을 거듭하고, 장면 전환이 막히거나 콘솔 오류가 나면 실패해요.
+// 데모 범위(?demo, 0101: 2막까지)로 돌아요. 이긴 판은 판 결과 다음에 데모 끝 화면을 거쳐요.
 // 같은 시드로 두 번 돌아요: 한 번씩 누르기, 그리고 누른 버튼을 빠르게 다시 누르기. 두 판의 상태가 칸마다 같아야 해요(같은 명령이 두 번 나가지 않음).
 import { expect, test, type Browser } from "@playwright/test";
 
@@ -26,7 +27,7 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
     if (r.status() >= 400) errors.push(`${r.status()}: ${r.url()}`);
   });
 
-  await page.goto(`/?seed=${SEED}`);
+  await page.goto(`/?demo&seed=${SEED}`);
   await expect(page.locator("#game canvas")).toBeVisible({ timeout: 30_000 });
   await page.waitForFunction(() => "game" in window && "session" in window);
   await page.evaluate(async (double) => {

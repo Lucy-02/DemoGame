@@ -22,4 +22,5 @@ src/presentation/depart/
 src/presentation/flow.ts
 src/presentation/menu/
 src/presentation/audio/
+src/presentation/demoEnd/
 src/presentation/glossary/
