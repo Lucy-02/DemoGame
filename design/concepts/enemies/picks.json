@@ -124,5 +124,122 @@
    526,
    609
   ]
+ },
+ "firefly_swarm": {
+  "case_id": "firefly_swarm-ga-s7204",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7204,
+  "size": [
+   569,
+   563
+  ]
+ },
+ "high_noon": {
+  "case_id": "high_noon-ga-s7201",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7201,
+  "size": [
+   768,
+   421
+  ]
+ },
+ "landslide": {
+  "case_id": "landslide-ga-s7202",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7202,
+  "size": [
+   768,
+   527
+  ]
+ },
+ "lantern_keeper": {
+  "case_id": "lantern_keeper-ga-s7203",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7203,
+  "size": [
+   556,
+   768
+  ]
+ },
+ "lightning_rod": {
+  "case_id": "lightning_rod-ga-s7202",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7202,
+  "size": [
+   521,
+   768
+  ]
+ },
+ "mirror_shard": {
+  "case_id": "mirror_shard-ga-s7201",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7201,
+  "size": [
+   768,
+   699
+  ]
+ },
+ "mole": {
+  "case_id": "mole-ga-s7201",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7201,
+  "size": [
+   768,
+   451
+  ]
+ },
+ "quake_turtle": {
+  "case_id": "quake_turtle-ga-s7203",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7203,
+  "size": [
+   768,
+   484
+  ]
+ },
+ "rock_pile": {
+  "case_id": "rock_pile-ga-s7302",
+  "run_id": "enemy-act2-r2-20261118",
+  "seed": 7302,
+  "size": [
+   768,
+   568
+  ]
+ },
+ "spark_bug": {
+  "case_id": "spark_bug-ga-s7204",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7204,
+  "size": [
+   768,
+   432
+  ]
+ },
+ "thunder_bird": {
+  "case_id": "thunder_bird-ga-s7204",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7204,
+  "size": [
+   768,
+   496
+  ]
+ },
+ "thunderstorm": {
+  "case_id": "thunderstorm-ga-s7201",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7201,
+  "size": [
+   768,
+   507
+  ]
+ },
+ "wandering_armor": {
+  "case_id": "wandering_armor-ga-s7202",
+  "run_id": "enemy-act2-r1-20261118",
+  "seed": 7202,
+  "size": [
+   457,
+   768
+  ]
  }
 }

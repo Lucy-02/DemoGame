@@ -1,4 +1,4 @@
-# 적 그림(임시 선택, 0100)을 게임용 파일로 옮겨요.
+# 적 그림(임시 선택, 0100 · 0114)을 게임용 파일로 옮겨요.
 # 쓰는 법: python -I tools/art/import-enemies.py <jjal 전달 폴더 (tools/enemy_deliver.py 결과)> <저장소 루트>
 # 만드는 것: public/assets/enemies/<적 id>.webp (알파로 잘린 누끼, 긴 변 LONG)
 #          design/concepts/enemies/picks.json (어느 후보를 연결했는지)
@@ -17,7 +17,9 @@ out = root / "public/assets/enemies"
 out.mkdir(parents=True, exist_ok=True)
 prov = root / "assets/provenance.jsonl"
 lines = [l for l in prov.read_text().split("\n") if l.strip()]
-picks = {}
+pick_file = root / "design/concepts/enemies/picks.json"
+# 앞서 들여온 막의 칸은 남기고 이번 것만 바꿔요
+picks = json.load(open(pick_file)) if pick_file.exists() else {}
 for eid, m in sorted(meta.items()):
     im = Image.open(src / f"{eid}.rgba.png").convert("RGBA")
     im.thumbnail((LONG, LONG), Image.LANCZOS)
@@ -30,12 +32,12 @@ for eid, m in sorted(meta.items()):
         "prompt": m["prompt"], "negative": m["negative"], "seed": m["seed"], "settings": m["settings"], "references": None,
         "source_png": f"jjal runs/{m['run_id']} {m['request_id']} (sha256 {m['source_sha256']})",
         "human_work": "Claude가 후보 시트에서 임시로 고름 (Lucy 선택 전). 배경 제거(rembg isnet-anime) 뒤 갇힌 배경색 덩어리 비우기 · 경계 1px 정리 · 배경색 빼기, 알파 기준으로 자르고 긴 변 768로 줄임, webp 변환",
-        "note": "0100 임시 선택. Lucy가 후보 시트에서 고르면 바꿔요",
+        "note": "임시 선택 (0100 · 0114). Lucy가 후보 시트에서 고르면 바꿔요",
     }
     lines = [l for l in lines if json.loads(l).get("path") != path]
     lines.append(json.dumps(row, ensure_ascii=False))
     picks[eid] = {"case_id": m["case_id"], "run_id": m["run_id"], "seed": m["seed"], "size": list(im.size)}
 prov.write_text("\n".join(lines) + "\n")
 (root / "design/concepts/enemies").mkdir(parents=True, exist_ok=True)
-json.dump(picks, open(root / "design/concepts/enemies/picks.json", "w"), ensure_ascii=False, indent=1)
-print(len(picks), "장")
+json.dump(picks, open(pick_file, "w"), ensure_ascii=False, indent=1)
+print(len(meta), "장")

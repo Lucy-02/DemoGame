@@ -13,5 +13,18 @@
   "cinder_imp": {"h": 96, "sink": 2, "face": [0.4, 0.25, 0.4]},
   "grimbark": {"h": 102, "sink": 3, "face": [0.44, 0.2, 0.26]},
   "wildfire": {"h": 100, "sink": 5, "face": [0.14, 0.52, 0.5]},
-  "gale": {"h": 98, "sink": -2, "face": [0.1, 0.55, 0.35]}
+  "gale": {"h": 98, "sink": -2, "face": [0.1, 0.55, 0.35]},
+  "rock_pile": {"h": 76, "sink": 3, "face": [0.42, 0.5, 0.5]},
+  "mole": {"h": 62, "sink": 4, "face": [0.2, 0.55, 0.6]},
+  "spark_bug": {"h": 62, "sink": 2, "face": [0.2, 0.6, 0.5]},
+  "lightning_rod": {"h": 98, "sink": 2, "face": [0.47, 0.14, 0.25]},
+  "firefly_swarm": {"h": 60, "sink": -18, "face": [0.5, 0.5, 1.0]},
+  "mirror_shard": {"h": 72, "sink": -10, "face": [0.52, 0.5, 0.6]},
+  "wandering_armor": {"h": 98, "sink": 2, "face": [0.42, 0.09, 0.2]},
+  "quake_turtle": {"h": 92, "sink": 3, "face": [0.12, 0.62, 0.5]},
+  "thunder_bird": {"h": 92, "sink": -4, "face": [0.38, 0.42, 0.35]},
+  "lantern_keeper": {"h": 100, "sink": 2, "face": [0.25, 0.12, 0.25]},
+  "landslide": {"h": 100, "sink": 3, "face": [0.2, 0.5, 0.6]},
+  "thunderstorm": {"h": 100, "sink": -4, "face": [0.42, 0.55, 0.5]},
+  "high_noon": {"h": 96, "sink": 2, "face": [0.28, 0.42, 0.75]}
 }
