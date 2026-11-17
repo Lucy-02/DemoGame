@@ -58,6 +58,26 @@ export interface OrderTipVM {
   chips?: { text: string; tone?: "warn" | "acc" }[];
 }
 
+/** 방전 띠 조각 (0096): 묶음 칸 안에서 at번째 토큰부터 n장이 띠 위에 있어요. 적 칸을 걸친 띠는 조각 둘, 머리(충격 기호 + 피해)는 첫 조각에만 */
+export interface BandVM {
+  /** 묶음 칸 번호 (bundles 인덱스) */
+  cell: number;
+  at: number;
+  n: number;
+  dmg: number;
+  head?: boolean;
+  /** 띠를 까는 적 (enemies 인덱스) */
+  enemy?: number;
+  tip?: OrderTipVM;
+}
+
+/** 적의 특성 칩 (0072 7번): 둥근 네모, 늘 보임. off = 이번 턴에 이미 쓰임 (0096) */
+export interface TraitVM {
+  icon: IconId;
+  off?: boolean;
+  tip: { title: string; sub?: string };
+}
+
 export interface StatusVM {
   icon: IconId;
   n: number;
@@ -100,6 +120,10 @@ export interface EnemyVM {
   /** 약점 속성. 바람·무속성처럼 약점이 없으면 비움 (0028). 있으면 약점 배지를 늘 그리고, 맞는 속성 카드를 들면 켜요 */
   weakTo?: IconId;
   statuses: StatusVM[];
+  /** 특성 칩: 기호 줄 맨 앞 (0072 7번) */
+  traits?: TraitVM[];
+  /** 땅속: 몸이 가라앉아요 (0096) */
+  buried?: boolean;
   /** 이번 턴 행동. 없으면 의도 알약을 그리지 않아요 */
   intent?: IntentVM;
   hovered?: boolean;
@@ -121,6 +145,8 @@ export interface BattleVM {
   /** bundles: 적 칸마다 그 앞에 묶인 아군 토큰, 마지막은 꼬리 묶음 (길이 = slots + 1, 0038). 없으면 적 칸만 */
   order: {
     slots: OrderSlotVM[]; bundles?: AllyTokenVM[][]; head?: OrderHeadVM;
+    /** 방전 띠 (0096) */
+    bands?: BandVM[];
     /** 턴 재생 중: 머리가 "재생 중"(빈 점), 지나가지 않은 첫 칸 앞에 흰 재생 위치 선 (0074) */
     playing?: boolean;
   };
@@ -175,6 +201,8 @@ export interface TargetRule {
   side: Side;
   /** pick: 이 인덱스만 고를 수 있어요 (해방 카드는 그 정령에게만) */
   only?: number;
+  /** pick: 이 인덱스는 고를 수 없어요 (이 카드가 끝날 때 땅속인 적, 0096) */
+  not?: number[];
 }
 
 /** 가운데 고르기 창 (0075): 낙하(턴 시작)와 품기(재생 뒤)가 같이 써요 */
@@ -210,7 +238,7 @@ export interface EnemyOutcomeVM {
 export interface PlayVM {
   target: TargetRule;
   /** 지금 놓으면 순서표에 들어갈 자리: bundles[bundle]의 i번째 (든 동안 흰 점선 토큰, 0074) */
-  slot?: { bundle: number; i: number; token: AllyTokenVM };
+  slot?: { bundle: number; i: number; token: AllyTokenVM; bands?: BandVM[] };
   /** pick: 고른 대상 인덱스마다 결과. all·random: 한 가지 결과("all"). 없으면 강조만 해요 */
   outcomes?: Partial<Record<number | "all", OutcomeVM>>;
 }

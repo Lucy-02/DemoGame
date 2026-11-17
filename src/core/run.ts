@@ -29,7 +29,7 @@ export interface RunOptions {
   unlockAll: boolean;
   /** 오늘 센 기운을 정해 두고 시작해요 (시험 · 자동 플레이). 없으면 뽑아요 */
   strongElement?: Element;
-  /** 몇 막까지 가는지. 없으면 constants.acts_enabled (화면이 2막 규칙을 보여 줄 때까지 1) */
+  /** 몇 막까지 가는지. 없으면 constants.acts_enabled (지금 2: Lucy 2026-11-17) */
   acts?: number;
 }
 
@@ -416,7 +416,7 @@ export class Run {
 
   /** 지금 인원에 맞춘 적 세기 (0053). 셋이면 undefined */
   enemyScale(): EnemyScale | undefined {
-    return partyScale(this.spirits.length);
+    return partyScale(this.spirits.length, this.current?.type === "boss");
   }
 
   pickEvent(): EventDef {

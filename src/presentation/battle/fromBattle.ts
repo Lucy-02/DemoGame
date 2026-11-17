@@ -1,25 +1,32 @@
 // core 전투 상태 → 전투 화면 VM. 고정 장면(fixtures/) 대신 실제 전투를 그릴 때 써요.
 // 화면은 이 VM만 알고 Battle은 몰라요. 카드 key는 `c<uid>`예요 (cardRef로 되돌려요).
 import { C, cardDef } from "../../core/data";
-import type { BCard, BEnemy, BSpirit, Battle, Ref, StatusId } from "../../core/battle";
+import { statusN, type BCard, type BEnemy, type BSpirit, type Battle, type Ref, type StatusId } from "../../core/battle";
 import type { EnemyAction, EnemyTargetRule } from "../../core/types";
 import { ELEMENT_ICON, faceKey } from "../faces";
 import { cardVM, equipVM, releaseVM } from "../run/fromCore";
 import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
-import type { AllyTokenVM, AllyVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
+import type { AllyTokenVM, AllyVM, BandVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
+
+/** 2막 규칙의 임시 기호 (0096: 새 기호를 그릴 때까지 있는 기호를 빌려 써요, TODO_ICON) */
+const BURROW_ICON = "i-veil";
+const REFLECT_ICON = "kw-counter";
+const HASTE_ICON = "i-bolt";
 
 /** 상태 → 정본 기호. 기호가 아직 없는 상태(벽·늦춤·별 등)는 그리지 않아요 (기호는 Lucy 확인 대기) */
 const STATUS_ICON: Partial<Record<StatusId, string>> = {
-  burn: "kw-burn", chill: "kw-chill", vuln: "kw-vuln", weak: "kw-weak", thorns: "kw-thorns", taunt: "kw-taunt", empower: "kw-strength",
+  burrow: BURROW_ICON, burn: "kw-burn", chill: "kw-chill", vuln: "kw-vuln", weak: "kw-weak", thorns: "kw-thorns", taunt: "kw-taunt", empower: "kw-strength",
 };
 
 /** 적 행동 → 의도 기호. 공격 의도 = fx-damage (0072) */
 const ACTION_ICON: Partial<Record<EnemyAction["type"], string>> = {
-  attack: "fx-damage", block: "fx-block", weak: "kw-weak", vulnerable: "kw-vuln", burn: "kw-burn", burnRamp: "kw-burn", buffMinions: "kw-strength",
+  attack: "fx-damage", attackRamp: "fx-damage", burrow: BURROW_ICON, block: "fx-block", weak: "kw-weak", vulnerable: "kw-vuln", burn: "kw-burn", burnRamp: "kw-burn", buffMinions: "kw-strength",
 };
 const CHARGE_ICON = "kw-charge";
 export const BREAK_ICON = "kw-break";
+
+const PERCENT = 100;
 
 export const cardKey = (c: BCard) => `c${c.uid}`;
 export const cardUid = (key: string) => Number(key.slice(1));
@@ -54,7 +61,7 @@ export function battleVM(b: Battle, place?: string): BattleVM {
     for (const s of releases) if (b.canRelease(s.id)) plays[releaseKey(s.id)] = { target: { kind: "pick", side: "ally", only: alive.indexOf(s) }, slot: slotOf(b, { end: b.releaseEnd(s.id), owner: s.id, card: null }) };
   }
   return {
-    order: { slots: order.map((o) => o.slot), bundles: bundlesOf(b).map((l) => l.map((t) => t.token)), head: { place, turn: b.turn } },
+    order: { slots: order.map((o) => o.slot), bundles: bundlesOf(b).map((l) => l.map((t) => t.token)), bands: bandsOf(b, bundle(b, lanesOf(b))), head: { place, turn: b.turn } },
     allies, enemies,
     mana: { n: b.mana, max: C.mana_per_turn },
     hand,
@@ -189,7 +196,7 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
   const gap = hitsOpening(b, p);
   const tip: OrderTipVM = {
     title: vm.name, kind: COPY.order.card, text: vm.detail.text,
-    chips: [...(k < slots ? [{ text: COPY.order.before(k + 1) }] : []), ...(gap ? [{ text: COPY.order.gap, tone: "warn" as const }] : [])],
+    chips: [...(k < slots ? [{ text: COPY.order.before(k + 1) }] : []), ...(gap ? [{ text: COPY.order.gap, tone: "warn" as const }] : []), ...liveZones(b).filter((z) => p.end >= z.from && p.end < z.to).map((z) => ({ text: COPY.band.chip(z.dmg) }))],
   };
   return { token: { key: keyOf(b, p), face: p.owner, icon, mark: gap ? "gap" : undefined, tip }, cardId: p.card.cardId, owner: p.owner };
 }
@@ -201,12 +208,51 @@ export function bundlesOf(b: Battle): PlannedToken[][] {
   return out.map((l, k) => l.map((p) => tokenOf(b, p, k, out.length - 1)));
 }
 
-/** 지금 놓으면 들어갈 자리 (든 동안 순서표에 흰 점선 토큰, 0074) */
+/** 지금 놓으면 들어갈 자리 (든 동안 순서표에 흰 점선 토큰, 0074). 든 카드가 들어간 뒤의 띠 조각도 함께 줘요 */
 function slotOf(b: Battle, c: BCard | Lane): PlayVM["slot"] {
   const me: Lane = "end" in c ? c : { end: b.previewEnd(c), owner: c.owner, card: c };
   const out = bundle(b, [...lanesOf(b), me]);
   const k = out.findIndex((l) => l.includes(me));
-  return { bundle: k, i: out[k].indexOf(me), token: { ...tokenOf(b, me, k, out.length - 1).token, mark: "held" } };
+  return { bundle: k, i: out[k].indexOf(me), token: { ...tokenOf(b, me, k, out.length - 1).token, mark: "held" }, bands: bandsOf(b, out) };
+}
+
+/** 살아 있는 적이 깐 방전 칸 */
+const liveZones = (b: Battle) => b.zones.filter((z) => !b.enemy(z.uid).dead);
+
+/**
+ * 방전 띠 (0096): 방전 칸마다, 그 구간이 걸치는 묶음 칸에 조각 하나씩.
+ * 묶음 칸 k는 앞 적 행동 뒤부터 k번째 적 행동까지에 끝나는 카드 자리예요. 띠 안에서 끝나는 카드가 그 조각 위에 올라가요.
+ */
+function bandsOf(b: Battle, cells: Lane[][]): BandVM[] | undefined {
+  const ats = openSlots(b).map((x) => x.at);
+  const alive = b.enemies.filter((e) => !e.dead);
+  const out: BandVM[] = [];
+  for (const z of liveZones(b)) {
+    let head = true;
+    cells.forEach((list, k) => {
+      const lo = k === 0 ? -Infinity : ats[k - 1], hi = k < ats.length ? ats[k] : Infinity;
+      // 이 칸에 끝나는 시각: lo < end <= hi
+      if (!(z.from <= hi && z.to > lo + 1)) return;
+      const at = list.filter((p) => p.end < z.from).length;
+      const n = list.filter((p) => p.end >= z.from && p.end < z.to).length;
+      out.push({
+        cell: k, at, n, dmg: z.dmg, head: head || undefined, enemy: alive.findIndex((e) => e.uid === z.uid),
+        tip: { title: COPY.band.title, text: [{ text: COPY.band.sub(z.dmg) }] },
+      });
+      head = false;
+    });
+  }
+  return out.length ? out : undefined;
+}
+
+/** 놓은 카드가 방전 칸에서 끝나 이 아군이 받을 피해 */
+function zoneDamageTo(b: Battle, s: BSpirit): number {
+  let sum = 0;
+  for (const p of b.planned) {
+    if (p.owner !== s.id) continue;
+    for (const z of liveZones(b)) if (p.end >= z.from && p.end < z.to) sum += z.dmg;
+  }
+  return sum;
 }
 
 // ── 아군 ──
@@ -222,7 +268,6 @@ function allyVM(b: Battle, s: BSpirit, incoming: Map<string, number>): AllyVM {
   };
 }
 
-/** 이번 적 차례에 이 아군이 받을 공격 피해 합계: 이번 턴 적 행동 전부 (0038 정보판 연동) */
 /**
  * 이번 적 차례에 아군마다 받을 피해 합계 (막기 전). 적 행동을 시각 순서로 따라가며 실제 타격과 같은 값 · 같은 대상으로 세요:
  * 대상의 취약, 앞열 바꿈 뒤의 앞열, 앞선 타격으로 바뀐 HP 최저 · 쓰러짐까지 넣어요.
@@ -230,6 +275,11 @@ function allyVM(b: Battle, s: BSpirit, incoming: Map<string, number>): AllyVM {
  */
 function incomingAll(b: Battle): Map<string, number> {
   const sum = new Map<string, number>();
+  // 방전 띠에 놓은 카드의 피해도 받을 피해에 더해요 (0096)
+  for (const s of b.aliveSpirits()) {
+    const z = zoneDamageTo(b, s);
+    if (z) sum.set(s.id, z);
+  }
   const sim = b.aliveSpirits().map((s) => ({ s, hp: s.hp, block: s.block }));
   const up = () => sim.filter((x) => x.hp > 0);
   let front = b.frontId;
@@ -305,9 +355,19 @@ function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[]): EnemyVM {
     art: "", hp: e.hp, maxHp: e.maxHp, block: e.block || undefined,
     element: ELEMENT_ICON[e.def.element] ?? ELEMENT_ICON.none, weakTo: weakTo(e.def.element),
     statuses: statusesOf(e),
+    traits: traitsOf(e),
+    buried: statusN(e, "burrow") > 0 || undefined,
     intent: intentOf(b, e, order),
     tip: { name: e.def.name, rank: COPY.rank[e.def.tier], lines: [[{ text: b.intent(e).text }]] },
   };
+}
+
+/** 특성 칩 (0072 7번): 되돌리기는 이번 턴 첫 타격을 받으면 꺼져요 (0096) */
+function traitsOf(e: BEnemy): EnemyVM["traits"] {
+  const out: NonNullable<EnemyVM["traits"]> = [];
+  if (e.def.reflectFirst) out.push({ icon: REFLECT_ICON, off: e.reflected || undefined, tip: { title: COPY.trait.reflect, sub: COPY.trait.reflectSub(Math.round(e.def.reflectFirst * PERCENT)) } });
+  if (e.def.haste) out.push({ icon: HASTE_ICON, tip: { title: COPY.trait.haste, sub: COPY.trait.hasteSub } });
+  return out.length ? out : undefined;
 }
 
 function intentOf(b: Battle, e: BEnemy, order: OrderEntry[]): IntentVM | undefined {
@@ -363,7 +423,12 @@ function handCard(b: Battle, c: BCard) {
 
 function targetRule(b: Battle, c: BCard): PlayVM["target"] {
   const need = b.needsTarget(c);
-  if (need === "enemy") return { kind: "pick", side: "enemy" };
+  if (need === "enemy") {
+    // 이 카드가 끝날 때 아직 땅속인 적은 고를 수 없어요 (0096)
+    const end = b.previewEnd(c);
+    const not = b.enemies.filter((e) => !e.dead).flatMap((e, i) => (b.buriedAt(e, end) ? [i] : []));
+    return { kind: "pick", side: "enemy", not: not.length ? not : undefined };
+  }
   if (need === "ally") return { kind: "pick", side: "ally" };
   switch (cardDef(c.cardId).target) {
     case "allEnemies": return { kind: "all", side: "enemy" };

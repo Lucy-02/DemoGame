@@ -29,10 +29,10 @@ const all = (side: Side, counts: Counts): UnitRef[] => Array.from({ length: coun
 const isUnit = (o: Over): o is UnitRef => typeof o === "object";
 
 export function focusFor(card: string, play: PlayVM, over: Over, counts: Counts): Focus {
-  const { kind, side, only } = play.target;
+  const { kind, side, only, not } = play.target;
   const onField = over !== "hand";
   if (kind === "pick") {
-    const cand = only === undefined ? all(side, counts) : [{ side, i: only }];
+    const cand = (only === undefined ? all(side, counts) : [{ side, i: only }]).filter((r) => !not?.includes(r.i));
     if (isUnit(over) && cand.some((r) => r.side === over.side && r.i === over.i)) {
       return {
         outcome: play.outcomes?.[over.i], lit: [over], cand: [], dim: true,

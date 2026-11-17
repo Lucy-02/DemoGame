@@ -19,7 +19,7 @@ import { miniSlotNode, preloadEquipArt } from "../../run/equip";
 import { EQUIP_MINI } from "../../run/layout";
 import { COPY, elementName, statusName } from "../copy";
 import { ALLY, ENEMY, FRAME, GROUND, INFO as I, INTENT, PREVIEW as PV, TIP } from "../layout";
-import type { AllyVM, BattleVM, Change, EnemyOutcomeVM, EnemyVM, IntentVM, StatusVM } from "../viewmodel";
+import type { AllyVM, BattleVM, Change, EnemyOutcomeVM, EnemyVM, IntentVM, StatusVM, TraitVM } from "../viewmodel";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
@@ -59,6 +59,7 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
     if (e.intent) loadIcon(scene, e.intent.icon, INTENT.icon);
     if (e.intent?.target === "random") loadIcon(scene, RANDOM_ICON, INTENT.face);
     statuses(e.statuses);
+    for (const t of e.traits ?? []) loadIcon(scene, t.icon, I.status.icon);
   }
   if (Object.keys(vm.plays).length > 0) loadIcon(scene, "fx-damage", PV.hits.icon);
   if (vm.acted) for (const id of POP_ICONS) loadIcon(scene, id, PV.hits.icon);
@@ -418,6 +419,15 @@ function statusChip(s: StatusVM): Chip {
   }, { fill: P.floor, radius: S.radius }, name ? { title: `${name} ${s.n}` } : undefined);
 }
 
+/** 특성 칩 (0072 7번): 둥근 네모에 기호만. off = 이번 턴에 이미 쓰여 흐려요 (0096) */
+function traitChip(t: TraitVM): Chip {
+  const S = I.status, R = I.trait;
+  return pill({
+    t: "row", h: S.h, pad: R.pad, align: "center",
+    children: [{ t: "icon", id: t.icon, w: S.icon, h: S.icon, tint: t.off ? P.veil["50"] : P.ink, fit: "y" }],
+  }, { fill: P.floor, radius: R.radius }, t.tip);
+}
+
 interface InfoView {
   marks: Mark[];
   /** 묶음 아래 끝 y */
@@ -491,6 +501,7 @@ function allyInfo(scene: Phaser.Scene, a: AllyVM, i: number, pv?: Change, pulse 
 function enemyInfo(scene: Phaser.Scene, e: EnemyVM, i: number, pv: EnemyOutcomeVM | undefined, weakOn: boolean): InfoView {
   const hp = pv ? pv.hp.to : e.hp;
   const chips: Chip[] = [
+    ...(e.traits ?? []).map(traitChip),
     elementChip(scene, e.element),
     ...(pv?.block ? [blockChip(pv.block.to, true)] : e.block ? [blockChip(e.block)] : []),
     // 약점 배지는 약점이 있으면 늘 (Lucy 2026-11-13). 없는 적은 배지 없음
@@ -804,7 +815,9 @@ export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPr
   const bodyTop = ENEMY.top + intentH + ENEMY.body.mt;
   const artX = cx - ENEMY.art.w / 2, artY = ENEMY.feet - ENEMY.art.h;
   if (pv.lit) glow(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, 0, true);
-  const art = gather(scene, 0, 0, () => { placeholderArt(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, P.ink3); });
+  // 땅속: 몸 윗부분만 남아요 (0096). 그림이 생기면 발 선에서 잘라요
+  const artH = e.buried ? ENEMY.art.h * ENEMY.buried : ENEMY.art.h;
+  const art = gather(scene, 0, 0, () => { placeholderArt(scene, artX, ENEMY.feet - artH, ENEMY.art.w, artH, P.ink3); });
   ground(scene, cx, ENEMY.feet);
   if (pv.outcome) drawHits(scene, pv.outcome.hits, cx - ENEMY.body.w / 2, bodyTop);
   let v!: InfoView;
