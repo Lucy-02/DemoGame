@@ -136,7 +136,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
             const hp = data.session.run.spirits.map((sp) => sp.hp);
             walk(data.session.run, 3);
             data.session.run.spirits.forEach((sp, i) => { sp.hp = hp[i]; });
-            game.scene.add(MAP_SCENE, MapScene, true, { run: data.session.run, under: { path: layout === "2" ? 0.3 : 1, preview: () => (game.scene.getScene(EVENT_SCENE) as EventScene | null)?.mapPreview() } } satisfies MapSceneData);
+            game.scene.add(MAP_SCENE, MapScene, true, { run: data.session.run, under: { path: layout === "2" ? 0.3 : 1, hide: new URLSearchParams(location.search).get("hide") ?? undefined, preview: () => (game.scene.getScene(EVENT_SCENE) as EventScene | null)?.mapPreview() } } satisfies MapSceneData);
           }
           game.scene.add(EVENT_SCENE, EventScene, true, data);
           return;
@@ -148,7 +148,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
             const hp = data.session.run.spirits.map((sp) => sp.hp);
             walk(data.session.run, 3);
             data.session.run.spirits.forEach((sp, i) => { sp.hp = hp[i]; });
-            game.scene.add(MAP_SCENE, MapScene, true, { run: data.session.run, under: { path: layout === "2" ? 0.3 : 1, preview: () => (game.scene.getScene(REST_SCENE) as RestScene | null)?.mapPreview() } } satisfies MapSceneData);
+            game.scene.add(MAP_SCENE, MapScene, true, { run: data.session.run, under: { path: layout === "2" ? 0.3 : 1, hide: new URLSearchParams(location.search).get("hide") ?? undefined, preview: () => (game.scene.getScene(REST_SCENE) as RestScene | null)?.mapPreview() } } satisfies MapSceneData);
           }
           game.scene.add(REST_SCENE, RestScene, true, data);
           return;

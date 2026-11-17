@@ -135,7 +135,7 @@ export class RestScene extends Phaser.Scene {
       drawProtoPanel(this, {
         layout, lanes, hot: this.hover,
         items: [
-          layout === "3"
+          layout === "3" || new URLSearchParams(location.search).has("faces")
             ? { label: COPY.rest, fx: [], faces: lanes.filter((l) => all[l.id]).map((l) => ({ face: l.face, from: l.hp, to: l.hp + all[l.id] })), enabled: s.canRest() }
             : { label: COPY.rest, fx: [outcomeFx({ type: "healPct", value: C.rest_heal_pct })!], enabled: s.canRest() },
           { label: COPY.upgrade, fx: [outcomeFx({ type: "upgradeCard" })!], enabled: s.canUpgrade() },

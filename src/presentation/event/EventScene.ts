@@ -104,12 +104,13 @@ export class EventScene extends Phaser.Scene {
     const lanes = this.lanes();
     const pv = this.hover === undefined ? undefined : s.preview(this.hover);
     const touchesGold = s.event.options.some((o) => o.outcome.some((x) => x.type === "gold"));
+    const FACES = new URLSearchParams(location.search).has("faces");
     const HP_FX = ["healPct", "damageAll", "damageFront", "maxHpAll"];
     drawProtoPanel(this, {
       layout, lanes, title: s.event.title, story: s.event.text, hot: this.hover, none: RUN_COPY.fx.none,
       gold: touchesGold ? { total: pv?.gold?.to ?? s.run.gold, was: pv?.gold?.from } : undefined,
       items: s.event.options.map((o, i) => {
-        if (layout !== "3") return { label: o.label, fx: outcomesFx(o.outcome), enabled: s.canChoose(i) };
+        if (layout !== "3" && !FACES) return { label: o.label, fx: outcomesFx(o.outcome), enabled: s.canChoose(i) };
         const v = s.preview(i);
         const faces: FaceFx[] = lanes.flatMap((l) => [
           ...(v.hp[l.id] && !v.maxHp[l.id] ? [{ face: l.face, from: v.hp[l.id].from, to: v.hp[l.id].to }] : []),

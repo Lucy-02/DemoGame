@@ -47,7 +47,7 @@ export interface MapSceneData {
   /** 시각 검증용: 처음부터 펼쳐 둘 정령 줄 */
   select?: string;
   /** 시안: 칸 안(이벤트 · 휴식)이 위에 떠 있는 동안. 길은 흐리고 입력을 받지 않아요. party=false면 정령 줄을 안 그려요 */
-  under?: { path: number; preview?: () => MapPreview | undefined };
+  under?: { path: number; hide?: string; preview?: () => MapPreview | undefined };
 }
 
 export interface MapPreview { gold?: { from: number; to: number }; hp: Record<string, number>; maxHp: Record<string, number> }
@@ -120,10 +120,10 @@ export class MapScene extends Phaser.Scene {
     drawGold(this, pv?.gold?.to ?? this.vm.gold, pv?.gold ? { was: pv.gold.from } : {}, GOLD_AT);
     drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) });
     if (this.under) {
-      gather(this, 0, 0, () => this.drawPath()).setAlpha(this.under.path);
+      if (this.under.hide !== "path") gather(this, 0, 0, () => this.drawPath()).setAlpha(this.under.path);
       this.input.enabled = false;
     } else this.drawPath();
-    this.drawMini();
+    if (this.under?.hide !== "mini") this.drawMini();
     this.drawParty(pv);
   }
 
@@ -217,7 +217,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private drawParty(pv?: MapPreview) {
-    let y = SLIM.y;
+    let y = this.under?.hide === "mini" ? MINI.y : SLIM.y;
     this.vm.party.forEach((l, i) => {
       if (l.id !== this.open) {
         const hpTo = pv?.hp[l.id], maxTo = pv?.maxHp[l.id];
