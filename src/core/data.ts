@@ -99,9 +99,10 @@ export const enemyDef = (id: string) => must(enemyMap, id, "enemy");
 const eventMap = byId(EVENTS);
 export const eventDef = (id: string) => must(eventMap, id, "event");
 
-/** 출전 인원에 맞춘 적 세기 (0053). 셋이면 그대로(undefined) */
-export function partyScale(size: number): EnemyScale | undefined {
-  return (C.party_scale as Record<string, EnemyScale>)[String(size)];
+/** 출전 인원에 맞춘 적 세기 (0053). 셋이면 그대로(undefined). 보스 칸은 boss 값이 있으면 그 값 (0087) */
+export function partyScale(size: number, boss = false): EnemyScale | undefined {
+  const k = (C.party_scale as Record<string, EnemyScale & { boss?: EnemyScale }>)[String(size)];
+  return (boss && k?.boss) || k;
 }
 
 /** 세기를 곱한 적 데이터. HP · 방어도 · 회복은 hp, 피해 · 화상 · 새끼 피해는 dmg */

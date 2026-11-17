@@ -23,7 +23,7 @@
   },
   "party_size": 3,
   "party_scale": {
-    "1": { "hp": 0.6, "dmg": 0.6 },
+    "1": { "hp": 0.6, "dmg": 0.4, "boss": { "hp": 0.85, "dmg": 0.5 } },
     "2": { "hp": 0.85, "dmg": 0.85 }
   },
   "default_party": ["fire_fox", "glass_salamander", "mist_cat"],
@@ -123,6 +123,6 @@
     { "elements": ["wind", "light", "shadow"] },
     { "elements": ["none"], "floors": 4 }
   ],
-  "acts_enabled": 1,
+  "acts_enabled": 2,
   "act_heal_pct": 1
 }

@@ -1,7 +1,7 @@
 // 적 규칙 (0062): 틈, 한 턴에 여러 번 행동, 거친 특성, 오늘 센 기운과 편성 풀
 import { describe, expect, it } from "vitest";
 import { Battle, statusN, type BattleEvent } from "./battle";
-import { C, ENCOUNTERS, applyTraits, enemyDef } from "./data";
+import { C, ENCOUNTERS, applyTraits, enemyDef, partyScale } from "./data";
 import { newGarden } from "./garden";
 import { Rng } from "./rng";
 import { Run } from "./run";
@@ -223,5 +223,21 @@ describe("판에 표시를 남기는 이벤트", () => {
     expect(Run.load(r.save()).bossGapBonus).toBe(1);
     expect(r.battleGapBonus()).toBe(1);
     expect(r.applyMark({ type: "gold", value: 1 })).toBe(false);
+  });
+});
+
+describe("혼자 떠난 판의 적 세기 (0098)", () => {
+  it("보스 칸은 보스 값을, 그 밖은 기본 값을 써요", () => {
+    const k = C.party_scale["1"];
+    expect(partyScale(1)).toMatchObject({ hp: k.hp, dmg: k.dmg });
+    expect(partyScale(1, true)).toEqual(k.boss);
+    expect(partyScale(2, true)).toEqual(partyScale(2));
+    expect(partyScale(3, true)).toBeUndefined();
+  });
+
+  it("단단한 특성의 방어도는 적 세기를 따라가요", () => {
+    const run = new Run({ seed: 1, frontId: PARTY[0], adult: false, unlockAll: true, party: [PARTY[0]] });
+    const b = new Battle(run.spirits, [], ["frostfang"], run.frontId, new Rng(1), partyScale(1), ["sturdy"]);
+    expect(b.enemy(1).block).toBe(Math.round(C.traits.sturdy_block * C.party_scale["1"].hp));
   });
 });

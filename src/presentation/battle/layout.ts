@@ -41,6 +41,8 @@ export const ORDER = {
   badge: { ratio: OT.badge.ratio, deg: OT.badge.deg, outline: 1.5, border: 1.5, dash: [3, 2] as [number, number], icon: 0.68, glyph: 0.62 },
   /** 아군 묶음 (.rt .bun): gap 10, padding 6, 테 1 */
   bundle: { gap: 10, pad: 6, ring: 1, max: OT.bundleMax, reserve: 2 },
+  /** 방전 띠 (0096 시안 .band): 묶음 안의 어두운 홈. 머리 = 충격 기호 + 피해 수 (gap 2), 내용과 gap 6, 빈 띠는 토큰 한 자리 폭 */
+  band: { padX: 6, padY: 3, icon: 12, inGap: 2, gap: 6 },
   /** "+n" 칩 (.more): padding 2 7, 테 1 */
   more: { padX: 7, padY: 2, ring: 1 },
   /** 흐림: 지나간 토큰 (0074 8번) · 든 카드 자리 (시안 held .62) · 끊긴 적 얼굴 (시안 faceOp .4) */
@@ -61,6 +63,8 @@ export const ALLY = {
 export const ENEMY = {
   xs: [805, 941, 1077], top: 212, feet: 344,
   body: { w: 112, h: 90, mt: 14 }, art: { w: 102, h: 82 },
+  /** 땅속 (0096 시안 .sunk): 몸 윗부분만 이만큼 남아요 (시안 임시 값) */
+  buried: 0.4,
 };
 
 /** .ground 104×14, 발 y에 가운데. radial-gradient(closest-side, shade, transparent) */
@@ -95,6 +99,8 @@ export const INFO = {
   weak: { d: 24, line: 2, ring: 2, gap: 4, icon: 16, mix: 0.6, on: { scale: 1.25, ringOut: 5 } },
   /** .st height 20 radius 10 padding 0 6 0 3 gap 1, 기호 16 */
   status: { h: 20, pad: [0, 6, 0, 3] as [number, number, number, number], radius: 10, gap: 1, icon: 16 },
+  /** 특성 칩 (0072 7번, 0096 시안 .chip.sq): 상태 칩과 같은 높이 · 기호, 둥근 네모 */
+  trait: { pad: [0, 2, 0, 2] as [number, number, number, number], radius: 5 },
   /** .flag 22, left x + 47, top 발 - 21, 외곽선 1.5 (drop-shadow 네 방향) */
   flag: { x: 47, y: -21, icon: 22, outline: 1.5 },
 };

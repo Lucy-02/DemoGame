@@ -12,7 +12,7 @@ import { faceKey } from "../../faces";
 import { LINE_HEIGHT, fontBox, measure, px, textStyle } from "../../style/text";
 import { COPY } from "../copy";
 import { ORDER as O } from "../layout";
-import type { AllyTokenVM, BattleVM, OrderSlotVM } from "../viewmodel";
+import type { AllyTokenVM, BandVM, BattleVM, OrderSlotVM } from "../viewmodel";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
@@ -107,10 +107,66 @@ const moreText = (n: number) => `+${n - shownOf(n)}`;
 const moreW = (n: number) => (n > O.bundle.max ? O.bundle.gap + measure(moreText(n), MORE) + O.more.padX * 2 : 0);
 const bundleWidth = (n: number) => O.bundle.pad * 2 + shownOf(n) * O.allyFace + (shownOf(n) - 1) * O.bundle.gap + moreW(n);
 
+// ── 방전 띠 (0096): 묶음 안의 어두운 홈. 머리 = 위험색 충격 기호 + 피해 수 (조준 피해 알약과 같은 문법, 0072 1번) ──
+
+const B = O.band;
+const BAND_ICON = "fx-damage";
+const bandHeadW = (b: BandVM) => (b.head ? B.icon + B.inGap + measure(String(b.dmg), NUM) : 0);
+
+interface CellPlan {
+  w: number;
+  /** 토큰마다 얼굴 왼쪽 x (칸 왼쪽 끝 기준) */
+  xs: number[];
+  bands: { x: number; w: number; band: BandVM }[];
+}
+
+/** 띠가 있는 칸의 자리: 토큰은 접지 않고 모두 보여요. 빈 띠는 토큰 한 자리 폭이에요 (시간 길이가 아니에요, 0038) */
+function planCell(n: number, bands: BandVM[]): CellPlan {
+  const sorted = [...bands].sort((a, z) => a.at - z.at);
+  const xs: number[] = [];
+  const out: CellPlan["bands"] = [];
+  let x = O.bundle.pad, first = true;
+  const step = () => {
+    if (!first) x += O.bundle.gap;
+    first = false;
+  };
+  const open = (b: BandVM) => {
+    step();
+    const x0 = x;
+    x += B.padX;
+    if (b.head) x += bandHeadW(b) + (b.n ? B.gap : 0);
+    return x0;
+  };
+  let i = 0;
+  for (const b of sorted) {
+    for (; i < b.at && i < n; i++) {
+      step();
+      xs.push(x);
+      x += O.allyFace;
+    }
+    const x0 = open(b);
+    if (!b.n && !b.head) x += O.allyFace;
+    for (let j = 0; j < b.n && i < n; j++, i++) {
+      if (j) x += O.bundle.gap;
+      xs.push(x);
+      x += O.allyFace;
+    }
+    x += B.padX;
+    out.push({ x: x0, w: x - x0, band: b });
+  }
+  for (; i < n; i++) {
+    step();
+    xs.push(x);
+    x += O.allyFace;
+  }
+  return { w: x + O.bundle.pad, xs, bands: out };
+}
+
 export function preloadOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   for (const s of vm.slots) loadIcon(scene, s.action, ENEMY_BADGE.icon);
   loadIcon(scene, BREAK_ICON, ENEMY_BADGE.icon);
   for (const t of (vm.bundles ?? []).flat()) loadIcon(scene, t.icon, ALLY_BADGE.icon);
+  loadIcon(scene, BAND_ICON, B.icon);
 }
 
 /** 든 카드 자리 토큰의 기호도 미리 불러 둬요 */
@@ -129,6 +185,8 @@ function textTopInLine(size: string) {
 export type OrderHit = { x: number; y: number; w: number; h: number; badge: () => void } & (
   | { kind: "ally"; bundle: number; i: number }
   | { kind: "enemy"; slot: number }
+  /** 방전 띠 (0096): 테 없이 풀이만 */
+  | { kind: "band"; band: BandVM }
 );
 
 /** 그린 토큰 하나 (모션용, 0077): 이름 · 얼굴 가운데 · 상태와 그 덩어리 */
@@ -159,6 +217,8 @@ export interface OrderCursor {
  */
 export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phaser.GameObjects.Graphics; hits: OrderHit[]; marks: OrderMark[]; cursor?: OrderCursor } {
   const hits: OrderHit[] = [];
+  /** 띠는 토큰 뒤에 깔려 있어서 토큰이 먼저 잡혀요 */
+  const bandHits: OrderHit[] = [];
   const marks: OrderMark[] = [];
   let cursorMark: OrderCursor | undefined;
   const phaseText = vm.playing ? COPY.playing : COPY.myTurn;
@@ -170,7 +230,9 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   const headW = Math.max(stateW, vm.head?.place ? measure(vm.head.place, HEAD.place) : 0);
   const bundles = vm.bundles ?? [];
   // 칸마다 두 장 자리를 미리 잡아서, 카드를 놓아도 적 토큰이 움직이지 않아요. 넘칠 때만 모든 칸이 함께 늘어요 (0077 0번)
-  const cellW = Math.max(vm.bundles ? bundleWidth(O.bundle.reserve) : 0, ...bundles.map((b) => (b.length ? bundleWidth(b.length) : 0)));
+  const bandsIn = (k: number) => (vm.bands ?? []).filter((b) => b.cell === k);
+  const plans = bundles.map((b, k) => (bandsIn(k).length ? planCell(b.length, bandsIn(k)) : undefined));
+  const cellW = Math.max(vm.bundles ? bundleWidth(O.bundle.reserve) : 0, ...bundles.map((b, k) => plans[k]?.w ?? (b.length ? bundleWidth(b.length) : 0)));
   const dividerW = O.head.padR + O.head.line + O.head.mr;
   // 재생 위치: 아직 다 지나가지 않은 첫 칸(묶음 또는 적) 앞
   const pastCell = (k: number) => (bundles[k] ?? []).every((t) => t.past);
@@ -233,15 +295,30 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   /** 묶음 칸 (.slot): 칸 폭만큼 연결선이 지나가고, 묶음은 다음 적 쪽(오른쪽)에 붙어 선을 덮어요 */
   const cell = (k: number) => {
     const list = bundles[k] ?? [];
-    const bw = list.length ? bundleWidth(list.length) : 0;
+    const plan = plans[k];
+    const bw = plan ? plan.w : list.length ? bundleWidth(list.length) : 0;
     line(cellW - bw);
     if (!bw) return;
     cursor("cell", k);
     const d = O.allyFace;
     const h = d + O.bundle.pad * 2;
-    box(g, x, cy - h / 2, bw, h, h / 2, { fill: P.glass, ring: { width: O.bundle.ring, color: P.manaLine } });
+    if (list.length) box(g, x, cy - h / 2, bw, h, h / 2, { fill: P.glass, ring: { width: O.bundle.ring, color: P.manaLine } });
+    for (const r of plan?.bands ?? []) {
+      const bh = d + B.padY * 2;
+      // 띠는 옅은 테로 묶음과 나뉘고, 든 카드가 들어오면 테가 위험색으로 켜져요 (0096)
+      const lit = list.slice(r.band.at, r.band.at + r.band.n).some((t) => t.mark === "held");
+      box(g, x + r.x, cy - bh / 2, r.w, bh, bh / 2, { fill: P.floor, ring: { width: O.bundle.ring, color: lit ? P.danger : P.glassLine } });
+      bandHits.push({ kind: "band", band: r.band, x: x + r.x, y: cy - bh / 2, w: r.w, h: bh, badge: () => {} });
+      if (r.band.head) {
+        const hx = x + r.x + B.padX;
+        icon(scene, hx, cy - B.icon / 2, BAND_ICON, B.icon, B.icon, P.danger);
+        scene.add.text(hx + B.icon + B.inGap, lineTop(NUM), String(r.band.dmg), textStyle(NUM, P.danger));
+      }
+    }
     let sx = x + O.bundle.pad;
-    list.slice(0, shownOf(list.length)).forEach((t, i) => {
+    const shown = plan ? list : list.slice(0, shownOf(list.length));
+    shown.forEach((t, i) => {
+      if (plan) sx = x + plan.xs[i];
       const fx = sx + d / 2;
       const badge = () => drawBadge(scene, fx, cy, ALLY_BADGE, { icon: t.icon, tint: P.ink2, fill: P.face });
       hits.push({ kind: "ally", bundle: k, i, x: sx, y: cy - d / 2, w: d, h: d, badge });
@@ -257,7 +334,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
       }, t.mark === "held" ? O.fade.held : t.past ? O.fade.past : undefined, { key: t.key, kind: "ally", x: fx, y: cy, d, past: !!t.past, held: t.mark === "held" });
       sx += d + O.bundle.gap;
     });
-    if (list.length > O.bundle.max) {
+    if (!plan && list.length > O.bundle.max) {
       const text = moreText(list.length);
       const mw = measure(text, MORE) + O.more.padX * 2;
       const mh = px(MORE) * LINE_HEIGHT + O.more.padY * 2;
@@ -293,12 +370,13 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     line(O.line.w);
   }
   cell(vm.slots.length);
-  return { g, hits, marks, cursor: cursorMark };
+  return { g, hits: [...hits, ...bandHits], marks, cursor: cursorMark };
 }
 
 /** 가리킨 토큰: 얼굴 원에 흰 테 (0038 호버). 같은 적의 다른 토큰(soft)은 옅은 테 (0074 5번). 테 위에 배지를 다시 얹어요 */
 export function drawOrderRing(scene: Phaser.Scene, hit: OrderHit, soft = false) {
   const cx = hit.x + hit.w / 2;
+  if (hit.kind === "band") return { cx, bottom: O.top + O.h };
   drawRing(scene, cx, hit.y + hit.h / 2, hit.w, { color: soft ? P.veil["50"] : P.ink });
   hit.badge();
   return { cx, bottom: O.top + O.h };

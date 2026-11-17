@@ -347,11 +347,13 @@ export class BattleScene extends Phaser.Scene {
     if (!hit) return false;
     const slot = hit.kind === "enemy" ? this.vm.order.slots[hit.slot] : undefined;
     const token = hit.kind === "ally" ? this.vm.order.bundles?.[hit.bundle]?.[hit.i] : undefined;
-    this.showHover(slot?.enemy === undefined ? null : { side: "enemy", i: slot.enemy });
+    const band = hit.kind === "band" ? hit.band : undefined;
+    const owner = slot?.enemy ?? band?.enemy;
+    this.showHover(owner === undefined || owner < 0 ? null : { side: "enemy", i: owner });
     // 풀이는 토큰 아래 말풍선 하나만: 유닛 아래 풀이는 지우고 강조만 남겨요
     this.hoverTip?.destroy();
     this.hoverTip = null;
-    const tip = token?.tip ?? slot?.tip;
+    const tip = token?.tip ?? slot?.tip ?? band?.tip;
     this.orderFx = gather(this, 0, 0, () => {
       const ring = drawOrderRing(this, hit);
       // 같은 적의 다른 토큰도 함께 밝혀요 (0074)
@@ -618,7 +620,7 @@ export class BattleScene extends Phaser.Scene {
         ? this.vm.order.bundles.map((l, k) => (k === held.bundle ? [...l.slice(0, held.i), held.token, ...l.slice(held.i)] : l))
         : this.vm.order.bundles;
       const order = drawOrder(this, {
-        ...this.vm.order, bundles,
+        ...this.vm.order, bundles, bands: held?.bands ?? this.vm.order.bands,
         slots: this.vm.order.slots.map((s) => (cutOrders.has(s.n) ? { ...s, cut: "plan" as const } : s)),
       });
       if (!f) {

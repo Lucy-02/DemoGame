@@ -37,6 +37,18 @@ export const COPY = {
     n: (n: number) => String.fromCharCode(CIRCLED_ONE + n - 1),
     before: (n: number) => `${String.fromCharCode(CIRCLED_ONE + n - 1)} 앞`,
   },
+  /** 특성 칩 풀이 (0096, 이름은 임시: TODO_NAMES 2절). 효과문은 합니다체 (TEXT_RULES 1절) */
+  trait: {
+    reflect: "되돌리기",
+    reflectSub: (pct: number) => `턴마다 처음 받는 피해의 ${pct}%를 공격한 정령에게 되돌립니다.`,
+    haste: "가속",
+    hasteSub: "다른 적이 더 빨리 행동합니다.",
+  },
+  /** 방전 띠 풀이 */
+  band: {
+    title: "방전", chip: (n: number) => `방전 ${n}`,
+    sub: (n: number) => `이 구간에서 끝나는 카드의 주인에게 피해를 ${n} 입힙니다.`,
+  },
   /** 적 이름 옆 등급 꼬리표 */
   rank: { elite: "정예", boss: "보스" } as Record<string, string | undefined>,
 };

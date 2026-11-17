@@ -17,7 +17,7 @@ interface Frame {
 
 const clone = (vm: BattleVM): BattleVM => ({
   ...vm,
-  order: { ...vm.order, playing: true, slots: vm.order.slots.map((s) => ({ ...s })), bundles: vm.order.bundles?.map((l) => l.map((t) => ({ ...t }))) },
+  order: { ...vm.order, playing: true, slots: vm.order.slots.map((s) => ({ ...s })), bundles: vm.order.bundles?.map((l) => l.map((t) => ({ ...t }))), bands: vm.order.bands?.map((z) => ({ ...z })) },
   allies: vm.allies.map((a) => ({ ...a })),
   enemies: vm.enemies.map((e) => ({ ...e })),
   // 재생 중에는 카드를 낼 수 없어요
@@ -44,6 +44,11 @@ export function playbackFrames(before: BattleVM, cast: PlaybackCast, events: rea
       if (k < 0) continue;
       cur.order.slots.splice(k, 1);
       const b = cur.order.bundles;
+      // 쓰러진 적의 띠는 사라지고, 합쳐진 칸의 띠는 한 칸 당겨요 (0096)
+      const left = b?.[k]?.length ?? 0;
+      cur.order.bands = cur.order.bands
+        ?.filter((z) => z.enemy !== s.enemy)
+        .map((z) => (z.cell > k ? { ...z, cell: z.cell - 1, at: z.cell === k + 1 ? z.at + left : z.at } : z));
       if (b) b.splice(k, 2, [...(b[k] ?? []), ...(b[k + 1] ?? [])]);
     }
     cur.order.slots.forEach((s, i) => { s.n = i + 1; });
