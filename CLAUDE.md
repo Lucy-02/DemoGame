@@ -44,7 +44,7 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 - `src/platform`, `electron/`: 저장·창 같은 바깥 세계. 렌더러는 Electron을 직접 import하지 않아요.
 - `src/design/tokens.ts`: `design/tokens/tokens.json`에서 `pnpm tokens`로 생성. 손으로 고치지 않아요.
 - `pnpm check:design`: 리터럴 값 검사. `design/strict-paths.txt`에 적힌 경로는 위반 시 실패해요.
-- `pnpm check`: 타입·의존 규칙·테스트·리터럴을 한 번에. `pnpm test:e2e`: Electron 스모크.
+- `pnpm check`: 타입·의존 규칙·테스트·리터럴을 한 번에. `pnpm test:e2e`: Electron 스모크. `pnpm test:run`: 봇이 화면으로 한 판을 끝까지 돌아요(`tools/screenBot.ts`, 개발 서버 · 크로미움 경로는 `PW_CHROMIUM`).
 
 ## 에셋
 - TTI(NovelAI Diffusion V5/V4.5)로 만든 파일은 모두 `assets/provenance.jsonl`에 기록해요 (`assets/PROVENANCE.md` 참고). 생성은 Lucy가 하고, Claude는 프롬프트 시트·후처리·기록을 맡아요.

@@ -39,6 +39,8 @@ export interface FlowOptions {
   trial?: boolean;
   /** 메인 화면의 종료 */
   quit?: () => void;
+  /** 메인 화면 구석에 적는 버전 */
+  version?: string;
 }
 
 export class GameFlow implements LegacyFlow {
@@ -65,7 +67,7 @@ export class GameFlow implements LegacyFlow {
   home() {
     this.current = undefined;
     const data: HomeSceneData = {
-      vm: homeVM(this.session.garden.state, this.session.run?.run),
+      vm: homeVM(this.session.garden.state, this.session.run?.run, this.opts.version),
       onPrimary: () => (this.session.run ? this.resume() : this.depart()),
       onItem: (id) => {
         if (id === "spirits") this.go(SPIRITS_SCENE, { session: this.session.garden, onBack: () => this.home() } satisfies SpiritsSceneData);

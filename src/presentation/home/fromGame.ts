@@ -6,8 +6,9 @@ import { spiritArt } from "../spiritArt";
 import { COPY } from "./copy";
 import type { HomeBadge, HomeItemVM, HomePrimaryVM, HomeVM } from "./viewmodel";
 
-export function homeVM(garden: Garden, run?: Run): HomeVM {
+export function homeVM(garden: Garden, run?: Run, version?: string): HomeVM {
   return {
+    version: version && COPY.version(version),
     title: COPY.title,
     primary: run ? continueVM(run) : { kind: "depart", label: COPY.depart },
     // 도감 · 설정 화면은 아직 없어요. 도감은 생기면 넣고, 설정은 자리만 있어요
