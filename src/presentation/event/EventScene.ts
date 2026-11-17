@@ -112,7 +112,7 @@ export class EventScene extends Phaser.Scene {
         if (layout !== "3") return { label: o.label, fx: outcomesFx(o.outcome), enabled: s.canChoose(i) };
         const v = s.preview(i);
         const faces: FaceFx[] = lanes.flatMap((l) => [
-          ...(v.hp[l.id] ? [{ face: l.face, from: v.hp[l.id].from, to: v.hp[l.id].to }] : []),
+          ...(v.hp[l.id] && !v.maxHp[l.id] ? [{ face: l.face, from: v.hp[l.id].from, to: v.hp[l.id].to }] : []),
           ...(v.maxHp[l.id] ? [{ face: l.face, from: v.maxHp[l.id].from, to: v.maxHp[l.id].to, max: true }] : []),
         ]);
         return { label: o.label, faces, fx: outcomesFx(o.outcome.filter((x) => !HP_FX.includes(x.type))), enabled: s.canChoose(i) };
