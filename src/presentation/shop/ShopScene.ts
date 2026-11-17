@@ -76,6 +76,13 @@ export class ShopScene extends Phaser.Scene {
   }
 
   preload() {
+    // 시안: 진열을 키워요 (?stock=big)
+    if (new URLSearchParams(location.search).get("stock") === "big") {
+      const w = 150, h = (HAND_CARD.h * w) / HAND_CARD.w;
+      Object.assign(STOCK, { w, h, scale: w / HAND_CARD.w, rows: [100, 100 + h + 70] });
+      Object.assign(STOCK.price, { dy: h + 10 });
+      Object.assign(SERVICE, { x: STOCK.x + 3 * w + 2 * STOCK.gap + 24, h: h + 30 });
+    }
     for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...SERVICE_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
     for (const id of SYS_ICONS) loadIcon(this, id, SYS.icon);
     loadIcon(this, "i-deck", 18);
@@ -179,13 +186,16 @@ export class ShopScene extends Phaser.Scene {
         if (healing) st.heal = vm.heal.gain[l.id];
       }
       if (new URLSearchParams(location.search).get("shop") === "slim") {
-        const y = Math.round((FRAME.h - (vm.lanes.length * (SLIM.h + SLIM.gap) - SLIM.gap)) / 2) + i * (SLIM.h + SLIM.gap);
-        drawSlimLane(this, l, y, SLIM, st.on?.click, {
+        const big = new URLSearchParams(location.search).get("stock") === "big";
+        const mid = big ? (STOCK.rows[0] + STOCK.rows[1] + STOCK.price.dy + STOCK.price.h) / 2 : FRAME.h / 2;
+        const y = Math.round(mid - (vm.lanes.length * (SLIM.h + SLIM.gap) - SLIM.gap) / 2) + i * (SLIM.h + SLIM.gap);
+        const look = big ? { ...SLIM, x: 758, w: 474, hp: { ...SLIM.hp, x: 262, w: 100, numRight: 18 } } : SLIM;
+        drawSlimLane(this, l, y, look, st.on?.click, {
           hot: st.hot, open: st.open, hpTo: st.heal ? Math.min(l.maxHp, l.hp + st.heal) : undefined,
           stat: st.stat ? { icon: STAT_ICON[st.stat], value: l.stats[st.stat], color: P.stat[st.stat] } : undefined,
         });
         if (st.on) {
-          const z = this.add.zone(SLIM.x, y, SLIM.w, SLIM.h).setOrigin(0, 0).setInteractive();
+          const z = this.add.zone(look.x, y, look.w, look.h).setOrigin(0, 0).setInteractive();
           if (st.on.over) z.on("pointerover", st.on.over);
           if (st.on.out) z.on("pointerout", st.on.out);
         }
