@@ -122,7 +122,8 @@ src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오�
   fromCore.ts                  cardVM(cardId, owner?), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 임시 표)
 src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 게임 흐름(flow.ts)이 전투 위에 띄움. 고정 장면 RESULTS
 src/presentation/home/         타이틀 겸 메인 화면 (0054). 기본 진입점, 정원·판 저장에 연결(fromGame.ts). 고정 장면 ?screen=home&scene=first|full|running
-src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=remove[:카드], P1 f3 · f4). 레거시 지도에서 열림. 빼기 = 덱 펼침 → 고르기 → 확인
+src/presentation/map/          지도 (?screen=map&scene=start|mid|boss, &select=<정령 id>, Lucy 2026-11-17). 한 막 전체 지도 + 오른쪽 위 슬림 파티 줄(run/slimLane.ts), 줄을 누르면 정령 줄로 펼침
+src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=remove[:카드], P1 f3 · f4). 지도에서 열림. 빼기 = 덱 펼침 → 고르기 → 확인
 src/session/shop.ts            상점 세션: buy·heal·remove 명령 → Run, onChange. 진열·값·치료량은 constants.json shop
 src/session/garden.ts          정원 세션: 명령 → core/garden → onChange. snapshot/restore
 src/session/run.ts             판 세션: 판의 자리(phase) + enter·leave·finishBattle·finishReward. 칸 사이 저장 save/restore
@@ -224,6 +225,7 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 2. **모션 디테일**: 지금 모션 값은 `provisional.motion.hover` 하나뿐이에요. 들기·밀림·말풍선·카드 사용(0009 "가벼운 종이", 0010 "빛 한 번 쓸기")의 길이·곡선은 Lucy가 정할 값이에요. 선택지를 보여 주고 고르게 해요.
 3. 기믹·차징(`frame-gimmick.png`), H3.
 5. **순서표(0074)**: 토큰은 `battle/views/order.ts` 한 규칙(얼굴 → 테 → 배지)으로 그리고, Lucy가 고른 값은 `provisional.order` 토큰에 있어요. 상태 모음은 `?screen=battle&scene=order-plan|order-play`. 턴 재생은 `battle/playback.ts`가 턴 종료 이벤트를 턴 종료 직전 VM에 입혀 행동마다 한 장면을 만들고, 장면마다 다시 그려요(행동 하나 450ms, `provisional.motion.playback.step`). 남은 것: 재생 연출(타격·쓰러짐·상태 변화·늦춰진 행동의 자리 옮김), 아군 토큰 되돌리기(전투 규칙 필요), 말풍선의 아군 결과 값·썸네일·꼬리, 적 효과문을 문구 규칙 문장 틀로.
+6. **해방 · 품기 · 낙하(0075)**: 해방 카드는 각성체 묶음 끝의 카드(`r:<정령 id>`)이고 그 정령에게만 놓아요(`TargetRule.only`). 가운데 고르기 창은 `battle/views/pick.ts` 하나를 낙하(턴 시작, `stars.choice`)와 품기(재생 뒤, `holdChoice`)가 같이 써요. 품기는 세션이 `askHold`를 켜서 턴 종료가 품기 직전에 멈추고 `confirmHold`로 이어 가요. 창은 화면 한가운데에 보상 카드 크기로 놓고 막은 `scrimDeep`이에요(Lucy 2026-11-16, 값은 임시 `PICK`). 남은 것: 해방 칸 비용과 순서표 토큰(규칙이 0칸 · 즉시), 해방 중 모습(0009 · 0011), 품었던 카드 표식, 카드가 손으로 들어오는 모션.
 4. 고해상도 화면(devicePixelRatio) 대응. 글자·구운 텍스처 해상도까지 같이 다뤄야 해요.
 
 정령 관리·정원
