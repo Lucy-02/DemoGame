@@ -34,6 +34,8 @@ export interface GameOptions {
   trial?: boolean;
   /** 메인 화면의 종료 */
   quit?: () => void;
+  /** 메인 화면 구석에 적는 버전 */
+  version?: string;
   /** 전투 결과: 받은 상태로 시작 (카드 key 또는 skip, 시각 검증용) */
   taken?: string;
   /** 정령 관리: 처음 고를 정령·탭, 패널 접힘 (?select=&tab=&closed) */
@@ -71,7 +73,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
-          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit }).start();
+          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit, version: opts.version }).start();
           return;
         }
         if (opts.screen === "spirits") {

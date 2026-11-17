@@ -22,5 +22,8 @@ export const PRIMARY = {
   face: { d: 34, gap: 5, ml: 18 }, floorMl: 14,
 };
 
+/** 버전: 왼쪽 아래 구석. 메뉴와 같은 왼쪽 여백을 아래에도 둬요 (새 값 없음) */
+export const VERSION = { x: MENU.x, bottom: MENU.x };
+
 /** .c1-tip: 줄 오른쪽 22, 줄 위쪽보다 7 위 */
 export const TIP = { dx: 22, dy: -7 };

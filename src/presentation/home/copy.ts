@@ -11,6 +11,7 @@ export const COPY = {
   quit: "종료",
   new: "N",
   floor: (n: number) => `${n}층`,
+  version: (v: string) => `v${v}`,
   grow: (n: number) => `키우기 ${n}`,
   branch: (n: number) => `갈래 고르기 ${n}`,
   newSpirit: (n: number) => `새 정령 ${n}`,

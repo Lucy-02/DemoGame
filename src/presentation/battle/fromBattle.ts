@@ -32,7 +32,8 @@ export const releaseId = (key: string) => (key.startsWith(RELEASE) ? key.slice(R
 export function battleVM(b: Battle, place?: string): BattleVM {
   const alive = b.spirits;
   const order = orderOf(b);
-  const allies = alive.map((s) => allyVM(b, s));
+  const incoming = incomingAll(b);
+  const allies = alive.map((s) => allyVM(b, s, incoming));
   const enemies = b.enemies.filter((e) => !e.dead).map((e) => enemyVM(b, e, order));
   const pick = pickOf(b);
   // 해방 카드: 아직 안 쓴 각성체 묶음 끝에 늘 붙어 있어요. 뽑지 않고 손패 장수에 세지 않아요 (0075)
@@ -210,11 +211,11 @@ function slotOf(b: Battle, c: BCard | Lane): PlayVM["slot"] {
 
 // ── 아군 ──
 
-function allyVM(b: Battle, s: BSpirit): AllyVM {
+function allyVM(b: Battle, s: BSpirit, incoming: Map<string, number>): AllyVM {
   return {
     face: s.id, name: s.def.name, element: ELEMENT_ICON[s.def.element] ?? ELEMENT_ICON.none, art: "",
     hp: s.hp, maxHp: s.maxHp, block: s.block || undefined,
-    incoming: incomingTo(b, s) || undefined,
+    incoming: incoming.get(s.id) || undefined,
     statuses: statusesOf(s),
     front: b.frontId === s.id,
     equip: s.run.equipment.length ? s.run.equipment.map((e) => equipVM(e, s.run.stage)) : undefined,
@@ -222,21 +223,47 @@ function allyVM(b: Battle, s: BSpirit): AllyVM {
 }
 
 /** 이번 적 차례에 이 아군이 받을 공격 피해 합계: 이번 턴 적 행동 전부 (0038 정보판 연동) */
-function incomingTo(b: Battle, s: BSpirit): number {
-  if (s.downed) return 0;
-  let sum = 0;
-  for (const e of b.aliveEnemies()) {
-    for (const { move } of b.moveQueue(e)) {
-      for (const a of move.actions) {
-        if (a.type !== "attack") continue;
-        if (!aims(b, a.target).includes(s.id)) continue;
-        sum += b.enemyDmgPreview(e, a.dmg) * (a.hits ?? 1);
+/**
+ * 이번 적 차례에 아군마다 받을 피해 합계 (막기 전). 적 행동을 시각 순서로 따라가며 실제 타격과 같은 값 · 같은 대상으로 세요:
+ * 대상의 취약, 앞열 바꿈 뒤의 앞열, 앞선 타격으로 바뀐 HP 최저 · 쓰러짐까지 넣어요.
+ * 무작위 대상은 아군이 여럿이면 누가 맞을지 몰라 세지 않아요. 놓은 카드가 바꿀 것(방어 · 도발 · 처치)은 넣지 않아요.
+ */
+function incomingAll(b: Battle): Map<string, number> {
+  const sum = new Map<string, number>();
+  const sim = b.aliveSpirits().map((s) => ({ s, hp: s.hp, block: s.block }));
+  const up = () => sim.filter((x) => x.hp > 0);
+  let front = b.frontId;
+  const queue = b.aliveEnemies()
+    .flatMap((e) => b.moveQueue(e).map((q) => ({ e, ...q })))
+    .sort((x, y) => x.at - y.at);
+  for (const { e, move } of queue) {
+    for (const a of move.actions) {
+      if (a.type === "swapFront") {
+        const others = up().filter((x) => x.s.id !== front).sort((x, y) => x.hp - y.hp);
+        if (others.length) front = others[0].s.id;
+      }
+      if (a.type !== "attack") continue;
+      const alive = up();
+      const targets = a.target === "all" ? alive
+        : a.target === "front" ? [alive.find((x) => x.s.id === front) ?? alive[0]]
+        : a.target === "lowest" ? [alive.slice().sort((x, y) => x.hp - y.hp)[0]]
+        : alive.length === 1 ? alive : [];
+      for (let h = 0; h < (a.hits ?? 1); h++) {
+        for (const t of targets) {
+          if (!t || t.hp <= 0) continue;
+          const dmg = b.enemyDmgPreview(e, a.dmg, t.s);
+          sum.set(t.s.id, (sum.get(t.s.id) ?? 0) + dmg);
+          const blocked = a.pierce ? 0 : Math.min(t.block, dmg);
+          t.block -= blocked;
+          t.hp -= dmg - blocked;
+        }
       }
     }
   }
   return sum;
 }
 
+/** 이 규칙이 지금 노리는 아군 (의도에 그리는 대상) */
 function aims(b: Battle, rule: EnemyTargetRule): string[] {
   const alive = b.aliveSpirits();
   if (rule === "all") return alive.map((s) => s.id);
@@ -245,7 +272,7 @@ function aims(b: Battle, rule: EnemyTargetRule): string[] {
     const low = alive.reduce<BSpirit | undefined>((m, s) => (!m || s.hp < m.hp ? s : m), undefined);
     return low ? [low.id] : [];
   }
-  // 무작위: 아군이 하나뿐이면 그 아군이 맞아요. 여럿이면 누가 맞을지 몰라 세지 않아요
+  // 무작위: 아군이 하나뿐이면 그 아군이 맞아요. 여럿이면 누가 맞을지 몰라요
   return alive.length === 1 ? [alive[0].id] : [];
 }
 

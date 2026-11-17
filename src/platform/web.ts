@@ -30,5 +30,6 @@ export function createWebPlatform(store: KeyValueStore, doc?: Document): Platfor
       return Boolean(doc?.fullscreenElement);
     },
     async quit() {},
+    async logError() {},
   };
 }
