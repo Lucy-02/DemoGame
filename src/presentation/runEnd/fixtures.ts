@@ -36,6 +36,7 @@ export function runEndRecord(name?: string): RunRecord {
   const fights = setup.wins.length + (setup.victory ? 0 : 1);
   const nodes = [...run.map.values()].filter((n) => n.type === "battle").slice(0, fights);
   run.visited = nodes.map((n) => n.id);
+  run.fights = fights;
   run.current = setup.victory ? run.map.get("boss") ?? null : nodes.at(-1) ?? null;
   const pool = run.rewardPool("common");
   for (let i = 0; i < setup.learned; i++) {
