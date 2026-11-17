@@ -9,7 +9,9 @@ import { LEGACY_SCENES, waitForLegacyFonts } from "./placeholder";
 import { BATTLE_SCENE, BattleScene } from "./battle/BattleScene";
 import { FIXTURES } from "./battle/fixtures";
 import { FRAME } from "./battle/layout";
+import { DEPART_SCENE, DepartScene, type DepartSceneData } from "./depart/DepartScene";
 import { HOME_SCENE, HomeScene, type HomeSceneData } from "./home/HomeScene";
+import { JOIN_SCENE, JoinScene, type JoinSceneData } from "./join/JoinScene";
 import { RESULT_SCENE, ResultScene, type ResultSceneData } from "./result/ResultScene";
 import { EVENT_SCENE, EventScene, type EventSceneData } from "./event/EventScene";
 import { REST_SCENE, RestScene, type RestSceneData } from "./rest/RestScene";
@@ -25,7 +27,7 @@ import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
   /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
-  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd" | "deck" | "map";
+  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd" | "deck" | "map" | "join" | "depart";
   /** 저장에 이어진 게임의 세션 (screen이 없을 때) */
   session?: GameSession;
   /** 시험 판: 메인 화면 없이 바로 떠나요 (?screen=legacy) */
@@ -42,7 +44,7 @@ export interface GameOptions {
   pick?: boolean;
   /** 시각 검증용: 이 key의 손패 카드에 호버한 상태로 시작 */
   hover?: string;
-  /** 고정 장면 이름 (전투: battle/fixtures FIXTURES, 정령 관리: spirits/fixtures GARDENS, 전투 결과: result/fixtures RESULTS, 상점: shop/fixtures SHOPS). 없으면 기본 */
+  /** 고정 장면 이름 (전투: battle/fixtures FIXTURES, 정령 관리: spirits/fixtures GARDENS, 전투 결과: result/fixtures RESULTS, 상점: shop/fixtures SHOPS, 깃들기: join/fixtures JOINS, 출전 준비: depart/fixtures DEPARTS). 없으면 기본 */
   scene?: string;
   /** 들기 크기 바꿔 보기 (battle/layout LIFT_STYLES) */
   lift?: string;
@@ -65,7 +67,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
         if (live) {
-          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene]] as const) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
@@ -102,6 +104,18 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           game.scene.add(SPIRITS_SCENE, SpiritsScene, false);
           game.scene.add(EVOLUTION_SCENE, EvolutionScene, false);
           game.scene.add(HOME_SCENE, HomeScene, true, home);
+          return;
+        }
+        if (opts.screen === "join") {
+          const data: JoinSceneData = { scene: opts.scene, select: opts.select, hover: opts.hover, taken: opts.taken };
+          game.scene.add(JOIN_SCENE, JoinScene, true, data);
+          return;
+        }
+        if (opts.screen === "depart") {
+          // 메인 화면 위에 떠요
+          const data: DepartSceneData = { scene: opts.scene, select: opts.select, hover: opts.hover };
+          game.scene.add(HOME_SCENE, HomeScene, true, { scene: "full" } satisfies HomeSceneData);
+          game.scene.add(DEPART_SCENE, DepartScene, true, data);
           return;
         }
         if (opts.screen === "map") {

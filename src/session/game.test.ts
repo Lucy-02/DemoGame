@@ -1,6 +1,7 @@
 // 게임 세션: 정원 ↔ 판 연결과 칸 사이 저장 (아키텍처 0001 PR 2)
 import { describe, expect, it } from "vitest";
 import { GROWTH } from "../core/data";
+import { joinOffer } from "../core/garden";
 import { GameSession, SAVE_KEYS, type SaveStore } from "./game";
 import type { RunSession } from "./run";
 
@@ -100,5 +101,26 @@ describe("게임 세션", () => {
     run.enter(run.run.reachable()[0].id);
     game.finishBattle(outcome(run, true));
     expect(game.garden.state.material).toBe(0);
+  });
+
+  it("출전 준비: 센 기운과 앞열을 정하고 떠나면 앞열이 다음 판 기본값으로 남아요 (0076 14)", async () => {
+    const store = new MemoryStore();
+    const game = await GameSession.load(store, seeds);
+    // 첫 판을 끝내고 하나를 골라 둘이 돼요
+    const first = game.startRun();
+    first.enter(first.run.reachable()[0].id);
+    game.finishBattle(outcome(first, false));
+    expect(game.joinPending).toBe(true);
+    const pick = joinOffer(game.garden.state)[0];
+    game.garden.dispatch({ kind: "join", id: pick });
+    expect(game.joinPending).toBe(false);
+    const plan = game.planRun();
+    expect(plan.party).toHaveLength(2);
+    expect(plan.front).toBe(game.garden.state.spirits[0].id);
+    const run = game.startRun(plan, pick);
+    expect(run.run.frontId).toBe(pick);
+    expect(run.run.strongElement).toBe(plan.strongElement);
+    expect(game.garden.state.front).toBe(pick);
+    expect(game.planRun().front).toBe(pick);
   });
 });

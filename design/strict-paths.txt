@@ -17,3 +17,6 @@ src/presentation/home/
 src/presentation/rest/
 src/presentation/event/
 src/presentation/runEnd/
+src/presentation/join/
+src/presentation/depart/
+src/presentation/flow.ts

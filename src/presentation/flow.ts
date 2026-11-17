@@ -17,6 +17,10 @@ import { DECK_SCENE, type DeckSceneData } from "./deck/DeckScene";
 import { homeVM } from "./home/fromGame";
 import { HOME_SCENE, type HomeSceneData } from "./home/HomeScene";
 import { MAP_SCENE, type MapSceneData } from "./map/MapScene";
+import { departVM } from "./depart/fromGarden";
+import { DEPART_SCENE, type DepartSceneData } from "./depart/DepartScene";
+import { joinVM } from "./join/fromGarden";
+import { JOIN_SCENE, type JoinSceneData } from "./join/JoinScene";
 import { LEGACY, LEGACY_FLOW, type LegacyFlow } from "./placeholder";
 import { REST_SCENE, type RestSceneData } from "./rest/RestScene";
 import { RESULT_SCENE, type ResultSceneData } from "./result/ResultScene";
@@ -50,6 +54,8 @@ export class GameFlow implements LegacyFlow {
   /** 게임을 켰을 때 */
   start() {
     if (this.opts.trial) this.depart();
+    // 고르지 않고 껐던 깃들기는 켜자마자 골라요 (0076 9)
+    else if (this.session.joinPending) this.join();
     else this.home();
   }
 
@@ -67,9 +73,55 @@ export class GameFlow implements LegacyFlow {
     this.go(HOME_SCENE, data);
   }
 
+  /** 떠나기. 정령이 둘 이상이면 메인 화면 위에 출전 준비를 띄워 앞열을 정하고 떠나요 (0076 14) */
   depart() {
-    this.session.startRun();
-    this.resume();
+    // 판 결과의 다시 떠나기: 깃들기를 먼저 고르고 이어서 떠나요
+    if (!this.opts.trial && this.session.joinPending) return this.join(undefined, () => this.depart());
+    const garden = this.session.garden.state;
+    if (this.opts.trial || garden.spirits.length < 2) {
+      this.session.startRun();
+      return this.resume();
+    }
+    const plan = this.session.planRun();
+    const data: DepartSceneData = {
+      vm: departVM(garden, plan),
+      onCancel: () => {
+        this.game.scene.stop(DEPART_SCENE);
+        this.game.scene.resume(HOME_SCENE);
+      },
+      onDepart: (front) => {
+        this.session.startRun(plan, front);
+        this.resume();
+      },
+    };
+    const open = () => {
+      this.game.scene.pause(HOME_SCENE);
+      this.game.scene.run(DEPART_SCENE, data);
+    };
+    if (this.game.scene.isActive(HOME_SCENE)) return open();
+    // 메인 화면이 다 뜬 뒤에 띄워요 (장면을 다시 시작하면 그 장면의 이벤트 구독이 지워져서 게임 단계로 기다려요)
+    this.home();
+    const wait = () => {
+      if (!this.game.scene.isActive(HOME_SCENE)) return;
+      this.game.events.off(Phaser.Core.Events.POST_STEP, wait);
+      open();
+    };
+    this.game.events.on(Phaser.Core.Events.POST_STEP, wait);
+  }
+
+  /** 깃들기: 판 끝에 꼭 골라요. 둘이면 연달아 골라요 (0076 9 · 10). prev = 바로 앞에 고른 정령 */
+  private join(prev?: string, then: () => void = () => this.home()) {
+    const garden = this.session.garden;
+    let picked: string | undefined;
+    const data: JoinSceneData = {
+      vm: joinVM(garden.state, prev),
+      onPick: (id) => {
+        picked = id;
+        garden.dispatch({ kind: "join", id });
+      },
+      onDone: () => (this.session.joinPending ? this.join(picked, then) : then()),
+    };
+    this.go(JOIN_SCENE, data);
   }
 
   /** 판의 지금 자리를 맡은 화면을 열어요 (이어하기도 여기로) */
@@ -157,8 +209,10 @@ export class GameFlow implements LegacyFlow {
     scene.scene.pause();
   }
 
+  /** 판 결과 뒤. 깃들기가 남았으면 먼저 골라요 */
   finish() {
     if (this.opts.trial) return this.depart();
+    if (this.session.joinPending) return this.join();
     this.home();
   }
 

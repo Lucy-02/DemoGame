@@ -3,8 +3,11 @@
 // 판이 끝나면 판 수와 갈래 조건(endRun · openBranches). 저장은 platform의 문자열 저장만 써요 (아키텍처 0001).
 import { GardenSession } from "./garden";
 import { RunSession, type BattleOutcome, type BattleWin, type RunSaveFile } from "./run";
+import { C } from "../core/data";
+import { defaultFront, type Garden } from "../core/garden";
+import { Rng } from "../core/rng";
 import type { Run, RunOptions } from "../core/run";
-import type { Garden } from "../core/garden";
+import type { Element } from "../core/types";
 
 /** 끝난 판 하나 (판 결과 화면, 0046). before = 떠날 때의 정원, after = 판을 닫은 뒤의 정원 */
 export interface RunRecord {
@@ -66,17 +69,38 @@ export class GameSession {
     return this._run;
   }
 
-  /** 정원의 정령으로 새 판을 떠나요. 앞열은 첫 정령이에요 (출전 준비 화면 0054는 Lucy 확인 대기) */
-  startRun(): RunSession {
-    if (this._run) throw new Error("이미 진행 중인 판이 있어요");
+  /**
+   * 떠나기 전에 정하는 다음 판 (출전 준비, 0076 14): 시드, 오늘 센 기운, 가진 정령 모두, 기본 앞열(지난 판의 앞열).
+   * 센 기운은 판을 만들기 전에 보여 줘야 해서 여기서 굴려 판에 넘겨요.
+   */
+  planRun(): RunPlan {
+    const g = this.garden.state;
     const seed = this.newSeed();
-    const opts: RunOptions = this.trialOpts
-      ? { ...this.trialOpts, seed }
-      : { seed, garden: this.garden.state, frontId: this.garden.state.spirits[0].id, adult: false, unlockAll: false };
+    const strongElement = new Rng(seed ^ STRONG_SALT).pick(C.acts[0].elements as Element[]);
+    return { seed, strongElement, party: g.spirits.slice(0, C.party_size).map((s) => s.id), front: defaultFront(g) };
+  }
+
+  /** 정원의 정령으로 새 판을 떠나요. plan(출전 준비)이 없으면 지금 계획으로, 앞열을 주면 그 정령이 앞열이에요 */
+  startRun(plan?: RunPlan, front?: string): RunSession {
+    if (this._run) throw new Error("이미 진행 중인 판이 있어요");
+    let opts: RunOptions;
+    if (this.trialOpts) opts = { ...this.trialOpts, seed: this.newSeed() };
+    else {
+      const p = plan ?? this.planRun();
+      const frontId = front && p.party.includes(front) ? front : p.front;
+      if (frontId !== this.garden.state.front) this.garden.dispatch({ kind: "setFront", id: frontId });
+      // 정령이 하나뿐인 판(첫 판)은 출전 준비 없이 떠나고 센 기운도 판이 굴려요
+      opts = { seed: p.seed, garden: this.garden.state, frontId, adult: false, unlockAll: false, ...(plan ? { strongElement: p.strongElement } : {}) };
+    }
     const run = RunSession.start(opts);
     this.attach(run);
     this.saveRun();
     return run;
+  }
+
+  /** 판 끝에 고를 깃들기가 남았나 (0076 9: 미루지 않아요) */
+  get joinPending(): boolean {
+    return (this.garden.state.joins ?? 0) > 0;
   }
 
   /**
@@ -135,5 +159,15 @@ export class GameSession {
     this.writes = this.writes.then(job).catch((e) => console.error("저장 실패", e));
   }
 }
+
+/** 출전 준비의 다음 판 */
+export interface RunPlan {
+  seed: number;
+  strongElement: Element;
+  party: string[];
+  front: string;
+}
+
+const STRONG_SALT = 0x5e7a;
 
 const randomSeed = () => Math.floor(Math.random() * 1e9);

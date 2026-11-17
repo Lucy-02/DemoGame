@@ -346,6 +346,16 @@ export const tokens = {
         "badge": "12px",
         "floor": "17px",
         "primary": "24px"
+      },
+      "join": {
+        "name": "30px",
+        "hero": "40px",
+        "chip": "15px",
+        "cta": "18px"
+      },
+      "depart": {
+        "button": "17px",
+        "kbd": "12px"
       }
     },
     "pattern": {
@@ -582,6 +592,46 @@ export const tokens = {
         },
         "leave": {
           "duration": "160ms"
+        }
+      },
+      "join": {
+        "easing": [
+          0.3,
+          0.7,
+          0.2,
+          1
+        ],
+        "fade": {
+          "delay": "300ms",
+          "duration": "400ms"
+        },
+        "move": {
+          "delay": "600ms",
+          "duration": "800ms"
+        },
+        "halo": {
+          "delay": "1100ms",
+          "duration": "1100ms"
+        },
+        "hop": {
+          "delay": "1600ms",
+          "duration": "420ms"
+        },
+        "info": {
+          "delay": "2000ms",
+          "duration": "450ms"
+        },
+        "party": {
+          "delay": "2300ms",
+          "duration": "350ms"
+        },
+        "face": {
+          "delay": "2450ms",
+          "duration": "420ms"
+        },
+        "cta": {
+          "delay": "2900ms",
+          "duration": "350ms"
         }
       }
     },
