@@ -78,6 +78,7 @@ export class MapScene extends Phaser.Scene {
   private open?: string;
   private hover: Phaser.GameObjects.Container | null = null;
   private under?: MapSceneData["under"];
+  private whole = false;
 
   constructor() {
     super(MAP_SCENE);
@@ -90,6 +91,12 @@ export class MapScene extends Phaser.Scene {
     this.onDeck = data.onDeck;
     this.open = data.select;
     this.under = data.under;
+    // 시안: 미니맵 없이 한 막 전체를 큰 지도에 (?map=whole)
+    if (new URLSearchParams(location.search).get("map") === "whole") {
+      Object.assign(PATH, { rows: 9, rowStep: 78, bottom: 716 });
+      this.under = this.under ?? undefined;
+      this.whole = true;
+    }
     this.hover = null;
   }
 
@@ -123,7 +130,7 @@ export class MapScene extends Phaser.Scene {
       if (this.under.hide === "mini" || !this.under.hide) gather(this, 0, 0, () => this.drawPath()).setAlpha(this.under.path);
       this.input.enabled = false;
     } else this.drawPath();
-    if (this.under?.hide === "path" || !this.under?.hide) this.drawMini();
+    if (!this.whole && (this.under?.hide === "path" || !this.under?.hide)) this.drawMini();
     this.drawParty(pv);
   }
 
@@ -218,7 +225,7 @@ export class MapScene extends Phaser.Scene {
 
   private drawParty(pv?: MapPreview) {
     const hide = this.under?.hide;
-    let y = hide === "mini" ? MINI.y : hide === "bothc" ? Math.round((FRAME.h - (this.vm.party.length * (SLIM.h + SLIM.gap) - SLIM.gap)) / 2) : SLIM.y;
+    let y = hide === "mini" || (this.whole && !hide) ? MINI.y : hide === "bothc" ? Math.round((FRAME.h - (this.vm.party.length * (SLIM.h + SLIM.gap) - SLIM.gap)) / 2) : SLIM.y;
     this.vm.party.forEach((l, i) => {
       if (l.id !== this.open) {
         const hpTo = pv?.hp[l.id], maxTo = pv?.maxHp[l.id];
