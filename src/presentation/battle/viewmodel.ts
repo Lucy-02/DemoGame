@@ -3,6 +3,7 @@
 import type { CardVM } from "../card/viewmodel";
 import type { RichText } from "../tooltip/content";
 import type { FaceId, IconId, UnitFace } from "../faces";
+import type { Stage } from "../../core/types";
 import type { EquipVM } from "../run/viewmodel";
 
 export type { FaceId, IconId, UnitFace };
@@ -91,6 +92,8 @@ export interface AllyVM {
   element?: IconId;
   /** 필드 그림 (지금은 정본의 임시 실루엣 sil-*) */
   art: IconId;
+  /** 성장 단계: 있으면 그 단계의 정령 그림을 세워요 (0109). 없으면 빈 상자 */
+  stage?: Stage;
   hp: number;
   maxHp: number;
   block?: number;
