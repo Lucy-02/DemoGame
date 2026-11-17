@@ -4,7 +4,7 @@ import type * as Phaser from "phaser";
 
 export interface StageArt { far: string; ground: string }
 
-const FILES: Record<number, string> = { 1: "assets/stages/act1", 2: "assets/stages/act2" };
+const FILES: Record<number, string> = { 1: "assets/stages/act1", 2: "assets/stages/act2", 3: "assets/stages/act3", 4: "assets/stages/act4", 5: "assets/stages/act5" };
 const key = (act: number, layer: keyof StageArt) => `stage:${act}:${layer}`;
 
 export function preloadStage(scene: Phaser.Scene, act?: number) {
