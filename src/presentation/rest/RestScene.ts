@@ -66,6 +66,8 @@ export class RestScene extends Phaser.Scene {
     this.deckHover = undefined;
     this.dirty = false;
     this.rested = false;
+    this.left = false;
+    this.input.enabled = true;
   }
 
   preload() {
@@ -106,7 +108,12 @@ export class RestScene extends Phaser.Scene {
     }))]));
   }
 
+  /** 한 번만 떠나요. 머무는 동안 떠나기가 또 불려도(두 번 누름) 세션은 이미 넘어가 있어요 */
+  private left = false;
+
   private leave() {
+    if (this.left) return;
+    this.left = true;
     this.onLeave?.(this);
   }
 
@@ -121,6 +128,8 @@ export class RestScene extends Phaser.Scene {
       this.hover = undefined;
       this.redraw();
       if (reducedMotion()) return this.leave();
+      // 머무는 동안에는 입력을 받지 않아요
+      this.input.enabled = false;
       this.time.delayedCall(MOVE.duration, () => this.leave());
       return;
     }

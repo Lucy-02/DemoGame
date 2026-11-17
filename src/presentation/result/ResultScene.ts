@@ -93,6 +93,7 @@ export class ResultScene extends Phaser.Scene {
     this.held = undefined;
     this.equipDone = undefined;
     this.onDone = data.onDone;
+    this.input.enabled = true;
     this.over = !!data.over;
     this.dirty = false;
   }
@@ -159,6 +160,8 @@ export class ResultScene extends Phaser.Scene {
     this.leaving = choice === "skip" ? undefined : choice.card;
     if (this.phase !== "done") return;
     if (this.leaving === undefined || reducedMotion()) return this.onDone?.(this);
+    // 머무는 동안에는 입력을 받지 않아요
+    this.input.enabled = false;
     this.time.delayedCall(MOVE.duration, () => this.onDone?.(this));
   }
 
