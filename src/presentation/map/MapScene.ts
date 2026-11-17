@@ -1,4 +1,4 @@
-// 지도 화면 (LEDGER §2 R2 지도 C, 0076 18번): 왼쪽에 가까운 길을 크게, 위 가운데에 전체 미니맵, 오른쪽에 슬림 파티 줄.
+// 지도 화면 (Lucy 2026-11-17, 0076 18번 대체): 왼쪽에 한 막 전체 지도(출발 ~ 보스), 오른쪽 열 맨 위에 슬림 파티 줄. 미니맵은 없어요.
 // 칸 종류는 기호로만 보여요(0050). 이름은 칸에 올렸을 때 말풍선에 나와요. 갈 수 있는 칸을 누르면 그 칸으로 들어가요.
 // 파티 줄을 누르면 그 줄만 같은 자리에서 정령 줄로 펼쳐져요(0046). 덱 보기는 오른쪽 위 덱 버튼으로 열어요(0076 15번).
 import * as Phaser from "phaser";
@@ -28,7 +28,7 @@ import { clampLeft, drawTooltip } from "../tooltip/Tooltip";
 import { COPY, KIND_ICON } from "./copy";
 import { DEFAULT_MAP, mapRun } from "./fixtures";
 import { mapVM, sheetVM } from "./fromRun";
-import { FRAME, GOLD_AT, MINI, PATH, SHEET, SLIM } from "./layout";
+import { FRAME, GOLD_AT, PATH, SHEET, SLIM } from "./layout";
 import type { MapNodeVM, MapVM, SheetVM } from "./viewmodel";
 
 const P = tokens.provisional.palette;
@@ -111,33 +111,24 @@ export class MapScene extends Phaser.Scene {
     drawGold(this, this.vm.gold, {}, GOLD_AT);
     drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) });
     this.drawPath();
-    this.drawMini();
     this.drawParty();
   }
 
-  /** 보이는 층 구간의 맨 아래 층 */
-  private get low(): number {
-    return Math.max(0, Math.min(this.vm.top + 1 - PATH.rows, this.vm.floor - PATH.back));
-  }
-
   private at(n: MapNodeVM): Pt {
-    return { x: PATH.cx + (n.col - (this.vm.cols - 1) / 2) * PATH.colStep, y: PATH.bottom - (n.floor - this.low) * PATH.rowStep };
+    return { x: PATH.cx + (n.col - (this.vm.cols - 1) / 2) * PATH.colStep, y: PATH.bottom - n.floor * PATH.rowStep };
   }
 
   private drawPath() {
     const { nodes, links } = this.vm;
     const byId = new Map(nodes.map((n) => [n.id, n]));
-    const seen = (n: MapNodeVM) => n.floor >= this.low && n.floor < this.low + PATH.rows;
     const L = PATH.link;
     const g = this.add.graphics();
     for (const l of links) {
       const a = byId.get(l.from)!, b = byId.get(l.to)!;
-      // 구간 밖으로 이어지는 길도 끝까지 그려서 위아래로 더 있음을 보여요
-      if (!seen(a) && !seen(b)) continue;
       if (l.walked) line(g, this.at(a), this.at(b), L.walked, withAlpha(P.ink2, L.walkedAlpha));
       else line(g, this.at(a), this.at(b), L.ahead, withAlpha(P.ink2, L.aheadAlpha), L.dash);
     }
-    for (const n of nodes) if (seen(n)) this.drawNode(n);
+    for (const n of nodes) this.drawNode(n);
   }
 
   private drawNode(n: MapNodeVM) {
@@ -176,32 +167,6 @@ export class MapScene extends Phaser.Scene {
       this.hover = null;
     });
     if (can) zone.on("pointerup", () => this.onEnter?.(n.id));
-  }
-
-  private drawMini() {
-    const M = MINI;
-    const { nodes, links, top, cols } = this.vm;
-    const g = this.add.graphics();
-    box(g, M.x, M.y, M.w, M.h, M.radius, { fill: P.glass, ring: { width: 1, color: P.glassLine } });
-    const iw = M.w - M.pad * 2, ih = M.h - M.pad * 2;
-    // 눕힌 지도: 왼쪽이 출발, 오른쪽이 보스
-    const at = (n: MapNodeVM): Pt => ({
-      x: M.x + M.pad + (n.floor / top) * iw,
-      y: M.y + M.pad + (cols > 1 ? n.col / (cols - 1) : 0.5) * ih,
-    });
-    // 왼쪽에 크게 보이는 구간
-    const step = iw / top;
-    box(g, M.x + M.pad + this.low * step - M.band.pad, M.y + M.pad - M.band.pad, step * (PATH.rows - 1) + M.band.pad * 2, ih + M.band.pad * 2, M.band.radius, { fill: withAlpha(P.ink, M.band.alpha) });
-    const byId = new Map(nodes.map((n) => [n.id, n]));
-    for (const l of links) {
-      const a = at(byId.get(l.from)!), b = at(byId.get(l.to)!);
-      line(g, a, b, M.line, withAlpha(P.ink2, l.walked ? 1 : M.lineAlpha));
-    }
-    for (const n of nodes) {
-      const p = at(n);
-      if (n.state === "here") circle(g, p.x, p.y, M.here, { fill: P.accHi });
-      else circle(g, p.x, p.y, M.dot, { fill: n.state === "far" ? withAlpha(P.ink2, M.dotAlpha) : P.ink });
-    }
   }
 
   private drawParty() {
