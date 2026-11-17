@@ -155,6 +155,8 @@ export class GameFlow implements LegacyFlow {
         const data: BattleSceneData = {
           session, onOver: (scene) => this.battleOver(scene, session.outcome()), onDeck: (scene) => this.deck(scene),
           place: floor === undefined ? undefined : BATTLE_COPY.floor(floor),
+          // 첫 판의 첫 전투에서만 개념을 한 번씩 짚어요 (0088)
+          ...(phase.first ? { guide: {} } : {}),
         };
         return this.go(BATTLE_SCENE, data);
       }
