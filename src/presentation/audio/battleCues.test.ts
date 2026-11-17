@@ -24,6 +24,13 @@ describe("전투 소리", () => {
     expect(cueOf({ k: "charge", uid: 1, move: "x" })).toBe("charge");
   });
 
+  it("해방 · 쓰러짐 · 회복은 제 소리가 있어요", () => {
+    expect(cueOf({ k: "release", id: "a" })).toBe("release");
+    expect(cueOf({ k: "downed", id: "a" })).toBe("down.ally");
+    expect(cueOf({ k: "enemyDead", uid: 1 })).toBe("down.enemy");
+    expect(cueOf({ k: "heal", ref: enemy, amount: 3 })).toBe("heal");
+  });
+
   it("한 묶음에서 같은 소리는 한 번만", () => {
     expect(cuesOf([dmg(3), dmg(3), { k: "block", ref: enemy, amount: 2 }])).toEqual(["hit.medium", "block"]);
   });

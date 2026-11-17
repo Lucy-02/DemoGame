@@ -1,10 +1,10 @@
 // core 전투 상태 → 전투 화면 VM. 고정 장면(fixtures/) 대신 실제 전투를 그릴 때 써요.
 // 화면은 이 VM만 알고 Battle은 몰라요. 카드 key는 `c<uid>`예요 (cardRef로 되돌려요).
 import { C, cardDef } from "../../core/data";
-import { statusN, type BCard, type BEnemy, type BSpirit, type Battle, type Ref, type StatusId } from "../../core/battle";
+import { statusN, type BCard, type BEnemy, type BSpirit, type Battle, type Forecast, type Planned, type Ref, type StatusId } from "../../core/battle";
 import type { EnemyAction, EnemyTargetRule } from "../../core/types";
 import { ELEMENT_ICON, faceKey } from "../faces";
-import { cardVM, equipVM, releaseVM } from "../run/fromCore";
+import { cardVM, equipVM, releaseVM, type CardStats } from "../run/fromCore";
 import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
 import type { AllyTokenVM, AllyVM, BandVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
@@ -39,7 +39,7 @@ export const releaseId = (key: string) => (key.startsWith(RELEASE) ? key.slice(R
 export function battleVM(b: Battle, place?: string): BattleVM {
   const alive = b.spirits;
   const order = orderOf(b);
-  const incoming = incomingAll(b);
+  const incoming = b.forecast();
   const allies = alive.map((s) => allyVM(b, s, incoming));
   const enemies = b.enemies.filter((e) => !e.dead).map((e) => enemyVM(b, e, order));
   const pick = pickOf(b);
@@ -83,8 +83,7 @@ function pickOf(b: Battle): PickVM | undefined {
   }
   const fall = b.stars.choice;
   if (fall && b.result === "ongoing") {
-    const s = b.spirit(fall.owner);
-    const st = Object.fromEntries(STAT_IDS.map((k) => [k, b.stat(s, k)])) as Record<StatId, number>;
+    const st = castStats(b, b.spirit(fall.owner));
     return { kind: "fall", n: Math.min(fall.picks, fall.options.length), picked: [], cards: fall.options.map((id) => ({ ...cardVM(id, fall.owner, st), face: faceKey(fall.owner) })) };
   }
   return undefined;
@@ -192,7 +191,7 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
     return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", tip }, owner: p.owner };
   }
   const icon = cardVM(p.card.cardId, p.owner).values[0]?.icon ?? CHARGE_ICON;
-  const vm = handCard(b, p.card);
+  const vm = handCard(b, p.card, p.n === undefined ? undefined : b.planned[p.n]);
   const gap = hitsOpening(b, p);
   const tip: OrderTipVM = {
     title: vm.name, kind: COPY.order.card, text: vm.detail.text,
@@ -245,78 +244,19 @@ function bandsOf(b: Battle, cells: Lane[][]): BandVM[] | undefined {
   return out.length ? out : undefined;
 }
 
-/** 놓은 카드가 방전 칸에서 끝나 이 아군이 받을 피해 */
-function zoneDamageTo(b: Battle, s: BSpirit): number {
-  let sum = 0;
-  for (const p of b.planned) {
-    if (p.owner !== s.id) continue;
-    for (const z of liveZones(b)) if (p.end >= z.from && p.end < z.to) sum += z.dmg;
-  }
-  return sum;
-}
-
 // ── 아군 ──
 
-function allyVM(b: Battle, s: BSpirit, incoming: Map<string, number>): AllyVM {
+/** incoming: 놓은 카드까지 미리 돌려 본 이번 턴 (받을 피해 합계와 깎일 HP가 실제 재생과 같아요. 무작위 대상과 치명은 몰라서 빼요) */
+function allyVM(b: Battle, s: BSpirit, incoming: Forecast): AllyVM {
   return {
     face: s.id, name: s.def.name, element: ELEMENT_ICON[s.def.element] ?? ELEMENT_ICON.none, art: "", stage: s.run.stage,
     hp: s.hp, maxHp: s.maxHp, block: s.block || undefined,
-    incoming: incoming.get(s.id) || undefined,
+    incoming: incoming.hit.get(s.id) || undefined,
+    loss: incoming.lost.get(s.id) ?? 0,
     statuses: statusesOf(s),
     front: b.frontId === s.id,
     equip: s.run.equipment.length ? s.run.equipment.map((e) => equipVM(e, s.run.stage)) : undefined,
   };
-}
-
-/**
- * 이번 적 차례에 아군마다 받을 피해 합계 (막기 전). 적 행동을 시각 순서로 따라가며 실제 타격과 같은 값 · 같은 대상으로 세요:
- * 대상의 취약, 앞열 바꿈 뒤의 앞열, 앞선 타격으로 바뀐 HP 최저 · 쓰러짐까지 넣어요.
- * 무작위 대상은 아군이 여럿이면 누가 맞을지 몰라 세지 않아요. 놓은 카드가 바꿀 것(방어 · 도발 · 처치)은 넣지 않아요.
- */
-function incomingAll(b: Battle): Map<string, number> {
-  const sum = new Map<string, number>();
-  // 방전 띠에 놓은 카드의 피해도 받을 피해에 더해요 (0096)
-  for (const s of b.aliveSpirits()) {
-    const z = zoneDamageTo(b, s);
-    if (z) sum.set(s.id, z);
-  }
-  const sim = b.aliveSpirits().map((s) => ({ s, hp: s.hp, block: s.block }));
-  const up = () => sim.filter((x) => x.hp > 0);
-  let front = b.frontId;
-  const ramp = new Map<number, number>();
-  const queue = b.aliveEnemies()
-    .flatMap((e) => b.moveQueue(e).map((q) => ({ e, ...q })))
-    .sort((x, y) => x.at - y.at);
-  for (const { e, move } of queue) {
-    for (const a of move.actions) {
-      if (a.type === "swapFront") {
-        const others = up().filter((x) => x.s.id !== front).sort((x, y) => x.hp - y.hp);
-        if (others.length) front = others[0].s.id;
-      }
-      // 쓸 때마다 세지는 행동은 이번 턴에 앞서 쓴 만큼 올려요
-      const used = ramp.get(e.uid) ?? e.ramp;
-      if (a.type === "attackRamp" || a.type === "burnRamp") ramp.set(e.uid, used + 1);
-      if (a.type !== "attack" && a.type !== "attackRamp") continue;
-      const base = a.type === "attackRamp" ? a.dmg + used * a.step : a.dmg;
-      const pierce = a.type === "attack" && !!a.pierce;
-      const alive = up();
-      const targets = a.target === "all" ? alive
-        : a.target === "front" ? [alive.find((x) => x.s.id === front) ?? alive[0]]
-        : a.target === "lowest" ? [alive.slice().sort((x, y) => x.hp - y.hp)[0]]
-        : alive.length === 1 ? alive : [];
-      for (let h = 0; h < (a.hits ?? 1); h++) {
-        for (const t of targets) {
-          if (!t || t.hp <= 0) continue;
-          const dmg = b.enemyDmgPreview(e, base, t.s);
-          sum.set(t.s.id, (sum.get(t.s.id) ?? 0) + dmg);
-          const blocked = pierce ? 0 : Math.min(t.block, dmg);
-          t.block -= blocked;
-          t.hp -= dmg - blocked;
-        }
-      }
-    }
-  }
-  return sum;
 }
 
 /** 이 규칙이 지금 노리는 아군 (의도에 그리는 대상) */
@@ -407,10 +347,15 @@ function amountOf(b: Battle, e: BEnemy, a: EnemyAction): string {
 
 // ── 손패 ──
 
-function handCard(b: Battle, c: BCard) {
-  const s = b.spirit(c.owner);
+/** 이 정령의 카드 숫자를 계산할 값: 능력치와 배율. 실제 타격과 같은 값을 써요 */
+function castStats(b: Battle, s: BSpirit): CardStats {
   const st = Object.fromEntries(STAT_IDS.map((k) => [k, b.stat(s, k)])) as Record<StatId, number>;
-  const vm = cardVM(c.cardId, c.owner, st);
+  return { ...st, mult: { damage: b.passiveMult(s, "damageMult"), burn: b.passiveMult(s, "burnMult"), chill: b.passiveMult(s, "chillMult"), heal: b.passiveMult(s, "healMult") } };
+}
+
+/** planned: 이미 놓은 카드면 그 자리. 숫자는 카드가 재생될 때의 값이에요 (놓아 둔 해방이 먼저 켜지면 해방 배율까지) */
+function handCard(b: Battle, c: BCard, planned?: Planned) {
+  const vm = cardVM(c.cardId, c.owner, castStats(b, b.casting(b.spirit(c.owner), planned)));
   const cost = b.cardCost(c);
   const chk = b.canPlay(c);
   return {

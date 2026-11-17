@@ -119,14 +119,14 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       const v = round(scale(ctx.main(op.value), b.stat(owner, "focus")) * b.passiveMult(owner, "healMult") * b.passiveMult(owner, "supportMult"));
       for (const s of ctx.allies) b.healSpirit(s, v);
     },
-    describe: (op, t) => [{ to: t.allyOf, core: `HP를 ${t.sc(t.main(op.value), "focus")} 회복하` }],
+    describe: (op, t) => [{ to: t.allyOf, core: `HP를 ${t.amt(t.main(op.value), "heal")} 회복하` }],
   },
   burn: {
     resolve(ctx, op) {
       const v = ctx.b.burnAmount(ctx.owner, scale(ctx.main(op.value), ctx.b.stat(ctx.owner, "focus")));
       for (const e of ctx.enemies) if (!e.dead) ctx.b.addStatus(e, "burn", v);
     },
-    describe: (op, t) => [{ to: t.foe, core: `화상을 ${t.sc(t.main(op.value), "focus")} 부여하` }],
+    describe: (op, t) => [{ to: t.foe, core: `화상을 ${t.amt(t.main(op.value), "burn")} 부여하` }],
   },
   burnHold: {
     resolve(ctx, op) {
@@ -151,7 +151,7 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       }
     },
     describe: (op, t) => [{
-      to: "", core: `다른 적 하나에게 화상을 ${t.sc(op.value, "focus")} 부여하`,
+      to: "", core: `다른 적 하나에게 화상을 ${t.amt(op.value, "burn")} 부여하`,
       after: `다른 적이 없으면 대상에게 ${polite("부여하")}. 그럴 때마다 양이 ${polite("줄어들")}.`,
     }],
   },
@@ -182,7 +182,7 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
         b.addStatus(e, "burn", b.burnAmount(owner, scale(base, b.stat(owner, "focus"))));
       }
     },
-    describe: (op, t) => [{ to: t.foe, core: `화상을 ${t.sc(t.main(op.value), "focus")} 부여하`, after: `대상이 이미 화상 상태이면 ${op.ifBurned} 더 ${polite("부여하")}.` }],
+    describe: (op, t) => [{ to: t.foe, core: `화상을 ${t.amt(t.main(op.value), "burn")} 부여하`, after: `대상이 이미 화상 상태이면 ${op.ifBurned} 더 ${polite("부여하")}.` }],
   },
   randomHits: {
     resolve(ctx, op) {
@@ -197,7 +197,7 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
         if (!e.dead) b.addStatus(e, "burn", burn);
       }
     },
-    describe: (op, t) => [{ to: "", core: `무작위 적에게 피해를 ${t.dmg(t.main(op.value))}씩 ${op.hits}번 입히`, after: `맞힐 때마다 화상을 ${t.sc(op.burn, "focus")} ${polite("부여하")}.` }],
+    describe: (op, t) => [{ to: "", core: `무작위 적에게 피해를 ${t.dmg(t.main(op.value))}씩 ${op.hits}번 입히`, after: `맞힐 때마다 화상을 ${t.amt(op.burn, "burn")} ${polite("부여하")}.` }],
   },
   burnShare: {
     resolve(ctx, op) {
@@ -255,7 +255,7 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
         op.freezeDelayMs ? `이 카드로 빙결시키면 ${op.freezeDelayMs}ms 더 ${polite("늦추")}.` : "",
         op.freezeWeak ? `이 카드로 빙결시키면 약화를 ${op.freezeWeak}턴 ${polite("부여하")}.` : "",
       ].filter(Boolean).join(" ");
-      return [{ to: t.foe, core: `냉기를 ${t.sc(t.main(op.value), "focus")} 부여하`, after: after || undefined }];
+      return [{ to: t.foe, core: `냉기를 ${t.amt(t.main(op.value), "chill")} 부여하`, after: after || undefined }];
     },
   },
   blockLowest: {

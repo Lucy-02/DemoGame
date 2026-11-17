@@ -18,6 +18,7 @@ import { STAT_ICON } from "../run/copy";
 import { drawSlimLane, type SlimState } from "../run/slimLane";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
+import { audioOf } from "../audio";
 import { shopSession } from "./fixtures";
 import { shopVM } from "./fromShop";
 import { SHOP_LANE, STOCK } from "./layout";
@@ -124,6 +125,7 @@ export class ShopScene extends Phaser.Scene {
     const sold = shopVM(this.session).cards[slot];
     this.leaving = sold ? { slot, card: sold.card } : undefined;
     this.session.dispatch({ kind: "buy", slot, spirit });
+    audioOf(this)?.play("buy");
   }
 
   private paint() {

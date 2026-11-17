@@ -6,3 +6,6 @@ out/
 release/
 test-results/
 playwright-report/
+
+# 소리 파일은 저장소 밖에 둬요 (Lucy 2026-11-17, 0087 8번 · 0091). 맥의 ~/workspace/jjal/sound-packs 에서 가져와요
+public/assets/audio/

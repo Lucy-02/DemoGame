@@ -2,7 +2,7 @@
 import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, baseCardId, cardDef, equipDef, equipName, isUpgradedId, spiritDef, upgradedId } from "../../core/data";
 import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round, scale } from "../../core/stats";
 import { signatureSwapOf } from "../../core/run";
-import { describeCard, describeEquipTier, describeSignatureSwap } from "../../core/text";
+import { castAmount, castDamage, describeCard, describeEquipTier, describeSignatureSwap, type CastMult } from "../../core/text";
 import type { CardDef, CardOp, DeckCard, EquipTier, RunEquip, RunSpirit, Stage } from "../../core/types";
 import { cardArtOf } from "../card/art";
 import type { CardRarity, CardVM, CardValueVM, Material, RichText } from "../card/viewmodel";
@@ -38,19 +38,29 @@ const OP_STAT: Partial<Record<CardOp["op"], StatId>> = {
   damage: "power", block: "guard", wall: "guard", thorns: "guard", heal: "focus", burn: "focus", chill: "focus",
 };
 
+/** 카드 숫자를 계산할 정령의 값: 능력치와, 있으면 그 정령에게 붙은 배율(해방 등) */
+export type CardStats = Record<StatId, number> & { mult?: CastMult };
+
+/** 능력치와 배율을 넣은 수치판 숫자. 효과문과 같은 계산이에요 (core/text.ts) */
+function cast(op: CardOp, base: number, k: StatId, st: CardStats): number {
+  if (op.op === "damage") return castDamage(base, st);
+  if (op.op === "burn" || op.op === "chill" || op.op === "heal") return castAmount(base, st, op.op);
+  return scale(base, st[k]);
+}
+
 const opBase = (op: CardOp): number | undefined => ("value" in op && typeof op.value === "number" ? op.value
   : "turns" in op && typeof op.turns === "number" ? op.turns : undefined);
 
 /** 수치판: 앞에서부터 기호가 있는 효과 두 개까지. st가 없으면 원래 숫자, 있으면 그 정령의 능력치로 계산한 숫자.
  *  카드에 찍힌 숫자(강화 전 카드)보다 오르면 ▲: 능력치로 오른 값과 강화로 오른 값이 같은 표식이에요 (0080) */
-export function valuesOf(def: CardDef, st?: Record<StatId, number>): CardValueVM[] {
+export function valuesOf(def: CardDef, st?: CardStats): CardValueVM[] {
   const printed = isUpgradedId(def.id) ? cardDef(baseCardId(def.id)).effects : def.effects;
   return def.effects.flatMap((op, i): CardValueVM[] => {
     const icon = OP_ICON[op.op];
     const base = opBase(op);
     if (!icon || base === undefined) return [];
     const k = "value" in op && typeof op.value === "number" ? OP_STAT[op.op] : undefined;
-    const n = st && k ? scale(base, st[k]) : base;
+    const n = st && k ? cast(op, base, k, st) : base;
     const was = opBase(printed[i]) ?? base;
     return [{ icon, n, mult: "hits" in op ? op.hits : undefined, ...(n > was ? { up: true } : {}) }];
   }).slice(0, PLATE_MAX);
@@ -65,7 +75,7 @@ export function statOf(def: CardDef): StatId | undefined {
 
 /** 카드 한 장. 숫자는 원래 값이에요 (0044: describeCard(def, null)). st를 주면 그 정령의 능력치로 계산한 값이에요.
  *  ownerId가 없으면 주인이 정해지지 않은 카드 */
-export function cardVM(cardId: string, ownerId?: string, st?: Record<StatId, number>): CardVM {
+export function cardVM(cardId: string, ownerId?: string, st?: CardStats): CardVM {
   const def = cardDef(cardId);
   const material = materialOf(def.element);
   const who = ownerId ? spiritDef(ownerId).name : COPY.shared;
