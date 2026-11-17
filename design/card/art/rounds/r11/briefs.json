@@ -1,0 +1,770 @@
+{
+ "round": "card-art-r11",
+ "note": "그림 없는 카드 채우기(0118, 임시). 불여우·별 4·공용·바람·안개 고양이 카드와 기술 카드 6종(레벨 1~3이 그림 하나를 같이 씀). 0063 브리프 규칙과 R10 기준(빛은 광원에서, 개수는 이름대로, 생김새는 실제대로)을 따름. 장면(S)·상징(M) × 시드 둘. 바탕·팔레트는 임시 값.",
+ "variants": [
+  {
+   "tag": "o",
+   "mode": "intact"
+  }
+ ],
+ "seeds": [
+  4101,
+  4102
+ ],
+ "common": {
+  "composition": "1.2::one bold chunky silhouette that fits inside the central half of the image, wide empty margin on every side::, centered, wide shot, floating in the air, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline",
+  "quality": "very aesthetic, masterpiece, best quality, no text",
+  "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic",
+  "composition_S": "1.2::a dynamic scene, the main action happens in the center, readable at a glance::, medium shot, simple shapes, clean lineart, cel shading, thick outline, limited palette, 1.1::beautiful atmospheric lighting, evocative mood::",
+  "composition_P": "1.2::scenery, wide shot, landscape, one clear focal point in the center::, simple shapes, clean lineart, cel shading, thick outline, limited palette, atmospheric perspective",
+  "composition_M": "1.2::symbolic still life, one central object, centered, wide empty margin::, simple background, clean lineart, cel shading, thick outline, 1.1::elegant, evocative::",
+  "uc_S": "1girl, 1boy, person, people, human, face, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.2::cluttered, crowded, busy::",
+  "uc_P": "1girl, 1boy, person, people, human, character, animal, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.1::cluttered, crowded::",
+  "uc_M": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic"
+ },
+ "tones": {
+  "sal": "1.2::plain soft dark warm grey background::, 1.1::thin white edge highlights::",
+  "ibex": "1.2::plain soft dark charcoal grey background::, 1.1::bright rim light outlining the silhouette::",
+  "star": "1.2::plain soft dark navy grey background::",
+  "sal_S": "1.1::warm red, amber and dark brown palette::",
+  "sal_P": "1.1::warm red, amber and dark brown palette::",
+  "ibex_S": "1.1::charcoal grey and molten orange palette::",
+  "ibex_P": "1.1::charcoal grey and molten orange palette::",
+  "star_S": "1.1::deep navy and pale gold palette::",
+  "star_P": "1.1::deep navy and pale gold palette::",
+  "pearl": "1.2::plain soft dark teal grey background::, 1.1::soft pearly highlights::",
+  "pearl_S": "1.1::deep teal, sea blue and pearl white palette::",
+  "pearl_P": "1.1::deep teal, sea blue and pearl white palette::",
+  "cham": "1.2::plain soft dark moss green grey background::",
+  "cham_S": "1.2::plain soft dark moss green grey background::, 1.1::muted deep green palette, low saturation::",
+  "cham_P": "1.1::deep green palette with small soft rainbow accents::",
+  "fox": "1.2::plain soft dark warm charcoal background::, 1.1::warm ember rim light::",
+  "fox_S": "1.1::deep crimson, ember orange and charcoal palette::",
+  "fox_P": "1.1::deep crimson, ember orange and charcoal palette::",
+  "cat": "1.2::plain soft dark slate blue grey background::, 1.1::cold pale highlights::",
+  "cat_S": "1.1::slate blue, frost white and pale cyan palette::",
+  "cat_P": "1.1::slate blue, frost white and pale cyan palette::",
+  "common": "1.2::plain soft dark neutral grey background::",
+  "common_S": "1.1::muted warm neutral palette with one soft accent color::",
+  "common_P": "1.1::muted warm neutral palette with one soft accent color::",
+  "wind": "1.2::plain soft dark grey green background::",
+  "wind_S": "1.1::pale sky blue, soft green and cream palette::",
+  "wind_P": "1.1::pale sky blue, soft green and cream palette::"
+ },
+ "cards": [
+  {
+   "id": "fire_claw",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::three glowing claw slashes of fire raking across a dark rock creature::"
+  },
+  {
+   "id": "fire_claw",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::three parallel claw marks burning orange on a dark stone::"
+  },
+  {
+   "id": "ember_scatter",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small fire fox spirit with a flaming tail flicking its tail, scattering glowing embers onto a dark rock creature, small flames catching on it::"
+  },
+  {
+   "id": "ember_scatter",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a spray of glowing embers flying in an arc through the dark::"
+  },
+  {
+   "id": "double_strike",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::two quick crossing claw slashes on a dark rock creature, sparks flying::"
+  },
+  {
+   "id": "double_strike",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::two crossed claw marks forming an X of orange light on dark stone::"
+  },
+  {
+   "id": "ember_flick",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::one glowing ember landing on a dark rock creature, a small flame starting where it lands::"
+  },
+  {
+   "id": "ember_flick",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::one small glowing ember drifting through the dark, a thin smoke trail behind it::"
+  },
+  {
+   "id": "ignite",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::the small flames on a dark rock creature suddenly bursting into a bright fiery blast::"
+  },
+  {
+   "id": "ignite",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a small spark touching a pile of embers, bursting into a bright flame::"
+  },
+  {
+   "id": "molten_stance",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature standing in front of its friends behind a low wall of flames, facing a dark rock creature::"
+  },
+  {
+   "id": "molten_stance",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a curved shield made of flames standing upright::"
+  },
+  {
+   "id": "blaze_aura",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small fire fox spirit with a flaming tail wreathed in a blazing aura, flames rising off its fur like wings::"
+  },
+  {
+   "id": "blaze_aura",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a pair of wings made of flame::"
+  },
+  {
+   "id": "backfire",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark rock creature already on fire, a second burst of flame hitting it from the front, fire meeting fire::"
+  },
+  {
+   "id": "backfire",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::two flames colliding head-on, sparks where they meet::"
+  },
+  {
+   "id": "fire_storm",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small fire fox spirit with a flaming tail sweeping its blazing tail, a wave of fire rolling across several dark rock creatures::"
+  },
+  {
+   "id": "fire_storm",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a sea of flames spreading across dark ground::"
+  },
+  {
+   "id": "phoenix_breath",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::a huge burst of flame shaped like a rising phoenix engulfing a dark rock creature::",
+   "uc_extra": "bird, real bird"
+  },
+  {
+   "id": "phoenix_breath",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a phoenix made of flame rising from embers, wings spread::",
+   "uc_extra": "bird, real bird"
+  },
+  {
+   "id": "kindling",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::dry firewood falling onto a burning dark rock creature, the flames growing bigger::"
+  },
+  {
+   "id": "kindling",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a small bundle of dry firewood catching fire::"
+  },
+  {
+   "id": "foxfire",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::floating foxfire wisps circling a dark rock creature, about to burst::"
+  },
+  {
+   "id": "foxfire",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::three floating foxfire flames hovering in the dark::"
+  },
+  {
+   "id": "eternal_lamp",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::an old stone lantern burning steadily in a dark night garden, its flame never going out::",
+   "uc_extra": "person"
+  },
+  {
+   "id": "eternal_lamp",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a stone lantern with a steady flame glowing inside::",
+   "uc_extra": "person"
+  },
+  {
+   "id": "sparks",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::bright sparks bouncing off a dark rock creature in random directions, tiny flames where they land::"
+  },
+  {
+   "id": "sparks",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a burst of bright sparks scattering in all directions::"
+  },
+  {
+   "id": "flame_pass",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::flames jumping from one burning dark rock creature to another standing next to it::"
+  },
+  {
+   "id": "flame_pass",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a flame leaping from one torch to another::"
+  },
+  {
+   "id": "wildfire",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::a wildfire spreading across dry grassland at night, a long line of flame on the horizon::"
+  },
+  {
+   "id": "wildfire",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a line of fire racing across dry grass::"
+  },
+  {
+   "id": "meteor",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::one meteor falling from the night sky and striking a dark rock creature marked with gold stars, the star marks bursting::",
+   "uc_extra": "laser, beam, light pillar, beam shooting upward"
+  },
+  {
+   "id": "meteor",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::one meteor falling diagonally downward, a glowing head and a long tail behind it::",
+   "uc_extra": "laser, beam, light pillar, beam shooting upward"
+  },
+  {
+   "id": "meteor_shower",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::many small meteors raining down on a dark rock creature marked with gold stars, each one striking a star mark::",
+   "uc_extra": "laser, beam, light pillar, beam shooting upward"
+  },
+  {
+   "id": "meteor_shower",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::many small meteors falling diagonally downward in parallel, short tails behind them::",
+   "uc_extra": "laser, beam, light pillar, beam shooting upward"
+  },
+  {
+   "id": "comet",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::a comet with a long tail passing low over dark hills, a dark rock creature below looking up as it curves back around::",
+   "uc_extra": "laser, beam, light pillar"
+  },
+  {
+   "id": "comet",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a comet with a long curved glowing tail::",
+   "uc_extra": "laser, beam, light pillar"
+  },
+  {
+   "id": "star_veil",
+   "owner": "star",
+   "comp": "S",
+   "subject": "no humans, 1.2::a veil of starlight draped over a small round ally creature like a curtain, gold stars woven into it, shielding it from a dark rock creature::",
+   "uc_extra": "laser, beam, light pillar"
+  },
+  {
+   "id": "star_veil",
+   "owner": "star",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a sheer curtain of night sky with gold stars woven into it::",
+   "uc_extra": "laser, beam, light pillar"
+  },
+  {
+   "id": "basic_claw",
+   "owner": "common",
+   "comp": "S",
+   "subject": "no humans, 1.2::one quick claw slash across a dark rock creature::"
+  },
+  {
+   "id": "basic_claw",
+   "owner": "common",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::three simple parallel claw marks scratched into dark stone::"
+  },
+  {
+   "id": "basic_block",
+   "owner": "common",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature crouching behind a round wooden shield as a dark rock creature hits it::"
+  },
+  {
+   "id": "basic_block",
+   "owner": "common",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a simple round wooden shield::"
+  },
+  {
+   "id": "catch_breath",
+   "owner": "common",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature pausing to catch its breath, a small puff of breath in the cool air::"
+  },
+  {
+   "id": "catch_breath",
+   "owner": "common",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a small puff of breath drifting in cool air::"
+  },
+  {
+   "id": "find_weakness",
+   "owner": "common",
+   "comp": "S",
+   "subject": "no humans, 1.2::a crack in the shell of a dark rock creature glowing with light, its weak spot showing::"
+  },
+  {
+   "id": "find_weakness",
+   "owner": "common",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a cracked dark stone with light shining through the crack::"
+  },
+  {
+   "id": "step_forward",
+   "owner": "common",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature stepping in front of a smaller friend, facing a dark rock creature::"
+  },
+  {
+   "id": "step_forward",
+   "owner": "common",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::one footprint stepping out ahead of a row of footprints::"
+  },
+  {
+   "id": "cheer",
+   "owner": "common",
+   "comp": "S",
+   "subject": "no humans, 1.2::two small round ally creatures, one cheering the other on, warm glow::"
+  },
+  {
+   "id": "cheer",
+   "owner": "common",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a small pennant flag waving in the wind::"
+  },
+  {
+   "id": "mend",
+   "owner": "common",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature wrapped in a soft bandage, a warm green light healing it::"
+  },
+  {
+   "id": "mend",
+   "owner": "common",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a rolled bandage and a sprig of healing herb::"
+  },
+  {
+   "id": "deep_breath",
+   "owner": "common",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature breathing in deeply on a hilltop at sunrise, fresh wind::"
+  },
+  {
+   "id": "deep_breath",
+   "owner": "common",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a swirl of fresh air rising from a meadow::"
+  },
+  {
+   "id": "breeze",
+   "owner": "wind",
+   "comp": "S",
+   "subject": "no humans, 1.2::a gentle breeze blowing leaves across a meadow::"
+  },
+  {
+   "id": "breeze",
+   "owner": "wind",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a few leaves carried on a soft breeze, curved wind lines::"
+  },
+  {
+   "id": "whirl_slash",
+   "owner": "wind",
+   "comp": "S",
+   "subject": "no humans, 1.2::a whirlwind of sharp wind blades slicing around a dark rock creature::"
+  },
+  {
+   "id": "whirl_slash",
+   "owner": "wind",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a spiral of sharp wind blades::"
+  },
+  {
+   "id": "tailwind",
+   "owner": "wind",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature carried forward by a strong tailwind, leaves flying past::"
+  },
+  {
+   "id": "tailwind",
+   "owner": "wind",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a small sail filled with wind::"
+  },
+  {
+   "id": "second_wind",
+   "owner": "wind",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature resting under a tree as a cool wind picks up again::"
+  },
+  {
+   "id": "second_wind",
+   "owner": "wind",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a pinwheel starting to spin in the wind::"
+  },
+  {
+   "id": "gust",
+   "owner": "wind",
+   "comp": "S",
+   "subject": "no humans, 1.2::a sudden gust knocking a dark rock creature off balance, dust flying::"
+  },
+  {
+   "id": "gust",
+   "owner": "wind",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a sudden gust of wind bending tall grass flat::"
+  },
+  {
+   "id": "crosswind",
+   "owner": "wind",
+   "comp": "S",
+   "subject": "no humans, 1.2::a strong headwind blowing against a dark rock creature, holding it back::"
+  },
+  {
+   "id": "crosswind",
+   "owner": "wind",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::two wind currents crossing and pushing against each other::"
+  },
+  {
+   "id": "ride_the_wind",
+   "owner": "wind",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature riding a long wind current through the sky::",
+   "uc_extra": "string, hand"
+  },
+  {
+   "id": "ride_the_wind",
+   "owner": "wind",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a paper kite riding a wind current::",
+   "uc_extra": "string, hand"
+  },
+  {
+   "id": "eye_of_storm",
+   "owner": "wind",
+   "comp": "S",
+   "subject": "no humans, 1.2::the calm eye of a huge storm, clear sky in the center surrounded by swirling clouds::"
+  },
+  {
+   "id": "eye_of_storm",
+   "owner": "wind",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a spiral storm cloud seen from above with a calm clear eye in the middle::"
+  },
+  {
+   "id": "mist_breath",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small mist cat spirit with misty fur breathing cold mist over a dark rock creature, frost forming on it::"
+  },
+  {
+   "id": "mist_breath",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a puff of cold white mist curling through the air with tiny ice crystals::"
+  },
+  {
+   "id": "paw_splash",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a splash of water hitting a dark rock creature, droplets flying and freezing at the edges::"
+  },
+  {
+   "id": "paw_splash",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a splash of water droplets frozen in midair::"
+  },
+  {
+   "id": "bubble_shield",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small round ally creature safe inside a big water bubble, a dark rock creature bouncing off it::"
+  },
+  {
+   "id": "bubble_shield",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a big shiny water bubble::"
+  },
+  {
+   "id": "frost_breath",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::an icy breath freezing the edge of a dark rock creature, frost crystals spreading::"
+  },
+  {
+   "id": "frost_breath",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a cold breath leaving frost on a dark stone::"
+  },
+  {
+   "id": "fog",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark rock creature lost in a thick fog::"
+  },
+  {
+   "id": "fog",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a soft blanket of fog rolling low::"
+  },
+  {
+   "id": "whisker_twitch",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::ripples spreading across a cold still pond around a few frozen stones::"
+  },
+  {
+   "id": "whisker_twitch",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::ripples spreading on still cold water::"
+  },
+  {
+   "id": "ice_wall",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a wall of ice rising in front of a group of small round ally creatures::"
+  },
+  {
+   "id": "ice_wall",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a clear wall of ice blocks::"
+  },
+  {
+   "id": "chill_wave",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::thin frost needles spreading across the ground toward a dark rock creature, frost creeping over it::"
+  },
+  {
+   "id": "chill_wave",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::thin frost needles spreading out like whiskers::"
+  },
+  {
+   "id": "frost_bite",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::icy claw marks on a dark rock creature, frost spreading from them::"
+  },
+  {
+   "id": "frost_bite",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::three claw marks of ice on dark stone::"
+  },
+  {
+   "id": "eternal_ice",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark rock creature frozen solid inside a block of ice on a snowy mountain::"
+  },
+  {
+   "id": "eternal_ice",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a block of ancient blue ice with a snowflake inside::"
+  },
+  {
+   "id": "creep",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::soft paw prints sneaking through frosty grass toward a dark rock creature::"
+  },
+  {
+   "id": "creep",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a line of soft paw prints in frost::"
+  },
+  {
+   "id": "first_frost",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::the first frost of autumn covering red leaves on the ground at dawn::"
+  },
+  {
+   "id": "first_frost",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a red maple leaf edged with white frost::"
+  },
+  {
+   "id": "deep_freeze",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a dark rock creature frozen deeper, thick ice spreading over it::"
+  },
+  {
+   "id": "deep_freeze",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::thick layered ice crystals growing::"
+  },
+  {
+   "id": "mist_veil",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a small mist cat spirit with misty fur behind a veil of mist, small round ally creatures fading softly into the fog::"
+  },
+  {
+   "id": "mist_veil",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a veil of drifting mist::"
+  },
+  {
+   "id": "tech_flare",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::a burning dark rock creature hit by a flare, a bright orange starburst explosion::"
+  },
+  {
+   "id": "tech_flare",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a bright orange flare bursting::"
+  },
+  {
+   "id": "tech_wildfire",
+   "owner": "fox",
+   "comp": "S",
+   "subject": "no humans, 1.2::fire leaping in a chain across three dark rock creatures standing in a row::"
+  },
+  {
+   "id": "tech_wildfire",
+   "owner": "fox",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a chain of three flames linked by sparks::"
+  },
+  {
+   "id": "tech_crystal_wall",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a red crystal wall standing in front of small round ally creatures, faint glowing copies of the wall behind it::",
+   "uc_extra": "drinking glass, cup, juice, liquid",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ]
+  },
+  {
+   "id": "tech_crystal_wall",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a red crystal wall with faint glowing copies behind it::",
+   "uc_extra": "drinking glass, cup, juice, liquid",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ]
+  },
+  {
+   "id": "tech_glass_edge",
+   "owner": "sal",
+   "comp": "S",
+   "subject": "no humans, 1.2::a red glass wall shattering outward, sharp shards flying at a dark rock creature::",
+   "uc_extra": "drinking glass, cup, juice, liquid",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ]
+  },
+  {
+   "id": "tech_glass_edge",
+   "owner": "sal",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a red glass wall bursting outward into sharp edges::",
+   "uc_extra": "drinking glass, cup, juice, liquid",
+   "variants": [
+    {
+     "tag": "c",
+     "mode": "clean"
+    }
+   ]
+  },
+  {
+   "id": "tech_whiteout",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a whiteout blizzard, a dark rock creature freezing in place in the snow::"
+  },
+  {
+   "id": "tech_whiteout",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a swirl of thick blowing snow::"
+  },
+  {
+   "id": "tech_mist_veil",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.2::a cold mist wrapping around the weakest small round ally creature like a blanket::"
+  },
+  {
+   "id": "tech_mist_veil",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, object focus, 1.2::a cold mist shaped like a shield::"
+  }
+ ]
+}
