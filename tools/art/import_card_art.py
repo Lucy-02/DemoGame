@@ -23,6 +23,7 @@ MODEL_NAMES = {"nai-diffusion-4-5-full": "NovelAI Diffusion V4.5 Full"}
 SELECTION = {
     "0042": "Lucy가 후보 중 선별(0042)",
     "0063": "Claude가 고른 1순위를 Lucy가 승인(0063)",
+    "0118": "Claude가 임시로 고름, Lucy 확인 전(0118)",
 }
 HUMAN_WORK = {
     "object": "{selection}. fit_art.py로 물체를 그림 창 가운데로 옮기고 크기를 맞춤(fit_size {size}), 모자란 바탕은 원본 바탕으로 이어 그림. {px}px webp 변환",
