@@ -27,4 +27,4 @@
 ## 결과와 후속 작업
 - `public/assets/stages/shop.webp` (만들기 `tools/art/place-bg.py`, 기록 `assets/provenance.jsonl`).
 - `src/presentation/stage.ts`의 `preloadPlace` · `placeArt`, `src/presentation/run/backdrop.ts`의 `drawBackdrop(scene, "shop")`, `src/presentation/shop/ShopScene.ts`.
-- 남은 것: Lucy의 선택, 고른 그림 2배 업스케일.
+- 남은 것: Lucy의 선택. 2배 업스케일은 0149에서 했어요(그림이 바뀌면 다시 돌려요).
