@@ -5,6 +5,7 @@ import { exampleCardArt } from "./cardArt";
 import { canonRest } from "./canonRest";
 import { exampleCrowded } from "./crowded";
 import { exampleEquip } from "./equip";
+import { ACT1 } from "./act1";
 import { exampleAct2Band, exampleAct2Buried, exampleAct2Plan } from "./act2";
 import { exampleOrderPlan, exampleOrderPlay } from "./order";
 
@@ -37,3 +38,5 @@ export const FIXTURES: Record<string, BattleVM> = {
   /** 예시: 꽉 찬 정보 묶음 (상태 다섯, 치명 받을 피해) */
   crowded: exampleCrowded,
 };
+/** 예시: 1막 적 그림 (0100). 실제 규칙으로 만들어서 getter로 늦게 만들어요 */
+for (const [name, make] of Object.entries(ACT1)) Object.defineProperty(FIXTURES, name, { get: make, enumerable: true });
