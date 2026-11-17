@@ -28,6 +28,7 @@ import { RESULT_SCENE, type ResultSceneData } from "./result/ResultScene";
 import { RUN_END_SCENE, type RunEndSceneData } from "./runEnd/RunEndScene";
 import { SHOP_SCENE, type ShopSceneData } from "./shop/ShopScene";
 import { SPIRITS_SCENE, type SpiritsSceneData } from "./spirits/SpiritsScene";
+import { VEIL_SCENE, VeilScene } from "./veil";
 
 const SCENE_PENDING = Phaser.Scenes.PENDING;
 const SCENE_SHUTDOWN = Phaser.Scenes.SHUTDOWN;
@@ -237,16 +238,22 @@ export class GameFlow implements LegacyFlow {
     return this.current;
   }
 
-  /** 떠 있는 장면(멈춘 것 포함)을 모두 닫고 이 장면을 열어요 */
+  /** 떠 있는 장면(멈춘 것 포함)을 모두 닫고 이 장면을 열어요. 지난 화면은 흐려지고 새 화면이 떠올라요 (0086) */
   private go(key: string, data?: object) {
     const scenes = this.game.scene;
-    for (const s of scenes.getScenes(false)) {
+    const open = () => scenes.getScenes(false).filter((s) => {
       const { key: k, status } = s.sys.settings;
       // 막 만들어지는 중(불러오기·create)인 장면도 닫아요
-      if (k !== key && status > SCENE_PENDING && status < SCENE_SHUTDOWN) scenes.stop(k);
-    }
-    scenes.start(key, data);
-    audioOf(this.game)?.music(this.musicOf(key));
+      return k !== VEIL_SCENE && status > SCENE_PENDING && status < SCENE_SHUTDOWN;
+    });
+    const swap = () => {
+      for (const s of open()) if (s.sys.settings.key !== key) scenes.stop(s.sys.settings.key);
+      scenes.start(key, data);
+      audioOf(this.game)?.music(this.musicOf(key));
+    };
+    const veil = scenes.getScene(VEIL_SCENE) as VeilScene | null;
+    if (!veil) return swap();
+    veil.cross(swap, () => scenes.isActive(key), open().length === 0);
   }
 
   /** 화면이 틀 음악 (0084 1번): 판 밖은 메인, 판 안은 지도, 전투는 전투 · 보스 */

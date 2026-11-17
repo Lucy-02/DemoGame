@@ -1,6 +1,8 @@
 // 지도 화면 (Lucy 2026-11-17, 0076 18번 대체): 왼쪽에 한 막 전체 지도(출발 ~ 보스), 오른쪽 열 맨 위에 슬림 파티 줄. 미니맵은 없어요.
 // 칸 종류는 기호로만 보여요(0050). 이름은 칸에 올렸을 때 말풍선에 나와요. 갈 수 있는 칸을 누르면 그 칸으로 들어가요.
 // 파티 줄을 누르면 그 줄만 같은 자리에서 정령 줄로 펼쳐져요(0046). 덱 보기는 오른쪽 위 덱 버튼으로 열어요(0076 15번).
+import { ms } from "../style/ease";
+import { FAST, MOVE, reducedMotion } from "../style/motion";
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import type { Run } from "../../core/run";
@@ -34,6 +36,7 @@ import type { MapNodeVM, MapVM, SheetVM } from "./viewmodel";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.result;
+const M = tokens.provisional.motion;
 const CHARGE_ICON = "kw-charge";
 
 export const MAP_SCENE = "map";
@@ -101,12 +104,18 @@ export class MapScene extends Phaser.Scene {
   }
 
   create() {
-    this.paint();
+    this.paint(true);
     this.events.on(Phaser.Scenes.Events.RESUME, () => this.paint());
     Object.assign(window, { __screenReady: MAP_SCENE });
   }
 
-  private paint() {
+  /** arrive = 지도에 막 들어옴: 지금 자리 테가 지난 칸에서 미끄러져 오고, 갈 수 있는 칸이 차례로 밝아져요 (0086) */
+  private arrive = false;
+  private opened = 0;
+
+  private paint(arrive = false) {
+    this.arrive = arrive && !reducedMotion();
+    this.opened = 0;
     this.children.removeAll(true);
     this.hover = null;
     this.vm = mapVM(this.run);
@@ -146,9 +155,22 @@ export class MapScene extends Phaser.Scene {
     });
     if (n.state === "far") node.setAlpha(PATH.dim.far);
     if (n.state === "past") node.setAlpha(PATH.dim.past);
+    // 화면이 떠오른 뒤, 테가 도착하고 나서 갈 수 있는 칸이 차례로 밝아져요
+    const settle = ms(M.screen.out.duration) + MOVE.duration;
+    if (n.state === "open" && this.arrive) {
+      node.setAlpha(PATH.dim.far);
+      this.tweens.add({ targets: node, alpha: 1, delay: settle + this.opened++ * ms(M.reveal.stagger), ...FAST });
+    }
     if (n.state === "here") {
       const d = N.d + (N.here.gap + N.here.width) * 2;
-      circle(this.add.graphics(), x, y, d, { ring: { width: N.here.width, color: P.accHi } });
+      const ring = gather(this, x, y, () => { circle(this.add.graphics(), 0, 0, d, { ring: { width: N.here.width, color: P.accHi } }); });
+      const from = this.vm.links.find((l) => l.walked && l.to === n.id)?.from;
+      const was = this.arrive && from ? this.vm.nodes.find((q) => q.id === from) : undefined;
+      if (was) {
+        const a = this.at(was);
+        ring.setPosition(a.x, a.y);
+        this.tweens.add({ targets: ring, x, y, delay: ms(M.screen.out.duration), ...MOVE });
+      }
     }
     if (n.peek) {
       // 순서표의 차징 배지와 같은 말: 보라 테 + 보라 차징 기호

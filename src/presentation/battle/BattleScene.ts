@@ -11,12 +11,13 @@ import { canonRest } from "./fixtures/canonRest";
 import { battleVM, cardUid, refOf, releaseId } from "./fromBattle";
 import { tokens } from "../../design/tokens";
 import { ms } from "../style/ease";
+import { reducedMotion } from "../style/motion";
 import { playbackFrames } from "./playback";
 import { audioOf, type SfxId } from "../audio";
 import { cuesOf, playbackCues } from "../audio/battleCues";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
-import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
+import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandSnapshot, type HandView } from "./views/hand";
 import { createPick, preloadPick, type PickView } from "./views/pick";
 import { drawOrder, drawOrderRing, preloadOrder, preloadOrderIcon, type OrderHit } from "./views/order";
 import { drawTooltip } from "../tooltip/Tooltip";
@@ -24,6 +25,7 @@ import { GLASS } from "../tooltip/skins";
 import { ALLY, BAND, DRAG, ENEMY, FRAME, LIFT_STYLES, SYS, TARGETING } from "./layout";
 import { playOrderMotion, snapshotOrder, type OrderSnapshot } from "./views/orderMotion";
 import { SYS_ICONS, drawSys } from "./views/topbar";
+import { playUnitMotion, type UnitActor } from "./views/unitMotion";
 import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 
@@ -124,6 +126,10 @@ export class BattleScene extends Phaser.Scene {
   private pick: PickView | null = null;
   /** 앞 장면의 순서표 (장면을 다시 그려도 남아요) */
   private orderPrev?: { session?: BattleSession; snap: OrderSnapshot };
+  /** 앞 장면의 턴 종료 버튼 모양 (0086) */
+  private endPrev?: { session: BattleSession; go: boolean };
+  /** 앞 장면의 손패 (0086). turn = 그 장면의 턴 */
+  private handPrev?: { session: BattleSession; snap: HandSnapshot; turn?: number };
 
   create() {
     // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
@@ -135,13 +141,24 @@ export class BattleScene extends Phaser.Scene {
     this.shown = this.rest;
     drawBand(this);
     drawMana(this, this.vm.mana);
-    drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined);
-    for (const id of this.cues?.[0] ?? []) audioOf(this)?.play(id);
+    // 턴 종료 버튼: 낼 카드가 없으면 밝아져요. 앞 장면과 모양이 달라졌으면 흐려지며 바뀌어요 (0086)
+    const endWas = this.session && this.endPrev?.session === this.session ? this.endPrev.go : undefined;
+    const endGo = drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined, endWas);
+    if (this.session) this.endPrev = { session: this.session, go: endGo };
+    // 재생 중 소리는 맞는 때(유닛이 밀리는 때)에 맞춰 나요 (0086 4번). 그 밖에는 바로
+    const cues = this.cues?.[0] ?? [];
+    const sound = () => { for (const id of cues) audioOf(this)?.play(id); };
+    if (this.playback && cues.length && !reducedMotion()) this.time.delayedCall(ms(tokens.provisional.motion.hit.recoil.delay), sound);
+    else sound();
     if (this.playback) this.time.delayedCall(ms(tokens.provisional.motion.playback.step), () => this.step());
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
     this.showHover(hov < 0 ? null : { side: "enemy", i: hov });
+    // 손패는 앞 장면에서 이어 움직여요. 전투를 막 열었거나 턴이 바뀌었으면 새 손패예요 (0086)
+    const handPrev = this.session && this.handPrev?.session === this.session ? this.handPrev : undefined;
+    const turn = this.vm.order.head?.turn;
     this.hand = createHand(this, this.vm.hand, {
+      prev: handPrev?.snap, deal: !!this.session && (!handPrev || handPrev.turn !== turn),
       lift: this.lift ? LIFT_STYLES[this.lift] : undefined,
       onPress: (key, p) => {
         if (p.rightButtonDown() || !this.vm.plays[key] || this.pick) return;
@@ -156,6 +173,7 @@ export class BattleScene extends Phaser.Scene {
         else this.hoverUnit(this.input.activePointer.x, this.input.activePointer.y);
       },
     });
+    if (this.session) this.handPrev = { session: this.session, snap: this.hand.snap, turn };
     this.input.mouse?.disableContextMenu();
     this.input.on("pointermove", (p: Phaser.Input.Pointer) => this.move(p));
     this.input.on("pointerup", (p: Phaser.Input.Pointer) => this.release(p));
@@ -503,9 +521,12 @@ export class BattleScene extends Phaser.Scene {
     const element = card && this.vm.hand.flatMap((g) => g.cards).find((c) => c.key === card)?.element;
     const lit = (ref: UnitRef) => !!f?.lit.some((r) => r.side === ref.side && r.i === ref.i);
     // 캐릭터마다 한 덩어리로 모아서 한 번에 어둡게 해요
-    const unit = (ref: UnitRef, draw: () => void) => {
-      const c = gather(this, 0, 0, draw);
+    const actors: UnitActor[] = [];
+    const unit = (ref: UnitRef, draw: () => UnitView) => {
+      let view!: UnitView;
+      const c = gather(this, 0, 0, () => { view = draw(); });
       if (f && dimmed(f, ref)) darken(c, TARGETING.dim);
+      if (!f) actors.push({ ref, view, root: c });
     };
     const cutOrders = new Set(this.vm.enemies.filter((_, i) => o?.enemies[i]?.cut).flatMap((e) => (e.intent?.order !== undefined ? [e.intent.order] : [])));
     const root = gather(this, 0, 0, () => {
@@ -530,6 +551,7 @@ export class BattleScene extends Phaser.Scene {
         unit(ref, () => {
           const v = drawAlly(this, a, i, { outcome: o?.incoming[i], lit: lit(ref) });
           if (!f) this.rested(ref, v);
+          return v;
         });
       });
       this.vm.enemies.forEach((e, i) => {
@@ -537,11 +559,18 @@ export class BattleScene extends Phaser.Scene {
         unit(ref, () => {
           const v = drawEnemy(this, e, i, { outcome: o?.enemies[i], lit: lit(ref), weakOn: !!element && element === e.weakTo });
           if (!f) this.rested(ref, v);
+          return v;
         });
       });
     });
     this.fieldLayer.add(root);
     root.setVisible(!f);
+    // 재생 중 유닛 반응: 알약 · 잔상은 필드 맨 위에 (0086)
+    if (!f && this.playback) {
+      const fx = this.add.container(0, 0);
+      this.fieldLayer.add(fx);
+      playUnitMotion(this, this.vm, actors, fx);
+    }
     return root;
   }
 }
