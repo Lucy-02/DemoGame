@@ -163,6 +163,15 @@ function elementTexture(scene: Phaser.Scene, el: string): string {
   });
 }
 
+/** HP 값마다 따로 굽는 텍스처 (막대 · 잔상). 전투가 끝나면 버려요: 판이 길어도 쌓이지 않게 */
+const VALUE_TEXTURES = ["battle:bar:", "battle:trail:"];
+
+export function dropValueTextures(scene: Phaser.Scene) {
+  for (const key of scene.textures.getTextureKeys()) {
+    if (VALUE_TEXTURES.some((p) => key.startsWith(p))) scene.textures.remove(key);
+  }
+}
+
 /** 약점 배지 바탕 (.weak): 어두운 원 + 십자 틈이 난 조준 테. on = 맞는 속성 카드를 든 동안 (warn 원, 바깥 warn 테, 1.25배) */
 export function weakTexture(scene: Phaser.Scene, on: boolean): { key: string; d: number } {
   const W = I.weak, k = on ? W.on.scale : 1;
