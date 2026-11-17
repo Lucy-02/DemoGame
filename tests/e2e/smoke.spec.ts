@@ -47,7 +47,7 @@ test("앱이 뜨고 platform 저장이 파일로 남는다", async () => {
 });
 
 /** 1280×800 화면 좌표: 메인 화면의 설정 줄, 설정 창의 전체화면 스위치 */
-const AT = { homeSettings: { x: 200, y: 452 }, fullscreen: { x: 833, y: 444 } };
+const AT = { homeSettings: { x: 200, y: 512 }, fullscreen: { x: 833, y: 444 } };
 const BASE = { w: 1280, h: 800 };
 
 const canvasBox = (page: Page) => page.evaluate(() => {
