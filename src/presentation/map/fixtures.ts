@@ -7,12 +7,15 @@ interface MapSetup {
   steps: number;
   /** 파티 순서대로 지금 HP */
   hp?: number[];
+  /** 보스의 큰 차징을 미리 봤어요 */
+  peek?: boolean;
 }
 
 export const MAPS: Record<string, MapSetup> = {
   start: { steps: 0 },
   mid: { steps: 3, hp: [24, 34, 18] },
   boss: { steps: 7, hp: [9, 20, 1] },
+  peek: { steps: 3, hp: [24, 34, 18], peek: true },
 };
 
 export const DEFAULT_MAP = "mid";
@@ -31,5 +34,6 @@ export function mapRun(name?: string): Run {
     const own = CARDS.filter((c) => c.spirit === sp.id && c.obtain !== "generated");
     for (let k = 0; k < Math.min(setup.steps - i, own.length) && k < 4; k++) if (k >= 0) run.addCard(own[k].id, sp.id);
   });
+  run.bossPeeked = !!setup.peek;
   return run;
 }
