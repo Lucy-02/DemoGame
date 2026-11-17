@@ -106,12 +106,24 @@ function sheetPieces(scene: Phaser.Scene, sheet: EquipSheetVM, inner: number, dr
   return out;
 }
 
-/** 말풍선을 놓을 자리. lane: 정령 줄 왼쪽에 붙고 꼬리가 pointY를 가리켜요. below: 오른쪽 끝을 맞춰 이 y 아래에 (화면 밖으로 나가면 올려요) */
+/** 말풍선을 놓을 자리. lane: 정령 줄 왼쪽에 붙고 꼬리가 pointY를 가리켜요(avoid = 가리면 안 되는 세로 구간, 겹치면 그 위나 아래로 비켜요). below: 오른쪽 끝을 맞춰 이 y 아래에 (화면 밖으로 나가면 올려요) */
 export type EquipTipAt =
-  | { kind: "lane"; right: number; pointY: number }
+  | { kind: "lane"; right: number; pointY: number; avoid?: { top: number; bottom: number } }
   | { kind: "below"; right: number; top: number }
   /** 왼쪽 끝을 맞춰 이 y 아래에 (화면 밖으로 나가면 안으로 들여요) */
   | { kind: "under"; left: number; top: number };
+
+/** 정령 줄 옆 말풍선의 위쪽 y: 가리키는 칸에 가운데를 맞추고, avoid 구간과 겹치면 가까운 쪽(아래 · 위)으로 비켜요 */
+function laneTop(at: Extract<EquipTipAt, { kind: "lane" }>, h: number) {
+  const min = TIP.edge, max = FRAME.h - TIP.edge - h;
+  const mid = Math.max(min, Math.min(max, at.pointY - h / 2));
+  const a = at.avoid;
+  if (!a || mid >= a.bottom || mid + h <= a.top) return mid;
+  const below = a.bottom + TIP.belowStrip, above = a.top - TIP.belowStrip - h;
+  const fits = [below, above].filter((y) => y >= min && y <= max);
+  if (!fits.length) return mid;
+  return fits.reduce((best, y) => (Math.abs(y - mid) < Math.abs(best - mid) ? y : best));
+}
 
 export function drawEquipTip(scene: Phaser.Scene, tip: EquipTipVM, at: EquipTipAt, owner?: Pick<LaneVM, "face">) {
   const [pt, pr, pb, pl] = TIP.pad;
@@ -131,9 +143,7 @@ export function drawEquipTip(scene: Phaser.Scene, tip: EquipTipVM, at: EquipTipA
   }
   const h = pt + pieces.reduce((a, p) => a + p.mt + p.h, 0) + pb;
   const left = at.kind === "under" ? Math.max(TIP.edge, Math.min(FRAME.w - TIP.edge - w, at.left)) : at.right - w;
-  const top = at.kind === "lane"
-    ? Math.max(TIP.edge, Math.min(FRAME.h - TIP.edge - h, at.pointY - h / 2))
-    : Math.min(at.top, FRAME.h - TIP.edge - h);
+  const top = at.kind === "lane" ? laneTop(at, h) : Math.min(at.top, FRAME.h - TIP.edge - h);
   const fill = withAlpha(P.glassD, 1);
   const sh = shadowTexture(scene, w, h, TIP.radius, { y: TIP.shadow.y, blur: TIP.shadow.blur, color: P.tipShadow });
   scene.add.image(left - sh.margin, top - sh.margin, sh.key).setOrigin(0, 0);
@@ -141,14 +151,16 @@ export function drawEquipTip(scene: Phaser.Scene, tip: EquipTipVM, at: EquipTipA
   const half = (TIP.tail * Math.SQRT2) / 2;
   const cy = at.kind === "lane" ? Math.max(top + TIP.radius + half, Math.min(top + h - TIP.radius - half, at.pointY)) : 0;
   const f = rgba(fill), l = rgba(P.veil["20"]);
-  if (at.kind === "lane") {
+  // 비켜서 칸을 가리킬 수 없으면 꼬리를 떼요
+  const tail = at.kind === "lane" && cy === at.pointY;
+  if (tail) {
     // 오른쪽 꼬리: 45° 돌린 정사각형의 오른쪽 절반 + 두 변의 선
     g.fillStyle(f.color, f.alpha).fillTriangle(left + w - 1, cy - half, left + w - 1 + half, cy, left + w - 1, cy + half);
     g.lineStyle(TIP.ring, l.color, l.alpha).lineBetween(left + w - 1, cy - half, left + w - 1 + half, cy).lineBetween(left + w - 1 + half, cy, left + w - 1, cy + half);
   }
   box(g, left, top, w, h, TIP.radius, { fill, ring: { width: TIP.ring, color: P.veil["20"] } });
   // 꼬리가 붙는 자리의 테를 덮어요
-  if (at.kind === "lane") g.fillStyle(f.color, f.alpha).fillRect(left + w - TIP.ring - 1, cy - half + 1, TIP.ring + 1, half * 2 - 2);
+  if (tail) g.fillStyle(f.color, f.alpha).fillRect(left + w - TIP.ring - 1, cy - half + 1, TIP.ring + 1, half * 2 - 2);
   let y = top + pt;
   for (const p of pieces) {
     y += p.mt;
