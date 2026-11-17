@@ -2,6 +2,7 @@
 // 가진 정령이 같은 크기 자리 칸으로 나란하고, 앞열은 자두빛 테 + 깃발 기호 하나예요. 칸을 누르면 앞열이 바뀌어요 (기본은 지난 판의 앞열).
 // 위에는 오늘 센 기운 칩(기호만, 이름은 호버). 칸마다 이름 · Lv, 속성 · 역할 기호, 새 카드 칩, 능력치, 작은 장비 칸.
 // `취소`(Esc)는 메인 화면으로, `떠나기`(첫 포커스, Enter)는 고른 앞열로 판을 시작해요.
+import { fadeInScene } from "../style/motion";
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { chip } from "../join/views/chip";
@@ -87,6 +88,7 @@ export class DepartScene extends Phaser.Scene {
     keys?.on("keydown-ESC", () => this.onCancel?.());
     keys?.on("keydown-ENTER", () => this.onDepart?.(this.front));
     this.paint();
+    fadeInScene(this);
     Object.assign(window, { __screenReady: DEPART_SCENE });
   }
 

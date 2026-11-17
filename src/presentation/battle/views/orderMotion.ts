@@ -4,12 +4,11 @@ import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { rgba } from "../../style/color";
 import { cubicBezier, ms } from "../../style/ease";
+import { FAST, MOVE, reducedMotion } from "../../style/motion";
 import type { OrderCursor, OrderMark } from "./order";
 
 const P = tokens.provisional.palette;
 const M = tokens.provisional.motion;
-const FAST = { duration: ms(M.hover.duration), ease: cubicBezier(M.hover.easing) };
-const MOVE = { duration: ms(M.spiritSwap.duration), ease: cubicBezier(M.spiritSwap.easing) };
 const T = M.orderToken;
 
 /** 앞 장면의 순서표: 토큰 이름마다 자리와 상태 */
@@ -24,7 +23,6 @@ export function snapshotOrder(marks: OrderMark[], cursor?: OrderCursor): OrderSn
   return out;
 }
 
-const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /** 덩어리를 얼굴 가운데 기준으로 키워요 (덩어리 안 좌표가 화면 좌표라서 자리를 함께 옮겨요). dx = 가로로 밀린 만큼 */
 function pose(m: OrderMark, scale: number, dx = 0) {
@@ -42,7 +40,7 @@ function pose(m: OrderMark, scale: number, dx = 0) {
  */
 export function playOrderMotion(scene: Phaser.Scene, prev: OrderSnapshot | undefined, marks: OrderMark[], cursor?: OrderCursor) {
   if (!prev) return;
-  const still = reduced();
+  const still = reducedMotion();
   const keyed = marks.filter((m) => m.key);
   const shared = keyed.filter((m) => prev.tokens[m.key!]);
   const gone = Object.keys(prev.tokens).some((k) => !keyed.some((m) => m.key === k));

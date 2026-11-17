@@ -8,20 +8,26 @@ import { darken } from "../style/opacity";
 import type { BattleSession } from "../../session/battle";
 import { bakeSpiritFace, preloadSpiritArt } from "../spiritArt";
 import { canonRest } from "./fixtures/canonRest";
-import { battleVM, cardUid, refOf, releaseId } from "./fromBattle";
+import { battleVM, cardKey, cardUid, refOf, releaseId } from "./fromBattle";
 import { tokens } from "../../design/tokens";
 import { ms } from "../style/ease";
+import { guideStep, type GuideSeen } from "./guide";
+import { reducedMotion } from "../style/motion";
 import { playbackFrames } from "./playback";
+import { audioOf, type SfxId } from "../audio";
+import { cuesOf, playbackCues } from "../audio/battleCues";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
-import { createHand, drawBand, drawEnd, drawMana, preloadHand, type HandView } from "./views/hand";
+import { drawGuide, type GuideBox } from "./views/guide";
+import { createHand, drawBand, drawEnd, drawMana, handBoxes, preloadHand, type HandSnapshot, type HandView } from "./views/hand";
 import { createPick, preloadPick, type PickView } from "./views/pick";
 import { drawOrder, drawOrderRing, preloadOrder, preloadOrderIcon, type OrderHit } from "./views/order";
 import { drawTooltip } from "../tooltip/Tooltip";
 import { GLASS } from "../tooltip/skins";
-import { ALLY, BAND, DRAG, ENEMY, FRAME, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { ALLY, BAND, DRAG, END, ENEMY, FRAME, INTENT, LIFT_STYLES, SYS, TARGETING } from "./layout";
 import { playOrderMotion, snapshotOrder, type OrderSnapshot } from "./views/orderMotion";
 import { SYS_ICONS, drawSys } from "./views/topbar";
+import { playUnitMotion, type UnitActor } from "./views/unitMotion";
 import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 
@@ -40,8 +46,12 @@ export interface BattleSceneData {
   place?: string;
   hover?: string;
   lift?: string;
+  /** 첫 판 안내 (0088): 주면 이 전투에서 개념을 한 번씩 짚어요. 이미 짚은 것을 여기에 적어 장면을 다시 그려도 남겨요 */
+  guide?: GuideSeen;
   /** 턴 재생: 남은 장면들. 첫 장면을 그리고, 한 행동 시간 뒤 다음 장면으로 넘어가요 */
   playback?: BattleVM[];
+  /** 턴 재생: 남은 장면마다 날 소리 (playback과 같은 순서) */
+  cues?: SfxId[][];
 }
 
 export class BattleScene extends Phaser.Scene {
@@ -59,7 +69,15 @@ export class BattleScene extends Phaser.Scene {
 
   private session?: BattleSession;
   private playback?: BattleVM[];
+  private cues?: SfxId[][];
   private place?: string;
+  private guide?: GuideSeen;
+  private guideFx: Phaser.GameObjects.Graphics | null = null;
+  private guideBoxes: GuideBox[] = [];
+  /** 차징 테가 켜진 채로 포인터가 적 밖에 있었는지. 카드를 적에게 놓은 자리에 그대로 있는 포인터는 "가리켜 봤다"로 치지 않아요 */
+  private guideArmed = false;
+  /** 지금 차징을 짚는 중인지 */
+  private guideCharge = false;
   private onOver?: (scene: Phaser.Scene) => void;
   private onDeck?: (scene: Phaser.Scene) => void;
 
@@ -68,7 +86,13 @@ export class BattleScene extends Phaser.Scene {
     this.onOver = data.onOver;
     this.onDeck = data.onDeck;
     this.place = data.place;
+    this.guide = data.guide;
+    this.guideFx = null;
+    this.guideBoxes = [];
+    this.guideArmed = false;
+    this.guideCharge = false;
     this.playback = data.playback;
+    this.cues = data.cues;
     this.vm = data.playback?.[0] ?? (data.session ? battleVM(data.session.battle, data.place) : data.vm ?? canonRest);
     this.previews.clear();
     this.bounds = [];
@@ -118,6 +142,10 @@ export class BattleScene extends Phaser.Scene {
   private pick: PickView | null = null;
   /** 앞 장면의 순서표 (장면을 다시 그려도 남아요) */
   private orderPrev?: { session?: BattleSession; snap: OrderSnapshot };
+  /** 앞 장면의 턴 종료 버튼 모양 (0086) */
+  private endPrev?: { session: BattleSession; go: boolean };
+  /** 앞 장면의 손패 (0086). turn = 그 장면의 턴 */
+  private handPrev?: { session: BattleSession; snap: HandSnapshot; turn?: number };
 
   create() {
     // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
@@ -129,12 +157,24 @@ export class BattleScene extends Phaser.Scene {
     this.shown = this.rest;
     drawBand(this);
     drawMana(this, this.vm.mana);
-    drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined);
+    // 턴 종료 버튼: 낼 카드가 없으면 밝아져요. 앞 장면과 모양이 달라졌으면 흐려지며 바뀌어요 (0086)
+    const endWas = this.session && this.endPrev?.session === this.session ? this.endPrev.go : undefined;
+    const endGo = drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined, endWas);
+    if (this.session) this.endPrev = { session: this.session, go: endGo };
+    // 재생 중 소리는 맞는 때(유닛이 밀리는 때)에 맞춰 나요 (0086 4번). 그 밖에는 바로
+    const cues = this.cues?.[0] ?? [];
+    const sound = () => { for (const id of cues) audioOf(this)?.play(id); };
+    if (this.playback && cues.length && !reducedMotion()) this.time.delayedCall(ms(tokens.provisional.motion.hit.recoil.delay), sound);
+    else sound();
     if (this.playback) this.time.delayedCall(ms(tokens.provisional.motion.playback.step), () => this.step());
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
     this.showHover(hov < 0 ? null : { side: "enemy", i: hov });
+    // 손패는 앞 장면에서 이어 움직여요. 전투를 막 열었거나 턴이 바뀌었으면 새 손패예요 (0086)
+    const handPrev = this.session && this.handPrev?.session === this.session ? this.handPrev : undefined;
+    const turn = this.vm.order.head?.turn;
     this.hand = createHand(this, this.vm.hand, {
+      prev: handPrev?.snap, deal: !!this.session && (!handPrev || handPrev.turn !== turn),
       lift: this.lift ? LIFT_STYLES[this.lift] : undefined,
       onPress: (key, p) => {
         if (p.rightButtonDown() || !this.vm.plays[key] || this.pick) return;
@@ -149,11 +189,13 @@ export class BattleScene extends Phaser.Scene {
         else this.hoverUnit(this.input.activePointer.x, this.input.activePointer.y);
       },
     });
+    if (this.session) this.handPrev = { session: this.session, snap: this.hand.snap, turn };
     this.input.mouse?.disableContextMenu();
     this.input.on("pointermove", (p: Phaser.Input.Pointer) => this.move(p));
     this.input.on("pointerup", (p: Phaser.Input.Pointer) => this.release(p));
     this.input.keyboard?.on("keydown-ESC", () => this.cancel());
     this.begin();
+    this.showGuide();
     if (this.vm.pick && !this.playback) this.pick = createPick(this, this.vm.pick, (keys) => this.picked(keys));
     Object.assign(window, { __screenReady: BATTLE_SCENE });
   }
@@ -196,12 +238,54 @@ export class BattleScene extends Phaser.Scene {
   private move(p: Phaser.Input.Pointer) {
     if (this.press && !this.dragging && Math.hypot(p.x - this.press.x, p.y - this.press.y) >= DRAG.threshold) {
       this.dragging = this.press.key;
+      if (this.held !== this.dragging) audioOf(this)?.play("card.pick");
       this.held = null;
       this.hand.startDrag(this.dragging);
       this.showHover(null);
     }
     this.refresh(p);
     this.hoverUnit(p.x, p.y);
+    this.quietGuide(p.x, p.y);
+  }
+
+  // ── 첫 판 안내 (0088): 짚을 곳 둘레에 테 하나. 그 자리를 가리키거나 카드를 집은 동안, 재생 · 고르기 창 중에는 쉬어요 ──
+
+  private showGuide() {
+    this.guideFx?.destroy();
+    this.guideFx = null;
+    this.guideBoxes = [];
+    this.guideArmed = false;
+    this.guideCharge = false;
+    const b = this.session?.battle;
+    if (!b || !this.guide || this.playback || this.pick) return;
+    const charging = b.enemies.filter((e) => !e.dead && e.charging);
+    const step = guideStep({ turn: b.turn, placed: b.playedThisTurn.length > 0, charging: charging.length > 0, spent: !Object.keys(this.vm.plays).length }, this.guide);
+    if (!step) return;
+    this.guideCharge = step === "charge";
+    const hand = handBoxes(this.vm.hand);
+    if (step === "place") this.guideBoxes = hand.groups;
+    else if (step === "end") this.guideBoxes = [{ x: END.x, y: END.y, w: END.w, h: END.button.h, radius: END.button.radius }];
+    else {
+      // 차징 중인 적의 의도 알약, 손에 브레이크 카드가 있으면 그 카드도 같은 테로
+      const alive = b.enemies.filter((e) => !e.dead);
+      for (const u of this.units) {
+        const box = u.ref.side === "enemy" && alive[u.ref.i]?.charging ? u.view.intentBox : undefined;
+        if (box) this.guideBoxes.push({ ...box, radius: INTENT.radius });
+      }
+      for (const c of b.hand) {
+        const box = b.cardDefOf(c).effects.some((o) => o.op === "ram" || o.op === "breakCharging") ? hand.cards.get(cardKey(c)) : undefined;
+        if (box) this.guideBoxes.push(box);
+      }
+    }
+    this.guideFx = drawGuide(this, this.guideBoxes);
+    this.quietGuide(this.input.activePointer.x, this.input.activePointer.y);
+  }
+
+  private quietGuide(x: number, y: number) {
+    if (!this.guideFx) return;
+    const busy = !!(this.dragging || this.held || this.press);
+    if (!busy && this.guideCharge && this.unitAt(x, y)?.side !== "enemy") this.guideArmed = true;
+    this.guideFx.setVisible(!busy && !this.guideBoxes.some((b) => inside(b, x, y)));
   }
 
   /** 고르기 창에서 고름: 낙하는 받고, 품기는 품고 턴 끝 처리를 이어 가요 */
@@ -296,6 +380,11 @@ export class BattleScene extends Phaser.Scene {
     if (!sameUnit) this.clearHoverFx();
     this.hoverRef = ref;
     this.hoverMark = mark;
+    // 차징 중인 적을 가리켜 풀이를 봤으면 다음 차례로 넘어가요 (0088)
+    if (this.guide && !this.guide.charge && ref?.side === "enemy" && this.guideArmed && this.session?.battle.enemies.filter((e) => !e.dead)[ref.i]?.charging) {
+      this.guide.charge = true;
+      this.showGuide();
+    }
     const unit = ref && this.units.find((u) => same(u.ref, ref))?.view;
     if (!ref || !unit) return;
     const { allies, enemies } = this.vm;
@@ -382,6 +471,7 @@ export class BattleScene extends Phaser.Scene {
       this.press = null;
       this.hand.endDrag();
       if (f.ready) this.play(card, f.ready.target);
+      else audioOf(this)?.play("card.place");
       this.showField(null);
       return;
     }
@@ -390,6 +480,7 @@ export class BattleScene extends Phaser.Scene {
       const key = this.press.key;
       this.press = null;
       this.held = this.held === key ? null : key;
+      audioOf(this)?.play(this.held ? "card.pick" : "card.place");
       this.hand.setHeld(this.held);
       return;
     }
@@ -398,6 +489,7 @@ export class BattleScene extends Phaser.Scene {
       const card = this.held;
       const f = this.focus(card, over);
       if (f.ready) this.play(card, f.ready.target);
+      else audioOf(this)?.play("card.place");
       this.cancel();
     }
   }
@@ -416,7 +508,9 @@ export class BattleScene extends Phaser.Scene {
     const s = this.session;
     if (!s) return console.info("[battle] 카드 사용", card, target ?? "(대상 고르기 없음)");
     const release = releaseId(card);
+    audioOf(this)?.play("card.play");
     const events = s.dispatch(release ? { kind: "release", id: release } : { kind: "play", uid: cardUid(card), target: refOf(s.battle, target) });
+    for (const id of cuesOf(events)) audioOf(this)?.play(id);
     if (events.length || !s.over) this.settle();
   }
 
@@ -424,15 +518,16 @@ export class BattleScene extends Phaser.Scene {
     const s = this.session;
     if (!s || this.dragging || this.playback || this.pick) return;
     const cast = { allies: s.battle.spirits.map((x) => x.id), enemies: s.battle.enemies.filter((e) => !e.dead).map((e) => e.uid) };
-    const frames = playbackFrames(this.vm, cast, s.dispatch({ kind: "endTurn" }));
-    this.scene.restart({ session: s, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: frames } satisfies BattleSceneData);
+    const events = s.dispatch({ kind: "endTurn" });
+    const frames = playbackFrames(this.vm, cast, events);
+    this.scene.restart({ session: s, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide, playback: frames, cues: playbackCues(events) } satisfies BattleSceneData);
   }
 
   /** 재생: 다음 장면으로. 남은 장면이 없으면 확정된 상태로 */
   private step() {
     const rest = this.playback?.slice(1) ?? [];
     if (!rest.length) return this.settle();
-    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, playback: rest } satisfies BattleSceneData);
+    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide, playback: rest, cues: this.cues?.slice(1) } satisfies BattleSceneData);
   }
 
   /**
@@ -441,7 +536,7 @@ export class BattleScene extends Phaser.Scene {
    */
   private settle() {
     if (this.session?.over) return this.onOver?.(this);
-    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place } satisfies BattleSceneData);
+    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide } satisfies BattleSceneData);
   }
 
   // ── 대상 강조 ──────────────────────────────────────────
@@ -491,9 +586,12 @@ export class BattleScene extends Phaser.Scene {
     const element = card && this.vm.hand.flatMap((g) => g.cards).find((c) => c.key === card)?.element;
     const lit = (ref: UnitRef) => !!f?.lit.some((r) => r.side === ref.side && r.i === ref.i);
     // 캐릭터마다 한 덩어리로 모아서 한 번에 어둡게 해요
-    const unit = (ref: UnitRef, draw: () => void) => {
-      const c = gather(this, 0, 0, draw);
+    const actors: UnitActor[] = [];
+    const unit = (ref: UnitRef, draw: () => UnitView) => {
+      let view!: UnitView;
+      const c = gather(this, 0, 0, () => { view = draw(); });
       if (f && dimmed(f, ref)) darken(c, TARGETING.dim);
+      if (!f) actors.push({ ref, view, root: c });
     };
     const cutOrders = new Set(this.vm.enemies.filter((_, i) => o?.enemies[i]?.cut).flatMap((e) => (e.intent?.order !== undefined ? [e.intent.order] : [])));
     const root = gather(this, 0, 0, () => {
@@ -518,6 +616,7 @@ export class BattleScene extends Phaser.Scene {
         unit(ref, () => {
           const v = drawAlly(this, a, i, { outcome: o?.incoming[i], lit: lit(ref) });
           if (!f) this.rested(ref, v);
+          return v;
         });
       });
       this.vm.enemies.forEach((e, i) => {
@@ -525,11 +624,18 @@ export class BattleScene extends Phaser.Scene {
         unit(ref, () => {
           const v = drawEnemy(this, e, i, { outcome: o?.enemies[i], lit: lit(ref), weakOn: !!element && element === e.weakTo });
           if (!f) this.rested(ref, v);
+          return v;
         });
       });
     });
     this.fieldLayer.add(root);
     root.setVisible(!f);
+    // 재생 중 유닛 반응: 알약 · 잔상은 필드 맨 위에 (0086)
+    if (!f && this.playback) {
+      const fx = this.add.container(0, 0);
+      this.fieldLayer.add(fx);
+      playUnitMotion(this, this.vm, actors, fx);
+    }
     return root;
   }
 }

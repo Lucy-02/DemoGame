@@ -633,6 +633,47 @@ export const tokens = {
           "delay": "2900ms",
           "duration": "350ms"
         }
+      },
+      "screen": {
+        "out": {
+          "duration": "120ms"
+        },
+        "in": {
+          "duration": "240ms"
+        }
+      },
+      "hit": {
+        "lunge": {
+          "duration": "220ms",
+          "distance": 14
+        },
+        "recoil": {
+          "delay": "110ms",
+          "duration": "240ms",
+          "distance": 8
+        },
+        "pill": {
+          "hold": "180ms",
+          "fade": "160ms",
+          "rise": 10
+        },
+        "trail": {
+          "duration": "240ms"
+        },
+        "down": {
+          "duration": "240ms",
+          "alpha": 0.35
+        }
+      },
+      "hand": {
+        "stagger": "40ms",
+        "leave": "120ms"
+      },
+      "reveal": {
+        "stagger": "60ms"
+      },
+      "musicFade": {
+        "duration": "600ms"
       }
     },
     "effect": {

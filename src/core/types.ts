@@ -252,8 +252,8 @@ export interface EnemyDef {
 export interface EncounterDef {
   id: string;
   tier: "normal" | "elite" | "boss";
-  /** 일반 편성: 처음 몇 전투는 weak, 그 뒤는 strong (0062) */
-  pool?: "weak" | "strong";
+  /** 일반 편성: 처음 몇 전투는 weak, 그 뒤는 strong (0062). first는 첫 판의 첫 전투에만 나오는 고정 편성 (0088) */
+  pool?: "weak" | "strong" | "first";
   /** 이 편성이 나오는 막 (1부터). 없으면 1막 */
   act?: number;
   /** 이 편성의 기운. 오늘 센 기운과 같으면 더 자주 나오고, 보스는 센 기운의 보스가 나와요 */
