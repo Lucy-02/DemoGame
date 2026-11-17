@@ -4,6 +4,8 @@ export const COPY = {
   settings: "설정",
   toHome: "메인으로",
   giveUp: "탐험 포기",
+  /** 용어 모음 (0102). 이름은 임시예요 */
+  glossary: "용어 모음",
   close: "닫기",
   giveUpTitle: "탐험을 포기할까요?",
   tip: {

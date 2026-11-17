@@ -7,6 +7,7 @@ import type { CardDef, CardOp, DeckCard, EquipTier, RunEquip, RunSpirit, Stage }
 import { cardArtOf } from "../card/art";
 import type { CardRarity, CardVM, CardValueVM, Material, RichText } from "../card/viewmodel";
 import { ELEMENT_ICON, type FaceId } from "../faces";
+import { TEXT_TERMS } from "../glossary/terms";
 import { spiritArt } from "../spiritArt";
 import { COPY, MATERIAL_NAME } from "./copy";
 import { STAT_IDS, type EquipChipVM, type EquipSheetVM, type EquipStatId, type EquipVM, type LaneVM, type StatId } from "./viewmodel";
@@ -18,8 +19,8 @@ const windowOf = (spiritId: string): FaceId => WINDOW_OF[spiritDef(spiritId).ele
 const MATERIALS: readonly string[] = ["fire", "water", "wind"];
 const materialOf = (element: string): Material => (MATERIALS.includes(element) ? (element as Material) : "none");
 
-/** 효과문에서 숫자는 강조, 상태 이름은 용어 밑줄로 (TEXT_RULES). 용어 목록은 임시예요: 키워드 사전이 생기면 거기서 읽어요 */
-const TERMS = ["화상", "냉기", "취약", "약화", "도발", "반격", "소멸", "빙결", "브레이크"];
+/** 효과문에서 숫자는 강조, 용어는 밑줄로 (TEXT_RULES). 용어 목록은 용어 사전에서 읽어요 (0102) */
+const TERMS = TEXT_TERMS;
 const SPLIT = new RegExp(`(\\d+|${TERMS.join("|")})`);
 export function richText(text: string): RichText {
   return text.split(SPLIT).filter(Boolean).map((t) => (/^\d+$/.test(t) ? { text: t, strong: true } : TERMS.includes(t) ? { text: t, term: true } : { text: t }));

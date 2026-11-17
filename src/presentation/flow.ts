@@ -23,6 +23,7 @@ import { HOME_SCENE, type HomeSceneData } from "./home/HomeScene";
 import { MAP_SCENE, type MapSceneData } from "./map/MapScene";
 import { RUN_MENU_KEY, SETTINGS_KEY } from "./menu/hooks";
 import { MENU_SCENE, type MenuSceneData } from "./menu/MenuScene";
+import { GLOSSARY_SCENE, type GlossarySceneData } from "./menu/GlossaryScene";
 import { SETTINGS_SCENE, type SettingsSceneData } from "./menu/SettingsScene";
 import { departVM } from "./depart/fromGarden";
 import { DEPART_SCENE, type DepartSceneData } from "./depart/DepartScene";
@@ -83,9 +84,11 @@ export class GameFlow implements LegacyFlow {
       onItem: (id) => {
         if (id === "spirits") this.go(SPIRITS_SCENE, { session: this.session.garden, onBack: () => this.home() } satisfies SpiritsSceneData);
         if (id === "quit") this.opts.quit?.();
-        if (id === "settings") {
+        if (id === "settings" || id === "glossary") {
           const home = this.game.scene.getScene(HOME_SCENE);
-          this.settings(home, () => home.scene.resume());
+          const back = () => home.scene.resume();
+          if (id === "settings") this.settings(home, back);
+          else this.glossary(home, back);
         }
         // 도감 화면은 아직 없어요
       },
@@ -238,7 +241,7 @@ export class GameFlow implements LegacyFlow {
 
   /** 판 안 메뉴 (0084 3번): 지금 화면은 아래에 멈춰 두고 그 위에 띄워요. 진행 중인 판이 있을 때만 열려요 */
   menu(scene: Phaser.Scene) {
-    if (!this.session.run || this.game.scene.isActive(MENU_SCENE) || this.game.scene.isActive(SETTINGS_SCENE)) return;
+    if (!this.session.run || [MENU_SCENE, SETTINGS_SCENE, GLOSSARY_SCENE].some((k) => this.game.scene.isActive(k))) return;
     const open = () => scene.scene.launch(MENU_SCENE, data);
     const close = () => scene.scene.stop(MENU_SCENE);
     const data: MenuSceneData = {
@@ -250,6 +253,10 @@ export class GameFlow implements LegacyFlow {
       onSettings: () => {
         close();
         this.settings(scene, open);
+      },
+      onGlossary: () => {
+        close();
+        this.glossary(scene, open);
       },
       // 메인으로: 판은 이 칸에 들어온 때로 저장돼 있어요. 다시 이으면 그 칸의 처음부터예요 (0084 6번)
       onHome: this.opts.trial ? undefined : () => {
@@ -278,6 +285,18 @@ export class GameFlow implements LegacyFlow {
     // 판 안 메뉴에서 왔으면 아래 화면은 이미 멈춰 있어요
     if (under.scene.isActive()) under.scene.pause();
     under.scene.launch(SETTINGS_SCENE, data);
+  }
+
+  /** 용어 모음 창 (0102): 설정 창과 같은 방식으로 떠요 */
+  private glossary(under: Phaser.Scene, then: () => void) {
+    const data: GlossarySceneData = {
+      onClose: () => {
+        under.scene.stop(GLOSSARY_SCENE);
+        then();
+      },
+    };
+    if (under.scene.isActive()) under.scene.pause();
+    under.scene.launch(GLOSSARY_SCENE, data);
   }
 
   /** 판 결과 뒤. 깃들기가 남았으면 먼저 골라요 */

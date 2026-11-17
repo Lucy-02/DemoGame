@@ -11,6 +11,7 @@
 // ?screen=join 은 깃들기(?scene=first|second&select=<후보 id>&hover=chip&taken=<후보 id>: 깃든 끝 상태).
 // ?screen=depart 는 출전 준비(?scene=three|two&select=<앞열로 바꿀 정령 id>&hover=<정령 id>|strong).
 // ?screen=menu 는 판 안 메뉴(?scene=menu|confirm&hover=settings|toHome|giveUp), ?screen=settings 는 설정 창(?hover=speed|shake). 둘 다 전투 고정 장면 위에 떠요.
+// ?screen=glossary 는 용어 모음 창(?hover=<용어 id>). 전투 고정 장면 위에 떠요.
 // 개발 빌드에서만: window.session · window.game 으로 세션과 장면을 볼 수 있고(자동 점검 tools/screenBot.ts가 써요), ?seed= 로 새 판 · 새 정원의 시드를 고정해요.
 // 데모 빌드(.env.demo의 VITE_DEMO=1, `pnpm dist:demo`)는 판의 범위를 데모로 묶고 데모 끝 화면을 켜요 (0101). 개발 빌드에서는 ?demo 로도 켜요.
 // ?slow=4 는 모션을 4배 느리게 (어느 화면이든).
@@ -45,7 +46,7 @@ async function start() {
   if (platform.kind === "web") mountDevWindow(platform);
   const screen = params.get("screen");
   const get = (k: string) => params.get(k) ?? undefined;
-  const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "demoEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" || screen === "menu" || screen === "settings" ? screen : undefined;
+  const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "demoEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" || screen === "menu" || screen === "settings" || screen === "glossary" ? screen : undefined;
   const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform, DEV ? devSeeds(params) : undefined, demo ? demoScope() : {});
   // 설정은 어느 화면이든 읽어요(소리 볼륨). 전체화면은 저장에 이어진 게임에서만 창에 입혀요: 설정이 정본이고, 창이 바뀌면(F11 · Esc) 설정이 따라가요 (0084 3 · 4번)
   const settings = await SettingsSession.load(platform);

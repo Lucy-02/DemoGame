@@ -12,7 +12,7 @@ export function homeVM(garden: Garden, run?: Run, version?: string): HomeVM {
     title: COPY.title,
     primary: run ? continueVM(run) : { kind: "depart", label: COPY.depart },
     // 도감 · 설정 화면은 아직 없어요. 도감은 생기면 넣고, 설정은 자리만 있어요
-    items: [spiritsItem(garden), { id: "settings", label: COPY.settings, icon: "i-gear" }, { id: "quit", label: COPY.quit }],
+    items: [spiritsItem(garden), { id: "glossary", label: COPY.glossary, icon: "g-book" }, { id: "settings", label: COPY.settings, icon: "i-gear" }, { id: "quit", label: COPY.quit }],
   };
 }
 

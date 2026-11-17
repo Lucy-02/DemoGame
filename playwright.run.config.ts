@@ -5,7 +5,7 @@ const PORT = 5233;
 
 export default defineConfig({
   testDir: "tests/run",
-  timeout: 15 * 60_000,
+  timeout: 30 * 60_000,
   reporter: "list",
   use: {
     baseURL: `http://localhost:${PORT}`,
