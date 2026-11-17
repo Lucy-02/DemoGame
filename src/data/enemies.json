@@ -4,6 +4,11 @@
       { "name": "끈적이기", "actions": [{ "type": "weak", "turns": 1, "target": "front" }] },
       { "name": "몸통박치기", "charge": true, "actions": [{ "type": "attack", "dmg": 14, "target": "front" }] }
     ] },
+  { "id": "moss_slime_first", "name": "이끼 슬라임", "tier": "normal", "element": "forest", "hp": 42,
+    "pattern": [
+      { "name": "몸통박치기", "charge": true, "actions": [{ "type": "attack", "dmg": 14, "target": "front" }] },
+      { "name": "끈적이기", "actions": [{ "type": "weak", "turns": 1, "target": "front" }] }
+    ] },
   { "id": "bramble_rat", "name": "가시쥐", "tier": "normal", "element": "forest", "hp": 20,
     "pattern": [
       { "name": "물어뜯기", "actions": [{ "type": "attack", "dmg": 5, "hits": 2, "target": "random" }] },

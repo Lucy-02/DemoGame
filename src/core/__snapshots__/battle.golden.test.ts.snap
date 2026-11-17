@@ -227,6 +227,7 @@ exports[`전투 골든 > 보스전 한 판의 이벤트 로그가 바뀌지 않�
 
 exports[`전투 골든 > 인카운터별 요약이 바뀌지 않는다 1`] = `
 [
+  "e_first wins=20/20 turns=64 hp=1409 release=0 cancel=0",
   "e_moss wins=20/20 turns=76 hp=1288 release=0 cancel=0",
   "e_rats wins=20/20 turns=70 hp=1243 release=0 cancel=0",
   "e_wisps wins=20/20 turns=86 hp=1274 release=0 cancel=0",

@@ -1,4 +1,5 @@
 [
+  { "id": "e_first", "tier": "normal", "pool": "first", "element": "forest", "enemies": ["moss_slime_first"] },
   { "id": "e_moss", "tier": "normal", "pool": "weak", "element": "forest", "enemies": ["moss_slime", "bramble_rat"] },
   { "id": "e_rats", "tier": "normal", "pool": "weak", "element": "forest", "enemies": ["bramble_rat", "bramble_rat"] },
   { "id": "e_wisps", "tier": "normal", "pool": "weak", "element": "fire", "enemies": ["wisp", "wisp", "wisp"] },

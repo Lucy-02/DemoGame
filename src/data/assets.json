@@ -11,6 +11,7 @@
   },
   "enemies": {
     "moss_slime":   { "type": "shape", "shape": "blob", "color": "#5fae5a", "size": 80 },
+    "moss_slime_first": { "type": "shape", "shape": "blob", "color": "#5fae5a", "size": 80 },
     "bramble_rat":  { "type": "shape", "shape": "blob", "color": "#8a6a3f", "size": 60 },
     "wisp":         { "type": "shape", "shape": "orb", "color": "#ffb347", "size": 45 },
     "rubble_shell": { "type": "shape", "shape": "turtle", "color": "#5b8fb9", "size": 100 },
