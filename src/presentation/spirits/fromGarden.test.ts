@@ -9,7 +9,7 @@ describe("정령 관리 화면 데이터", () => {
     const vm = spiritsVM(GARDENS.mixed, "fire_fox");
     expect(vm.roster.map((t) => [t.chip, t.ring.kind, t.todo])).toEqual([
       ["유체 Lv 4", "ready", 2],
-      ["성체 Lv 5", "progress", 2],
+      ["성체 Lv 5", "progress", 1],
       ["각성체 Lv 6", "final", 0],
     ]);
   });
@@ -26,6 +26,18 @@ describe("정령 관리 화면 데이터", () => {
     expect(spiritsVM(GARDENS.mixed, "night_owl").selected).toBe("fire_fox");
   });
 
+  it("정원에 있는 정령은 목업 목록에 있어도 실제 값으로 보여요 (산양 · 카멜레온)", () => {
+    const mocks = { list: MOCKUPS, stage: () => "awakened" as const };
+    const g = GARDENS.mixed;
+    const own = { ...g, spirits: [...g.spirits, { ...g.spirits[0], id: "magma_ibex", stage: "baby" as const, branch: undefined }] };
+    const vm = spiritsVM(own, "magma_ibex", mocks);
+    expect(vm.detail.mock).toBeUndefined();
+    expect(vm.detail.stage).toBe("유체");
+    expect(vm.detail.growth.level).toBeDefined();
+    expect(vm.roster.filter((t) => t.id === "magma_ibex")).toHaveLength(1);
+    expect(vm.roster).toHaveLength(4 + MOCKUPS.length - 1);
+  });
+
   it("일러스트: 지금 단계 그림, 그림이 없는 정령(불여우)은 자리표시", () => {
     const vm = spiritsVM(GARDENS.mixed, "mist_cat");
     expect(vm.roster.map((t) => t.face?.key)).toEqual([undefined, "spirit:glass_salamander:adult:body", "spirit:mist_cat:awakened:body"]);
@@ -36,10 +48,10 @@ describe("정령 관리 화면 데이터", () => {
     expect(spiritsVM(GARDENS.mixed, "fire_fox").detail.art).toBeUndefined();
   });
 
-  it("탭 3개, 할 일은 성장 길·유대 탭 배지와 요약 카드로 이어져요", () => {
+  it("탭 2개(유대는 MVP 밖, 0052), 할 일은 성장 길 탭 배지와 요약 카드로 이어져요", () => {
     const d = spiritsVM(GARDENS.mixed, "fire_fox").detail;
-    expect(d.tabs.map((t) => [t.label, t.count, t.badge])).toEqual([["개요", undefined, undefined], ["성장 길", "Lv 4", "g-up"], ["유대", "0/3", undefined]]);
-    expect(d.facts.map((f) => f.kind)).toEqual(["next", "cells", "bond", "todo"]);
+    expect(d.tabs.map((t) => [t.label, t.count, t.badge])).toEqual([["개요", undefined, undefined], ["성장 길", "Lv 4", "g-up"]]);
+    expect(d.facts.map((f) => f.kind)).toEqual(["next", "cells", "todo"]);
     // 성격은 유체부터 보여요. 효과는 성체부터라 안내를 덧붙여요 (0033)
     expect(d.personality).toBeDefined();
     expect(d.overview.personality?.note).toBe("성체가 되면 효과가 나요");

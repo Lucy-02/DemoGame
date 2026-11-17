@@ -27,7 +27,7 @@ export const ART = {
 };
 
 /** .tb height 52 padding 0 20 gap 10, 아래 1px 선 · .tb-back gap 4 · .res gap 6, .ri 16 */
-export const TOP = { h: 52, padX: 20, gap: 10, line: 1, backGap: 4, backIcon: 14, resGap: 6, resIcon: 16 };
+export const TOP = { h: 52, padX: 20, gap: 10, line: 1, backGap: 4, backIcon: 14 };
 
 /** .q-id left 20 top 72 width 300 padding 16 20 16 radius 16 gap 8 */
 export const ID = {
@@ -79,7 +79,6 @@ export const PANEL = {
   /** .q-awk padding-top 14 border-top 1 · .q-awkb gap 12 */
   foot: { pt: 14, line: 1, gap: 12 },
   /** .q-eps li height 52 gap 12 border-top 1 · .q-epn 26 */
-  episode: { h: 52, gap: 12, num: 26 },
 };
 
 /** .q-rail right 20 top 72 56×548 radius 16 padding 6 0 · .q-rt gap 10 · .q-badge.rt top 12 18, svg 11 */
@@ -107,8 +106,8 @@ export const STRIP = {
   /** .q-sort height 28 padding 0 10 radius 8 gap 4 svg 12 · .q-filt gap 4, span 30×26 radius 7 svg 14 */
   sort: { h: 28, padX: 10, radius: 8, gap: 4, icon: 12 },
   filter: { w: 30, h: 26, radius: 7, gap: 4, icon: 14 },
-  /** .q-party padding-top 8 border-top 1 gap 8 · b margin-left 4 · .q-pbtn height 28 padding 0 10 radius 8 */
-  party: { pt: 8, line: 1, gap: 8, numMl: 4, button: { h: 28, padX: 10, radius: 8 } },
+  /** .q-party padding-top 8 border-top 1 · b margin-left 4 */
+  party: { pt: 8, line: 1, numMl: 4 },
   /** .q-tiles gap 12 · .q-tile 96 padding 8 6 10 radius 12, 고른 타일 테 1.5, 위 꼭지 6 (top -9) */
   tiles: { gap: 12 },
   tile: {
