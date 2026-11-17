@@ -38,6 +38,6 @@ export function cloneBattle(src: Battle, rng?: Rng): Battle {
 export const CLONED_FIELDS = ["spirits", "enemies", "draw", "hand", "discard", "exhaust", "sealed", "playedThisTurn", "planned", "slots", "zones", "stars", "hold", "askHold", "holdChoice",
   "pulled", "playedByElement", "repeatNext", "mana", "turn", "frontId", "result", "nextTurnMana", "replaying", "resolving", "now", "pendingCostUp", "pendingSeal", "nextUid", "echoingReady", "firstGapBonus", "events", "rng", "scale",
   // 받을 피해를 미리 돌려 보는 사본(Battle.forecast)에서만 채워져요. 전투에서는 늘 null이라 복사하지 않아요
-  "tally",
+  "tally", "watch", "watched",
   // 생성자가 새 전투에 묶어 만드는 단계 목록이라 복사하지 않아요
   "turnStartSteps", "turnEndSteps", "roundEndSteps"];

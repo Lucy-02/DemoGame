@@ -7,7 +7,7 @@ import { ELEMENT_ICON, faceKey } from "../faces";
 import { cardVM, equipVM, releaseVM, type CardStats } from "../run/fromCore";
 import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
-import type { AllyTokenVM, AllyVM, BandVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
+import type { AllyTokenVM, AllyVM, BandVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, OutcomeVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
 
 /** 2막 규칙의 임시 기호 (0096: 새 기호를 그릴 때까지 있는 기호를 빌려 써요, TODO_ICON) */
 const BURROW_ICON = "i-veil";
@@ -54,7 +54,11 @@ export function battleVM(b: Battle, place?: string): BattleVM {
     .filter((g) => g.cards.length > 0);
   const plays: Record<string, PlayVM> = {};
   if (!pick) {
-    for (const c of b.hand) if (b.canPlay(c).ok) plays[cardKey(c)] = { target: targetRule(b, c), slot: slotOf(b, c) };
+    for (const c of b.hand) {
+      if (!b.canPlay(c).ok) continue;
+      const target = targetRule(b, c);
+      plays[cardKey(c)] = { target, slot: slotOf(b, c), outcomes: outcomesOf(b, c, target, incoming) };
+    }
   }
   const playable = Object.keys(plays).length;
   if (!pick) {
@@ -366,7 +370,38 @@ function handCard(b: Battle, c: BCard, planned?: Planned) {
   };
 }
 
+/**
+ * 조준 결과 (0007 · 0013): 이 카드를 더 놓고 이번 턴을 미리 돌려 본 값. 고르는 카드는 고를 수 있는 대상마다, 그 밖에는 한 가지예요.
+ * rest = 지금 놓은 카드까지의 결과 (받을 피해 a→b의 a)
+ */
+function outcomesOf(b: Battle, c: BCard, rule: PlayVM["target"], rest: Forecast): PlayVM["outcomes"] {
+  const one = (target?: Ref) => outcomeVM(b, rest, b.forecast({ uid: c.uid, target }));
+  if (rule.kind !== "pick") return { all: one() };
+  const out: NonNullable<PlayVM["outcomes"]> = {};
+  if (rule.side === "enemy") b.aliveEnemies().forEach((e, i) => { if (!rule.not?.includes(i)) out[i] = one({ side: "e", uid: e.uid }); });
+  else b.spirits.forEach((s, i) => { if (!s.downed) out[i] = one({ side: "s", id: s.id }); });
+  return out;
+}
+
+function outcomeVM(b: Battle, rest: Forecast, f: Forecast): OutcomeVM {
+  const enemies: OutcomeVM["enemies"] = {};
+  b.aliveEnemies().forEach((e, i) => {
+    const o = f.card?.get(e.uid);
+    if (o) enemies[i] = { hits: o.hits, hp: o.hp, block: o.block.from === o.block.to ? undefined : o.block, cut: o.cut || undefined };
+  });
+  const incoming = b.spirits.map((s) => {
+    const from = rest.hit.get(s.id) ?? 0, to = f.hit.get(s.id) ?? 0;
+    const loss = f.lost.get(s.id) ?? 0;
+    return from === to && loss === (rest.lost.get(s.id) ?? 0) ? undefined : { from, to, loss };
+  });
+  return { enemies, incoming };
+}
+
+/** 무작위 적을 때리는 카드: 적이 여럿이면 누가 맞을지 몰라요 */
+const hitsAtRandom = (b: Battle, c: BCard) => b.aliveEnemies().length > 1 && cardDef(c.cardId).effects.some((op) => op.op === "randomHits");
+
 function targetRule(b: Battle, c: BCard): PlayVM["target"] {
+  if (hitsAtRandom(b, c)) return { kind: "random", side: "enemy" };
   const need = b.needsTarget(c);
   if (need === "enemy") {
     // 이 카드가 끝날 때 아직 땅속인 적은 고를 수 없어요 (0096)

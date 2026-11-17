@@ -1,6 +1,6 @@
 // 전투 화면 VM: core 전투 상태 → 화면 값
 import { describe, expect, it } from "vitest";
-import type { Battle } from "../../core/battle";
+import type { Battle, CardOutcome, Planned } from "../../core/battle";
 import { ENCOUNTERS } from "../../core/data";
 import { Run } from "../../core/run";
 import { BattleSession } from "../../session/battle";
@@ -105,6 +105,83 @@ describe("전투 화면 VM", () => {
   });
 });
 
+describe("조준 결과 미리보기 (0123)", () => {
+  it("조준한 대상의 결과와 받을 피해 a→b는 그 카드를 놓고 실제로 재생한 값과 같아요 (무작위 대상 · 치명 제외)", () => {
+    const bad: string[] = [];
+    let compared = 0;
+    for (const enc of ENCOUNTERS) {
+      const b = new BattleSession(run(), enc.enemies).battle;
+      for (let turn = 1; turn <= 6 && b.result === "ongoing"; turn++) {
+        // 턴마다 다른 카드 · 다른 대상을 골라 앞에 몇 장을 놓은 뒤 한 장을 조준해요
+        for (let n = 0; n < turn % 3; n++) placeOne(b, turn + n);
+        const vm = battleVM(b);
+        const c = b.hand.filter((x) => b.canPlay(x).ok)[turn % Math.max(1, b.hand.length)] ?? b.hand.find((x) => b.canPlay(x).ok);
+        if (!c) { playTurn(b); continue; }
+        const play = vm.plays[`c${c.uid}`];
+        const alive = b.aliveEnemies();
+        const i = play.target.kind !== "pick" ? "all" : play.target.side === "enemy"
+          ? alive.findIndex((_, k) => !play.target.not?.includes(k) && k >= turn % alive.length) : b.spirits.findIndex((x) => !x.downed);
+        const want = play.outcomes?.[i === -1 ? 0 : i];
+        if (!want) { playTurn(b); continue; }
+        const target = i === "all" ? undefined : play.target.side === "enemy" ? { side: "e" as const, uid: alive[i === -1 ? 0 : i].uid } : { side: "s" as const, id: b.spirits[i].id };
+        const random = alive.some((e) => b.moveQueue(e).some((q) => q.move.actions.some((a) => "target" in a && a.target === "random")));
+        const uids = alive.map((e) => e.uid);
+        const faces = vm.allies.map((a) => a.face);
+        const rest = Object.fromEntries(vm.allies.map((a) => [a.face, a.incoming ?? 0]));
+        expect(b.play(c.uid, target)).toBe(true);
+        const real = playTurn(b, b.planned[b.planned.length - 1]);
+        const at = `${enc.id} ${turn}턴 ${b.cardDefOf(c).name}`;
+        if (play.target.kind === "random") {
+          // 무작위 대상 카드는 대상 결과를 확정해 보이지 않아요
+          if (Object.keys(want.enemies).length) bad.push(`${at}: 무작위 카드에 대상 결과가 있음`);
+          continue;
+        }
+        // 적이 무작위로 고르는 행동(공격 · 약화 등)이 끼면 누가 걸릴지 몰라서 견주지 않아요
+        if (random) continue;
+        compared++;
+        uids.forEach((uid, k) => {
+          const w = want.enemies[k], r = real.card?.get(uid);
+          const flat = (o?: { hits: number[]; hp: { from: number; to: number }; block?: { from: number; to: number }; cut?: boolean }) =>
+            (o ? JSON.stringify([o.hits, o.hp.from, o.hp.to, o.block ? o.block.to - o.block.from : 0, !!o.cut]) : "없음");
+          if (flat(w) !== flat(r)) bad.push(`${at} 적 ${k}: 미리보기 ${flat(w)}, 실제 ${flat(r)}`);
+        });
+        faces.forEach((face, k) => {
+          const to = want.incoming[k]?.to ?? rest[face];
+          if (to !== (real.hit[face] ?? 0)) bad.push(`${at} ${face}: 받을 피해 ${to}, 실제 ${real.hit[face] ?? 0}`);
+          const loss = want.incoming[k]?.loss;
+          if (loss !== undefined && !real.downedBefore.includes(face) && loss !== (real.lost[face] ?? 0)) bad.push(`${at} ${face}: 깎일 HP ${loss}, 실제 ${real.lost[face] ?? 0}`);
+        });
+      }
+    }
+    expect(bad).toEqual([]);
+    expect(compared).toBeGreaterThan(100);
+  });
+
+  it("무작위 적을 때리는 카드: 적이 여럿이면 대상 결과가 없고, 하나면 그 적의 결과가 보여요", () => {
+    const spark = (enemies: string[]) => {
+      const b = new BattleSession(run(), enemies).battle;
+      b.hand.push({ uid: 9000, cardId: "sparks", owner: "fire_fox", tempCostDelta: 0, locked: false, isCopy: false, grow: 0, held: false, heldFast: false });
+      return battleVM(b).plays.c9000;
+    };
+    const many = spark(["moss_slime", "bramble_rat"]);
+    expect(many.target.kind).toBe("random");
+    expect(many.outcomes?.all?.enemies).toEqual({});
+    const single = spark(["moss_slime"]);
+    expect(single.target.kind).toBe("all");
+    expect(single.outcomes?.all?.enemies[0]?.hits).toHaveLength(2);
+  });
+});
+
+/** 낼 수 있는 카드 하나를 놓아요 */
+function placeOne(b: Battle, k: number) {
+  const ok = b.hand.filter((x) => b.canPlay(x).ok);
+  const c = ok[k % Math.max(1, ok.length)];
+  if (!c) return;
+  const need = b.needsTarget(c);
+  const foes = b.aliveEnemies(), mine = b.aliveSpirits();
+  b.play(c.uid, need === "enemy" ? { side: "e", uid: foes[k % foes.length].uid } : need === "ally" ? { side: "s", id: mine[k % mine.length].id } : undefined);
+}
+
 /** 낼 수 있는 카드를 모두 놓아요. 대상은 턴마다 돌려 가며 골라요 */
 function placeAll(b: Battle, turn: number) {
   for (const s of b.aliveSpirits()) if (b.canRelease(s.id)) b.release(s.id);
@@ -120,7 +197,24 @@ function placeAll(b: Battle, turn: number) {
 }
 
 /** 턴을 실제로 넘기고 아군마다 받은 피해(막기 전)와 재생으로 깎인 HP를 돌려줘요. 미리보기처럼 운은 없는 것으로 맞춰요 (치명 없음) */
-function playTurn(b: Battle) {
+function playTurn(b: Battle, watch?: Planned) {
+  let card: Map<number, CardOutcome> | undefined;
+  const resolve = b["resolvePlanned"].bind(b);
+  b["resolvePlanned"] = (p) => {
+    if (p !== watch) return resolve(p);
+    // 지켜보는 카드가 재생되는 동안 적마다 생긴 일을 이벤트와 앞뒤 값으로 직접 모아요
+    const before = new Map(b.enemies.map((e) => [e.uid, { hp: e.hp, block: e.block }]));
+    const from = b.events.length;
+    resolve(p);
+    card = new Map();
+    for (const e of b.enemies) {
+      const was = before.get(e.uid)!;
+      const evs = b.events.slice(from);
+      const hits = evs.flatMap((ev) => (ev.k === "damage" && ev.ref.side === "e" && ev.ref.uid === e.uid ? [ev.amount + ev.blocked] : []));
+      const cut = evs.some((ev) => ev.k === "cancel" && ev.uid === e.uid && ev.reason === "break");
+      if (hits.length || cut || was.hp !== e.hp || was.block !== e.block) card.set(e.uid, { hits, hp: { from: was.hp, to: e.hp }, block: { from: was.block, to: e.block }, cut });
+    }
+  };
   const hit: Record<string, number> = {}, lost: Record<string, number> = {};
   const hp = new Map(b.spirits.map((s) => [s.id, s.hp]));
   const downedBefore = b.spirits.filter((s) => s.downed).map((s) => s.id);
@@ -145,7 +239,8 @@ function playTurn(b: Battle) {
   b.drain();
   b.hurtSpirit = hurt;
   b["replay"] = replay;
-  return { hit, lost, downedBefore };
+  b["resolvePlanned"] = resolve;
+  return { hit, lost, downedBefore, card };
 }
 
 describe("2막 규칙 표시 (0096)", () => {
