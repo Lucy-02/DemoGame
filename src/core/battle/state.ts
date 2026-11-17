@@ -225,7 +225,7 @@ export interface Intent {
   name: string;
   /** 이번 턴 이 행동이 일어나는 시각(ms). 이번 턴에 행동하지 않으면 null */
   at: number | null;
-  /** "피해 6", "4×2" 같은 짧은 표기 */
+  /** 호버 풀이: 효과문 문장 틀의 완결문 (TEXT_RULES 1절) */
   text: string;
   kind: "attack" | "defend" | "debuff" | "buff" | "charge" | "chargeReady" | "skip";
 }

@@ -4,6 +4,7 @@ import { activePersonality, maxHpOf, round } from "../stats";
 import type {
   AuraId, CardDef, CardOp, DeckCard, Element, EnemyMove, EnemyScale, EnemyTargetRule, EnemyTrait, RunSpirit, StatKey,
 } from "../types";
+import { join } from "../clauses";
 import { ENEMY_ACTIONS, intentKind } from "./enemy-actions";
 import { exhaustsAfterUse, handlerOf, resolveOp, usesReady, type EffectContext } from "./effects";
 import type { Engine, HurtOptions, MultHook } from "./engine";
@@ -222,11 +223,12 @@ export class Battle implements Engine {
     const move = this.currentMove(e);
     const slot = this.slots.find((x) => x.uid === e.uid && !x.done);
     const at = slot ? slot.at : null;
-    const zone = move.zones?.length ? [`방전 칸 ${move.zones.length}곳 피해 ${move.zoneDmg ?? 0}`] : [];
-    const desc = [...zone, ...move.actions.map((a) => ENEMY_ACTIONS[a.type].text(this, e, a as never))].join(", ");
-    if (!slot && move.charge && e.charging) return { name: move.name, at, text: `차징 중 → 다음 턴 ${desc}`, kind: "charge" };
-    if (!slot) return { name: move.name, at, text: "이번 턴 행동 없음", kind: "skip" };
-    if (move.charge && e.charging) return { name: move.name, at, text: `${desc} (끊기 가능)`, kind: "chargeReady" };
+    const zone = move.zones?.length ? [`방전 칸을 ${move.zones.length}곳 깝니다. 방전 칸에서 끝난 카드의 주인에게 피해를 ${move.zoneDmg ?? 0} 입힙니다.`] : [];
+    // 호버 풀이: 효과문 문장 틀 (TEXT_RULES 1절). 끊을 수 있는지는 화면이 `브레이크 가능` 칩으로 보여요
+    const desc = join([...zone, ...move.actions.map((a) => ENEMY_ACTIONS[a.type].text(this, e, a as never))]);
+    if (!slot && move.charge && e.charging) return { name: move.name, at, text: `다음 턴에 행동합니다. ${desc}`, kind: "charge" };
+    if (!slot) return { name: move.name, at, text: "이번 턴에는 행동하지 않습니다.", kind: "skip" };
+    if (move.charge && e.charging) return { name: move.name, at, text: desc, kind: "chargeReady" };
     return { name: move.name, at, text: desc, kind: intentKind(move.actions) };
   }
 
