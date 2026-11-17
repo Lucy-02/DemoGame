@@ -4,7 +4,7 @@
 import { GardenSession } from "./garden";
 import { RunSession, type BattleOutcome, type BattleWin, type RunSaveFile } from "./run";
 import { C } from "../core/data";
-import { defaultFront, type Garden } from "../core/garden";
+import { deepStartOpen, defaultFront, type Garden } from "../core/garden";
 import { Rng } from "../core/rng";
 import type { Run, RunOptions } from "../core/run";
 import type { Element } from "../core/types";
@@ -88,11 +88,16 @@ export class GameSession {
    * 떠나기 전에 정하는 다음 판 (출전 준비, 0076 14): 시드, 오늘 센 기운, 가진 정령 모두, 기본 앞열(지난 판의 앞열).
    * 센 기운은 판을 만들기 전에 보여 줘야 해서 여기서 굴려 판에 넘겨요.
    */
-  planRun(): RunPlan {
+  planRun(deep = false): RunPlan {
     const g = this.garden.state;
     const seed = this.newSeed();
-    const strongElement = new Rng(seed ^ STRONG_SALT).pick(C.acts[0].elements as Element[]);
-    return { seed, strongElement, party: g.spirits.slice(0, C.party_size).map((s) => s.id), front: defaultFront(g) };
+    const party = g.spirits.slice(0, C.party_size).map((s) => s.id);
+    // 뒤 막에서 출발하면 그 막의 센 기운을 미리 보여 줘요 (0108)
+    // 데모처럼 그 막까지 가지 않는 범위에서는 뒤 막 출발이 없어요 (0101)
+    const inScope = (this.scope.acts ?? C.acts_enabled) >= C.deep_start.act;
+    const startAct = deep && inScope && deepStartOpen(g, party) ? C.deep_start.act : undefined;
+    const strongElement = new Rng(seed ^ STRONG_SALT).pick(C.acts[(startAct ?? 1) - 1].elements as Element[]);
+    return { seed, strongElement, party, front: defaultFront(g), startAct };
   }
 
   /** 정원의 정령으로 새 판을 떠나요. plan(출전 준비)이 없으면 지금 계획으로, 앞열을 주면 그 정령이 앞열이에요 */
@@ -105,7 +110,7 @@ export class GameSession {
       const frontId = front && p.party.includes(front) ? front : p.front;
       if (frontId !== this.garden.state.front) this.garden.dispatch({ kind: "setFront", id: frontId });
       // 정령이 하나뿐인 판(첫 판)은 출전 준비 없이 떠나고 센 기운도 판이 굴려요
-      opts = { seed: p.seed, garden: this.garden.state, frontId, adult: false, unlockAll: false, ...(plan ? { strongElement: p.strongElement } : {}), ...(this.scope.acts ? { acts: this.scope.acts } : {}) };
+      opts = { seed: p.seed, garden: this.garden.state, frontId, adult: false, unlockAll: false, ...(plan ? { strongElement: p.strongElement } : {}), ...(p.startAct ? { startAct: p.startAct } : {}), ...(this.scope.acts ? { acts: this.scope.acts } : {}) };
     }
     const run = RunSession.start(opts);
     this.attach(run);
@@ -207,6 +212,8 @@ export interface RunPlan {
   strongElement: Element;
   party: string[];
   front: string;
+  /** 3막에서 출발 (0108). 없으면 1막부터 */
+  startAct?: number;
 }
 
 const STRONG_SALT = 0x5e7a;

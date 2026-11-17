@@ -1,7 +1,7 @@
 // 게임 세션: 정원 ↔ 판 연결과 칸 사이 저장 (아키텍처 0001 PR 2)
 import { describe, expect, it } from "vitest";
 import { C, GROWTH } from "../core/data";
-import { joinOffer } from "../core/garden";
+import { deepStartOpen, joinOffer, newGarden } from "../core/garden";
 import { GameSession, SAVE_KEYS, demoScope, type SaveStore } from "./game";
 import type { RunSession } from "./run";
 
@@ -186,6 +186,16 @@ describe("데모 범위 (0101)", () => {
   it("범위를 안 주면 게임이 여는 막까지 가요", async () => {
     const game = await GameSession.load(new MemoryStore(), seeds);
     expect(game.startRun().run.lastAct).toBe(C.acts_enabled);
+  });
+
+  it("데모에서는 성체 정원도 뒤 막에서 출발하지 않아요", async () => {
+    const grown = { ...newGarden(1), spirits: newGarden(1).spirits.map((sp) => ({ ...sp, stage: "adult" as const })) };
+    const party = grown.spirits.map((sp) => sp.id);
+    expect(deepStartOpen(grown, party)).toBe(true);
+    const store = new MemoryStore();
+    await store.write(SAVE_KEYS.garden, JSON.stringify(grown));
+    expect((await GameSession.load(store, seeds)).planRun(true).startAct).toBe(C.deep_start.act);
+    expect((await GameSession.load(store, seeds, demoScope())).planRun(true).startAct).toBeUndefined();
   });
 
   it("데모의 정령은 시작 풀 넷이고, 깃들기는 두 번이에요", () => {

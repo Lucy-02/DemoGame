@@ -8,7 +8,8 @@ import { join } from "node:path";
 async function launch(): Promise<{ app: ElectronApplication; userData: string }> {
   const userData = await mkdtemp(join(tmpdir(), "demogame-e2e-"));
   // GPU 없는 CI에서도 WebGL이 돌게 소프트웨어 렌더러를 써요. 루트(컨테이너)에서는 샌드박스를 끌 수밖에 없어요.
-  const args = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"];
+  // 맥에서는 이 플래그가 WebGL을 깨뜨려서(ANGLE 초기화 실패) 리눅스에서만 써요.
+  const args = process.platform === "linux" ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] : [];
   if (process.getuid?.() === 0) args.unshift("--no-sandbox");
   const exe = process.env.DEMOGAME_EXE;
   const app = await electron.launch({ ...(exe ? { executablePath: exe, args } : { args: [...args, "."] }), env: { ...process.env, DEMOGAME_USER_DATA: userData } });

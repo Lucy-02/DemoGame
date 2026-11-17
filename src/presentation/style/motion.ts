@@ -2,6 +2,7 @@
 import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { cubicBezier, ms } from "./ease";
+import { gather } from "./gather";
 import { colorMatrix, opacityOf } from "./opacity";
 
 const M = tokens.provisional.motion;
@@ -48,4 +49,47 @@ export function revealInOrder(scene: Phaser.Scene, parts: Phaser.GameObjects.Con
 export function fadeAway(scene: Phaser.Scene, target: { opacity: number; root: Phaser.GameObjects.Container }) {
   if (reducedMotion()) return target.root.destroy();
   scene.tweens.add({ targets: target, opacity: 0, duration: ms(M.hand.leave), ease: FAST.ease, onComplete: () => target.root.destroy() });
+}
+
+/**
+ * 제자리에서 모양 · 숫자가 바뀔 때: 새 모양을 그린 뒤, 앞 모양을 위에 겹쳐 그리고 흐려 보내요 (0086 11번 · 0092).
+ * drawOld는 바탕을 가리는 판까지 함께 그려요 (두 모양이 섞여 보이지 않게).
+ */
+export function fadeOutOld(scene: Phaser.Scene, drawOld: () => void) {
+  if (reducedMotion()) return;
+  const old = gather(scene, 0, 0, drawOld);
+  const fade = opacityOf(old);
+  scene.tweens.addCounter({ from: 1, to: 0, ...FAST, onUpdate: (t) => { fade.value = t.getValue() ?? 0; }, onComplete: () => old.destroy() });
+}
+
+/**
+ * 화면을 통째로 다시 그릴 때(호버 · 누름): 앞 모습을 한 장으로 떠 두고, 새로 그린 화면 위에서 흐려 보내요 (0092).
+ * 화면의 update에서 paint 대신 불러요. 처음 그릴 때와 모션 줄이기에서는 바로 그려요.
+ */
+export function crossPaint(scene: Phaser.Scene, paint: () => void) {
+  const before = [...scene.children.list];
+  if (reducedMotion() || !before.length) return paint();
+  const { width, height } = scene.scale;
+  const shot = scene.make.renderTexture({ x: 0, y: 0, width, height }, false).setOrigin(0).setScrollFactor(0);
+  shot.camera.setScroll(scene.cameras.main.scrollX, scene.cameras.main.scrollY);
+  shot.draw(before).render();
+  paint();
+  scene.add.existing(shot).setDepth(Number.MAX_SAFE_INTEGER);
+  scene.tweens.add({ targets: shot, alpha: 0, ...FAST, onComplete: () => shot.destroy() });
+}
+
+/** 가리켜서 뜨는 것(테 · 풀이): 제자리에서 흐리게 나타나요 (0092) */
+export function fadeInPart<T extends Phaser.GameObjects.Container>(scene: Phaser.Scene, part: T): T {
+  if (reducedMotion()) return part;
+  const fade = opacityOf(part);
+  fade.value = 0;
+  scene.tweens.addCounter({ from: 0, to: 1, ...FAST, onUpdate: (t) => { if (part.active) fade.value = t.getValue() ?? 1; } });
+  return part;
+}
+
+/** 가리킨 것에서 벗어나면: 제자리에서 흐려져 사라져요 (0092) */
+export function fadeOutPart(scene: Phaser.Scene, part: Phaser.GameObjects.Container) {
+  if (reducedMotion()) return part.destroy();
+  const fade = opacityOf(part);
+  scene.tweens.addCounter({ from: fade.value, to: 0, duration: ms(M.hand.leave), ease: FAST.ease, onUpdate: (t) => { if (part.active) fade.value = t.getValue() ?? 0; }, onComplete: () => { if (part.active) part.destroy(); } });
 }

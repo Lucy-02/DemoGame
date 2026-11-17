@@ -44,7 +44,10 @@ export class RunSession {
   private constructor(readonly run: Run, private _phase: RunPhase) {}
 
   static start(opts: RunOptions): RunSession {
-    return new RunSession(new Run(opts), { kind: "map" });
+    const run = new Run(opts);
+    // 뒤 막에서 출발한 판은 출발 묶음의 첫 보상부터 골라요 (0108)
+    const reward = run.rollBundleReward();
+    return new RunSession(run, reward ? { kind: "reward", reward } : { kind: "map" });
   }
 
   get phase(): RunPhase {
@@ -126,7 +129,9 @@ export class RunSession {
   /** 보상을 다 고르고 지도로 */
   finishReward() {
     this.expect("reward");
-    this.set({ kind: "map" });
+    // 출발 묶음이 남았으면 다음 보상으로 이어져요 (0108)
+    const reward = this.run.rollBundleReward();
+    this.set(reward ? { kind: "reward", reward } : { kind: "map" });
   }
 
   save(): RunSaveFile {

@@ -3,7 +3,7 @@
 // 카드 강화를 누르면 덱 고르기 창(run/deckPick, 상점 빼기와 같은 틀 · 두 단계)이 떠요. 고른 카드 오른쪽에 강화한 카드가 끼어 전→후가 보이고,
 // 강화할 수 없는 카드는 회색이에요(0043).
 // 둘 다 할 것이 없을 때(모두 HP가 가득하고 강화할 카드도 없음)만 떠나기가 보여요.
-import { MOVE, reducedMotion } from "../style/motion";
+import { MOVE, crossPaint, reducedMotion } from "../style/motion";
 import * as Phaser from "phaser";
 import { upgradedId } from "../../core/data";
 import type { RestSession } from "../../session/rest";
@@ -66,6 +66,8 @@ export class RestScene extends Phaser.Scene {
     this.deckHover = undefined;
     this.dirty = false;
     this.rested = false;
+    this.left = false;
+    this.input.enabled = true;
   }
 
   preload() {
@@ -86,7 +88,8 @@ export class RestScene extends Phaser.Scene {
   update() {
     if (!this.dirty) return;
     this.dirty = false;
-    this.paint();
+    // 호버 · 누름으로 다시 그릴 때 앞 모습이 흐려지며 바뀌어요 (0092)
+    crossPaint(this, () => this.paint());
   }
 
   private redraw() {
@@ -106,7 +109,12 @@ export class RestScene extends Phaser.Scene {
     }))]));
   }
 
+  /** 한 번만 떠나요. 머무는 동안 떠나기가 또 불려도(두 번 누름) 세션은 이미 넘어가 있어요 */
+  private left = false;
+
   private leave() {
+    if (this.left) return;
+    this.left = true;
     this.onLeave?.(this);
   }
 
@@ -121,6 +129,8 @@ export class RestScene extends Phaser.Scene {
       this.hover = undefined;
       this.redraw();
       if (reducedMotion()) return this.leave();
+      // 머무는 동안에는 입력을 받지 않아요
+      this.input.enabled = false;
       this.time.delayedCall(MOVE.duration, () => this.leave());
       return;
     }

@@ -20,7 +20,7 @@ import { cuesOf, playbackCues } from "../audio/battleCues";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
 import { drawGuide, type GuideBox } from "./views/guide";
-import { createHand, drawBand, drawEnd, drawMana, handBoxes, preloadHand, type HandSnapshot, type HandView } from "./views/hand";
+import { createHand, drawBand, drawEnd, drawMana, handBoxes, preloadHand, type EndSnapshot, type HandSnapshot, type HandView } from "./views/hand";
 import { createPick, preloadPick, type PickView } from "./views/pick";
 import { drawOrder, drawOrderRing, preloadOrder, preloadOrderIcon, type OrderHit } from "./views/order";
 import { drawTooltip } from "../tooltip/Tooltip";
@@ -144,7 +144,7 @@ export class BattleScene extends Phaser.Scene {
   /** 앞 장면의 순서표 (장면을 다시 그려도 남아요) */
   private orderPrev?: { session?: BattleSession; snap: OrderSnapshot };
   /** 앞 장면의 턴 종료 버튼 모양 (0086) */
-  private endPrev?: { session: BattleSession; go: boolean };
+  private endPrev?: { session: BattleSession; end: EndSnapshot; mana: number };
   /** 앞 장면의 손패 (0086). turn = 그 장면의 턴 */
   private handPrev?: { session: BattleSession; snap: HandSnapshot; turn?: number };
 
@@ -157,11 +157,11 @@ export class BattleScene extends Phaser.Scene {
     this.rest = this.drawField(null);
     this.shown = this.rest;
     drawBand(this);
-    drawMana(this, this.vm.mana);
-    // 턴 종료 버튼: 낼 카드가 없으면 밝아져요. 앞 장면과 모양이 달라졌으면 흐려지며 바뀌어요 (0086)
-    const endWas = this.session && this.endPrev?.session === this.session ? this.endPrev.go : undefined;
-    const endGo = drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined, endWas);
-    if (this.session) this.endPrev = { session: this.session, go: endGo };
+    // 마력 · 더미 수 · 턴 종료 버튼: 앞 장면과 달라졌으면 흐려지며 바뀌어요. 턴 종료는 낼 카드가 없으면 밝아져요 (0086 · 0092)
+    const endPrev = this.session && this.endPrev?.session === this.session ? this.endPrev : undefined;
+    drawMana(this, this.vm.mana, endPrev?.mana);
+    const end = drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined, endPrev?.end);
+    if (this.session) this.endPrev = { session: this.session, end, mana: this.vm.mana.n };
     // 재생 속도(설정)는 턴 재생에만 걸려요 (0084 7번): 행동 사이 시간과 그동안의 움직임 · 소리 박자가 함께 빨라져요
     const speed = this.playback ? playbackScale(this) : 1;
     this.tweens.timeScale = speed;
