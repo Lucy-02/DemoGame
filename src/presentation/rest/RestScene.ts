@@ -3,6 +3,7 @@
 // 카드 강화를 누르면 덱 고르기 창(run/deckPick, 상점 빼기와 같은 틀 · 두 단계)이 떠요. 고른 카드 오른쪽에 강화한 카드가 끼어 전→후가 보이고,
 // 강화할 수 없는 카드는 회색이에요(0043).
 // 둘 다 할 것이 없을 때(모두 HP가 가득하고 강화할 카드도 없음)만 떠나기가 보여요.
+import { MOVE, reducedMotion } from "../style/motion";
 import * as Phaser from "phaser";
 import { upgradedId } from "../../core/data";
 import type { RestSession } from "../../session/rest";
@@ -64,6 +65,7 @@ export class RestScene extends Phaser.Scene {
     this.pick = this.upgrading && key ? this.session.run.deck.find((c) => c.cardId === key && this.session.run.canUpgrade(c.uid))?.uid : undefined;
     this.deckHover = undefined;
     this.dirty = false;
+    this.rested = false;
   }
 
   preload() {
@@ -108,10 +110,18 @@ export class RestScene extends Phaser.Scene {
     this.onLeave?.(this);
   }
 
+  /** 쉬기를 골랐어요 (넘어가기 전 한 박자) */
+  private rested = false;
+
   private choose(i: number) {
     if (i === Pick.Rest) {
-      if (!this.session.dispatch({ kind: "rest" })) return;
-      this.leave();
+      if (this.rested || !this.session.dispatch({ kind: "rest" })) return;
+      // 찬 HP를 한 박자 보고 넘어가요 (0089)
+      this.rested = true;
+      this.hover = undefined;
+      this.redraw();
+      if (reducedMotion()) return this.leave();
+      this.time.delayedCall(MOVE.duration, () => this.leave());
       return;
     }
     if (!this.session.canUpgrade()) return;

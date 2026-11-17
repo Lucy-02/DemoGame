@@ -3,6 +3,8 @@
 // 여럿이면 카드를 집은 다음 줄을 눌러 정해요(집은 카드를 다시 누르거나 빈 곳을 누르면 내려놓아요). 치료에 올리면 줄마다 HP a→b.
 // 빼기 칸을 누르면 덱 고르기 창(0082)이 열려요: 카드를 고른 뒤 확인해야 빠져요(두 단계, 0046).
 // 세션을 받으면 런에 연결되고(레거시 지도에서 열어요), 없으면 씨앗을 정한 런 위의 고정 장면이에요.
+import type { CardVM } from "../card/viewmodel";
+import { fadeAway } from "../style/motion";
 import * as Phaser from "phaser";
 import { ShopSession } from "../../session/shop";
 import { createHandCard, preloadHandCard } from "../card/HandCard";
@@ -43,6 +45,8 @@ type Hover = { kind: "card"; slot: number } | { kind: "lane"; id: string } | { k
 export class ShopScene extends Phaser.Scene {
   private session!: ShopSession;
   private hover?: Hover;
+  /** 방금 산 카드 (다음에 그릴 때 진열에서 흐려져 빠져요) */
+  private leaving?: { slot: number; card: CardVM };
   /** 집은 카드 칸 (배울 정령을 고르는 중) */
   private held?: number;
   /** 빼기: 덱을 펼쳐 고르는 중 */
@@ -116,6 +120,9 @@ export class ShopScene extends Phaser.Scene {
     if (!this.session.canBuy(slot)) return;
     this.held = undefined;
     this.hover = undefined;
+    // 산 카드는 진열에서 흐려져 빠져요 (0089)
+    const sold = shopVM(this.session).cards[slot];
+    this.leaving = sold ? { slot, card: sold.card } : undefined;
     this.session.dispatch({ kind: "buy", slot, spirit });
   }
 
@@ -171,10 +178,17 @@ export class ShopScene extends Phaser.Scene {
 
     // 진열 카드 3×2 (말풍선은 다른 카드 위에 오도록 마지막에)
     let tip: (() => void) | undefined;
+    const leaving = this.leaving;
+    this.leaving = undefined;
     vm.cards.forEach((c, slot) => {
-      if (!c) return;
       const x = STOCK.x + (slot % STOCK.cols) * (STOCK.w + STOCK.gap);
       const y = STOCK.rows[Math.floor(slot / STOCK.cols)];
+      if (!c) {
+        if (leaving?.slot === slot) {
+          fadeAway(this, createHandCard(this, cardWithFace(this, leaving.card, undefined, STOCK.scale), x + (STOCK.w - HAND_CARD.w) / 2, y + STOCK.h - HAND_CARD.h, { showRarity: true, scale: STOCK.scale }));
+        }
+        return;
+      }
       const owner = c.learners.length === 1 ? vm.lanes.find((l) => l.id === c.learners[0]) : undefined;
       const card = cardWithFace(this, c.card, owner, STOCK.scale);
       const view = createHandCard(this, card, x + (STOCK.w - HAND_CARD.w) / 2, y + STOCK.h - HAND_CARD.h, { showRarity: true, scale: STOCK.scale });
