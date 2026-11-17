@@ -744,6 +744,8 @@ export interface UnitView {
   bottom: number;
   /** 적 머리 위 의도 알약 */
   intent?: Phaser.GameObjects.Container;
+  /** 의도 알약의 자리 (첫 판 안내가 짚을 곳, 0088) */
+  intentBox?: UnitBounds;
   /** 유닛 그림 (재생 중 나섬 · 밀림은 그림만 움직여요, 0086) */
   art: Phaser.GameObjects.Container;
 }
@@ -797,8 +799,8 @@ export function drawIntent(scene: Phaser.Scene, e: EnemyVM, i: number, st: { cut
 /** weakOn: 든 카드의 속성이 이 적의 약점이면 약점 배지를 켜요 */
 export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPreview<EnemyOutcomeVM> & { weakOn?: boolean } = {}): UnitView {
   const cx = ENEMY.xs[i];
-  let intentH = 0;
-  const intent = gather(scene, 0, 0, () => { intentH = drawIntent(scene, e, i, { cut: !!pv.outcome?.cut }).h; });
+  let intentH = 0, intentW = 0;
+  const intent = gather(scene, 0, 0, () => { ({ w: intentW, h: intentH } = drawIntent(scene, e, i, { cut: !!pv.outcome?.cut })); });
   const bodyTop = ENEMY.top + intentH + ENEMY.body.mt;
   const artX = cx - ENEMY.art.w / 2, artY = ENEMY.feet - ENEMY.art.h;
   if (pv.lit) glow(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, 0, true);
@@ -807,5 +809,5 @@ export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPr
   if (pv.outcome) drawHits(scene, pv.outcome.hits, cx - ENEMY.body.w / 2, bodyTop);
   let v!: InfoView;
   const info = gather(scene, 0, 0, () => { v = enemyInfo(scene, e, i, pv.outcome, !!pv.weakOn); });
-  return { bounds: { x: cx - HALF, y: ENEMY.top, w: HALF * 2, h: v.bottom - ENEMY.top }, info, marks: v.marks, bottom: v.bottom, intent, art };
+  return { bounds: { x: cx - HALF, y: ENEMY.top, w: HALF * 2, h: v.bottom - ENEMY.top }, info, marks: v.marks, bottom: v.bottom, intent, art, intentBox: { x: cx - intentW / 2, y: ENEMY.top, w: intentW, h: intentH } };
 }

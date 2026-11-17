@@ -147,7 +147,8 @@ export class Run {
     for (const card of CARDS) {
       if (card.startEach) for (const s of party) for (let i = 0; i < card.startEach; i++) this.addCard(card.id, s.id);
       if (!card.start) continue;
-      const owner = party.find((s) => s.id === card.startOwner) ?? party.find((s) => s.element === card.element);
+      // 주인이 정해진 카드는 그 정령만 받아요 (같은 속성의 다른 정령에게 가지 않아요)
+      const owner = card.startOwner ? party.find((s) => s.id === card.startOwner) : party.find((s) => s.element === card.element);
       if (!owner) continue;
       for (let i = 0; i < card.start; i++) this.addCard(card.id, owner.id);
     }
@@ -155,9 +156,14 @@ export class Run {
     this.generateMap();
     const drawn = this.rng.pick(C.acts[0].elements as Element[]);
     // 첫 판은 센 기운을 정해 둬요 (0079). 난수는 그대로 뽑아 둬서 지도 · 특성 순서가 안 바뀌어요
-    const first = garden && !(garden.runs ?? 0) ? (C.run_pool.first_run_strong as Element) : undefined;
+    const first = this.firstRun ? (C.run_pool.first_run_strong as Element) : undefined;
     this.strongElement = opts.strongElement ?? first ?? drawn;
     for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
+  }
+
+  /** 정원의 첫 판인지 (정원 없이 도는 시험 판은 아니에요) */
+  get firstRun(): boolean {
+    return !!this.opts.garden && !(this.opts.garden.runs ?? 0);
   }
 
   /** 이 막의 보스 전 층 수. 보스는 그 다음 층 */
@@ -338,6 +344,11 @@ export class Run {
     const tier = type === "battle" ? "normal" : type;
     const rule = C.run_pool;
     let pool = ENCOUNTERS.filter((e) => e.tier === tier && (e.act ?? 1) === this.act);
+    if (tier === "normal" && this.firstRun && this.act === 1 && this.normalBattles === 0) {
+      // 첫 판의 첫 전투는 고정 편성 (0088). 난수를 쓰지 않아요
+      this.normalBattles++;
+      return ENCOUNTERS.find((e) => e.id === rule.first_battle) ?? missing(rule.first_battle);
+    }
     if (tier === "normal") {
       const want = this.normalBattles < rule.weak_battles ? "weak" : "strong";
       pool = pool.filter((e) => e.pool === want);
