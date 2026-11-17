@@ -232,6 +232,9 @@
 - ✅ Lucy 11/13: 유닛 85% · 간격 72% (0067).
 - 디렉터 판단 11/18(Lucy 확인 대기): 1막 = B3 숲속 빈터 8703, 레이어 둘, 그림자는 화면이 그림 → 0103. 후보 시트 https://claude.ai/artifact/Y8sXTfrybUkWUmGgyyPDo1
 - 디렉터 판단 11/18(Lucy 확인 대기): 2막 = D2 붉은 바위 대지 9002 → 0110. 후보 시트 https://claude.ai/artifact/W3cZVwLGB8ykaqnDfunP5P. ❌ 소금 들(흰 빈칸), 채석 대지(광장 · 돌담으로 나옴). 지역 이름은 미정
+- 디렉터 판단 11/18(Lucy 확인 대기): 3막 = E3 언 호수 9402 → 0111. 후보 시트 https://claude.ai/artifact/8ZSAjazYfb8rukjPGeuDdT. ❌ 검은 모래 해변(흰 하늘), 겨울 갯벌(한 색). 지역 이름은 미정
+- 디렉터 판단 11/18(Lucy 확인 대기): 4막 = F2 백야 툰드라 9604 → 0112. 후보 시트 https://claude.ai/artifact/TkN2LtYEBSVCZ6dHqTXT6i. ❌ 구름바다 고원(밝은 연두), 곶 초원(1막과 가까움). 지역 이름은 미정
+- 디렉터 판단 11/18(Lucy 확인 대기): 5막 = G3 아홉 빛 꽃들 10004 → 0113. 후보 시트 https://claude.ai/artifact/AQdTFkxRasgbrDA5WKfvpM. ❌ 처음 나무 분지(나무가 유닛과 다툼), 들의 끝 물가(해변으로 읽힘). 지역 이름은 미정
 
 ## 용어 모음 (2026-11-18, 0102)
 - 캡처: /mnt/project-files/glossary/ (B 기호 격자 + 호버 풀이 = 채택, A 한 장 목록 · C 목록 + 풀이 판 = 기각). 디렉터 판단, Lucy 확인 대기
