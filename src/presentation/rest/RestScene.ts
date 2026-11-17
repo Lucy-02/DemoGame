@@ -21,6 +21,7 @@ import type { DeckCardVM, LaneVM } from "../run/viewmodel";
 import { preloadSpiritArt } from "../spiritArt";
 import { preloadStage } from "../stage";
 import { loadIcon } from "../style/icons";
+import { audioOf } from "../audio";
 import { COPY } from "./copy";
 import { restSession } from "./fixtures";
 
@@ -126,6 +127,7 @@ export class RestScene extends Phaser.Scene {
   private choose(i: number) {
     if (i === Pick.Rest) {
       if (this.rested || !this.session.dispatch({ kind: "rest" })) return;
+      audioOf(this)?.play("rest");
       // 찬 HP를 한 박자 보고 넘어가요 (0089)
       this.rested = true;
       this.hover = undefined;
@@ -181,6 +183,7 @@ export class RestScene extends Phaser.Scene {
         clear: () => { this.pick = undefined; this.redraw(); },
         ok: (uid) => {
           if (!this.session.dispatch({ kind: "upgrade", uid })) return;
+          audioOf(this)?.play("upgrade");
           this.leave();
         },
         back: () => { this.upgrading = false; this.pick = undefined; this.deckHover = undefined; this.redraw(); },
