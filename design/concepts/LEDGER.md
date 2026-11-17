@@ -230,3 +230,6 @@
 ## 용어 모음 (2026-11-18, 0102)
 - 캡처: /mnt/project-files/glossary/ (B 기호 격자 + 호버 풀이 = 채택, A 한 장 목록 · C 목록 + 풀이 판 = 기각). 디렉터 판단, Lucy 확인 대기
 - 검사 항목 결과: 가장 작은 글자 12px로 맞춤. 색만으로 뜻을 전하는 곳은 상점의 모자란 카드 값 하나(Lucy 확인 대기)
+
+## 용어 기호 후보 (2026-11-18, 0105)
+- 벽 · 품기 · 낙하 · 틈 후보 세 개씩: https://claude.ai/artifact/TjwuPx7M8WDyzwcYgZnm5e (사본 /mnt/project-files/glossary/icon-candidates.html). Lucy 선택 대기

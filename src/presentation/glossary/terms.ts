@@ -9,8 +9,10 @@ export interface Term {
   id: string;
   name: string;
   group: TermGroup;
-  /** 정본 기호 id. 없으면 점선 칸 (TODO_ICON) */
+  /** 정본 기호 id */
   icon?: string;
+  /** 기호가 없을 때 전투에서 쓰는 표지: weak = 약점 조준 테, release = 해방 ✦, opening = 허점 노란 테, downed = 쓰러진 정령의 붉은 점선 테 (0105). 둘 다 없으면 점선 칸 (TODO_ICON) */
+  mark?: "weak" | "release" | "opening" | "downed";
   what: string;
   when?: string;
   /** 효과문에서 점선 밑줄로 표시하는 용어 */
@@ -41,12 +43,12 @@ export const TERMS: readonly Term[] = [
 
   { id: "charge", name: "차징", group: "battle", icon: "kw-charge", what: "적이 큰 행동을 준비합니다.", when: "브레이크로만 끊을 수 있습니다." },
   { id: "break", name: "브레이크", group: "battle", icon: "kw-break", inText: true, what: "차징 중인 적의 행동을 끊습니다." },
-  { id: "opening", name: "허점", group: "battle", what: `적이 행동하기 직전에 끝난 공격은 피해가 ${pct(C.opening_mult)}% 늘어납니다.` },
+  { id: "opening", name: "허점", group: "battle", mark: "opening", what: `적이 행동하기 직전에 끝난 공격은 피해가 ${pct(C.opening_mult)}% 늘어납니다.` },
   { id: "gap", name: "틈", group: "battle", what: "큰 차징을 끊거나 늦추거나 몰아 치면 열립니다.", when: `틈이 열린 적은 모든 공격을 허점으로 받고 피해를 ${pct(C.gap.dmg_mult)}% 더 받습니다.` },
-  { id: "weakness", name: "약점", group: "battle", what: `약점 속성의 공격은 피해가 ${pct(C.affinity_weak)}% 늘어납니다.`, when: `저항하는 속성의 공격은 ${pct(C.affinity_resist)}% 줄어듭니다.` },
+  { id: "weakness", name: "약점", group: "battle", mark: "weak", what: `약점 속성의 공격은 피해가 ${pct(C.affinity_weak)}% 늘어납니다.`, when: `저항하는 속성의 공격은 ${pct(C.affinity_resist)}% 줄어듭니다.` },
   { id: "front", name: "앞열", group: "battle", icon: "g-flag", what: "적이 앞열을 노리는 공격을 받습니다." },
-  { id: "release", name: "해방", group: "battle", what: `각성체가 전투마다 한 번 ${C.release_duration}턴 동안 변신합니다.` },
-  { id: "downed", name: "쓰러짐", group: "battle", what: "그 전투 동안 카드가 봉인됩니다.", when: `전투가 끝나면 HP ${C.downed_return_hp}로 돌아옵니다.` },
+  { id: "release", name: "해방", group: "battle", mark: "release", what: `각성체가 전투마다 한 번 ${C.release_duration}턴 동안 변신합니다.` },
+  { id: "downed", name: "쓰러짐", group: "battle", mark: "downed", what: "그 전투 동안 카드가 봉인됩니다.", when: `전투가 끝나면 HP ${C.downed_return_hp}로 돌아옵니다.` },
 ];
 
 export const GROUPS: readonly TermGroup[] = ["status", "card", "battle"];
@@ -55,6 +57,11 @@ const BY_ICON = new Map(TERMS.filter((t) => t.icon).map((t) => [t.icon!, t]));
 
 /** 기호 → 용어. 사전에 없는 기호는 풀이를 띄우지 않아요 */
 export const termOfIcon = (icon: string): Term | undefined => BY_ICON.get(icon);
+
+const BY_NAME = new Map(TERMS.map((t) => [t.name, t]));
+
+/** 이름 → 용어 (효과문의 밑줄 용어) */
+export const termOfName = (name: string): Term | undefined => BY_NAME.get(name);
 
 /** 효과문에서 밑줄로 표시할 용어 이름 */
 export const TEXT_TERMS: readonly string[] = TERMS.filter((t) => t.inText).map((t) => t.name);

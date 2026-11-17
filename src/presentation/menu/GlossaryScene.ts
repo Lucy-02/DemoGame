@@ -2,9 +2,12 @@
 // 칸은 기호 + 이름뿐이고, 풀이는 칸에 올리면 창 오른쪽 말풍선으로 떠요 (0050). 풀이 문구는 용어 사전(glossary/terms)을 그대로 써요.
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
+import { COPY as BATTLE } from "../battle/copy";
+import { weakTexture } from "../battle/views/units";
 import { GROUPS, TERMS, termBody, type Term } from "../glossary/terms";
 import { drawWindow } from "../result/views/window";
-import { box } from "../style/draw";
+import { rgba } from "../style/color";
+import { box, circle } from "../style/draw";
 import { render, size, type Node } from "../style/flex";
 import { loadIcon } from "../style/icons";
 import { P, rule, text } from "../spirits/views/parts";
@@ -66,6 +69,26 @@ export class GlossaryScene extends Phaser.Scene {
     this.dirty = true;
   }
 
+  /** 기호가 없는 용어: 전투에서 쓰는 표지를 그대로, 그것도 없으면 점선 칸 (TODO_ICON) */
+  private mark(t: Term): Node {
+    const d = G.cell.icon;
+    if (t.mark === "release") return text(BATTLE.order.release, TI.item, P.accHi, { w: d });
+    return {
+      t: "block", w: d, h: d,
+      draw: (g, x, y, w, h) => {
+        if (t.mark === "weak") this.add.image(x + w / 2, y + h / 2, weakTexture(this, false).key).setDisplaySize(w, h);
+        else if (t.mark === "opening") circle(g, x + w / 2, y + h / 2, w - G.ring, { ring: { width: G.ring, color: P.warn } });
+        else if (t.mark === "downed") {
+          // 점선 테: 호 여섯 조각 (허점의 이은 테와 모양으로도 갈려요)
+          const c = rgba(P.danger), n = G.downArcs, step = (Math.PI * 2) / n;
+          g.lineStyle(G.ring, c.color, c.alpha);
+          for (let i = 0; i < n; i++) g.beginPath().arc(x + w / 2, y + h / 2, (w - G.ring) / 2, i * step, (i + 0.5) * step).strokePath();
+        }
+        else box(g, x, y, w, h, G.todo.radius, { ring: { width: G.todo.ring, color: P.ink2, dash: G.todo.dash } });
+      },
+    };
+  }
+
   private paint() {
     for (const o of [...this.children.list]) o.destroy();
     const inner = G.w - 2 * G.pad;
@@ -76,8 +99,7 @@ export class GlossaryScene extends Phaser.Scene {
         t: "row", w: cw, h: C.h, radius: C.radius, pad: [0, C.padX, 0, C.padX], gap: C.gap, align: "center",
         style: this.hover === t.id ? { fill: P.veil["09"], ring: { width: 1, color: P.veil["50"] } } : undefined,
         children: [
-          t.icon ? { t: "icon", id: t.icon, w: C.icon, h: C.icon, tint: P.ink }
-            : { t: "block", w: C.icon, h: C.icon, draw: (g, x, y, w, h) => box(g, x, y, w, h, G.todo.radius, { ring: { width: G.todo.ring, color: P.ink2, dash: G.todo.dash } }) },
+          t.icon ? { t: "icon", id: t.icon, w: C.icon, h: C.icon, tint: P.ink } : this.mark(t),
           text(t.name, TI.item, P.ink),
         ],
       };
