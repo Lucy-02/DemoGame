@@ -4,6 +4,10 @@ export class Rng {
   constructor(seed: number) {
     this.s = seed >>> 0;
   }
+  /** 저장용 지금 상태. `new Rng(state)`로 같은 흐름을 이어요 */
+  get state(): number {
+    return this.s >>> 0;
+  }
   next(): number {
     let t = (this.s += 0x6d2b79f5);
     t = Math.imul(t ^ (t >>> 15), t | 1);

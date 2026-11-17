@@ -1,21 +1,37 @@
 // 새 화면(정본 기준)으로 게임을 띄워요. 기준 해상도는 정본 프레임과 같은 1280×800.
 // 창 크기에 맞춰 늘이지 않고 1280×800 고정 뷰포트로 그려요.
+// screen이 없으면 저장에 이어진 게임(메인 화면에서 시작, flow.ts)이고, 화면 이름을 주면 그 화면의 고정 장면이에요.
 import * as Phaser from "phaser";
 import { tokens } from "../design/tokens";
+import type { GameSession } from "../session/game";
+import { GameFlow } from "./flow";
+import { LEGACY_SCENES, waitForLegacyFonts } from "./placeholder";
 import { BATTLE_SCENE, BattleScene } from "./battle/BattleScene";
 import { FIXTURES } from "./battle/fixtures";
 import { FRAME } from "./battle/layout";
 import { HOME_SCENE, HomeScene, type HomeSceneData } from "./home/HomeScene";
 import { RESULT_SCENE, ResultScene, type ResultSceneData } from "./result/ResultScene";
+import { EVENT_SCENE, EventScene, type EventSceneData } from "./event/EventScene";
+import { REST_SCENE, RestScene, type RestSceneData } from "./rest/RestScene";
+import { RUN_END_SCENE, RunEndScene, type RunEndSceneData } from "./runEnd/RunEndScene";
 import { SHOP_SCENE, ShopScene, type ShopSceneData } from "./shop/ShopScene";
+import { DECK_SCENE, DeckScene, type DeckSceneData } from "./deck/DeckScene";
+import { MAP_SCENE, MapScene, type MapSceneData } from "./map/MapScene";
+import { EVOLUTION_SCENE, EvolutionScene } from "./evolution/EvolutionScene";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
 import type { TabId } from "./spirits/viewmodel";
 import { installCursor } from "./style/cursor";
 import { loadFonts } from "./style/fonts";
 
 export interface GameOptions {
-  /** 띄울 화면 (기본 전투). spirits = 정령 관리, result = 전투 결과, shop = 상점 */
-  screen?: "battle" | "spirits" | "result" | "shop" | "home";
+  /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
+  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd" | "deck" | "map";
+  /** 저장에 이어진 게임의 세션 (screen이 없을 때) */
+  session?: GameSession;
+  /** 시험 판: 메인 화면 없이 바로 떠나요 (?screen=legacy) */
+  trial?: boolean;
+  /** 메인 화면의 종료 */
+  quit?: () => void;
   /** 전투 결과: 받은 상태로 시작 (카드 key 또는 skip, 시각 검증용) */
   taken?: string;
   /** 정령 관리: 처음 고를 정령·탭, 패널 접힘 (?select=&tab=&closed) */
@@ -33,7 +49,8 @@ export interface GameOptions {
 }
 
 export async function startGame(parent: string, opts: GameOptions = {}): Promise<Phaser.Game> {
-  await loadFonts();
+  const live = !opts.screen && opts.session;
+  await Promise.all([loadFonts(), live ? waitForLegacyFonts() : undefined]);
   return new Phaser.Game({
     type: Phaser.WEBGL,
     parent,
@@ -47,8 +64,17 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
       postBoot: (game) => {
         // 마우스 커서(0025). 끌기·대기 같은 잠깐 상태는 game.registry.get("cursor").push/pop
         game.registry.set("cursor", installCursor(game));
+        if (live) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene]] as const) {
+            game.scene.add(key, scene, false);
+          }
+          for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
+          new GameFlow(game, opts.session!, { trial: opts.trial, quit: opts.quit }).start();
+          return;
+        }
         if (opts.screen === "spirits") {
           const data: SpiritsSceneData = { scene: opts.scene, select: opts.select, tab: opts.tab as TabId | undefined, closed: opts.closed, pick: opts.pick };
+          game.scene.add(EVOLUTION_SCENE, EvolutionScene, false);
           game.scene.add(SPIRITS_SCENE, SpiritsScene, true, data);
           return;
         }
@@ -74,12 +100,38 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
             },
           };
           game.scene.add(SPIRITS_SCENE, SpiritsScene, false);
+          game.scene.add(EVOLUTION_SCENE, EvolutionScene, false);
           game.scene.add(HOME_SCENE, HomeScene, true, home);
+          return;
+        }
+        if (opts.screen === "map") {
+          game.scene.add(MAP_SCENE, MapScene, true, { scene: opts.scene, select: opts.select } satisfies MapSceneData);
+          return;
+        }
+        if (opts.screen === "deck") {
+          // 덱 보기는 다른 화면 위에 뜨는 창이라, 확인할 때는 전투 고정 장면 위에 띄워요
+          game.scene.add(BATTLE_SCENE, BattleScene, true, {});
+          game.scene.add(DECK_SCENE, DeckScene, true, { scene: opts.scene } satisfies DeckSceneData);
           return;
         }
         if (opts.screen === "shop") {
           const data: ShopSceneData = { scene: opts.scene, hover: opts.hover };
           game.scene.add(SHOP_SCENE, ShopScene, true, data);
+          return;
+        }
+        if (opts.screen === "runEnd") {
+          const data: RunEndSceneData = { scene: opts.scene };
+          game.scene.add(RUN_END_SCENE, RunEndScene, true, data);
+          return;
+        }
+        if (opts.screen === "event") {
+          const data: EventSceneData = { scene: opts.scene, hover: opts.hover };
+          game.scene.add(EVENT_SCENE, EventScene, true, data);
+          return;
+        }
+        if (opts.screen === "rest") {
+          const data: RestSceneData = { scene: opts.scene, hover: opts.hover };
+          game.scene.add(REST_SCENE, RestScene, true, data);
           return;
         }
         game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, lift: opts.lift });

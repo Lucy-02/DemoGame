@@ -117,3 +117,4 @@ export function describeEquipTier(tier: EquipTier): string[] {
 /** 전용 무기가 대표 카드를 기술로 바꾸는 효과문 (0055) */
 export const describeSignatureSwap = (from: string, to: string) =>
   `${josa(cardName(from), "이/가")} ${josa(cardName(to), "으로/로")} 바뀝니다.`;
+

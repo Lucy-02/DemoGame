@@ -5,6 +5,7 @@ import { exampleCardArt } from "./cardArt";
 import { canonRest } from "./canonRest";
 import { exampleCrowded } from "./crowded";
 import { exampleEquip } from "./equip";
+import { exampleOrderPlan, exampleOrderPlay } from "./order";
 
 export const FIXTURES: Record<string, BattleVM> = {
   /** 정본 쉬는 상태 (#rest) */
@@ -25,6 +26,9 @@ export const FIXTURES: Record<string, BattleVM> = {
   equip: exampleEquip,
   /** 예시: 든 카드의 속성이 약점인 적 (약점 배지 켜짐) */
   weak: exampleWeak,
+  /** 예시: 순서표 토큰 상태 (0074). 계획 중 · 재생 중 */
+  "order-plan": exampleOrderPlan,
+  "order-play": exampleOrderPlay,
   /** 예시: 꽉 찬 정보 묶음 (상태 다섯, 치명 받을 피해) */
   crowded: exampleCrowded,
 };

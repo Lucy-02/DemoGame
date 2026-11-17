@@ -1,10 +1,10 @@
 // 규칙 데이터(정령·카드) → 런 화면 값 (카드, 정령 줄). 고정 장면과, 런에 연결할 때 함께 써요.
-import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, cardDef, equipDef, equipName, spiritDef } from "../../core/data";
+import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, baseCardId, cardDef, equipDef, equipName, isUpgradedId, spiritDef, upgradedId } from "../../core/data";
 import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round, scale } from "../../core/stats";
 import { signatureSwapOf } from "../../core/run";
 import { describeCard, describeEquipTier, describeSignatureSwap } from "../../core/text";
-import type { CardDef, CardOp, EquipTier, RunEquip, RunSpirit, Stage } from "../../core/types";
-import { isCardArtId } from "../card/art";
+import type { CardDef, CardOp, DeckCard, EquipTier, RunEquip, RunSpirit, Stage } from "../../core/types";
+import { cardArtOf } from "../card/art";
 import type { CardRarity, CardVM, CardValueVM, Material, RichText } from "../card/viewmodel";
 import { ELEMENT_ICON, type FaceId } from "../faces";
 import { spiritArt } from "../spiritArt";
@@ -37,16 +37,21 @@ const OP_STAT: Partial<Record<CardOp["op"], StatId>> = {
   damage: "power", block: "guard", wall: "guard", thorns: "guard", heal: "focus", burn: "focus", chill: "focus",
 };
 
-/** 수치판: 앞에서부터 기호가 있는 효과 두 개까지. st가 없으면 원래 숫자, 있으면 그 정령의 능력치로 계산한 숫자(오르면 ▲) */
+const opBase = (op: CardOp): number | undefined => ("value" in op && typeof op.value === "number" ? op.value
+  : "turns" in op && typeof op.turns === "number" ? op.turns : undefined);
+
+/** 수치판: 앞에서부터 기호가 있는 효과 두 개까지. st가 없으면 원래 숫자, 있으면 그 정령의 능력치로 계산한 숫자.
+ *  카드에 찍힌 숫자(강화 전 카드)보다 오르면 ▲: 능력치로 오른 값과 강화로 오른 값이 같은 표식이에요 (0080) */
 export function valuesOf(def: CardDef, st?: Record<StatId, number>): CardValueVM[] {
-  return def.effects.flatMap((op): CardValueVM[] => {
+  const printed = isUpgradedId(def.id) ? cardDef(baseCardId(def.id)).effects : def.effects;
+  return def.effects.flatMap((op, i): CardValueVM[] => {
     const icon = OP_ICON[op.op];
-    const fromValue = "value" in op && typeof op.value === "number";
-    const base = fromValue ? (op.value as number) : "turns" in op && typeof op.turns === "number" ? op.turns : undefined;
+    const base = opBase(op);
     if (!icon || base === undefined) return [];
-    const k = fromValue ? OP_STAT[op.op] : undefined;
+    const k = "value" in op && typeof op.value === "number" ? OP_STAT[op.op] : undefined;
     const n = st && k ? scale(base, st[k]) : base;
-    return [{ icon, n, mult: "hits" in op ? op.hits : undefined, ...(n > base ? { up: true } : {}) }];
+    const was = opBase(printed[i]) ?? base;
+    return [{ icon, n, mult: "hits" in op ? op.hits : undefined, ...(n > was ? { up: true } : {}) }];
   }).slice(0, PLATE_MAX);
 }
 
@@ -66,10 +71,23 @@ export function cardVM(cardId: string, ownerId?: string, st?: Record<StatId, num
   return {
     key: cardId, name: def.name, cost: def.cost, owner: ownerId ? windowOf(ownerId) : "star", material,
     element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, art: "i-spark",
-    illustration: isCardArtId(cardId) ? cardId : undefined,
+    illustration: cardArtOf(baseCardId(cardId)),
     rarity: def.rarity === "basic" ? undefined : (def.rarity as CardRarity),
     values: valuesOf(def, st),
-    detail: { text: richText(describeCard(def, st ?? null)), owner: [who, ELEMENT_NAME[def.element], MATERIAL_NAME[material]].filter(Boolean).join(COPY.sep) },
+    detail: { text: richText(describeCard(def, st ?? null)), owner: [who, ELEMENT_NAME[def.element], MATERIAL_NAME[material], isUpgradedId(cardId) ? COPY.upgraded : undefined].filter(Boolean).join(COPY.sep) },
+  };
+}
+
+/** 덱 카드 한 장. 강화한 카드는 강화한 숫자로(▲) 보여요 (0080) */
+export const deckCardVM = (c: DeckCard): CardVM => cardVM(c.upgraded ? upgradedId(c.cardId) : c.cardId, c.owner);
+
+/** 해방 카드 (0075 · 0076 3번): 각성체 손패 묶음 끝에 붙는 한 장. 비용 동전 = 쓰는 칸. 이름 띠는 "해방" (정령별 해방 이름은 아직 TODO_NAME) */
+export function releaseVM(spiritId: string, slots: number): CardVM {
+  const def = spiritDef(spiritId);
+  return {
+    key: spiritId, name: COPY.release, cost: slots, owner: windowOf(spiritId), material: materialOf(def.element),
+    element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, art: "i-spark", values: [],
+    detail: { text: richText(def.release.desc), owner: [def.name, COPY.release].join(COPY.sep) },
   };
 }
 

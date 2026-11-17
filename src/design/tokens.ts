@@ -179,6 +179,7 @@ export const tokens = {
       "cardLiftShine": "rgba(255,255,255,.6)",
       "pvFill": "rgba(122,69,119,.26)",
       "aimGlow": "rgba(201,155,196,.45)",
+      "scrimDeep": "rgba(22,20,19,.82)",
       "scrim": "rgba(22,20,19,.55)",
       "glassSel": "rgba(246,241,233,.09)",
       "ink3Spirit": "#a39c92",
@@ -214,8 +215,10 @@ export const tokens = {
     },
     "text": {
       "battle": {
-        "orderLabel": "13px",
-        "orderNum": "12px",
+        "orderPlace": "12px",
+        "orderState": "14px",
+        "orderNum": "13px",
+        "orderMore": "12px",
         "hp": "16px",
         "incoming": "13px",
         "chip": "13px",
@@ -246,7 +249,8 @@ export const tokens = {
         "bubbleCalcStrong": "13px",
         "bubbleWhy": "12.5px",
         "bubbleOwner": "12px",
-        "hit": "16px"
+        "hit": "16px",
+        "tipResult": "20px"
       },
       "spirits": {
         "res": "16px",
@@ -310,6 +314,16 @@ export const tokens = {
         "tipTag": "11px",
         "tipBody": "12.5px",
         "tipStat": "18px"
+      },
+      "runScreen": {
+        "record": "14px",
+        "story": "18px",
+        "eventName": "20px",
+        "optLabel": "17px",
+        "optText": "14px",
+        "keep": "15px",
+        "onlyNum": "20px",
+        "onlyWas": "14px"
       },
       "branch": {
         "name": "26px",
@@ -538,6 +552,37 @@ export const tokens = {
         ],
         "peak": 0.45,
         "low": 0.25
+      },
+      "playback": {
+        "step": "450ms"
+      },
+      "orderToken": {
+        "act": {
+          "duration": "220ms",
+          "scale": 1.16
+        },
+        "cut": {
+          "duration": "420ms",
+          "peak": 0.85
+        },
+        "enter": {
+          "duration": "200ms",
+          "delay": "120ms",
+          "stagger": "50ms",
+          "from": 0.85,
+          "easing": [
+            0.3,
+            1.5,
+            0.5,
+            1
+          ]
+        },
+        "cursor": {
+          "grow": "200ms"
+        },
+        "leave": {
+          "duration": "160ms"
+        }
       }
     },
     "effect": {
@@ -546,6 +591,19 @@ export const tokens = {
         "contrast": 0.7,
         "brightness": 1.1,
         "opacity": 0.62
+      }
+    },
+    "order": {
+      "allyScale": 0.8,
+      "bundleMax": 4,
+      "pastOpacity": 0.5,
+      "ring": {
+        "width": 2,
+        "gap": 3
+      },
+      "badge": {
+        "ratio": 0.42,
+        "deg": 45
       }
     }
   }
