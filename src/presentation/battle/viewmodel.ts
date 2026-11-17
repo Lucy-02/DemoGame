@@ -8,6 +8,8 @@ import type { EquipVM } from "../run/viewmodel";
 export type { FaceId, IconId, UnitFace };
 
 export interface OrderSlotVM {
+  /** 장면이 바뀌어도 같은 토큰임을 알아보는 이름 (모션, 0077). 없으면 움직이지 않아요 */
+  key?: string;
   n: number;
   /** 적 그림 기호 (en-*) */
   art: IconId;
@@ -32,6 +34,8 @@ export interface OrderHeadVM {
 
 /** 순서표의 아군 토큰: 놓은 카드 한 장 (0038). 주인 얼굴 + 카드 기호, 번호 없음 */
 export interface AllyTokenVM {
+  /** 장면이 바뀌어도 같은 토큰임을 알아보는 이름 (모션, 0077) */
+  key?: string;
   face: UnitFace;
   /** 카드 그림 창의 효과 기호 */
   icon: IconId;
@@ -123,13 +127,15 @@ export interface BattleVM {
   allies: AllyVM[];
   enemies: EnemyVM[];
   mana: { n: number; max: number };
-  /** 정령별 손패 묶음 (왼쪽부터) */
+  /** 정령별 손패 묶음 (왼쪽부터). 각성체 묶음 끝에는 해방 카드가 붙어요 (0075) */
   hand: { owner: UnitFace; cards: CardVM[] }[];
   /** 지금 낼 수 있는 카드 수 */
   playable: number;
   piles: { draw: number; discard: number; exhaust: number };
   /** 낼 수 있는 카드마다 대상 규칙과 결과 미리보기 (card key). 없는 카드는 끌거나 집을 수 없어요 */
   plays: Record<string, PlayVM>;
+  /** 열린 고르기 창. 닫힐 때까지 다른 조작은 쉬어요 */
+  pick?: PickVM;
   /** 시각 검증용 시작 상태 (?scene=aim 등). 없으면 쉬는 상태 */
   start?: StartVM;
 }
@@ -152,6 +158,19 @@ export interface UnitRef {
 export interface TargetRule {
   kind: "pick" | "all" | "random";
   side: Side;
+  /** pick: 이 인덱스만 고를 수 있어요 (해방 카드는 그 정령에게만) */
+  only?: number;
+}
+
+/** 가운데 고르기 창 (0075): 낙하(턴 시작)와 품기(재생 뒤)가 같이 써요 */
+export interface PickVM {
+  /** fall = 고르면 바로 받아요 · hold = 미리 골라져 있고 버튼으로 닫아요 */
+  kind: "fall" | "hold";
+  /** 고를 장 수 */
+  n: number;
+  cards: CardVM[];
+  /** 미리 골라진 카드 key */
+  picked: string[];
 }
 
 /** 카드를 낼 때 필드에 그리는 결과 (결정 0007 "미리보기 예산", 0013 끌어 대기).

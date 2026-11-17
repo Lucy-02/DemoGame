@@ -2,7 +2,7 @@
 
 - 날짜: 2026-11-06
 - 단계: 진화 연출 / 움직임
-- 상태: 수락됨 (Lucy "나쁘지 않네. 일단 마무리"). 시간·크기·흐림 값은 모두 임시(`tools/evolution-preview/main.ts` 상단). 게임 화면에는 아직 연결하지 않았어요.
+- 상태: 수락됨 (Lucy "나쁘지 않네. 일단 마무리"). 시간·크기·흐림 값은 모두 임시(`tools/evolution-preview/main.ts` 상단). 게임에서는 정령 화면의 키우기(유체 → 성체)에 이어져 있어요(`src/presentation/evolution/`, 2026-11-16). 공개에서 멈추고 누르면 정령 화면으로 돌아가요. 정리 박자(정보 패널)는 정령 화면이 대신해요.
 - 미리보기: `pnpm dev:web` → `/evolution-preview.html` (`?beat=5` 정지 화면, `&stage=none` 배경 끄기, `&feather=` `&choke=` `&matte=0` `&bandblur=` 값 바꿔 보기)
 - 기획 문서: Claude Doc "진화·각성 연출 기획" (업계 사례·원칙)
 

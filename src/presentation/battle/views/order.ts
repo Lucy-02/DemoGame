@@ -5,7 +5,7 @@ import { box, circle } from "../../style/draw";
 import { place } from "../../style/flex";
 import { gather } from "../../style/gather";
 import { icon, loadIcon } from "../../style/icons";
-import { opacityOf } from "../../style/opacity";
+import { opacityOf, type Opacity } from "../../style/opacity";
 import { placeholderArt } from "../../style/placeholder";
 import { ringTexture } from "../../style/ring";
 import { faceKey } from "../../faces";
@@ -131,12 +131,36 @@ export type OrderHit = { x: number; y: number; w: number; h: number; badge: () =
   | { kind: "enemy"; slot: number }
 );
 
+/** 그린 토큰 하나 (모션용, 0077): 이름 · 얼굴 가운데 · 상태와 그 덩어리 */
+export interface OrderMark {
+  key?: string;
+  kind: "ally" | "enemy";
+  x: number;
+  y: number;
+  d: number;
+  past: boolean;
+  held?: boolean;
+  cut?: boolean;
+  node: Phaser.GameObjects.Container;
+  alpha: () => Opacity;
+  /** 이 장면에서의 불투명도 */
+  fade: number;
+}
+
+/** 재생 위치 선 */
+export interface OrderCursor {
+  x: number;
+  bar: Phaser.GameObjects.Graphics;
+}
+
 /**
  * 순서표 (0038): [머리] │ [묶음] ─ ①적 ─ [묶음] ─ ②적 ─ … ─ [꼬리 묶음]. 오른쪽 끝이 이번 턴의 끝이에요 (0074 12번).
  * 묶음 칸은 모두 같은 폭(가장 긴 묶음)이고, 묶음은 칸 안에서 다음 적 쪽에 붙어요. 빈 칸은 연결선만.
  */
-export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phaser.GameObjects.Graphics; hits: OrderHit[] } {
+export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phaser.GameObjects.Graphics; hits: OrderHit[]; marks: OrderMark[]; cursor?: OrderCursor } {
   const hits: OrderHit[] = [];
+  const marks: OrderMark[] = [];
+  let cursorMark: OrderCursor | undefined;
   const phaseText = vm.playing ? COPY.playing : COPY.myTurn;
   const turnText = vm.head ? `${COPY.turn} ${vm.head.turn}` : "";
   const placeH = px(HEAD.place) * LINE_HEIGHT, stateH = px(HEAD.state) * LINE_HEIGHT;
@@ -145,7 +169,8 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   const stateW = turnW + O.head.dot + O.head.gap + measure(phaseText, HEAD.state);
   const headW = Math.max(stateW, vm.head?.place ? measure(vm.head.place, HEAD.place) : 0);
   const bundles = vm.bundles ?? [];
-  const cellW = Math.max(0, ...bundles.map((b) => (b.length ? bundleWidth(b.length) : 0)));
+  // 칸마다 두 장 자리를 미리 잡아서, 카드를 놓아도 적 토큰이 움직이지 않아요. 넘칠 때만 모든 칸이 함께 늘어요 (0077 0번)
+  const cellW = Math.max(vm.bundles ? bundleWidth(O.bundle.reserve) : 0, ...bundles.map((b) => (b.length ? bundleWidth(b.length) : 0)));
   const dividerW = O.head.padR + O.head.line + O.head.mr;
   // 재생 위치: 아직 다 지나가지 않은 첫 칸(묶음 또는 적) 앞
   const pastCell = (k: number) => (bundles[k] ?? []).every((t) => t.past);
@@ -190,14 +215,19 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
 
   const cursor = (kind: "cell" | "slot", k: number) => {
     if (cursorAt?.kind !== kind || cursorAt.k !== k) return;
-    box(g, x + O.cursor.mx, cy - O.cursor.h / 2, O.cursor.w, O.cursor.h, O.cursor.radius, { fill: P.ink });
+    const bar = box(scene.add.graphics(), 0, -O.cursor.h / 2, O.cursor.w, O.cursor.h, O.cursor.radius, { fill: P.ink }).setPosition(x + O.cursor.mx, cy);
+    cursorMark = { x: x + O.cursor.mx, bar };
     x += cursorW;
   };
 
   /** 토큰 하나를 한 덩어리로 그려요. fade가 있으면 덩어리째 흐려요 (CSS opacity) */
-  const token = (draw: () => void, fade?: number) => {
-    const c = gather(scene, 0, 0, draw);
-    if (fade !== undefined) opacityOf(c).value = fade;
+  const token = (draw: () => void, fade: number | undefined, mark: Omit<OrderMark, "node" | "alpha" | "fade">) => {
+    const node = gather(scene, 0, 0, draw);
+    // 불투명도 필터는 흐린 토큰과 움직이는 토큰에만 붙여요
+    let op: Opacity | undefined;
+    const alpha = () => (op ??= opacityOf(node));
+    if (fade !== undefined) alpha().value = fade;
+    if (mark.key) marks.push({ ...mark, node, alpha, fade: fade ?? 1 });
   };
 
   /** 묶음 칸 (.slot): 칸 폭만큼 연결선이 지나가고, 묶음은 다음 적 쪽(오른쪽)에 붙어 선을 덮어요 */
@@ -224,7 +254,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
         badge();
         // 해방: 왼쪽 위 ✦ 배지 (0074 토큰 그리기 규칙)
         if (t.mark === "release") drawBadge(scene, fx, cy, ALLY_BADGE, { icon: "", glyph: COPY.order.release, tint: P.accHi, fill: P.face }, [-1, -1]);
-      }, t.mark === "held" ? O.fade.held : t.past ? O.fade.past : undefined);
+      }, t.mark === "held" ? O.fade.held : t.past ? O.fade.past : undefined, { key: t.key, kind: "ally", x: fx, y: cy, d, past: !!t.past, held: t.mark === "held" });
       sx += d + O.bundle.gap;
     });
     if (list.length > O.bundle.max) {
@@ -258,12 +288,12 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
       if (s.cut === "done") opacityOf(face).value = O.fade.cutFace;
       if (s.state === "now") drawRing(scene, fx, cy, O.face, { color: P.ink });
       badge();
-    }, s.state === "past" ? O.fade.past : undefined);
+    }, s.state === "past" ? O.fade.past : undefined, { key: s.key, kind: "enemy", x: fx, y: cy, d: O.face, past: s.state === "past", cut: s.cut === "done" });
     x += slotW;
     line(O.line.w);
   }
   cell(vm.slots.length);
-  return { g, hits };
+  return { g, hits, marks, cursor: cursorMark };
 }
 
 /** 가리킨 토큰: 얼굴 원에 흰 테 (0038 호버). 같은 적의 다른 토큰(soft)은 옅은 테 (0074 5번). 테 위에 배지를 다시 얹어요 */

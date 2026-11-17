@@ -179,6 +179,7 @@ export const tokens = {
       "cardLiftShine": "rgba(255,255,255,.6)",
       "pvFill": "rgba(122,69,119,.26)",
       "aimGlow": "rgba(201,155,196,.45)",
+      "scrimDeep": "rgba(22,20,19,.82)",
       "scrim": "rgba(22,20,19,.55)",
       "glassSel": "rgba(246,241,233,.09)",
       "ink3Spirit": "#a39c92",
@@ -314,6 +315,16 @@ export const tokens = {
         "tipBody": "12.5px",
         "tipStat": "18px"
       },
+      "runScreen": {
+        "record": "14px",
+        "story": "18px",
+        "eventName": "20px",
+        "optLabel": "17px",
+        "optText": "14px",
+        "keep": "15px",
+        "onlyNum": "20px",
+        "onlyWas": "14px"
+      },
       "branch": {
         "name": "26px",
         "level": "13px",
@@ -335,6 +346,16 @@ export const tokens = {
         "badge": "12px",
         "floor": "17px",
         "primary": "24px"
+      },
+      "join": {
+        "name": "30px",
+        "hero": "40px",
+        "chip": "15px",
+        "cta": "18px"
+      },
+      "depart": {
+        "button": "17px",
+        "kbd": "12px"
       }
     },
     "pattern": {
@@ -544,6 +565,74 @@ export const tokens = {
       },
       "playback": {
         "step": "450ms"
+      },
+      "orderToken": {
+        "act": {
+          "duration": "220ms",
+          "scale": 1.16
+        },
+        "cut": {
+          "duration": "420ms",
+          "peak": 0.85
+        },
+        "enter": {
+          "duration": "200ms",
+          "delay": "120ms",
+          "stagger": "50ms",
+          "from": 0.85,
+          "easing": [
+            0.3,
+            1.5,
+            0.5,
+            1
+          ]
+        },
+        "cursor": {
+          "grow": "200ms"
+        },
+        "leave": {
+          "duration": "160ms"
+        }
+      },
+      "join": {
+        "easing": [
+          0.3,
+          0.7,
+          0.2,
+          1
+        ],
+        "fade": {
+          "delay": "300ms",
+          "duration": "400ms"
+        },
+        "move": {
+          "delay": "600ms",
+          "duration": "800ms"
+        },
+        "halo": {
+          "delay": "1100ms",
+          "duration": "1100ms"
+        },
+        "hop": {
+          "delay": "1600ms",
+          "duration": "420ms"
+        },
+        "info": {
+          "delay": "2000ms",
+          "duration": "450ms"
+        },
+        "party": {
+          "delay": "2300ms",
+          "duration": "350ms"
+        },
+        "face": {
+          "delay": "2450ms",
+          "duration": "420ms"
+        },
+        "cta": {
+          "delay": "2900ms",
+          "duration": "350ms"
+        }
       }
     },
     "effect": {

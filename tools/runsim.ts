@@ -67,6 +67,9 @@ export interface RunSimResult {
   bossHpPct?: number;
   bossTurns?: number;
   battles: number;
+  /** 잡몹 · 정예 전투의 턴 수 (이긴 전투와 진 전투 모두) */
+  mobTurns: number[];
+  eliteTurns: number[];
 }
 
 const hpPct = (run: Run) => run.spirits.reduce((a, s) => a + s.hp, 0) / run.spirits.reduce((a, s) => a + maxHpOf(s), 0);
@@ -74,6 +77,7 @@ const hpPct = (run: Run) => run.spirits.reduce((a, s) => a + s.hp, 0) / run.spir
 /** 전투 하나. 이기면 true. HP를 런에 되돌려요 (쓰러진 정령은 복귀 HP). */
 function fight(run: Run, enc: EncounterDef, rng: Rng, bot: Bot): { won: boolean; turns: number } {
   const b = new Battle(run.spirits, run.battleDeck(), enc.enemies, run.frontId, rng, run.enemyScale(), run.battleTraits());
+  b.firstGapBonus = run.battleGapBonus();
   while (b.result === "ongoing" && b.turn < MAX_TURNS) {
     bot(b, rng);
     b.drain();
@@ -116,6 +120,7 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
   const rng = new Rng(seed * 31 + 7);
   const { bot, policy } = player(kind, seed);
   let battles = 0;
+  const mobTurns: number[] = [], eliteTurns: number[] = [];
   for (let guard = 0; guard < 30; guard++) {
     const node = pickNode(run, rng);
     run.enter(node);
@@ -124,8 +129,10 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
       const before = { bossDeck: run.deck.length, bossHpPct: hpPct(run) };
       const { won, turns } = fight(run, enc, battleRng, bot);
       battles++;
-      if (node.type === "boss") return { won, endedAt: won ? "clear" : enc.id, floor: node.floor, reachedBoss: true, ...before, bossTurns: turns, battles };
-      if (!won) return { won: false, endedAt: enc.id, floor: node.floor, reachedBoss: false, battles };
+      if (node.type === "battle") mobTurns.push(turns);
+      else if (node.type === "elite") eliteTurns.push(turns);
+      if (node.type === "boss") return { won, endedAt: won ? "clear" : enc.id, floor: node.floor, reachedBoss: true, ...before, bossTurns: turns, battles, mobTurns, eliteTurns };
+      if (!won) return { won: false, endedAt: enc.id, floor: node.floor, reachedBoss: false, battles, mobTurns, eliteTurns };
       const reward = run.rollBattleReward(node.type);
       if (!reward.cardsDone) {
         const id = policy.reward(reward.cards, rng);
@@ -163,6 +170,11 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
           const cards = run.rollCards(3, C.reward.rarity_normal as Record<string, number>, o.rarity);
           if (cards.length) { const c = rng.pick(cards); run.addCard(c.id, rng.pick(run.learnersOf(c.id)).id); }
         } else if (o.type === "removeCard") removeOne(run, policy);
+        else if (o.type === "upgradeCard" || o.type === "duplicateCard") {
+          // 피해 · 화상 카드 가운데 하나를 골라요
+          const good = run.deck.filter((c) => has(c.cardId, "damage", "burn") && (o.type === "duplicateCard" || run.canUpgrade(c.uid)));
+          if (good.length) { const c = rng.pick(good); if (o.type === "upgradeCard") run.upgradeCard(c.uid); else run.duplicateCard(c.uid); }
+        } else run.applyMark(o);
       }
     }
   }
@@ -188,7 +200,7 @@ function report(label: string, n: number, kind: BotKind, party?: string[], adult
   const [lo, hi] = wilson(wins.length, n);
   console.log(
     `${label.padEnd(30)} ${kind.padEnd(6)} n=${String(n).padEnd(5)} 클리어 ${pct(wins.length / n)} [${(lo * 100).toFixed(1)}–${(hi * 100).toFixed(1)}]  보스 도달 ${pct(boss.length / n)}  ` +
-    `보스 때 덱 ${avg(boss.map((r) => r.bossDeck!)).toFixed(1).padStart(4)}장 · HP ${pct(avg(boss.map((r) => r.bossHpPct!)))} · ${avg(boss.map((r) => r.bossTurns!)).toFixed(1)}턴  끝난 곳: ${top}`,
+    `보스 때 덱 ${avg(boss.map((r) => r.bossDeck!)).toFixed(1).padStart(4)}장 · HP ${pct(avg(boss.map((r) => r.bossHpPct!)))} · ${avg(boss.map((r) => r.bossTurns!)).toFixed(1)}턴  잡몹 ${avg(rs.flatMap((r) => r.mobTurns)).toFixed(1)}턴 · 정예 ${avg(rs.flatMap((r) => r.eliteTurns)).toFixed(1)}턴  끝난 곳: ${top}`,
   );
 }
 

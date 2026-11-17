@@ -4,10 +4,10 @@ import { C, cardDef } from "../../core/data";
 import type { BCard, BEnemy, BSpirit, Battle, Ref, StatusId } from "../../core/battle";
 import type { EnemyAction, EnemyTargetRule } from "../../core/types";
 import { ELEMENT_ICON, faceKey } from "../faces";
-import { cardVM, equipVM } from "../run/fromCore";
+import { cardVM, equipVM, releaseVM } from "../run/fromCore";
 import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
-import type { AllyTokenVM, AllyVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
+import type { AllyTokenVM, AllyVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
 
 /** 상태 → 정본 기호. 기호가 아직 없는 상태(벽·늦춤·별 등)는 그리지 않아요 (기호는 Lucy 확인 대기) */
 const STATUS_ICON: Partial<Record<StatusId, string>> = {
@@ -23,6 +23,10 @@ export const BREAK_ICON = "kw-break";
 
 export const cardKey = (c: BCard) => `c${c.uid}`;
 export const cardUid = (key: string) => Number(key.slice(1));
+/** 해방 카드 key (`r:<정령 id>`) */
+const RELEASE = "r:";
+export const releaseKey = (spiritId: string) => RELEASE + spiritId;
+export const releaseId = (key: string) => (key.startsWith(RELEASE) ? key.slice(RELEASE.length) : undefined);
 
 /** place: 순서표 머리의 장소 글 (판이 알려 줘요) */
 export function battleVM(b: Battle, place?: string): BattleVM {
@@ -30,20 +34,52 @@ export function battleVM(b: Battle, place?: string): BattleVM {
   const order = orderOf(b);
   const allies = alive.map((s) => allyVM(b, s));
   const enemies = b.enemies.filter((e) => !e.dead).map((e) => enemyVM(b, e, order));
+  const pick = pickOf(b);
+  // 해방 카드: 아직 안 쓴 각성체 묶음 끝에 늘 붙어 있어요. 뽑지 않고 손패 장수에 세지 않아요 (0075)
+  const releases = alive.filter((s) => !s.downed && !s.releaseUsed && s.run.stage === "awakened");
+  const releaseCard = (s: BSpirit) => ({ ...releaseVM(s.id, C.release_cost), key: releaseKey(s.id), face: faceKey(s.id), off: !b.canRelease(s.id) || undefined });
   const hand = alive
-    .map((s) => ({ owner: s.id, cards: b.hand.filter((c) => c.owner === s.id).map((c) => handCard(b, c)) }))
+    .map((s) => ({
+      owner: s.id,
+      cards: [...b.hand.filter((c) => c.owner === s.id).map((c) => handCard(b, c)), ...(releases.includes(s) ? [releaseCard(s)] : [])],
+    }))
     .filter((g) => g.cards.length > 0);
   const plays: Record<string, PlayVM> = {};
-  for (const c of b.hand) if (b.canPlay(c).ok) plays[cardKey(c)] = { target: targetRule(b, c), slot: slotOf(b, c) };
+  if (!pick) {
+    for (const c of b.hand) if (b.canPlay(c).ok) plays[cardKey(c)] = { target: targetRule(b, c), slot: slotOf(b, c) };
+  }
+  const playable = Object.keys(plays).length;
+  if (!pick) {
+    for (const s of releases) if (b.canRelease(s.id)) plays[releaseKey(s.id)] = { target: { kind: "pick", side: "ally", only: alive.indexOf(s) }, slot: slotOf(b, { end: b.releaseEnd(s.id), owner: s.id, card: null }) };
+  }
   return {
     order: { slots: order.map((o) => o.slot), bundles: bundlesOf(b).map((l) => l.map((t) => t.token)), head: { place, turn: b.turn } },
     allies, enemies,
     mana: { n: b.mana, max: C.mana_per_turn },
     hand,
-    playable: Object.keys(plays).length,
+    playable,
     piles: { draw: b.draw.length, discard: b.discard.length, exhaust: b.exhaust.length },
-    plays,
+    plays, pick,
   };
+}
+
+/** 열린 고르기: 턴 끝 품기가 먼저, 없으면 낙하 */
+function pickOf(b: Battle): PickVM | undefined {
+  const hold = b.holdChoice;
+  if (hold) {
+    const cards = hold.cards.flatMap((uid) => b.hand.filter((c) => c.uid === uid));
+    return {
+      kind: "hold", n: hold.n, picked: hold.auto.map((uid) => `c${uid}`),
+      cards: cards.map((c) => ({ ...handCard(b, c), off: undefined, costShort: undefined })),
+    };
+  }
+  const fall = b.stars.choice;
+  if (fall && b.result === "ongoing") {
+    const s = b.spirit(fall.owner);
+    const st = Object.fromEntries(STAT_IDS.map((k) => [k, b.stat(s, k)])) as Record<StatId, number>;
+    return { kind: "fall", n: Math.min(fall.picks, fall.options.length), picked: [], cards: fall.options.map((id) => ({ ...cardVM(id, fall.owner, st), face: faceKey(fall.owner) })) };
+  }
+  return undefined;
 }
 
 /** 화면이 고른 대상(편 + 인덱스)을 전투의 대상으로 */
@@ -78,7 +114,7 @@ function orderOf(b: Battle): OrderEntry[] {
       text: [{ text: b.intent(e).text }],
       chips: [{ text: COPY.order.n(i + 1) }, ...(charge ? [{ text: COPY.order.breakable, tone: "acc" as const }] : [])],
     };
-    return { uid: x.uid, slot: { n: i + 1, art: "", action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
+    return { uid: x.uid, slot: { key: `t${b.turn}:s${b.slots.indexOf(x)}`, n: i + 1, art: "", action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
   });
 }
 
@@ -95,14 +131,17 @@ const openSlots = (b: Battle) => b.slots.filter((x) => !x.done).sort((x, y) => x
 export interface PlannedToken {
   token: AllyTokenVM;
   /** 놓은 카드 (호버 풀이) */
-  cardId: string;
+  cardId?: string;
   owner: string;
 }
 
 interface Lane {
   end: number;
   owner: string;
-  card: BCard;
+  /** 해방은 카드가 없어요 */
+  card: BCard | null;
+  /** 놓은 순서 (토큰 이름) */
+  n?: number;
   target?: Ref;
 }
 
@@ -126,13 +165,24 @@ function bundle(b: Battle, lanes: Lane[]): Lane[][] {
 
 /** 허점: 적 행동 직전 창 안에 끝나는 공격 (0059). 노린 적, 대상이 없으면 살아 있는 적 가운데 하나라도 */
 function hitsOpening(b: Battle, p: Lane): boolean {
-  if (!cardDef(p.card.cardId).effects.some((op) => op.op === "damage")) return false;
+  if (!p.card || !cardDef(p.card.cardId).effects.some((op) => op.op === "damage")) return false;
   const targets = p.target?.side === "e" ? [b.enemy(p.target.uid)] : p.target ? [] : b.aliveEnemies();
   return targets.some((e) => b.inOpening(e, p.end));
 }
 
+/** 놓은 카드의 토큰 이름. 든 카드 자리는 놓으면 받을 이름을 미리 써서, 놓는 순간 같은 토큰으로 이어져요 */
+const keyOf = (b: Battle, p: Lane) => `t${b.turn}:p${p.n ?? b.planned.length}`;
+
 /** k번째 묶음의 토큰. 묶음 뒤에 적 칸이 있으면 그 번호의 "앞" 칩 */
 function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
+  if (!p.card) {
+    const vm = releaseVM(p.owner, C.release_cost);
+    const tip: OrderTipVM = {
+      title: b.spirit(p.owner).def.release.name, kind: vm.name, text: vm.detail.text,
+      chips: k < slots ? [{ text: COPY.order.before(k + 1) }] : [],
+    };
+    return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", tip }, owner: p.owner };
+  }
   const icon = cardVM(p.card.cardId, p.owner).values[0]?.icon ?? CHARGE_ICON;
   const vm = handCard(b, p.card);
   const gap = hitsOpening(b, p);
@@ -140,10 +190,10 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
     title: vm.name, kind: COPY.order.card, text: vm.detail.text,
     chips: [...(k < slots ? [{ text: COPY.order.before(k + 1) }] : []), ...(gap ? [{ text: COPY.order.gap, tone: "warn" as const }] : [])],
   };
-  return { token: { face: p.owner, icon, mark: gap ? "gap" : undefined, tip }, cardId: p.card.cardId, owner: p.owner };
+  return { token: { key: keyOf(b, p), face: p.owner, icon, mark: gap ? "gap" : undefined, tip }, cardId: p.card.cardId, owner: p.owner };
 }
 
-const lanesOf = (b: Battle): Lane[] => b.planned.map((p) => ({ end: p.end, owner: p.owner, card: p.card, target: p.target }));
+const lanesOf = (b: Battle): Lane[] => b.planned.map((p, n) => ({ end: p.end, owner: p.owner, card: p.card, target: p.target, n }));
 
 export function bundlesOf(b: Battle): PlannedToken[][] {
   const out = bundle(b, lanesOf(b));
@@ -151,8 +201,8 @@ export function bundlesOf(b: Battle): PlannedToken[][] {
 }
 
 /** 지금 놓으면 들어갈 자리 (든 동안 순서표에 흰 점선 토큰, 0074) */
-function slotOf(b: Battle, c: BCard): PlayVM["slot"] {
-  const me: Lane = { end: b.previewEnd(c), owner: c.owner, card: c };
+function slotOf(b: Battle, c: BCard | Lane): PlayVM["slot"] {
+  const me: Lane = "end" in c ? c : { end: b.previewEnd(c), owner: c.owner, card: c };
   const out = bundle(b, [...lanesOf(b), me]);
   const k = out.findIndex((l) => l.includes(me));
   return { bundle: k, i: out[k].indexOf(me), token: { ...tokenOf(b, me, k, out.length - 1).token, mark: "held" } };

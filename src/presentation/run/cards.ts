@@ -36,3 +36,11 @@ export function drawCardTip(scene: Phaser.Scene, card: CardVM, x: number, y: num
   const left = clampLeft(cx - PAPER.w / 2, PAPER.w, FRAME.w, GRID.gutter);
   return drawTooltip(scene, { skin: PAPER, content: cardTipContent(card.detail), at: { left, bottom: y - CARD_FOCUS.tipGap, tailX: cx - left } });
 }
+
+/** 카드 옆(오른쪽, 넘치면 왼쪽)에 꼬리 없는 효과 말풍선. 윗줄 머리 · 카드를 가리면 안 되는 자리(덱 고르기 둘째 줄부터)에 */
+export function drawCardTipBeside(scene: Phaser.Scene, card: CardVM, x: number, y: number, w: number) {
+  const gap = CARD_FOCUS.tipGap;
+  const right = x + w + gap;
+  const left = right + PAPER.w <= FRAME.w - GRID.gutter ? right : x - gap - PAPER.w;
+  return drawTooltip(scene, { skin: PAPER, content: cardTipContent(card.detail), at: { left, top: y } });
+}

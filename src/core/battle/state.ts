@@ -114,7 +114,8 @@ export interface BCard extends DeckCard {
 
 /** 계획된 아군 카드. 턴 종료 때 끝나는 시각 순서로 재생돼요 (0036). */
 export interface Planned {
-  card: BCard;
+  /** 카드. 해방은 카드가 없어요 (null) */
+  card: BCard | null;
   owner: string;
   target?: Ref;
   start: number;
@@ -164,6 +165,18 @@ export interface HoldState {
   highTide: boolean;
   /** 다음 턴 더 뽑는 수 (용궁) */
   nextTurnDraw: number;
+}
+
+/** 턴 끝 품기 고르기: 화면이 물을 때만 열려요 */
+export interface HoldChoice {
+  /** 품을 장 수 */
+  n: number;
+  /** 품을 수 있는 카드 uid (자동 규칙 순서) */
+  cards: number[];
+  /** 자동 규칙이 고른 카드 uid */
+  auto: number[];
+  /** 멈춘 턴 끝 처리 자리 */
+  at: number;
 }
 
 export type Ref = { side: "s"; id: string } | { side: "e"; uid: number };

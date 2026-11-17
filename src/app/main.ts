@@ -4,7 +4,12 @@
 // ?screen=battle 은 정본 기준 새 전투 화면(?scene=aim 처럼 고정 장면 고르기). ?screen=spirits 는 정령 관리(?scene=fresh|mixed&select=&tab=&closed).
 // ?screen=result 는 전투 결과(?scene=normal&hover=<카드 key|skip>&taken=<카드 key|skip>).
 // ?screen=shop 은 상점(?scene=normal|poor&hover=<카드 id|heal>).
+// ?screen=rest 는 휴식(?scene=normal|full&hover=rest|upgrade|upgrade:<카드 id>).
+// ?screen=event 는 이벤트(?scene=<이벤트 id>&hover=<선택지 번호>|pick:<선택지 번호>).
+// ?screen=runEnd 는 판 결과(?scene=victory|first|defeat).
 // ?screen=home 은 타이틀 겸 메인 화면(?scene=first|full|running&hover=<줄 id>).
+// ?screen=join 은 깃들기(?scene=first|second&select=<후보 id>&hover=chip&taken=<후보 id>: 깃든 끝 상태).
+// ?screen=depart 는 출전 준비(?scene=three|two&select=<앞열로 바꿀 정령 id>&hover=<정령 id>|strong).
 // ?screen=legacy 는 정원·저장 없이 바로 떠나는 시험 판(&party=a,b,c&adult&unlockAll&seed=). 칸마다 새 화면이 없으면 임시 장면이 맡아요.
 import { C, SPIRITS } from "../core/data";
 import { getPlatform } from "../platform";
@@ -18,7 +23,7 @@ async function start() {
   const params = new URLSearchParams(location.search);
   const screen = params.get("screen");
   const get = (k: string) => params.get(k) ?? undefined;
-  const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" ? screen : undefined;
+  const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" ? screen : undefined;
   const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform);
   Object.assign(window, { session });
   const game = await startGame("game", {

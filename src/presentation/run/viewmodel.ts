@@ -76,3 +76,10 @@ export interface EquipTipVM {
   sheet: EquipSheetVM;
   drop?: EquipSheetVM;
 }
+
+/** 덱에서 고르는 카드 한 장 (상점 빼기 · 휴식 강화 · 이벤트). after = 강화한 모습 (강화할 때만) */
+export interface DeckCardVM {
+  uid: number;
+  card: CardVM;
+  after?: CardVM;
+}
