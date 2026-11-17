@@ -564,7 +564,8 @@ export const tokens = {
         "low": 0.25
       },
       "playback": {
-        "step": "450ms"
+        "step": "450ms",
+        "fastStep": "250ms"
       },
       "orderToken": {
         "act": {

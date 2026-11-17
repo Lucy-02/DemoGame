@@ -11,6 +11,7 @@ import { canonRest } from "./fixtures/canonRest";
 import { battleVM, cardUid, refOf, releaseId } from "./fromBattle";
 import { tokens } from "../../design/tokens";
 import { ms } from "../style/ease";
+import { openRunMenu, playbackScale, playbackStep } from "../menu/hooks";
 import { playbackFrames } from "./playback";
 import { dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { drawBackdrop } from "./views/backdrop";
@@ -123,14 +124,16 @@ export class BattleScene extends Phaser.Scene {
     // 정령 얼굴을 정본 얼굴과 같은 키로 구워요 (정보판 · 의도 · 손패 묶음 · 카드 초상 홈)
     for (const s of this.session?.battle.spirits ?? []) bakeSpiritFace(this, s.id, s.run.stage);
     drawBackdrop(this);
-    drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) });
+    drawSys(this, { "i-deck": this.onDeck && (() => this.onDeck?.(this)) }, false);
     this.fieldLayer = this.add.container(0, 0);
     this.rest = this.drawField(null);
     this.shown = this.rest;
     drawBand(this);
     drawMana(this, this.vm.mana);
     drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined);
-    if (this.playback) this.time.delayedCall(ms(tokens.provisional.motion.playback.step), () => this.step());
+    // 재생 속도(설정)는 턴 재생에만 걸려요 (0084 7번): 행동 사이 시간과 그동안의 움직임
+    this.tweens.timeScale = this.playback ? playbackScale(this) : 1;
+    if (this.playback) this.time.delayedCall(playbackStep(this), () => this.step());
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
     this.showHover(hov < 0 ? null : { side: "enemy", i: hov });
@@ -152,7 +155,11 @@ export class BattleScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
     this.input.on("pointermove", (p: Phaser.Input.Pointer) => this.move(p));
     this.input.on("pointerup", (p: Phaser.Input.Pointer) => this.release(p));
-    this.input.keyboard?.on("keydown-ESC", () => this.cancel());
+    // Esc: 집은 카드가 있으면 내려놓고, 없으면 판 안 메뉴 (0084)
+    this.input.keyboard?.on("keydown-ESC", () => {
+      if (this.dragging || this.press || this.held) this.cancel();
+      else openRunMenu(this);
+    });
     this.begin();
     if (this.vm.pick && !this.playback) this.pick = createPick(this, this.vm.pick, (keys) => this.picked(keys));
     Object.assign(window, { __screenReady: BATTLE_SCENE });

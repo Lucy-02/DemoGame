@@ -2,6 +2,7 @@
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { icon } from "../../style/icons";
+import { bindMenuKey, hasRunMenu, openRunMenu } from "../../menu/hooks";
 import { FRAME, SYS } from "../layout";
 
 const P = tokens.provisional.palette;
@@ -9,15 +10,17 @@ const P = tokens.provisional.palette;
 export const SYS_ICONS = ["i-deck", "i-log", "i-gear"] as const;
 type SysId = (typeof SYS_ICONS)[number];
 
-/** on: 누를 수 있는 버튼 (기록 · 설정 화면은 아직 없어요) */
-export function drawSys(scene: Phaser.Scene, on: Partial<Record<SysId, () => void>> = {}) {
+/** on: 누를 수 있는 버튼 (기록 화면은 아직 없어요). 톱니는 판 안 메뉴를 열어요 (0084).
+ *  esc: Esc로도 메뉴를 열어요. Esc를 따로 쓰는 화면(전투: 집은 카드 내려놓기)은 false로 주고 직접 불러요 */
+export function drawSys(scene: Phaser.Scene, on: Partial<Record<SysId, () => void>> = {}, esc = true) {
+  if (esc) bindMenuKey(scene);
   const inset = (SYS.button - SYS.icon) / 2;
   SYS_ICONS.forEach((id, i) => {
     const fromRight = SYS_ICONS.length - 1 - i;
     const x = FRAME.w - SYS.right - SYS.button - fromRight * (SYS.button + SYS.gap);
     // 정본에서 .ib의 ink-3는 `.frame button{color:inherit}`에 덮여서 실제로는 --ink로 보여요.
     icon(scene, x + inset, SYS.top + inset, id, SYS.icon, SYS.icon, P.ink);
-    const click = on[id];
+    const click = on[id] ?? (id === "i-gear" && hasRunMenu(scene) ? () => openRunMenu(scene) : undefined);
     if (click) scene.add.zone(x, SYS.top, SYS.button, SYS.button).setOrigin(0, 0).setInteractive({ useHandCursor: true }).on("pointerup", click);
   });
 }

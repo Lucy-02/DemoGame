@@ -4,6 +4,7 @@
 import * as Phaser from "phaser";
 import type { Run } from "../core/run";
 import type { GameSession } from "../session/game";
+import type { SettingsSession } from "../session/settings";
 import { BattleSession } from "../session/battle";
 import { EventSession } from "../session/event";
 import { RestSession } from "../session/rest";
@@ -17,6 +18,9 @@ import { DECK_SCENE, type DeckSceneData } from "./deck/DeckScene";
 import { homeVM } from "./home/fromGame";
 import { HOME_SCENE, type HomeSceneData } from "./home/HomeScene";
 import { MAP_SCENE, type MapSceneData } from "./map/MapScene";
+import { RUN_MENU_KEY, SETTINGS_KEY } from "./menu/hooks";
+import { MENU_SCENE, type MenuSceneData } from "./menu/MenuScene";
+import { SETTINGS_SCENE, type SettingsSceneData } from "./menu/SettingsScene";
 import { departVM } from "./depart/fromGarden";
 import { DEPART_SCENE, type DepartSceneData } from "./depart/DepartScene";
 import { joinVM } from "./join/fromGarden";
@@ -36,6 +40,8 @@ export interface FlowOptions {
   trial?: boolean;
   /** 메인 화면의 종료 */
   quit?: () => void;
+  /** 설정 (없으면 저장하지 않는 기본 설정) */
+  settings?: SettingsSession;
 }
 
 export class GameFlow implements LegacyFlow {
@@ -44,6 +50,8 @@ export class GameFlow implements LegacyFlow {
 
   constructor(private game: Phaser.Game, private session: GameSession, private opts: FlowOptions = {}) {
     game.registry.set(LEGACY_FLOW, this);
+    game.registry.set(RUN_MENU_KEY, (scene: Phaser.Scene) => this.menu(scene));
+    if (opts.settings) game.registry.set(SETTINGS_KEY, opts.settings);
   }
 
   get run(): Run {
@@ -67,7 +75,11 @@ export class GameFlow implements LegacyFlow {
       onItem: (id) => {
         if (id === "spirits") this.go(SPIRITS_SCENE, { session: this.session.garden, onBack: () => this.home() } satisfies SpiritsSceneData);
         if (id === "quit") this.opts.quit?.();
-        // 설정 · 도감 화면은 아직 없어요
+        if (id === "settings") {
+          const home = this.game.scene.getScene(HOME_SCENE);
+          this.settings(home, () => home.scene.resume());
+        }
+        // 도감 화면은 아직 없어요
       },
     };
     this.go(HOME_SCENE, data);
@@ -207,6 +219,49 @@ export class GameFlow implements LegacyFlow {
     };
     scene.scene.launch(DECK_SCENE, data);
     scene.scene.pause();
+  }
+
+  /** 판 안 메뉴 (0084 3번): 지금 화면은 아래에 멈춰 두고 그 위에 띄워요. 진행 중인 판이 있을 때만 열려요 */
+  menu(scene: Phaser.Scene) {
+    if (!this.session.run || this.game.scene.isActive(MENU_SCENE) || this.game.scene.isActive(SETTINGS_SCENE)) return;
+    const open = () => scene.scene.launch(MENU_SCENE, data);
+    const close = () => scene.scene.stop(MENU_SCENE);
+    const data: MenuSceneData = {
+      onResume: () => {
+        close();
+        scene.scene.resume();
+      },
+      // 설정은 메뉴 자리에 뜨고, 닫으면 메뉴로 돌아와요
+      onSettings: () => {
+        close();
+        this.settings(scene, open);
+      },
+      // 메인으로: 판은 이 칸에 들어온 때로 저장돼 있어요. 다시 이으면 그 칸의 처음부터예요 (0084 6번)
+      onHome: this.opts.trial ? undefined : () => {
+        this.session.suspendRun();
+        this.home();
+      },
+      // 탐험 포기: 패배와 같아요. 판 결과로 가요 (0084 5번)
+      onGiveUp: () => {
+        this.session.abandonRun();
+        this.runEnd();
+      },
+    };
+    scene.scene.pause();
+    open();
+  }
+
+  /** 설정 창: under 화면은 멈춰 두고, 닫으면 then */
+  private settings(under: Phaser.Scene, then: () => void) {
+    const data: SettingsSceneData = {
+      settings: this.opts.settings,
+      onClose: () => {
+        under.scene.stop(SETTINGS_SCENE);
+        then();
+      },
+    };
+    under.scene.pause();
+    under.scene.launch(SETTINGS_SCENE, data);
   }
 
   /** 판 결과 뒤. 깃들기가 남았으면 먼저 골라요 */

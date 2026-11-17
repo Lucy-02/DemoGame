@@ -117,6 +117,12 @@ export class RunSession {
     return win;
   }
 
+  /** 탐험 포기: 어느 자리에서든 판을 패배로 끝내요 (0084 5번). 그 칸에서 하던 일은 버려요 */
+  abandon() {
+    if (this._phase.kind === "over") throw new Error("이미 끝난 판이에요");
+    this.set({ kind: "over", victory: false });
+  }
+
   /** 보상을 다 고르고 지도로 */
   finishReward() {
     this.expect("reward");
