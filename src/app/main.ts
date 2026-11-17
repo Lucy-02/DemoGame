@@ -55,13 +55,13 @@ async function start() {
   if (DEV) Object.assign(window, { session, settings, game });
 }
 
-/** 시험 판: ?party=a,b,c 로 출전 정령(없으면 constants.default_party), ?adult 성체로, ?unlockAll 모든 카드, ?seed= 시드, ?acts=2 2막까지 */
+/** 시험 판: ?party=a,b,c 로 출전 정령(없으면 constants.default_party), ?adult 성체로, ?unlockAll 모든 카드, ?seed= 시드, ?acts=2 2막까지, ?start=3 3막에서 출발 */
 function trialSession(params: URLSearchParams): GameSession {
   const ids = (params.get("party") ?? "").split(",").filter((id) => SPIRITS.some((s) => s.id === id));
   const party = ids.length ? ids : (C.default_party as string[]);
   const seed = Number(params.get("seed"));
   return GameSession.trial(
-    { party, frontId: party.includes("glass_salamander") ? "glass_salamander" : party[0], adult: params.has("adult"), unlockAll: params.has("unlockAll"), ...(params.has("acts") ? { acts: Number(params.get("acts")) } : {}) },
+    { party, frontId: party.includes("glass_salamander") ? "glass_salamander" : party[0], adult: params.has("adult"), unlockAll: params.has("unlockAll"), ...(params.has("acts") ? { acts: Number(params.get("acts")) } : {}), ...(params.has("start") ? { startAct: Number(params.get("start")) } : {}) },
     Number.isFinite(seed) && params.has("seed") ? () => seed : undefined,
   );
 }

@@ -4,7 +4,7 @@
 // 빼기 칸을 누르면 덱 고르기 창(0082)이 열려요: 카드를 고른 뒤 확인해야 빠져요(두 단계, 0046).
 // 세션을 받으면 런에 연결되고(레거시 지도에서 열어요), 없으면 씨앗을 정한 런 위의 고정 장면이에요.
 import type { CardVM } from "../card/viewmodel";
-import { fadeAway } from "../style/motion";
+import { crossPaint, fadeAway } from "../style/motion";
 import * as Phaser from "phaser";
 import { ShopSession } from "../../session/shop";
 import { createHandCard, preloadHandCard } from "../card/HandCard";
@@ -93,7 +93,8 @@ export class ShopScene extends Phaser.Scene {
   update() {
     if (!this.dirty) return;
     this.dirty = false;
-    this.paint();
+    // 호버 · 누름으로 다시 그릴 때 앞 모습이 흐려지며 바뀌어요 (0092)
+    crossPaint(this, () => this.paint());
   }
 
   private redraw() {
