@@ -24,6 +24,7 @@ import { DECK_SCENE, DeckScene, type DeckSceneData } from "./deck/DeckScene";
 import { MAP_SCENE, MapScene, type MapSceneData } from "./map/MapScene";
 import { SETTINGS_KEY } from "./menu/hooks";
 import { MENU_SCENE, MenuScene, type MenuSceneData } from "./menu/MenuScene";
+import { GLOSSARY_SCENE, GlossaryScene, type GlossarySceneData } from "./menu/GlossaryScene";
 import { SETTINGS_SCENE, SettingsScene, type SettingsSceneData } from "./menu/SettingsScene";
 import { EVOLUTION_SCENE, EvolutionScene } from "./evolution/EvolutionScene";
 import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/SpiritsScene";
@@ -34,7 +35,7 @@ import { VEIL_SCENE, VeilScene } from "./veil";
 
 export interface GameOptions {
   /** 고정 장면으로 띄울 화면. spirits = 정령 관리, result = 전투 결과, shop = 상점. 없으면 저장에 이어진 게임 */
-  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd" | "deck" | "map" | "join" | "depart" | "menu" | "settings";
+  screen?: "battle" | "spirits" | "result" | "shop" | "home" | "rest" | "event" | "runEnd" | "deck" | "map" | "join" | "depart" | "menu" | "settings" | "glossary";
   /** 저장에 이어진 게임의 세션 (screen이 없을 때) */
   session?: GameSession;
   /** 시험 판: 메인 화면 없이 바로 떠나요 (?screen=legacy) */
@@ -96,7 +97,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           opts.settings.onChange((s) => audio?.setVolumes(s.volume));
         }
         if (live) {
-          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene], [MENU_SCENE, MenuScene], [SETTINGS_SCENE, SettingsScene]] as const) {
+          for (const [key, scene] of [[HOME_SCENE, HomeScene], [BATTLE_SCENE, BattleScene], [SPIRITS_SCENE, SpiritsScene], [EVOLUTION_SCENE, EvolutionScene], [RESULT_SCENE, ResultScene], [SHOP_SCENE, ShopScene], [DECK_SCENE, DeckScene], [MAP_SCENE, MapScene], [REST_SCENE, RestScene], [EVENT_SCENE, EventScene], [RUN_END_SCENE, RunEndScene], [JOIN_SCENE, JoinScene], [DEPART_SCENE, DepartScene], [MENU_SCENE, MenuScene], [SETTINGS_SCENE, SettingsScene], [GLOSSARY_SCENE, GlossaryScene]] as const) {
             game.scene.add(key, scene, false);
           }
           for (const [key, scene] of LEGACY_SCENES) game.scene.add(key, scene, false);
@@ -162,6 +163,11 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
         if (opts.screen === "menu") {
           game.scene.add(BATTLE_SCENE, BattleScene, true, {});
           game.scene.add(MENU_SCENE, MenuScene, true, { hover: opts.hover, confirm: opts.scene === "confirm", onHome: () => {} } satisfies MenuSceneData);
+          return;
+        }
+        if (opts.screen === "glossary") {
+          game.scene.add(BATTLE_SCENE, BattleScene, true, {});
+          game.scene.add(GLOSSARY_SCENE, GlossaryScene, true, { hover: opts.hover } satisfies GlossarySceneData);
           return;
         }
         if (opts.screen === "settings") {
