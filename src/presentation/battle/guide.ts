@@ -19,6 +19,8 @@ export interface GuideSeen {
   breakShown?: true;
   /** 차징 알약을 가리켜 풀이를 봤어요 */
   charge?: true;
+  /** 이 전투에서 카드를 한 장이라도 놓아 봤어요 */
+  placed?: true;
 }
 
 export interface GuideFacts {
@@ -37,6 +39,8 @@ export interface GuideFacts {
 export function guideStep(f: GuideFacts, seen: GuideSeen): GuideStep | null {
   const first = !!seen.steps && f.turn === 1;
   if (first && !f.placed) return "place";
+  // 첫 턴을 카드 없이 넘겼으면, 한 장 놓아 볼 때까지 다음 턴에도 손패를 짚어요
+  if (seen.steps && !seen.placed && !f.placed && !f.spent) return "place";
   // 낼 카드가 없으면 턴 종료가 먼저예요. 차징은 다음 턴에 다시 짚어요
   if (first && f.spent) return "end";
   if (seen.breakHint && f.charging && f.canBreak) return "break";

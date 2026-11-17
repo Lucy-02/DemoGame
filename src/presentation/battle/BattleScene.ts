@@ -304,6 +304,7 @@ export class BattleScene extends Phaser.Scene {
     if (!b || !this.guide || this.playback || this.pick) return;
     const charging = b.enemies.filter((e) => !e.dead && e.charging);
     const breaks = b.hand.filter((c) => this.vm.plays[cardKey(c)] && b.cardDefOf(c).effects.some((o) => o.op === "ram" || o.op === "breakCharging"));
+    if (b.playedThisTurn.length > 0) this.guide.placed = true;
     const step = guideStep({
       turn: b.turn, placed: b.playedThisTurn.length > 0, charging: charging.length > 0,
       spent: !Object.keys(this.vm.plays).length, canBreak: breaks.length > 0,
