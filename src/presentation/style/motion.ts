@@ -22,7 +22,7 @@ export const reducedMotion = () => typeof matchMedia === "function" && matchMedi
 export function fadeInScene(scene: Phaser.Scene) {
   if (reducedMotion()) return;
   const fxs = scene.cameras.cameras.map((cam) => cam.filters.internal.addColorMatrix());
-  const set = (opacity: number) => { for (const fx of fxs) fx.colorMatrix.set(colorMatrix({ opacity })); };
+  const set = (opacity: number) => { for (const fx of fxs) fx.colorMatrix?.set(colorMatrix({ opacity })); };
   set(0);
   scene.tweens.addCounter({
     from: 0, to: 1, ...FAST,

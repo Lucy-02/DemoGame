@@ -18,7 +18,8 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
   const page = await (await browser.newContext()).newPage();
   const name = double ? "두 번 누르기" : "한 번 누르기";
   const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+  // 어디서 났는지 보이게 스택도 적어요
+  page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}\n${e.stack ?? ""}`));
   page.on("console", (m) => {
     // 못 불러온 파일은 아래에서 주소와 함께 적어요
     if (m.type() === "error" && !m.text().startsWith("Failed to load resource")) errors.push(`console: ${m.text()}`);
