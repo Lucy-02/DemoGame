@@ -1,4 +1,5 @@
-// 화면으로 한 판을 끝까지: 메인 → 출전 → 지도 → 전투 … → 보스 → 승리 결과 → 깃들기 → 메인 (0084 9번).
+// 화면으로 한 판을 끝까지: 메인 → 출전 → 지도 → 전투 … → 보스 → 승리 결과 → 데모 끝 → 깃들기 → 메인 (0084 9번).
+// 데모 범위(?demo, 0101)로 돌아요: 데모 끝 화면만 더 거치고 나머지 길은 같아요.
 // 봇(tools/screenBot.ts)이 떠 있는 장면의 손잡이를 눌러요. 이길 때까지 판을 거듭하고, 장면 전환이 막히거나 콘솔 오류가 나면 실패해요.
 import { expect, test } from "@playwright/test";
 
@@ -7,7 +8,7 @@ interface Tick { scene?: string; did?: string; runs: number; wins: number }
 /** 같은 시드면 같은 판이에요 */
 const SEED = 7;
 /** 한 번은 거쳐야 하는 장면 */
-const MUST = ["home", "depart", "map", "battle", "result", "event", "rest", "shop", "runEnd", "join"];
+const MUST = ["home", "depart", "map", "battle", "result", "event", "rest", "shop", "runEnd", "demoEnd", "join"];
 const MAX_RUNS = 12;
 /** 이만큼 아무것도 못 누르면 막힌 것으로 봐요 */
 const STUCK_MS = 20_000;
@@ -23,7 +24,7 @@ test("화면으로 한 판을 끝까지 돌아요", async ({ page }) => {
     if (r.status() >= 400) errors.push(`${r.status()}: ${r.url()}`);
   });
 
-  await page.goto(`/?seed=${SEED}`);
+  await page.goto(`/?demo&seed=${SEED}`);
   await expect(page.locator("#game canvas")).toBeVisible({ timeout: 30_000 });
   await page.waitForFunction(() => "game" in window && "session" in window);
   await page.evaluate(async () => {

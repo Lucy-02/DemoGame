@@ -17,6 +17,7 @@ import { BATTLE_SCENE, type BattleSceneData } from "./battle/BattleScene";
 import { COPY as BATTLE_COPY } from "./battle/copy";
 import { EVENT_SCENE, type EventSceneData } from "./event/EventScene";
 import { DECK_SCENE, type DeckSceneData } from "./deck/DeckScene";
+import { DEMO_END_SCENE, type DemoEndSceneData } from "./demoEnd/DemoEndScene";
 import { homeVM } from "./home/fromGame";
 import { HOME_SCENE, type HomeSceneData } from "./home/HomeScene";
 import { MAP_SCENE, type MapSceneData } from "./map/MapScene";
@@ -47,6 +48,8 @@ export interface FlowOptions {
   settings?: SettingsSession;
   /** 메인 화면 구석에 적는 버전 */
   version?: string;
+  /** 데모 빌드 (0101): 마지막 막의 보스를 이긴 판 결과 다음에 데모 끝 화면이 떠요 */
+  demo?: boolean;
 }
 
 export class GameFlow implements LegacyFlow {
@@ -289,8 +292,15 @@ export class GameFlow implements LegacyFlow {
     const record = this.session.lastRun;
     if (!record) return this.finish();
     audioOf(this.game)?.play(record.victory ? "victory" : "defeat");
-    const data: RunEndSceneData = { record, onGarden: () => this.finish(), onAgain: () => this.depart() };
+    // 데모에서 이긴 판은 어느 버튼이든 데모 끝을 거쳐 그 버튼이 가던 곳으로 가요 (0101)
+    const demoEnd = !!this.opts.demo && record.victory;
+    const to = (next: NonNullable<DemoEndSceneData["next"]>, then: () => void) => () => (demoEnd ? this.demoEnd(next, then) : then());
+    const data: RunEndSceneData = { record, onGarden: to("garden", () => this.finish()), onAgain: to("again", () => this.depart()) };
     this.go(RUN_END_SCENE, data);
+  }
+
+  private demoEnd(next: NonNullable<DemoEndSceneData["next"]>, then: () => void) {
+    this.go(DEMO_END_SCENE, { next, onNext: then } satisfies DemoEndSceneData);
   }
 
   private rewardDone() {

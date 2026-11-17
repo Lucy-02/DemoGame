@@ -124,5 +124,6 @@
     { "elements": ["none"], "floors": 4 }
   ],
   "acts_enabled": 2,
+  "demo": { "acts": 2 },
   "act_heal_pct": 1
 }

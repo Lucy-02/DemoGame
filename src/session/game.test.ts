@@ -1,8 +1,8 @@
 // 게임 세션: 정원 ↔ 판 연결과 칸 사이 저장 (아키텍처 0001 PR 2)
 import { describe, expect, it } from "vitest";
-import { GROWTH } from "../core/data";
+import { C, GROWTH } from "../core/data";
 import { joinOffer } from "../core/garden";
-import { GameSession, SAVE_KEYS, type SaveStore } from "./game";
+import { GameSession, SAVE_KEYS, demoScope, type SaveStore } from "./game";
 import type { RunSession } from "./run";
 
 class MemoryStore implements SaveStore {
@@ -174,5 +174,23 @@ describe("게임 세션", () => {
     game.finishBattle(outcome(back, true));
     await game.flush();
     expect(JSON.parse(store.data.get(SAVE_KEYS.run)!).phase.kind).toBe("reward");
+  });
+});
+
+describe("데모 범위 (0101)", () => {
+  it("데모 판은 constants.demo.acts막까지만 가요", async () => {
+    const game = await GameSession.load(new MemoryStore(), seeds, demoScope());
+    expect(game.startRun().run.lastAct).toBe(Math.min(C.demo.acts, C.acts_enabled));
+  });
+
+  it("범위를 안 주면 게임이 여는 막까지 가요", async () => {
+    const game = await GameSession.load(new MemoryStore(), seeds);
+    expect(game.startRun().run.lastAct).toBe(C.acts_enabled);
+  });
+
+  it("데모의 정령은 시작 풀 넷이고, 깃들기는 두 번이에요", () => {
+    // 시작 풀이나 깃드는 때가 늘면 데모 범위를 따로 묶어야 해요
+    expect(C.start_pool).toHaveLength(4);
+    expect(C.party_size).toBe(3);
   });
 });

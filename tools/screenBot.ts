@@ -124,6 +124,9 @@ function act(s: Loose, game: GameSession): string | undefined {
       s.data_.onGarden(s);
       return "판 결과 넘기기";
     }
+    case "demoEnd":
+      s.next();
+      return "데모 끝 넘기기";
     case "join": {
       if (s.picked === undefined) {
         s.select(0);

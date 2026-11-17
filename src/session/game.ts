@@ -26,6 +26,15 @@ export interface SaveStore {
 
 export const SAVE_KEYS = { garden: "garden", run: "run" } as const;
 
+/** 판의 범위. 데모 빌드는 막 수를 묶어요 (0101) */
+export interface GameScope {
+  /** 몇 막까지 가는지. 없으면 constants.acts_enabled */
+  acts?: number;
+}
+
+/** 데모 범위 (0101): constants.demo.acts막까지. 게임이 여는 막(acts_enabled)을 넘지 않아요 */
+export const demoScope = (): GameScope => ({ acts: Math.min(C.demo.acts, C.acts_enabled) });
+
 /** 정원 없이 도는 시험 판(?screen=legacy). 저장하지 않고 정원에 아무것도 남기지 않아요 */
 export type TrialOptions = Omit<RunOptions, "seed" | "garden">;
 
@@ -41,16 +50,17 @@ export class GameSession {
     private store: SaveStore | undefined,
     private newSeed: () => number,
     private trialOpts?: TrialOptions,
+    private scope: GameScope = {},
   ) {
     garden.onChange(() => this.write(SAVE_KEYS.garden, garden.snapshot()));
   }
 
   /** 저장을 읽어요. 정원이 없으면 새로 하기의 정원을 만들어 바로 남겨요 (0053) */
-  static async load(store: SaveStore, newSeed: () => number = randomSeed): Promise<GameSession> {
+  static async load(store: SaveStore, newSeed: () => number = randomSeed, scope: GameScope = {}): Promise<GameSession> {
     const gardenText = await store.read(SAVE_KEYS.garden);
     const fresh = !gardenText;
     const garden = gardenText ? GardenSession.restore(gardenText) : GardenSession.fresh(newSeed());
-    const game = new GameSession(garden, store, newSeed);
+    const game = new GameSession(garden, store, newSeed, undefined, scope);
     if (fresh) game.write(SAVE_KEYS.garden, garden.snapshot());
     const runText = await store.read(SAVE_KEYS.run);
     if (runText) {
@@ -95,7 +105,7 @@ export class GameSession {
       const frontId = front && p.party.includes(front) ? front : p.front;
       if (frontId !== this.garden.state.front) this.garden.dispatch({ kind: "setFront", id: frontId });
       // 정령이 하나뿐인 판(첫 판)은 출전 준비 없이 떠나고 센 기운도 판이 굴려요
-      opts = { seed: p.seed, garden: this.garden.state, frontId, adult: false, unlockAll: false, ...(plan ? { strongElement: p.strongElement } : {}) };
+      opts = { seed: p.seed, garden: this.garden.state, frontId, adult: false, unlockAll: false, ...(plan ? { strongElement: p.strongElement } : {}), ...(this.scope.acts ? { acts: this.scope.acts } : {}) };
     }
     const run = RunSession.start(opts);
     this.attach(run);
