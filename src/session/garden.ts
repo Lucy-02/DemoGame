@@ -1,7 +1,7 @@
 // 정원 세션: 화면이 보내는 명령을 받아 core/garden 규칙을 부르고, 바뀐 상태를 알려요.
 // 화면은 상태를 직접 고치지 않아요 (아키텍처 0001 "화면은 명령만 보내고"). 저장은 snapshot/restore로 (다음 단계에서 platform에 연결).
 import {
-  endRun, evolve, feed, grantBattle, join, keepEquipment, markSeen, setFront, openBranches, startGarden, seeEpisode, spiritUnlocks, gardenSpirit, GARDEN_VERSION,
+  endRun, evolve, feed, grantBattle, join, keepEquipment, markGuide, markSeen, setFront, openBranches, startGarden, seeEpisode, spiritUnlocks, gardenSpirit, GARDEN_VERSION,
   type BattleTier, type Garden,
 } from "../core/garden";
 import type { RunSpirit } from "../core/types";
@@ -21,6 +21,8 @@ export type GardenCommand =
   | { kind: "join"; id: string }
   /** 출전 준비에서 앞열을 정하고 떠나요. 다음 출전 준비의 기본값이 돼요 (0076 14) */
   | { kind: "setFront"; id: string }
+  /** 안내를 한 번 짚었어요 (0095) */
+  | { kind: "guide"; id: string }
   /** 성장 길을 열어 이 정령의 해금을 봤어요 (배지가 사라져요) */
   | { kind: "seeUnlocks"; id: string };
 
@@ -60,6 +62,7 @@ export class GardenSession {
       case "keepEquipment": return keepEquipment(g, cmd.party, cmd.keep);
       case "join": return join(g, cmd.id);
       case "setFront": return setFront(g, cmd.id);
+      case "guide": return markGuide(g, cmd.id);
       case "seeUnlocks": {
         const s = gardenSpirit(g, cmd.id);
         const fresh = spiritUnlocks(s).filter((k) => !s.seen.includes(k));

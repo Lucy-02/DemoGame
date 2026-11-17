@@ -3,6 +3,7 @@ import { app, BrowserWindow, ipcMain, net, protocol, shell } from "electron";
 import { join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { IPC } from "../../src/platform/bridge";
+import { createErrorLog } from "./errorLog";
 import { createFileStorage } from "./storage";
 
 const SCHEME = "app";
@@ -32,7 +33,16 @@ function serveRenderer() {
   });
 }
 
+/** 오류 기록: userData/logs/error.log. 렌더러의 잡히지 않은 오류와 main의 오류를 같이 적어요 */
+function openErrorLog() {
+  const log = createErrorLog(join(app.getPath("userData"), "logs", "error.log"));
+  // 기록만 하고 기본 동작(종료)은 그대로 둬요
+  process.on("uncaughtExceptionMonitor", (e) => void log.append(`v${app.getVersion()} main ${e.stack ?? e.message}`));
+  return log;
+}
+
 function registerIpc() {
+  const errors = openErrorLog();
   const storage = createFileStorage(join(app.getPath("userData"), "saves"));
   ipcMain.handle(IPC.read, (_e, key: string) => storage.read(key));
   ipcMain.handle(IPC.write, (_e, key: string, text: string) => {
@@ -45,6 +55,7 @@ function registerIpc() {
   });
   ipcMain.handle(IPC.isFullscreen, (e) => BrowserWindow.fromWebContents(e.sender)?.isFullScreen() ?? false);
   ipcMain.handle(IPC.quit, () => app.quit());
+  ipcMain.handle(IPC.logError, (_e, text: string) => errors.append(String(text)));
 }
 
 function createWindow() {

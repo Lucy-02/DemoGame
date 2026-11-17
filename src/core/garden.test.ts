@@ -285,3 +285,14 @@ describe("장비 남기기 (0056)", () => {
     expect(() => keepEquipment(g, [foxRun(g)], { fire_fox: ["fox_spear"] })).toThrow();
   });
 });
+
+describe("한 번 짚는 안내 (0095)", () => {
+  it("짚은 안내는 정원에 남고 두 번 적히지 않아요", async () => {
+    const { hasGuide, markGuide, newGarden } = await import("./garden");
+    const g = newGarden(1);
+    expect(hasGuide(g, "break")).toBe(false);
+    const seen = markGuide(g, "break");
+    expect(hasGuide(seen, "break")).toBe(true);
+    expect(markGuide(seen, "break")).toBe(seen);
+  });
+});

@@ -3,10 +3,11 @@ import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { faceTexture } from "../../spiritArt";
 import { box } from "../../style/draw";
-import { render, type BoxNode, type Node } from "../../style/flex";
+import { render, size, type BoxNode, type Node } from "../../style/flex";
 import { P, glass, plateStyle, text } from "../../spirits/views/parts";
 import { COPY } from "../copy";
-import { LOGO, MENU, PRIMARY } from "../layout";
+import { FRAME } from "../../run/layout";
+import { LOGO, MENU, PRIMARY, VERSION } from "../layout";
 import type { HomeBadge, HomeItemVM, HomePrimaryVM } from "../viewmodel";
 
 const T = tokens.provisional.text.home;
@@ -20,6 +21,12 @@ export function drawLogo(scene: Phaser.Scene, title: string) {
     style: { ring: { width: LOGO.ring, color: P.glassLine, dash: LOGO.dash } },
     children: [text(title, T.logo, P.ink)],
   }, LOGO.x, LOGO.y);
+}
+
+/** 버전: 왼쪽 아래 구석에 흐린 작은 글자 (크기는 배지 글자를 빌려요) */
+export function drawVersion(scene: Phaser.Scene, version: string) {
+  const node = text(version, T.badge, P.ink3);
+  render(scene, node, VERSION.x, FRAME.h - VERSION.bottom - size(node).h);
 }
 
 /** 기호가 아직 없는 자리 (TODO_ICON): 점선 둥근 네모 */

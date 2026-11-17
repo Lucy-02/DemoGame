@@ -3,6 +3,7 @@
 // 화면은 명령만 보내고(세션), 화면 사이 이동은 여기서만 해요 (아키텍처 0001).
 import * as Phaser from "phaser";
 import type { Run } from "../core/run";
+import { hasGuide } from "../core/garden";
 import type { GameSession } from "../session/game";
 import type { SettingsSession } from "../session/settings";
 import { BattleSession } from "../session/battle";
@@ -44,6 +45,8 @@ export interface FlowOptions {
   quit?: () => void;
   /** 설정 (없으면 저장하지 않는 기본 설정) */
   settings?: SettingsSession;
+  /** 메인 화면 구석에 적는 버전 */
+  version?: string;
 }
 
 export class GameFlow implements LegacyFlow {
@@ -72,7 +75,7 @@ export class GameFlow implements LegacyFlow {
   home() {
     this.current = undefined;
     const data: HomeSceneData = {
-      vm: homeVM(this.session.garden.state, this.session.run?.run),
+      vm: homeVM(this.session.garden.state, this.session.run?.run, this.opts.version),
       onPrimary: () => (this.session.run ? this.resume() : this.depart()),
       onItem: (id) => {
         if (id === "spirits") this.go(SPIRITS_SCENE, { session: this.session.garden, onBack: () => this.home() } satisfies SpiritsSceneData);
@@ -156,7 +159,11 @@ export class GameFlow implements LegacyFlow {
           session, onOver: (scene) => this.battleOver(scene, session.outcome()), onDeck: (scene) => this.deck(scene),
           place: floor === undefined ? undefined : BATTLE_COPY.floor(floor),
           // 첫 판의 첫 전투에서만 개념을 한 번씩 짚어요 (0088)
-          ...(phase.first ? { guide: {} } : {}),
+          // 브레이크는 조건이 맞는 첫 순간에 한 번, 어느 전투든 (0095). 짚으면 정원에 적어요
+          guide: {
+            steps: !!phase.first, breakHint: !hasGuide(this.session.garden.state, "break"),
+            onBreak: () => this.session.garden.dispatch({ kind: "guide", id: "break" }),
+          },
         };
         return this.go(BATTLE_SCENE, data);
       }
@@ -265,7 +272,8 @@ export class GameFlow implements LegacyFlow {
         then();
       },
     };
-    under.scene.pause();
+    // 판 안 메뉴에서 왔으면 아래 화면은 이미 멈춰 있어요
+    if (under.scene.isActive()) under.scene.pause();
     under.scene.launch(SETTINGS_SCENE, data);
   }
 
