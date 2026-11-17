@@ -13,6 +13,7 @@ import { cardWithFace, drawCardTip } from "../run/cards";
 import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
 import { GOLD_ICONS, drawGold } from "../run/gold";
 import { protoLayout } from "../run/proto";
+import { SERVICE } from "./layout";
 import { drawSlimLane } from "../run/slimLane";
 import { SLIM } from "../map/layout";
 import { STAT_ICON } from "../run/copy";
