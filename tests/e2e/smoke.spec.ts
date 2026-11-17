@@ -5,11 +5,12 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-async function launch(): Promise<{ app: ElectronApplication; userData: string }> {
-  const userData = await mkdtemp(join(tmpdir(), "demogame-e2e-"));
+async function launch(dir?: string): Promise<{ app: ElectronApplication; userData: string }> {
+  const userData = dir ?? await mkdtemp(join(tmpdir(), "demogame-e2e-"));
   // GPU 없는 CI에서도 WebGL이 돌게 소프트웨어 렌더러를 써요. 루트(컨테이너)에서는 샌드박스를 끌 수밖에 없어요.
   // 맥에서는 이 플래그가 WebGL을 깨뜨려서(ANGLE 초기화 실패) 리눅스에서만 써요.
-  const args = process.platform === "linux" ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] : [];
+  // GPU 없는 윈도 CI도 같은 길을 써요 (DEMOGAME_SOFTWARE_GL=1)
+  const args = process.platform === "linux" || process.env.DEMOGAME_SOFTWARE_GL ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] : [];
   if (process.getuid?.() === 0) args.unshift("--no-sandbox");
   const exe = process.env.DEMOGAME_EXE;
   const app = await electron.launch({ ...(exe ? { executablePath: exe, args } : { args: [...args, "."] }), env: { ...process.env, DEMOGAME_USER_DATA: userData } });
@@ -41,6 +42,26 @@ test("앱이 뜨고 platform 저장이 파일로 남는다", async () => {
 
     // 렌더러에는 Node가 없어야 해요.
     expect(await page.evaluate(() => typeof (globalThis as { require?: unknown }).require)).toBe("undefined");
+  } finally {
+    await app.close();
+  }
+});
+
+test("같은 저장 폴더로 두 번 실행하면 둘째는 바로 꺼져요", async () => {
+  const { app, userData } = await launch();
+  try {
+    await expect((await app.firstWindow()).locator("#game canvas")).toBeVisible({ timeout: 20_000 });
+    // 둘째는 창을 만들기 전에 꺼져요: 붙기도 전에 꺼지면 launch가 실패하고, 붙었다면 곧 닫혀요
+    const gone = await launch(userData).then(
+      (second) => Promise.race([
+        new Promise<boolean>((done) => second.app.on("close", () => done(true))),
+        new Promise<boolean>((done) => setTimeout(() => done(false), 15_000)),
+      ]),
+      () => true,
+    );
+    expect(gone).toBe(true);
+    // 먼저 뜬 창은 그대로예요
+    expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(1);
   } finally {
     await app.close();
   }

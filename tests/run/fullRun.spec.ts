@@ -37,6 +37,14 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
     Object.assign(window, { __tick: bot.tick, __fingerprint: bot.fingerprint });
   }, double);
 
+  /** 메모리 두 숫자: JS 힙(MB)과 텍스처 수. 판을 돈 뒤 얼마나 늘었는지 기록에 남겨요 (docs/handoff/PERF_ANALYSIS.md) */
+  const memory = () => page.evaluate(() => {
+    const heap = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize;
+    const game = (window as unknown as { game: { textures: { getTextureKeys(): string[] } } }).game;
+    return { heapMb: heap ? Math.round(heap / 1e6) : undefined, textures: game.textures.getTextureKeys().length };
+  });
+  const memoryAtStart = await memory();
+
   const seen = new Set<string>();
   const marks = new Set<string>();
   const trail: string[] = [];
@@ -78,6 +86,8 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
     if (state.did === "판 결과 승리" || state.did === "판 결과 패배") await page.screenshot({ path: shot(`runEnd-${state.runs}-${state.endedAct}막`) });
     if (state.did?.startsWith("지도 보임") && (state.act ?? 1) > 1) await page.screenshot({ path: shot(`map-${state.runs}-${state.act}막`) });
   }
+  const memoryAtEnd = await memory();
+  console.log(`${name}: 메모리 JS 힙 ${memoryAtStart.heapMb ?? "?"} → ${memoryAtEnd.heapMb ?? "?"}MB, 텍스처 ${memoryAtStart.textures} → ${memoryAtEnd.textures}개`);
   console.log(`${name}: 판 ${state.runs}번(가장 멀리 ${reached}막), 누름 ${trail.length}번(다시 ${trail.filter((t) => t.endsWith("(다시)")).length}번), 가장 긴 멈춤 ${(longest / 1000).toFixed(1)}초, 거친 장면: ${[...seen].join(" · ")}, 2막 규칙: ${[...marks].join(" · ") || "없음"}`);
   await page.context().close();
   return prints;
