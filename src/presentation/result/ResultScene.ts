@@ -5,7 +5,7 @@
 // 정예 보상은 카드 아래 장비 줄이 처음부터 보이고, 카드를 받거나 넘긴 뒤에 장비를 누구에게 줄지 골라요 (0051 · 0064 Q2-A).
 // 받을 수 있는 칸이 점선으로 밝아지고, 줄이나 칸에 올리면 장비가 비쳐 보이며 달라지는 것은 줄 왼쪽 말풍선에 나와요.
 // 세션을 주면 런에 연결돼요: 고르는 즉시 규칙에 적용하고 onDone으로 나가요. 세션이 없으면 고정 장면이에요.
-import { fadeInScene } from "../style/motion";
+import { MOVE, fadeAway, fadeInScene, reducedMotion } from "../style/motion";
 import * as Phaser from "phaser";
 import type { RewardSession } from "../../session/reward";
 import { createHandCard, preloadHandCard } from "../card/HandCard";
@@ -58,6 +58,8 @@ export class ResultScene extends Phaser.Scene {
   private session?: RewardSession;
   private vm!: ResultVM;
   private hover?: Hover;
+  /** 방금 받은 카드 (다음에 그릴 때 진열에서 흐려져 빠져요) */
+  private leaving?: number;
   /** 집은 카드 (배울 정령을 고르는 중) */
   private held?: number;
   private taken?: ResultChoice;
@@ -151,7 +153,11 @@ export class ResultScene extends Phaser.Scene {
     this.hover = undefined;
     this.held = undefined;
     this.dirty = true;
-    if (this.phase === "done") this.onDone?.(this);
+    // 받은 카드는 진열에서 흐려져 빠지고 정령 줄 칸에 놓여요. 그 한 박자를 보고 넘어가요 (0089)
+    this.leaving = choice === "skip" ? undefined : choice.card;
+    if (this.phase !== "done") return;
+    if (this.leaving === undefined || reducedMotion()) return this.onDone?.(this);
+    this.time.delayedCall(MOVE.duration, () => this.onDone?.(this));
   }
 
   /** 장비를 이 정령에게 줘요. option = 들어갈 칸 (꽉 찼으면 그 칸의 장비를 내려놓아요) */
@@ -271,11 +277,14 @@ export class ResultScene extends Phaser.Scene {
     }
 
     // 보상 카드: 왼→오 = 줄 위→아래
+    const leaving = this.leaving;
+    this.leaving = undefined;
     vm.cards.forEach((c, i) => {
-      if (got?.card === i) return;
+      if (got?.card === i && leaving !== i) return;
       const x = at.col.x + i * (REWARD.w + REWARD.gap), y = at.cardsY;
       const card = cardWithFace(this, c.card, c.owners.length === 1 ? lane(c.owners[0]) : undefined, REWARD.scale);
       const view = createHandCard(this, card, x + (REWARD.w - HAND_CARD.w) / 2, y + REWARD.h - HAND_CARD.h, { showRarity: true, scale: REWARD.scale });
+      if (got?.card === i) return fadeAway(this, view);
       const on = focusI === i;
       view.setHeld(on);
       view.setLifted(on);
