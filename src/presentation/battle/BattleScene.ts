@@ -119,6 +119,8 @@ export class BattleScene extends Phaser.Scene {
   private pick: PickView | null = null;
   /** 앞 장면의 순서표 (장면을 다시 그려도 남아요) */
   private orderPrev?: { session?: BattleSession; snap: OrderSnapshot };
+  /** 앞 장면의 턴 종료 버튼 모양 (0086) */
+  private endPrev?: { session: BattleSession; go: boolean };
   /** 앞 장면의 손패 (0086). turn = 그 장면의 턴 */
   private handPrev?: { session: BattleSession; snap: HandSnapshot; turn?: number };
 
@@ -132,7 +134,10 @@ export class BattleScene extends Phaser.Scene {
     this.shown = this.rest;
     drawBand(this);
     drawMana(this, this.vm.mana);
-    drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined);
+    // 턴 종료 버튼: 낼 카드가 없으면 밝아져요. 앞 장면과 모양이 달라졌으면 흐려지며 바뀌어요 (0086)
+    const endWas = this.session && this.endPrev?.session === this.session ? this.endPrev.go : undefined;
+    const endGo = drawEnd(this, this.vm, this.session && !this.playback ? () => this.endTurn() : undefined, endWas);
+    if (this.session) this.endPrev = { session: this.session, go: endGo };
     if (this.playback) this.time.delayedCall(ms(tokens.provisional.motion.playback.step), () => this.step());
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);

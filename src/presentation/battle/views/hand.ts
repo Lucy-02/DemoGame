@@ -7,6 +7,7 @@ import { place, render, size, type Node } from "../../style/flex";
 import { gather } from "../../style/gather";
 import { loadIcon } from "../../style/icons";
 import { FAST, MOVE, reducedMotion } from "../../style/motion";
+import { opacityOf } from "../../style/opacity";
 import { cardTipContent } from "../../card/cardTip";
 import { createHandCard, preloadHandCard, type HandCardView } from "../../card/HandCard";
 import { HAND_CARD } from "../../card/layout";
@@ -261,21 +262,27 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
   return { setHover, setHeld, startDrag, moveDrag, endDrag, snap };
 }
 
-/** onEnd: 턴 종료를 누르면 (고정 장면에서는 없어요) */
-export function drawEnd(scene: Phaser.Scene, vm: BattleVM, onEnd?: () => void) {
+/**
+ * onEnd: 턴 종료를 누르면 (고정 장면에서는 없어요).
+ * 낼 수 있는 카드가 없으면 버튼이 밝은 유리 판으로 바뀌어요 (0084 8번 · 0086 11번: 확인 창 대신 모양으로. 보라 채움은 0054에서 기각).
+ * wasGo = 앞 장면의 모양. 달라졌으면 앞 모양이 흐려지며 바뀌어요. 지금 모양(go)을 돌려줘요.
+ */
+export function drawEnd(scene: Phaser.Scene, vm: BattleVM, onEnd?: () => void, wasGo?: boolean): boolean {
   const B = END.button;
+  const go = !!onEnd && vm.playable === 0;
   const pile = (id: string, n: number): Node => ({
     t: "row", align: "center", gap: END.piles.gap,
     children: [{ t: "icon", id, w: END.piles.icon, h: END.piles.icon, tint: P.ink3 }, text(String(n), T.pile, P.ink2)],
   });
+  const button = (lit: boolean, click?: () => void): Node => ({
+    t: "row", w: END.w, h: B.h, radius: B.radius, align: "center", justify: "center", onClick: click,
+    style: lit ? { fill: P.veil["09"], ring: { width: B.ring, color: P.veil["50"] } } : { fill: P.endCalm, ring: { width: B.ring, color: P.endCalmLine } },
+    children: [text(COPY.endTurn, T.endTurn, lit ? P.ink : P.ink2)],
+  });
   const col: Node = {
     t: "col", w: END.w, gap: END.gap, align: "stretch",
     children: [
-      {
-        t: "row", h: B.h, radius: B.radius, align: "center", justify: "center", onClick: onEnd,
-        style: { fill: P.endCalm, ring: { width: B.ring, color: P.endCalmLine } },
-        children: [text(COPY.endTurn, T.endTurn, P.ink2)],
-      },
+      button(go, onEnd),
       {
         t: "row", justify: "between", pad: END.piles.pad,
         children: [pile(PILE_ICONS[0], vm.piles.draw), pile(PILE_ICONS[1], vm.piles.discard), pile(PILE_ICONS[2], vm.piles.exhaust)],
@@ -283,4 +290,14 @@ export function drawEnd(scene: Phaser.Scene, vm: BattleVM, onEnd?: () => void) {
     ],
   };
   render(scene, col, END.x, END.y);
+  if (wasGo !== undefined && wasGo !== go && !reducedMotion()) {
+    // 앞 모양을 위에 겹쳐 두고 흐려 보내요 (바닥색으로 가려 두 모양이 섞여 보이지 않게)
+    const old = gather(scene, 0, 0, () => {
+      box(scene.add.graphics(), END.x, END.y, END.w, B.h, B.radius, { fill: P.floor });
+      render(scene, button(wasGo), END.x, END.y);
+    });
+    const fade = opacityOf(old);
+    scene.tweens.addCounter({ from: 1, to: 0, ...FAST, onUpdate: (t) => { fade.value = t.getValue() ?? 0; }, onComplete: () => old.destroy() });
+  }
+  return go;
 }
