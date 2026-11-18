@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain, net, protocol, screen, shell } from "elect
 import { join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { IPC } from "../../src/platform/bridge";
-import { fitResize, fitStart } from "./aspect";
+import { fitResize, fitSnapped, fitStart } from "./aspect";
 import { createErrorLog } from "./errorLog";
 import { createFileStorage } from "./storage";
 
@@ -107,6 +107,15 @@ function createWindow() {
       const frame = { width: outerW - innerW, height: outerH - innerH };
       e.preventDefault();
       win.setBounds(fitResize(win.getBounds(), next, details.edge, frame, BASE.w / BASE.h, { width: BASE.w / 2, height: BASE.h / 2 }));
+    });
+    // 윈도 스냅(아래 끝까지 끌기)은 will-resize를 거치지 않아서, 끝난 뒤 비율이 어긋나 있으면 다시 맞춰요
+    win.on("resized", () => {
+      if (win.isFullScreen() || win.isMaximized() || win.isMinimized()) return;
+      const [outerW, outerH] = win.getSize();
+      const [innerW, innerH] = win.getContentSize();
+      if (Math.abs(innerW - (innerH * BASE.w) / BASE.h) <= 2) return;
+      const frame = { width: outerW - innerW, height: outerH - innerH };
+      win.setBounds(fitSnapped(win.getBounds(), frame, BASE.w / BASE.h, screen.getDisplayMatching(win.getBounds()).workArea));
     });
   } else win.setAspectRatio(BASE.w / BASE.h);
   // 기준 크기가 화면에 다 안 들어가면 OS가 한쪽만 잘라 비율이 깨져요. 들어갈 만큼 비율대로 줄여서 열어요

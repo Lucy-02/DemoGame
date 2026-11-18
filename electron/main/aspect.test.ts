@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fitResize, fitStart, type Bounds } from "./aspect";
+import { fitResize, fitSnapped, fitStart, type Bounds } from "./aspect";
 
 const FRAME = { width: 16, height: 39 };
 const MIN = { width: 640, height: 400 };
@@ -27,7 +27,7 @@ describe("창 끌기 비율 맞춤", () => {
     expect(b.y + b.height).toBe(cur.y + cur.height);
   });
 
-  it("모서리는 더 많이 바뀐 쪽을 따라가요", () => {
+  it("모서리는 커서를 덮는 쪽을 따라가요", () => {
     const b = fitResize(cur, { ...cur, width: cur.width + 10, height: cur.height + 200 }, "bottom-right", FRAME, RATIO, MIN);
     expect(inner(b)).toEqual([1600, 1000]);
   });
@@ -53,5 +53,23 @@ describe("fitStart", () => {
       expect(s.height + FRAME.height).toBeLessThanOrEqual(work.height + 1);
       expect(s.width / s.height).toBeCloseTo(1.6, 2);
     }
+  });
+});
+
+describe("fitSnapped", () => {
+  const FRAME = { width: 16, height: 39 };
+  const WORK = { x: 0, y: 0, width: 2560, height: 1400 };
+
+  it("세로로 꽉 찬 창을 비율대로 넓히고 화면 안으로 당겨요", () => {
+    const b = fitSnapped({ x: 1100, y: 0, width: 1736, height: 1400 }, FRAME, 1.6, WORK);
+    expect((b.width - FRAME.width) / (b.height - FRAME.height)).toBeCloseTo(1.6, 2);
+    expect(b.height).toBe(1400);
+    expect(b.x + b.width).toBeLessThanOrEqual(WORK.width);
+  });
+
+  it("화면보다 넓어지면 줄여요", () => {
+    const b = fitSnapped({ x: 0, y: 0, width: 900, height: 1400 }, FRAME, 1.6, { ...WORK, width: 1800 });
+    expect(b.width).toBeLessThanOrEqual(1800);
+    expect((b.width - FRAME.width) / (b.height - FRAME.height)).toBeCloseTo(1.6, 2);
   });
 });
