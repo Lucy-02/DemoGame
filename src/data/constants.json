@@ -57,9 +57,7 @@
     "light": "shadow",
     "shadow": "light"
   },
-  "crit_base": 0.05,
   "crit_mult": 1.5,
-  "crit_pity": 0.02,
   "release_damage_mult": {
     "fire_fox": 1.5
   },

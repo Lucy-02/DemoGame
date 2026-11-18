@@ -66,7 +66,6 @@ export interface BSpirit extends StatusHolder {
   release: number;
   /** 해방은 각성체만, 전투마다 한 번 */
   releaseUsed: boolean;
-  critPity: number;
   downed: boolean;
   /** 이 정령에게 걸린 지속 효과와 값 */
   auras: Map<AuraId, number>;

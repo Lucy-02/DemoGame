@@ -136,10 +136,10 @@ export const baseStat = (rs: RunSpirit, k: StatKey) => resolveStat(rs, k).value;
 
 export const maxHpOf = (rs: RunSpirit) => resolveStat(rs, "hp").value;
 
-/** 치명 확률 · 치명 피해: 상수에 장비 고정값을 더하고 비율을 곱해요 */
+/** 치명 확률 · 치명 피해: 장비 고정값을 더하고 비율을 곱해요. 기본 치명 확률은 없어요: 치명은 장비로만 생겨요 (0154) */
 export function critStat(rs: RunSpirit, k: "crit_chance" | "crit_mult"): number {
   const mods = equipMods(rs, k).filter(([, m]) => !m.when);
-  const base = k === "crit_chance" ? C.crit_base : C.crit_mult;
+  const base = k === "crit_chance" ? 0 : C.crit_mult;
   const flat = mods.filter(([, m]) => m.op === "add").reduce((a, [, m]) => a + m.value, 0);
   const pct = mods.filter(([, m]) => m.op === "pct").reduce((a, [, m]) => a + m.value, 0);
   return (base + flat) * (1 + pct);
