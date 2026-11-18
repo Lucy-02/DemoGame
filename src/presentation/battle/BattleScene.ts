@@ -171,6 +171,8 @@ export class BattleScene extends Phaser.Scene {
   private dragging: string | null = null;
   private held: string | null = null;
   private onOtherCard = false;
+  /** 재생의 다음 걸음 타이머 (건너뛸 때 바로 꺼요) */
+  private stepTimer?: Phaser.Time.TimerEvent;
   /** 열린 가운데 고르기 창 (0075). 보이는 동안 아래 화면의 조작은 쉬어요 */
   private pick: PickView | null = null;
   /** 앞 장면의 순서표 (장면을 다시 그려도 남아요) */
@@ -209,7 +211,7 @@ export class BattleScene extends Phaser.Scene {
       // 첫 걸음(아무것도 지나가지 않음)은 재생 위치 선이 자라는 동안만 머물러요. 여러 번 치는 걸음은 타격 수만큼 길어져요 (0093)
       const M = tokens.provisional.motion;
       const stay = this.vm.acted ? ms(M.playback.step) + hitSpan(this.vm) : ms(M.orderToken.cursor.grow);
-      this.time.delayedCall(stay, () => this.step());
+      this.stepTimer = this.time.delayedCall(stay, () => this.step());
       // 재생 중에 누르거나 스페이스 · 엔터를 누르면 끝 상태로 바로 넘어가요 (0093)
       const skip = () => this.skip();
       this.input.once("pointerdown", skip);
@@ -617,7 +619,8 @@ export class BattleScene extends Phaser.Scene {
   private skip() {
     if (!this.playback) return;
     this.playback = [];
-    // 걸어 둔 다음 걸음과 소리는 거둬요
+    // 걸어 둔 다음 걸음과 소리는 거둬요. removeAllEvents는 다음 프레임에야 지워서, 같은 프레임에 걸음이 한 번 더 나가지 않게 바로 꺼요
+    this.stepTimer?.remove(false);
     this.time.removeAllEvents();
     this.step();
   }
