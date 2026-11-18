@@ -6,7 +6,7 @@ import { castAmount, castDamage, describeCard, describeEquipTier, describeSignat
 import type { CardDef, CardOp, DeckCard, EquipTier, RunEquip, RunSpirit, Stage } from "../../core/types";
 import { cardArtOf } from "../card/art";
 import type { CardRarity, CardVM, CardValueVM, Material, RichText } from "../card/viewmodel";
-import { ELEMENT_ICON, type FaceId } from "../faces";
+import { ELEMENT_ICON, ROLE_ICON, type FaceId } from "../faces";
 import { TEXT_TERMS } from "../glossary/terms";
 import { spiritArt } from "../spiritArt";
 import { COPY, MATERIAL_NAME } from "./copy";
@@ -81,6 +81,7 @@ export function cardVM(cardId: string, ownerId?: string, st?: CardStats): CardVM
   const who = ownerId ? spiritDef(ownerId).name : COPY.shared;
   return {
     key: cardId, name: def.name, cost: def.cost, owner: ownerId ? windowOf(ownerId) : "star", material,
+    ...(ownerId ? { role: ROLE_ICON[spiritDef(ownerId).role] } : {}),
     element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, art: "i-spark",
     illustration: cardArtOf(baseCardId(cardId)),
     rarity: def.rarity === "basic" ? undefined : (def.rarity as CardRarity),
@@ -96,7 +97,7 @@ export const deckCardVM = (c: DeckCard): CardVM => cardVM(c.upgraded ? upgradedI
 export function releaseVM(spiritId: string, slots: number): CardVM {
   const def = spiritDef(spiritId);
   return {
-    key: spiritId, name: COPY.release, cost: slots, owner: windowOf(spiritId), material: materialOf(def.element),
+    key: spiritId, name: COPY.release, cost: slots, owner: windowOf(spiritId), material: materialOf(def.element), role: ROLE_ICON[def.role],
     element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, art: "i-spark", values: [],
     detail: { text: richText(def.release.desc), owner: [def.name, COPY.release].join(COPY.sep) },
   };

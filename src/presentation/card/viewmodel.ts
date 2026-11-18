@@ -43,6 +43,8 @@ export interface CardVM {
   owner: FaceId;
   /** 초상 홈에 넣을 얼굴 텍스처 키 (원으로 구운 그림). 없으면 owner의 얼굴 그림 (정본 얼굴이 없는 정령용) */
   face?: string;
+  /** 주인 정령의 역할 기호. 얼굴 그림이 없으면 초상 홈에 이 기호를 그려요 (0105 후속, Lucy 2026-11-18 초상 1) */
+  role?: IconId;
   /** 희귀도. 보석은 createHandCard에 showRarity를 준 자리(보상·상점)에서만 그려요. 손패는 안 그려요 (0050) */
   rarity?: CardRarity;
   /** 속성 재질(이름 띠) */

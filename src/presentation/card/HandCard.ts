@@ -6,6 +6,7 @@ import { rgba } from "../style/color";
 import { box, circle } from "../style/draw";
 import { place, render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
+import { canvasTexture } from "../style/gradient";
 import { icon, iconKey, loadIcon } from "../style/icons";
 import { adjustColor, opacityOf } from "../style/opacity";
 import { placeholderArt } from "../style/placeholder";
@@ -35,6 +36,7 @@ export function preloadHandCard(scene: Phaser.Scene, c: CardVM, opts: HandCardOp
   const two = c.values.length > 1;
   const icons: [string, number][] = [[c.element, C.element.size], ...c.values.map((v): [string, number] => [v.icon, two ? C.glyph.sizeTwo : C.glyph.size])];
   if (opts.showRarity && c.rarity) icons.push([`rarity-${c.rarity}`, C.rarity.size], [`rarity-${c.rarity}-edge`, C.rarity.size]);
+  if (c.role) icons.push([c.role, C.element.size]);
   if (c.mark) icons.push([c.mark, C.mark.icon]);
   if (c.need) icons.push(["g-lock", C.lock.icon], [c.need, C.lock.icon]);
   for (const [id, w] of icons) {
@@ -142,6 +144,19 @@ function heldOutlineTexture(scene: Phaser.Scene): string {
   return key;
 }
 
+const NO_FACE = "card:no-face";
+
+/** 얼굴 그림이 없다는 표시 텍스처 (1×1 빈 칸). 그림 없는 정령의 구운 얼굴(spiritArt.bakeSpiritFace)도 같은 크기예요 */
+export function noFace(scene: Phaser.Scene): string {
+  if (!scene.textures.exists(NO_FACE)) canvasTexture(scene, NO_FACE, 1, 1, () => {});
+  return NO_FACE;
+}
+
+function isBlankFace(scene: Phaser.Scene, key: string): boolean {
+  if (!scene.textures.exists(key)) return true;
+  return (scene.textures.get(key).getSourceImage() as { width: number }).width <= 1;
+}
+
 /** 카드 몸: 틀, 그림 창, 이름 띠, 속성 기호, 초상 홈, 수치판, 표식. (x, y) = 카드 바깥 왼쪽 위.
  *  onLifted: 들린 상태에만 보일 몸 그림을 넘겨받아요. */
 function drawBody(
@@ -174,8 +189,12 @@ function drawBody(
   circle(top, x + C.notch.x + C.notch.d / 2, y + C.notch.y + C.notch.d / 2, C.notch.d, { fill: P.paper });
   const fd = C.notch.d - C.notch.inset * 2;
   const fx = x + C.notch.x + C.notch.inset, fy = y + C.notch.y + C.notch.inset;
-  // face를 직접 주면 이미 원으로 구운 그림이에요 (해상도는 주는 쪽이 정해요)
-  if (c.face) scene.add.image(fx, fy, c.face).setOrigin(0, 0).setDisplaySize(fd, fd);
+  // face를 직접 주면 이미 원으로 구운 그림이에요 (해상도는 주는 쪽이 정해요).
+  // 얼굴 그림이 없으면 빈 홈(그림 창 빛) + 주인의 역할 기호, 주인이 없으면 빈 홈만 (Lucy 2026-11-18 초상 1, 순서표의 그림 없는 얼굴과 같은 말)
+  if (c.face && isBlankFace(scene, c.face)) {
+    circle(top, fx + fd / 2, fy + fd / 2, fd, { fill: P.paper2 });
+    if (c.role) icon(scene, fx + (fd - C.element.size) / 2, fy + (fd - C.element.size) / 2, c.role, C.element.size, C.element.size, P.pMute);
+  } else if (c.face) scene.add.image(fx, fy, c.face).setOrigin(0, 0).setDisplaySize(fd, fd);
   else place(scene, top, { t: "image", key: faceKey(c.owner), w: fd, h: fd, round: true }, fx, fy);
 
   // 수치판 (오른쪽 맞춤)
