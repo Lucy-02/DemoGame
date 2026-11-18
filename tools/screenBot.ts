@@ -2,6 +2,8 @@
 // 지금 떠 있는 장면을 보고 그 장면의 손잡이(버튼이 부르는 것과 같은 함수)를 한 번 눌러요. 전투의 판단은 tools/bot.ts의 smart가 해요.
 // 화면 흐름(GameFlow)과 장면 전환을 실제로 거치고, 규칙은 세션을 통해서만 바뀌어요.
 import type * as Phaser from "phaser";
+import { GROWTH } from "../src/core/data";
+import type { Garden } from "../src/core/garden";
 import { maxHpOf } from "../src/core/stats";
 import { Rng } from "../src/core/rng";
 import type { GameSession } from "../src/session/game";
@@ -38,8 +40,15 @@ let seenOver = false;
 let pressedAt = -10;
 /** 지도를 한 번 본 막 (찍을 틈) */
 let lookedAct = 0;
-/** 턴 재생을 빨리 감는 배수. 재생은 장면이 스스로 넘겨요 (봇이 넘기면 장면이 걸어 둔 걸음과 겹쳐요) */
+/** 끝까지 보는 턴 재생을 빨리 감는 배수 */
 const FAST = 12;
+/**
+ * 턴 재생을 끝까지 보는 턴: 전투마다 이 턴까지만 보고, 그 뒤 턴은 사람처럼 눌러 건너뛰어요 (0093).
+ * 재생은 걸음마다 장면을 다시 그려서 판에서 가장 오래 걸려요. 전투가 길어져도(밸런스) 걸리는 시간이 덜 늘어요.
+ */
+const WATCH_TURNS = 1;
+/** 지금 재생을 끝까지 볼지 (턴을 넘길 때 정해요) */
+let watch = true;
 /** 봇이 놓은 카드로 끝나 봇이 닫은 전투 */
 const closed = new WeakSet<object>();
 /** 가 본 칸 종류 */
@@ -54,6 +63,21 @@ let again: { scene: Loose; press: Press; left: number[]; from: number } | undefi
 /** 빠르게 두 번 누르기를 켜요 */
 export function setDouble(on: boolean) {
   double = on;
+}
+
+/**
+ * 정원 저장에서 정령을 모두 각성체로 키워요 (runsim --awakened와 같은 값).
+ * 첫 판 뒤에 써요: 정령이 모일 때까지 지는 판을 거듭하지 않고 다음 판에 1막을 넘겨요. 밸런스가 바뀌어도 판 수가 덜 흔들려요.
+ */
+export function grownSave(gardenText: string): string {
+  const g = JSON.parse(gardenText) as Garden;
+  return JSON.stringify({ ...g, spirits: g.spirits.map((x) => ({ ...x, stage: "awakened", exp: GROWTH.levels[GROWTH.levels.length - 1] })) } satisfies Garden);
+}
+
+/** 끝낸 판이 이만큼이면 메인 화면에서 떠나지 않고 기다려요 (테스트가 정령을 키우고 다시 켤 틈) */
+let waitAtHome = Infinity;
+export function setWaitAtHome(runs: number) {
+  waitAtHome = runs;
 }
 
 /** 이번 턴 카드를 이미 놓은 전투 */
@@ -130,7 +154,7 @@ function act(s: Loose, game: GameSession): Press | undefined {
   const key: string = s.sys.settings.key;
   if (key !== "runEnd") seenOver = false;
   switch (key) {
-    case "home": return { did: "떠나기", press: () => s.onPrimary(), again: true };
+    case "home": return (game.garden.state.runs ?? 0) >= waitAtHome ? undefined : { did: "떠나기", press: () => s.onPrimary(), again: true };
     case "depart": return { did: "출전", press: () => s.onDepart(s.front), again: true };
     case "map": {
       const run = game.run!.run;
@@ -206,11 +230,18 @@ function act(s: Loose, game: GameSession): Press | undefined {
 
 function battle(s: Loose): Press | undefined {
   const b = s.session.battle;
-  // 턴 재생은 장면이 스스로 넘겨요. 시계만 빨리 감아요
+  // 다음 장면으로 넘어가는 중(그릴 파일을 읽는 동안)에는 사람도 못 눌러요. 이때 누르면 전투 끝이 두 번 불려요
+  if (s.leaving) return undefined;
   if (s.playback) {
-    s.time.timeScale = FAST;
-    s.tweens.timeScale = FAST;
-    return undefined;
+    // 다 본 재생: 장면이 확정 상태로 가는 중이에요
+    if (!s.playback.length) return undefined;
+    // 끝까지 보는 재생은 장면이 스스로 넘겨요. 시계만 빨리 감아요
+    if (watch) {
+      s.time.timeScale = FAST;
+      s.tweens.timeScale = FAST;
+      return undefined;
+    }
+    return { did: "재생 건너뛰기", press: () => s.skip(), again: true };
   }
   const pick = s.vm.pick;
   if (pick) {
@@ -232,5 +263,5 @@ function battle(s: Loose): Press | undefined {
     };
   }
   const turn = b.turn;
-  return { did: `턴 ${turn}`, press: () => s.endTurn(), again: true };
+  return { did: `턴 ${turn}`, press: () => { watch = turn <= WATCH_TURNS; s.endTurn(); }, again: true };
 }
