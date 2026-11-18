@@ -29,7 +29,7 @@ import { GLASS } from "../tooltip/skins";
 import { ALLY, BAND, DRAG, END, ENEMY, FRAME, INTENT, LIFT_STYLES, SYS, TARGETING } from "./layout";
 import { playOrderMotion, snapshotOrder, type OrderSnapshot } from "./views/orderMotion";
 import { SYS_ICONS, drawSys } from "./views/topbar";
-import { playUnitMotion, type UnitActor } from "./views/unitMotion";
+import { hitSpan, playUnitMotion, type UnitActor } from "./views/unitMotion";
 import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, dropValueTextures, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 
@@ -205,7 +205,17 @@ export class BattleScene extends Phaser.Scene {
     const sound = () => { for (const id of cues) audioOf(this)?.play(id); };
     if (this.playback && cues.length && !reducedMotion()) this.time.delayedCall(ms(tokens.provisional.motion.hit.recoil.delay), sound);
     else sound();
-    if (this.playback) this.time.delayedCall(ms(tokens.provisional.motion.playback.step), () => this.step());
+    if (this.playback) {
+      // 첫 걸음(아무것도 지나가지 않음)은 재생 위치 선이 자라는 동안만 머물러요. 여러 번 치는 걸음은 타격 수만큼 길어져요 (0093)
+      const M = tokens.provisional.motion;
+      const stay = this.vm.acted ? ms(M.playback.step) + hitSpan(this.vm) : ms(M.orderToken.cursor.grow);
+      this.time.delayedCall(stay, () => this.step());
+      // 재생 중에 누르거나 스페이스 · 엔터를 누르면 끝 상태로 바로 넘어가요 (0093)
+      const skip = () => this.skip();
+      this.input.once("pointerdown", skip);
+      this.input.keyboard?.once("keydown-SPACE", skip);
+      this.input.keyboard?.once("keydown-ENTER", skip);
+    }
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
     this.showHover(hov < 0 ? null : { side: "enemy", i: hov });
@@ -600,6 +610,15 @@ export class BattleScene extends Phaser.Scene {
       return this.settle();
     }
     this.restartWith({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide, playback: rest, cues: this.cues?.slice(1) } satisfies BattleSceneData);
+  }
+
+  /** 재생 건너뛰기: 남은 걸음을 보지 않고 확정된 상태로 (0093) */
+  private skip() {
+    if (!this.playback) return;
+    this.playback = [];
+    // 걸어 둔 다음 걸음과 소리는 거둬요
+    this.time.removeAllEvents();
+    this.step();
   }
 
   /**
