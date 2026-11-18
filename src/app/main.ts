@@ -17,7 +17,8 @@
 // ?slow=4 는 모션을 4배 느리게 (어느 화면이든).
 // ?res=2 는 그리는 해상도 배수를 고정 (없으면 모니터 크기로 골라요, presentation/style/resolution.ts).
 // ?screen=legacy 는 정원·저장 없이 바로 떠나는 시험 판(&party=a,b,c&adult&unlockAll&seed=). 칸마다 새 화면이 없으면 임시 장면이 맡아요.
-import { C, SPIRITS } from "../core/data";
+import { C, SPIRITS, setLocale } from "../core/data";
+import { LOCALE_IDS, type Locale } from "../core/l10n";
 import { getPlatform } from "../platform";
 import { startGame } from "../presentation/game";
 import { GameSession, demoScope } from "../session/game";
@@ -45,6 +46,9 @@ async function start() {
   Object.assign(window, { platform });
   // 게임이 부모 크기를 재기 전에 창 틀을 씌워요
   if (platform.kind === "web") mountDevWindow(platform);
+  // 개발용 ?locale=en: 다른 언어 문구가 칸에 들어가는지 볼 때 (없는 문구는 기본 언어로 보여요)
+  const lang = DEV ? params.get("locale") : null;
+  if (lang && (LOCALE_IDS as string[]).includes(lang)) setLocale(lang as Locale);
   const screen = params.get("screen");
   const get = (k: string) => params.get(k) ?? undefined;
   const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "demoEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" || screen === "menu" || screen === "settings" || screen === "glossary" ? screen : undefined;
