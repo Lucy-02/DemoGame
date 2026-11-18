@@ -614,7 +614,7 @@ export class BattleScene extends Phaser.Scene {
 
   /** 재생 건너뛰기: 남은 걸음을 보지 않고 확정된 상태로 (0093) */
   private skip() {
-    if (!this.playback) return;
+    if (!this.playback || this.leaving) return;
     this.playback = [];
     // 걸어 둔 다음 걸음과 소리는 거둬요
     this.time.removeAllEvents();
@@ -627,6 +627,9 @@ export class BattleScene extends Phaser.Scene {
    */
   private settle() {
     if (this.session?.over) {
+      // 마지막 걸음의 타이머와 건너뛰기 누름이 한 프레임에 겹쳐도 전투는 한 번만 끝내요
+      if (this.leaving) return;
+      this.leaving = true;
       // 값마다 구운 막대 텍스처는 전투가 끝나면 버려요 (P8-10)
       this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => dropValueTextures(this));
       return this.onOver?.(this);
