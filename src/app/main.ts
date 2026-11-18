@@ -15,8 +15,10 @@
 // 개발 빌드에서만: window.session · window.game 으로 세션과 장면을 볼 수 있고(자동 점검 tools/screenBot.ts가 써요), ?seed= 로 새 판 · 새 정원의 시드를 고정해요.
 // 데모 빌드(.env.demo의 VITE_DEMO=1, `pnpm dist:demo`)는 판의 범위를 데모로 묶고 데모 끝 화면을 켜요 (0101). 개발 빌드에서는 ?demo 로도 켜요.
 // ?slow=4 는 모션을 4배 느리게 (어느 화면이든).
+// ?res=2 는 그리는 해상도 배수를 고정 (없으면 모니터 크기로 골라요, presentation/style/resolution.ts).
 // ?screen=legacy 는 정원·저장 없이 바로 떠나는 시험 판(&party=a,b,c&adult&unlockAll&seed=). 칸마다 새 화면이 없으면 임시 장면이 맡아요.
-import { C, SPIRITS } from "../core/data";
+import { C, SPIRITS, setLocale } from "../core/data";
+import { LOCALE_IDS, type Locale } from "../core/l10n";
 import { getPlatform } from "../platform";
 import { startGame } from "../presentation/game";
 import { GameSession, demoScope } from "../session/game";
@@ -44,6 +46,9 @@ async function start() {
   Object.assign(window, { platform });
   // 게임이 부모 크기를 재기 전에 창 틀을 씌워요
   if (platform.kind === "web") mountDevWindow(platform);
+  // 개발용 ?locale=en: 다른 언어 문구가 칸에 들어가는지 볼 때 (없는 문구는 기본 언어로 보여요)
+  const lang = DEV ? params.get("locale") : null;
+  if (lang && (LOCALE_IDS as string[]).includes(lang)) setLocale(lang as Locale);
   const screen = params.get("screen");
   const get = (k: string) => params.get(k) ?? undefined;
   const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "demoEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" || screen === "menu" || screen === "settings" || screen === "glossary" ? screen : undefined;
@@ -58,6 +63,7 @@ async function start() {
     quit: () => void (session?.flush() ?? Promise.resolve()).then(() => platform.quit()), version: versionOf(demo), demo,
     hover: get("hover"), scene: get("scene"), lift: get("lift"), stage: params.has("stage") ? Number(get("stage")) : undefined, select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
     slow: Number(params.get("slow")) || undefined,
+    res: Number(params.get("res")) || undefined,
   });
   // 시험용 문: 개발 빌드에서만 열어요
   if (DEV) Object.assign(window, { session, settings, game });

@@ -1,7 +1,8 @@
 import { describeOp } from "./battle/effects";
 import { join, type Clause, type TextContext } from "./clauses";
 import { josa } from "./korean";
-import { C, cardDef } from "./data";
+import { C, cardDef, currentLocale } from "./data";
+import type { Locale } from "./l10n";
 import { round, scale } from "./stats";
 import type { CardDef, CardTarget, EquipStat, EquipTier, StatCondition } from "./types";
 
@@ -39,10 +40,39 @@ const ALLY_OF: Partial<Record<CardTarget, string>> = { ally: "아군 하나의 "
 /** 아군에게 거는 상태의 주어 */
 const ALLY_WHO: Partial<Record<CardTarget, string>> = { ally: "고른 아군의 ", allAllies: "모든 아군의 " };
 
+/** 효과문에 들어가는 수치: 언어와 상관없이 같은 계산이에요 */
+export type CardNumbers = Pick<TextContext, "sc" | "dmg" | "amt" | "main">;
+
+/**
+ * 다른 언어의 효과문 쓰는 이 (번역 경계, 평가 P7-10). 카드의 효과 목록(`def.effects`: 효과 종류 + 수치)과 보정된 수치 계산을 받아 그 언어의 문장을 돌려줘요.
+ * 한국어 어순 · 조사로 된 문장(`battle/effects.ts`의 describe)은 기본 언어 전용이라, 다른 언어는 여기에 자기 틀을 등록해요.
+ */
+export type CardTextWriter = (def: CardDef, n: CardNumbers) => string;
+
+const writers: Partial<Record<Locale, CardTextWriter>> = {};
+
+/** 언어의 효과문 쓰는 이를 등록해요. undefined를 주면 지워요 (기본 언어 문장으로 돌아가요) */
+export function setCardTextWriter(locale: Locale, writer: CardTextWriter | undefined) {
+  if (writer) writers[locale] = writer;
+  else delete writers[locale];
+}
+
 /** 시전 정령의 능력치를 반영한 최종 수치로 카드 문구를 만들어요. 효과마다의 문장은 효과 핸들러(`battle/effects.ts`)에 있어요. */
 export function describeCard(def: CardDef, st: CasterStats | null): string {
   let mainUsed = false;
   const t = def.target;
+  const numbers: CardNumbers = {
+    sc: (v, k) => (st ? scale(v, st[k]) : v),
+    dmg: (v) => (st ? castDamage(v, st) : v),
+    amt: (v, kind) => (st ? castAmount(v, st, kind) : v),
+    main: (v) => {
+      if (mainUsed) return v;
+      mainUsed = true;
+      return v + (st?.grow ?? 0);
+    },
+  };
+  const writer = writers[currentLocale()];
+  if (writer) return writer(def, numbers);
   const ctx: TextContext = {
     foe: ENEMY_TO[t] ?? "",
     foeOf: t === "allEnemies" ? "모든 적의" : "대상의",
@@ -54,14 +84,7 @@ export function describeCard(def: CardDef, st: CasterStats | null): string {
       const [to, verb] = (ALLY[op] as Record<string, readonly [string, string]>)[t] ?? ALLY[op].self;
       return { to, core: `${what} ${verb}` };
     },
-    sc: (v, k) => (st ? scale(v, st[k]) : v),
-    dmg: (v) => (st ? castDamage(v, st) : v),
-    amt: (v, kind) => (st ? castAmount(v, st, kind) : v),
-    main: (v) => {
-      if (mainUsed) return v;
-      mainUsed = true;
-      return v + (st?.grow ?? 0);
-    },
+    ...numbers,
   };
   const body = join(def.effects.flatMap((op) => describeOp(op, ctx)));
   return def.exhaust ? `${body} 소멸.` : body;

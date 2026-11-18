@@ -37,6 +37,8 @@ protocol.registerSchemesAsPrivileged([
 
 /** 게임 기준 해상도와 바닥색 (렌더러의 FRAME · tokens.provisional.palette.floor와 같은 값) */
 const BASE = { w: 1280, h: 800 };
+/** 창을 줄일 수 있는 한계: 12px 글자가 9px이 되는 배율 */
+const MIN_SCALE = 9 / 12;
 const FLOOR = "#232120";
 
 function serveRenderer() {
@@ -84,8 +86,9 @@ function createWindow() {
     // 게임 기준 해상도(1280×800)와 같은 크기로 열어요. 크기를 바꾸면 화면이 비율을 지키며 따라 늘어요 (0084 4번)
     width: BASE.w,
     height: BASE.h,
-    minWidth: BASE.w / 2,
-    minHeight: BASE.h / 2,
+    // 가장 작은 글자(12px)가 9px 아래로 내려가지 않는 선까지만 줄어요 (평가 P7-15)
+    minWidth: BASE.w * MIN_SCALE,
+    minHeight: BASE.h * MIN_SCALE,
     useContentSize: true,
     // 남는 곳(비율이 다른 전체화면)은 게임 바닥색 (index.html과 같은 값)
     backgroundColor: FLOOR,

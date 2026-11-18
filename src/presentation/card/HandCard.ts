@@ -10,6 +10,7 @@ import { canvasTexture } from "../style/gradient";
 import { icon, iconKey, loadIcon } from "../style/icons";
 import { adjustColor, opacityOf } from "../style/opacity";
 import { placeholderArt } from "../style/placeholder";
+import { RES, createCanvas } from "../style/resolution";
 import { shadowTexture } from "../style/shadow";
 import { px } from "../style/text";
 import { faceKey } from "../faces";
@@ -47,13 +48,14 @@ export function preloadHandCard(scene: Phaser.Scene, c: CardVM, opts: HandCardOp
 }
 
 const sharpSize = (w: number, scale: number) => Math.round(w * scale);
+// 기호 텍스처는 이미 배수만큼 촘촘해요(style/icons). 키운 카드는 그 위에 키운 만큼 더 촘촘한 것으로 바꿔요
 const ICON_KEY = /^icon:(.+)@([\d.]+)x([\d.]+)$/;
 
 /** 키운 카드에서 글자와 기호를 화면 크기에 맞는 해상도로 바꿔요 (구운 재질·그림은 그대로) */
 function sharpen(scene: Phaser.Scene, root: Phaser.GameObjects.Container, scale: number) {
   for (const o of root.list) {
     if (o instanceof Phaser.GameObjects.Container) sharpen(scene, o, scale);
-    else if (o instanceof Phaser.GameObjects.Text) o.setResolution(Math.ceil(scale));
+    else if (o instanceof Phaser.GameObjects.Text) o.setResolution(Math.ceil(scale * RES()));
     else if (o instanceof Phaser.GameObjects.Image) {
       const m = ICON_KEY.exec(o.texture.key);
       if (!m) continue;
@@ -133,7 +135,7 @@ function heldOutlineTexture(scene: Phaser.Scene): string {
   if (scene.textures.exists(key)) return key;
   const { width, offset } = C.held;
   const m = offset + width;
-  const tex = scene.textures.createCanvas(key, C.w + m * 2, C.h + m * 2)!;
+  const tex = createCanvas(scene, key, C.w + m * 2, C.h + m * 2);
   const ctx = tex.getContext();
   ctx.strokeStyle = P.accHi;
   ctx.lineWidth = width;

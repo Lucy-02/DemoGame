@@ -2,13 +2,19 @@
 // 한 색 기호는 흰색으로 저장돼 있어서 틴트로 색을 입혀요.
 import type * as Phaser from "phaser";
 import { rgba } from "./color";
+import { RES, logicalSize } from "./resolution";
 
 export const iconKey = (id: string, w: number, h = w) => `icon:${id}@${w}x${h}`;
 
 /** preload 단계에서 부르세요. 같은 키는 한 번만 올려요. */
 export function loadIcon(scene: Phaser.Scene, id: string, w: number, h = w): string {
   const key = iconKey(id, w, h);
-  if (!scene.textures.exists(key)) scene.load.svg(key, `assets/ui/icons/${id}.svg`, { width: w, height: h });
+  if (!scene.textures.exists(key)) {
+    // 그리는 배수만큼 촘촘하게 올리고, 놓이는 크기는 w×h 그대로
+    const k = RES();
+    scene.load.svg(key, `assets/ui/icons/${id}.svg`, { width: w * k, height: h * k });
+    if (k !== 1) scene.load.once(`filecomplete-svg-${key}`, () => logicalSize(scene.textures.get(key), w, h));
+  }
   return key;
 }
 
@@ -66,11 +72,12 @@ export function iconFit(
 /** 캔버스에 기호를 한 색으로 그려요 (구워 두는 텍스처용) */
 export function paintIcon(ctx: CanvasRenderingContext2D, scene: Phaser.Scene, id: string, w: number, x: number, y: number, color: string) {
   const c = document.createElement("canvas");
-  c.width = c.height = w;
+  const d = Math.ceil(w * RES());
+  c.width = c.height = d;
   const t = c.getContext("2d")!;
-  t.drawImage(scene.textures.get(iconKey(id, w)).getSourceImage() as CanvasImageSource, 0, 0, w, w);
+  t.drawImage(scene.textures.get(iconKey(id, w)).getSourceImage() as CanvasImageSource, 0, 0, d, d);
   t.globalCompositeOperation = "source-in";
   t.fillStyle = color;
-  t.fillRect(0, 0, w, w);
-  ctx.drawImage(c, x, y);
+  t.fillRect(0, 0, d, d);
+  ctx.drawImage(c, x, y, w, w);
 }

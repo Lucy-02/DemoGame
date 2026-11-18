@@ -188,8 +188,13 @@ scripts/                       build-tokens, check-literals, check-assets
 - 말풍선 문단: 본문 13px/1.5(강조 14.5, 용어 점선 밑줄 offset 3), 계산 12px(강조 13, padding-top 5, **선 없음**), 이유 12.5px, 주인 12px.
 
 ### 뷰포트
-- 1280×800으로 그리고 `Scale.FIT`으로 부모(#game)에 맞춰 늘여요. 가운데 정렬은 Phaser autoCenter를 쓰지 않고 `index.html`의 flex가 맡아요(둘 다 쓰면 두 번 밀려요).
-- Electron 창은 1280×800(useContentSize)으로 열리고 16:10으로만 늘어나요(최소 640×400). 늘이면 캔버스가 CSS로 커져서 글자가 조금 흐려요. Windows 배율이 100%가 아니면 브라우저가 캔버스를 늘려서 살짝 흐릴 수 있어요. 고해상도 대응(devicePixelRatio)은 아직 안 했어요.
+- 화면 좌표는 1280×800이고 `Scale.FIT`으로 부모(#game)에 맞춰 늘여요. 가운데 정렬은 Phaser autoCenter를 쓰지 않고 `index.html`의 flex가 맡아요(둘 다 쓰면 두 번 밀려요).
+- Electron 창은 1280×800(useContentSize)으로 열리고 16:10으로만 늘어나요(최소 960×600: 12px 글자가 9px).
+- **그리는 배수 (0136, `style/resolution.ts`)**: 큰 모니터에서는 캔버스를 배수(1 · 2 · 3)만큼 키우고 카메라가 그만큼 키워 그려요. 화면 코드는 1280×800 좌표만 써요. 지킬 것 넷:
+  - 글자는 `textStyle()`로 만들어요(배수만큼 촘촘한 캔버스). 직접 스타일을 쓰면 `resolution: RES()`를 넣어요.
+  - 구워 두는 캔버스는 `scene.textures.createCanvas` 대신 `createCanvas(scene, key, w, h)`(또는 `canvasTexture`)로. 그리는 좌표와 놓는 크기는 w×h 그대로예요. 안에서 중간 캔버스를 쓰면 그것도 `RES()`배로 만들어요.
+  - 포인터 자리는 `p.x` 대신 `pointerAt(p).x`. 카메라는 `cameras.add(x, y, w, h)`에 화면 좌표를 그대로 넘겨요(안에서 배수를 곱해요).
+  - `?res=2`로 2배를 고정해 보고, `?res=1`과 배치가 같은지 봐요.
 
 ---
 
@@ -238,7 +243,6 @@ pnpm visual --screen spirits [--frame s-f1..s-f5] [--select <정령>] [--tab ove
 2. **모션 디테일**: 공통 값은 `style/motion.ts`(FAST · MOVE · 창 뜸 · 차례로 나타남), 화면 전환은 `veil.ts`, 전투 재생 반응은 `battle/views/unitMotion.ts`예요 (0077 · 0086, 모두 `provisional.motion` 임시 값). 남은 빈 곳은 0086 "남은 빈 곳"에 순서대로 있어요. `?slow=4`로 느리게 봐요.
 3. 기믹·차징(`frame-gimmick.png`), H3.
 5. **순서표(0074)**: 토큰은 `battle/views/order.ts` 한 규칙(얼굴 → 테 → 배지)으로 그리고, Lucy가 고른 값은 `provisional.order` 토큰에 있어요. 상태 모음은 `?screen=battle&scene=order-plan|order-play`. 턴 재생은 `battle/playback.ts`가 턴 종료 이벤트를 턴 종료 직전 VM에 입혀 행동마다 한 장면을 만들고, 장면마다 다시 그려요(행동 하나 450ms, `provisional.motion.playback.step`). 남은 것: 재생 연출(타격·쓰러짐·상태 변화·늦춰진 행동의 자리 옮김), 말풍선의 아군 결과 값·썸네일·꼬리, 적 효과문을 문구 규칙 문장 틀로.
-4. 고해상도 화면(devicePixelRatio) 대응. 글자·구운 텍스처 해상도까지 같이 다뤄야 해요.
 
 정령 관리·정원
 - 정원 저장: `GardenSession.snapshot/restore`를 platform 저장에 연결, 새 판(`Run`)에 `garden`을 넘기기

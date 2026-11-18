@@ -43,6 +43,7 @@ Phaser 4 + Vite + TypeScript + Spine. PC(스팀) 1인 개발. 브랜딩·UI/UX·
 - 시안을 구현할 때 시안 HTML을 그대로 옮기지 않아요. 재사용·리팩터링할 수 있는 기존 컴포넌트를 먼저 찾아 쓰고, 실제 코드 구조에 맞게 가져와요 (Lucy 2026-11-09).
 - `src/platform`, `electron/`: 저장·창 같은 바깥 세계. 렌더러는 Electron을 직접 import하지 않아요.
 - `src/design/tokens.ts`: `design/tokens/tokens.json`에서 `pnpm tokens`로 생성. 손으로 고치지 않아요.
+- 큰 모니터에서는 배수만큼 촘촘히 그려요(0136). 화면 코드는 1280×800 좌표만 쓰고, 글자 · 구운 캔버스 · 포인터 자리는 `style/resolution.ts`의 길(`textStyle` · `createCanvas` · `pointerAt`)로. `pnpm check:contrast`: 글자 대비 재기(보고만).
 - `pnpm check:design`: 리터럴 값 검사. `design/strict-paths.txt`에 적힌 경로는 위반 시 실패해요.
 - `pnpm check`: 타입·의존 규칙·테스트·리터럴·문서·에셋 출처 기록을 한 번에. 출시 준비(단계표 · 스팀 순서 · 플레이테스트)는 `docs/release/`. `pnpm test:e2e`: Electron 스모크(창 크기 · 전체화면 포함, `DEMOGAME_EXE`로 패키지된 앱). `pnpm dist`(`--mac` · `--win`): `release/`에 패키징, `pnpm dist:demo`: 데모 빌드(0101). `pnpm test:run`: 봇이 화면으로 막을 넘긴 한 판을 끝까지 돌고, 같은 버튼을 빠르게 다시 눌러도 같은 판인지 봐요(`tools/screenBot.ts`, 약 10분, CI는 별도 잡 `screen-run`. 깔린 크로미움을 쓰려면 `PW_CHROMIUM`).
 

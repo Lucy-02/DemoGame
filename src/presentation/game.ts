@@ -1,5 +1,5 @@
 // 새 화면(정본 기준)으로 게임을 띄워요. 기준 해상도는 정본 프레임과 같은 1280×800.
-// 그리는 크기는 1280×800 그대로이고, 창에 맞춰 비율을 지키며 늘여요. 남는 곳은 바닥색이에요 (0084 4번).
+// 화면 좌표는 1280×800 그대로이고, 창에 맞춰 비율을 지키며 늘여요. 남는 곳은 바닥색이에요 (0084 4번). 큰 모니터에서는 배수만큼 촘촘히 그려요.
 // screen이 없으면 저장에 이어진 게임(메인 화면에서 시작, flow.ts)이고, 화면 이름을 주면 그 화면의 고정 장면이에요.
 import * as Phaser from "phaser";
 import { tokens } from "../design/tokens";
@@ -32,6 +32,7 @@ import { SPIRITS_SCENE, SpiritsScene, type SpiritsSceneData } from "./spirits/Sp
 import type { TabId } from "./spirits/viewmodel";
 import { installCursor } from "./style/cursor";
 import { loadFonts } from "./style/fonts";
+import { installResolution, pickResolution } from "./style/resolution";
 import { VEIL_SCENE, VeilScene } from "./veil";
 
 export interface GameOptions {
@@ -65,6 +66,8 @@ export interface GameOptions {
   lift?: string;
   /** 전투 고정 장면에 깔 배경의 막 (?stage=1) */
   stage?: number;
+  /** 그리는 해상도 배수를 정해 보기 (?res=2). 없으면 모니터 크기로 골라요 */
+  res?: number;
   /** 모션 느리게 보기 (?slow=4 는 4배 느리게). 모션을 확인할 때만 써요 */
   slow?: number;
 }
@@ -72,11 +75,14 @@ export interface GameOptions {
 export async function startGame(parent: string, opts: GameOptions = {}): Promise<Phaser.Game> {
   const live = !opts.screen && opts.session;
   await Promise.all([loadFonts(), live ? waitForLegacyFonts() : undefined]);
+  // 큰 모니터에서는 같은 화면을 배수만큼 촘촘히 그려요. 화면 좌표는 그대로 1280×800이에요 (style/resolution.ts)
+  const res = pickResolution(FRAME, { w: window.screen.width, h: window.screen.height }, window.devicePixelRatio || 1, opts.res);
+  installResolution(res, Phaser.Cameras.Scene2D.CameraManager);
   return new Phaser.Game({
     type: Phaser.WEBGL,
     parent,
-    width: FRAME.w,
-    height: FRAME.h,
+    width: FRAME.w * res,
+    height: FRAME.h * res,
     backgroundColor: tokens.provisional.palette.floor,
     // 부모(#game) 크기에 맞춰 비율을 지키며 늘여요. 가운데 정렬은 index.html의 #game(flex)이 맡고, 남는 곳은 그 바닥색이에요
     scale: { mode: Phaser.Scale.FIT },

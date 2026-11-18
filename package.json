@@ -25,6 +25,7 @@
     "check:assets": "tsx scripts/check-assets.ts",
     "audio": "tsx scripts/pull-audio.ts",
     "check:docs": "tsx scripts/check-docs.ts",
+    "check:contrast": "tsx tools/visual/contrast.ts",
     "visual": "tsx tools/visual/compare.ts"
   },
   "devDependencies": {

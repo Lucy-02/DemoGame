@@ -2,6 +2,7 @@
 // 덮는 동안에는 아래 화면의 조작을 막아요. 모션 줄이기에서는 바로 바꿔요.
 import * as Phaser from "phaser";
 import { tokens } from "../design/tokens";
+import { FRAME } from "./battle/layout";
 import { rgba } from "./style/color";
 import { ms } from "./style/ease";
 import { MOVE, reducedMotion } from "./style/motion";
@@ -23,8 +24,7 @@ export class VeilScene extends Phaser.Scene {
   }
 
   create() {
-    const { width, height } = this.scale;
-    this.rect = this.add.rectangle(0, 0, width, height, rgba(tokens.provisional.palette.floor).color).setOrigin(0, 0).setAlpha(0);
+    this.rect = this.add.rectangle(0, 0, FRAME.w, FRAME.h, rgba(tokens.provisional.palette.floor).color).setOrigin(0, 0).setAlpha(0);
   }
 
   /** bare = 덮을 화면이 없음 (게임을 막 켰을 때): 흐려지는 걸음 없이 바로 바꾸고 떠오르기만 해요 */

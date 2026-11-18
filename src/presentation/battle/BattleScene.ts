@@ -32,6 +32,7 @@ import { SYS_ICONS, drawSys } from "./views/topbar";
 import { hitSpan, playUnitMotion, type UnitActor } from "./views/unitMotion";
 import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, dropValueTextures, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
+import { pointerAt } from "../style/resolution";
 
 export const BATTLE_SCENE = "battle";
 
@@ -230,7 +231,7 @@ export class BattleScene extends Phaser.Scene {
       onPress: (key, p) => {
         if (p.rightButtonDown() || this.pick) return;
         if (!this.vm.plays[key]) return void audioOf(this)?.play("card.deny");
-        this.press = { key, x: p.x, y: p.y };
+        this.press = { key, x: pointerAt(p).x, y: pointerAt(p).y };
       },
       onChange: (key, held) => {
         this.onOtherCard = key !== null && !held;
@@ -238,7 +239,7 @@ export class BattleScene extends Phaser.Scene {
         if (this.onOtherCard) this.showField(null);
         else this.refresh(this.input.activePointer);
         if (key !== null || this.dragging || this.held) this.showHover(null);
-        else this.hoverUnit(this.input.activePointer.x, this.input.activePointer.y);
+        else this.hoverUnit(pointerAt(this.input.activePointer).x, pointerAt(this.input.activePointer).y);
       },
     });
     if (this.session) this.handPrev = { session: this.session, snap: this.hand.snap, turn };
@@ -292,7 +293,7 @@ export class BattleScene extends Phaser.Scene {
   // ── 입력 ──────────────────────────────────────────────
 
   private move(p: Phaser.Input.Pointer) {
-    if (this.press && !this.dragging && Math.hypot(p.x - this.press.x, p.y - this.press.y) >= DRAG.threshold) {
+    if (this.press && !this.dragging && Math.hypot(pointerAt(p).x - this.press.x, pointerAt(p).y - this.press.y) >= DRAG.threshold) {
       this.dragging = this.press.key;
       if (this.held !== this.dragging) audioOf(this)?.play("card.pick");
       this.held = null;
@@ -300,8 +301,8 @@ export class BattleScene extends Phaser.Scene {
       this.showHover(null);
     }
     this.refresh(p);
-    this.hoverUnit(p.x, p.y);
-    this.quietGuide(p.x, p.y);
+    this.hoverUnit(pointerAt(p).x, pointerAt(p).y);
+    this.quietGuide(pointerAt(p).x, pointerAt(p).y);
   }
 
   // ── 첫 판 안내 (0088): 짚을 곳 둘레에 테 하나. 그 자리를 가리키거나 카드를 집은 동안, 재생 · 고르기 창 중에는 쉬어요 ──
@@ -345,7 +346,7 @@ export class BattleScene extends Phaser.Scene {
       }
     }
     this.guideFx = drawGuide(this, this.guideBoxes);
-    this.quietGuide(this.input.activePointer.x, this.input.activePointer.y);
+    this.quietGuide(pointerAt(this.input.activePointer).x, pointerAt(this.input.activePointer).y);
   }
 
   private quietGuide(x: number, y: number) {
@@ -514,8 +515,8 @@ export class BattleScene extends Phaser.Scene {
   private refresh(p: Phaser.Input.Pointer) {
     const card = this.dragging ?? this.held;
     if (!card) return;
-    const over = this.overAt(p.x, p.y);
-    if (this.dragging) this.hand.moveDrag(p.x, p.y, this.dragAt(this.dragging, over));
+    const over = this.overAt(pointerAt(p).x, pointerAt(p).y);
+    if (this.dragging) this.hand.moveDrag(pointerAt(p).x, pointerAt(p).y, this.dragAt(this.dragging, over));
     else if (this.onOtherCard) return;
     this.showFocus(card, over);
   }
@@ -530,8 +531,8 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
     if (p.rightButtonReleased()) return this.cancel();
-    if (!this.dragging && !this.press && !this.held && this.undoAt(p.x, p.y)) return;
-    const over = this.overAt(p.x, p.y);
+    if (!this.dragging && !this.press && !this.held && this.undoAt(pointerAt(p).x, pointerAt(p).y)) return;
+    const over = this.overAt(pointerAt(p).x, pointerAt(p).y);
     if (this.dragging) {
       const card = this.dragging;
       const f = this.focus(card, over);
@@ -617,7 +618,7 @@ export class BattleScene extends Phaser.Scene {
 
   /** 재생 건너뛰기: 남은 걸음을 보지 않고 확정된 상태로 (0093) */
   private skip() {
-    if (!this.playback) return;
+    if (!this.playback || this.leaving) return;
     this.playback = [];
     // 걸어 둔 다음 걸음과 소리는 거둬요. removeAllEvents는 다음 프레임에야 지워서, 같은 프레임에 걸음이 한 번 더 나가지 않게 바로 꺼요
     this.stepTimer?.remove(false);
@@ -631,6 +632,9 @@ export class BattleScene extends Phaser.Scene {
    */
   private settle() {
     if (this.session?.over) {
+      // 마지막 걸음의 타이머와 건너뛰기 누름이 한 프레임에 겹쳐도 전투는 한 번만 끝내요
+      if (this.leaving) return;
+      this.leaving = true;
       // 값마다 구운 막대 텍스처는 전투가 끝나면 버려요 (P8-10)
       this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => dropValueTextures(this));
       return this.onOver?.(this);
