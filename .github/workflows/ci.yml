@@ -58,6 +58,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm dist:demo
+      # 러너의 기본 화면(1024×768)에는 기준 창(1280×800)이 안 들어가서 윈도가 창을 줄여요. 스모크가 기준 크기를 보려면 화면이 더 커야 해요
+      - name: Set display to 1920x1080
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
       - name: Packaged smoke test
         run: pnpm exec playwright test
         env:
