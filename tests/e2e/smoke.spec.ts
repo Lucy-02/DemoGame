@@ -118,13 +118,17 @@ test("창 크기를 바꾸면 비율을 지키며 늘고, 설정의 전체화면
       const c = await canvasBox(page);
       await page.mouse.click(c.x + (p.x * c.w) / BASE.w, c.y + (p.y * c.h) / BASE.h);
     };
-    await page.waitForTimeout(500);
-    await click(AT.homeSettings);
-    await page.waitForTimeout(800);
-    await click(AT.fullscreen);
-    await expect.poll(() => win((w) => w.isFullScreen()), { timeout: 10_000 }).toBe(true);
+    // 고정 대기 대신 설정 창이 실제로 뜬 것을 기다려요 (소프트웨어 렌더러 CI는 프레임이 300ms를 넘어요). 첫 화면이 아직 입력을 안 받으면 다시 눌러요
+    await expect(async () => {
+      await click(AT.homeSettings);
+      await page.waitForFunction(() => (window as { __screenReady?: string }).__screenReady === "settings", undefined, { timeout: 3_000 });
+    }).toPass({ timeout: 30_000 });
     await settle(page);
-    await expect.poll(async () => (await saved()).fullscreen).toBe(true);
+    await click(AT.fullscreen);
+    // 스위치가 눌렸는지(저장)와 창이 따랐는지를 따로 봐서, 실패하면 어느 쪽인지 드러나요
+    await expect.poll(async () => (await saved()).fullscreen, { message: "전체화면 스위치가 눌려 설정에 저장돼요", timeout: 10_000 }).toBe(true);
+    await expect.poll(() => win((w) => w.isFullScreen()), { message: "창이 전체화면으로 바뀌어요", timeout: 10_000 }).toBe(true);
+    await settle(page);
     // 창 관리자가 있는 곳(맥 · 윈도)에서는 화면을 채우고 비율을 지켜요
     if (process.platform !== "linux") {
       const c = await canvasBox(page);
