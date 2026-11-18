@@ -38,14 +38,14 @@ describe("정령 관리 화면 데이터", () => {
     expect(vm.roster).toHaveLength(4 + MOCKUPS.length - 1);
   });
 
-  it("일러스트: 지금 단계 그림, 그림이 없는 정령(불여우)은 자리표시", () => {
+  it("일러스트: 지금 단계 그림 (불여우 포함)", () => {
     const vm = spiritsVM(GARDENS.mixed, "mist_cat");
-    expect(vm.roster.map((t) => t.face?.key)).toEqual([undefined, "spirit:glass_salamander:adult:body", "spirit:mist_cat:awakened:body"]);
+    expect(vm.roster.map((t) => t.face?.key)).toEqual(["spirit:fire_fox:baby:body", "spirit:glass_salamander:adult:body", "spirit:mist_cat:awakened:body"]);
     expect(vm.detail.art).toMatchObject({ key: "spirit:mist_cat:awakened:body", frame: { k: "face" } });
     // 조정값(spiritFit.json)은 Lucy가 피팅 페이지에서 바꾸는 값이라, 있는지만 봐요
     expect(vm.detail.art?.fit).toBeTypeOf("object");
     expect(spiritsVM(GARDENS.fresh, "mist_cat").detail.art).toMatchObject({ key: "spirit:mist_cat:baby:body", frame: { k: "mass" } });
-    expect(spiritsVM(GARDENS.mixed, "fire_fox").detail.art).toBeUndefined();
+    expect(spiritsVM(GARDENS.mixed, "fire_fox").detail.art).toMatchObject({ key: "spirit:fire_fox:baby:body", frame: { k: "mass" } });
   });
 
   it("탭 2개(유대는 MVP 밖, 0052), 할 일은 성장 길 탭 배지와 요약 카드로 이어져요", () => {

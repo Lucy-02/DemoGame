@@ -96,7 +96,7 @@ src/presentation/battle/
   layout.ts                    FRAME BG FLOOR SYS ORDER ALLY ENEMY GROUND INFO TIP INTENT BAND MANA HAND END HOVER
   viewmodel.ts, copy.ts        BattleVM 타입, 화면 문구
   fixtures/canonRest.ts        정본 고정 장면
-  ../stage.ts                  막마다 까는 배경 그림 (0103, 0110~0113). 전투와 이벤트 · 휴식(0119)이 함께 써요. public/assets/stages/act<N>/far.webp · ground.webp, 만들기 tools/art/stage-bg.py, 보기 ?screen=battle&stage=1. 장소 그림(상점, 0122)은 한 장: public/assets/stages/shop.webp, 만들기 tools/art/place-bg.py
+  ../stage.ts                  막마다 까는 배경 그림 (0103, 0110~0113). 전투와 이벤트 · 휴식(0119)이 함께 써요. public/assets/stages/act<N>/far.webp · ground.webp, 만들기 tools/art/stage-bg.py, 보기 ?screen=battle&stage=1. 장소 그림(상점, 0122)은 한 장: public/assets/stages/shop.webp, 만들기 tools/art/place-bg.py. 그림 파일은 화면의 2배(0149, --scale 2)라서 stageImage()로 화면 너비에 맞춰 놓아요
   views/backdrop.ts            배경: 막의 그림이 있으면 그걸, 없으면 방사 그라데이션 + 바닥
   views/topbar.ts, order.ts    위치·시스템 버튼, 행동 순서 띠
   views/units.ts               아군·적(그림 자리, 그림자, 발밑 정보 묶음 "캡슐 막대 V1": HP 막대 + 기호 칩 줄, 의도 알약). drawAlly/drawEnemy → { bounds, info, marks, bottom, intent? }. 가리키면 drawUnitTip(유닛 풀이)·drawMarkTip(기호 한 줄 풀이)·drawAllyPulse(깎일 구간 깜빡임)·drawIntent(이어진 의도 밝게)

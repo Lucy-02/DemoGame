@@ -4,6 +4,7 @@ import { activePersonality, maxHpOf, round } from "../stats";
 import type {
   AuraId, CardDef, CardOp, DeckCard, Element, EnemyMove, EnemyScale, EnemyTargetRule, EnemyTrait, RunSpirit, StatKey,
 } from "../types";
+import { join } from "../clauses";
 import { ENEMY_ACTIONS, intentKind } from "./enemy-actions";
 import { exhaustsAfterUse, handlerOf, resolveOp, usesReady, type EffectContext } from "./effects";
 import type { Engine, HurtOptions, MultHook } from "./engine";
@@ -222,11 +223,12 @@ export class Battle implements Engine {
     const move = this.currentMove(e);
     const slot = this.slots.find((x) => x.uid === e.uid && !x.done);
     const at = slot ? slot.at : null;
-    const zone = move.zones?.length ? [`방전 칸 ${move.zones.length}곳 피해 ${move.zoneDmg ?? 0}`] : [];
-    const desc = [...zone, ...move.actions.map((a) => ENEMY_ACTIONS[a.type].text(this, e, a as never))].join(", ");
-    if (!slot && move.charge && e.charging) return { name: move.name, at, text: `차징 중 → 다음 턴 ${desc}`, kind: "charge" };
-    if (!slot) return { name: move.name, at, text: "이번 턴 행동 없음", kind: "skip" };
-    if (move.charge && e.charging) return { name: move.name, at, text: `${desc} (끊기 가능)`, kind: "chargeReady" };
+    const zone = move.zones?.length ? [`방전 칸을 ${move.zones.length}곳 깝니다. 방전 칸에서 끝난 카드의 주인에게 피해를 ${move.zoneDmg ?? 0} 입힙니다.`] : [];
+    // 호버 풀이: 효과문 문장 틀 (TEXT_RULES 1절). 끊을 수 있는지는 화면이 `브레이크 가능` 칩으로 보여요
+    const desc = join([...zone, ...move.actions.map((a) => ENEMY_ACTIONS[a.type].text(this, e, a as never))]);
+    if (!slot && move.charge && e.charging) return { name: move.name, at, text: `다음 턴에 행동합니다. ${desc}`, kind: "charge" };
+    if (!slot) return { name: move.name, at, text: "이번 턴에는 행동하지 않습니다.", kind: "skip" };
+    if (move.charge && e.charging) return { name: move.name, at, text: desc, kind: "chargeReady" };
     return { name: move.name, at, text: desc, kind: intentKind(move.actions) };
   }
 
@@ -398,11 +400,23 @@ export class Battle implements Engine {
           if (firing && move.big) this.openGap(e, "delay");
           break;
         }
-        this.slots.push({ uid: e.uid, at, done: false });
+        this.slots.push({ uid: e.uid, at, done: false, aim: this.rollAim(move) });
         last = at;
         if (firing) break;
       }
     }
+  }
+
+  /** 무작위 대상은 턴 시작에 뽑아 둬요: 행동 순서대로, 공격은 타격마다 하나씩 (0128) */
+  private rollAim(move: EnemyMove): string[] | undefined {
+    const alive = this.aliveSpirits();
+    const n = move.actions.reduce((sum, a) => sum + (!("target" in a) || a.target !== "random" ? 0 : a.type === "attack" ? a.hits ?? 1 : 1), 0);
+    return n && alive.length ? Array.from({ length: n }, () => this.rng.pick(alive).id) : undefined;
+  }
+
+  /** 이 행동이 무작위로 노리는 정령들 (미리 뽑은 차례에서 살아 있는 정령만, 겹침 없이) */
+  aimOf(slot: EnemySlot): string[] {
+    return [...new Set(slot.aim ?? [])].filter((id) => !this.spirit(id).downed);
   }
 
   /** 지금 행동을 없애고 다음 패턴으로 넘겨요 */
@@ -657,6 +671,7 @@ export class Battle implements Engine {
     // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
     for (const p of left) if (p.card) this.discard.push(p.card);
     this.planned = [];
+    this.emit({ k: "turnEnd" });
     this.finishTurn(0);
   }
 
@@ -679,7 +694,7 @@ export class Battle implements Engine {
         nextEnemy.done = true;
         this.now = nextEnemy.at;
         const e = this.enemy(nextEnemy.uid);
-        if (!e.dead) this.enemyAct(e);
+        if (!e.dead) this.enemyAct(e, nextEnemy);
       }
       if (this.checkEnd()) return null;
     }
@@ -809,9 +824,10 @@ export class Battle implements Engine {
   // ───────────────────────── 적 행동 ─────────────────────────
 
   /** 박힌 시각에 적 행동 하나 */
-  private enemyAct(e: BEnemy) {
+  private enemyAct(e: BEnemy, slot: EnemySlot) {
     const move = this.currentMove(e);
     e.charging = false;
+    e.aim = slot.aim;
     // 땅속에 있던 적은 움직이면서 올라와요
     if (statusN(e, "burrow") > 0 && !move.actions.some((a) => a.type === "burrow")) delete e.status.burrow;
     this.emit({ k: "enemyAct", uid: e.uid, move: move.name });
@@ -823,11 +839,14 @@ export class Battle implements Engine {
     e.patternIdx++;
   }
 
-  pickTargets(rule: EnemyTargetRule): BSpirit[] {
+  pickTargets(rule: EnemyTargetRule, by?: BEnemy): BSpirit[] {
     const alive = this.aliveSpirits();
     if (!alive.length) return [];
     if (this.rng instanceof NoLuck) this.rng.asked = false;
-    const picked = runStages(ENEMY_TARGET_STAGES, { b: this, rule, alive, picked: null }).picked ?? [];
+    // 무작위 대상은 턴 시작에 뽑아 둔 차례에서 하나씩 꺼내요 (배열은 사본과 나눠 쓰니 고치지 않고 갈아 끼워요)
+    const aimed = rule === "random" ? by?.aim?.[0] : undefined;
+    if (aimed !== undefined && by) by.aim = by.aim!.slice(1);
+    const picked = runStages(ENEMY_TARGET_STAGES, { b: this, rule, alive, aimed, picked: null }).picked ?? [];
     // 미리 돌려 볼 때: 운으로 고른 대상은 누가 맞을지 몰라요
     if (this.rng instanceof NoLuck && this.rng.asked && alive.length > 1) return [];
     return picked;

@@ -18,6 +18,22 @@ describe("파일 저장소", () => {
     expect(await s.read("run")).toBeNull();
   });
 
+  it("직전 판을 읽고, 못 읽는 파일은 .broken으로 치운다", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "demogame-"));
+    const s = createFileStorage(join(dir, "saves"));
+    expect(await s.readBackup("garden")).toBeNull();
+    await s.setAside("garden");
+    await s.write("garden", "1");
+    await s.write("garden", "{");
+    expect(await s.readBackup("garden")).toBe("1");
+    await s.setAside("garden");
+    expect(await s.read("garden")).toBeNull();
+    expect(await readFile(join(dir, "saves", "garden.broken.json"), "utf8")).toBe("{");
+    // 되돌린 것을 다시 써도 직전 판은 그대로예요
+    await s.write("garden", "1");
+    expect(await s.readBackup("garden")).toBe("1");
+  });
+
   it("경로 조작 키를 거부한다", async () => {
     const s = createFileStorage(tmpdir());
     await expect(s.write("../../etc/x", "x")).rejects.toThrow(/invalid storage key/);

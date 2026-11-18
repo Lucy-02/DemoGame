@@ -555,7 +555,7 @@
    "name": "막기",
    "owner": "common",
    "composition": "scene",
-   "case_id": "basic_block-S-o-s4203",
+   "case_id": "basic_block-S-o-s4404",
    "fit_size": null,
    "decision": "0118"
   },
@@ -564,7 +564,7 @@
    "name": "할퀴기",
    "owner": "common",
    "composition": "scene",
-   "case_id": "basic_claw-S-o-s4102",
+   "case_id": "basic_claw-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -609,8 +609,8 @@
    "name": "응원",
    "owner": "common",
    "composition": "symbol",
-   "case_id": "cheer-M-o-s4101",
-   "fit_size": 0.5,
+   "case_id": "cheer-M-o-s4402",
+   "fit_size": 0.56,
    "decision": "0118"
   },
   {
@@ -618,7 +618,7 @@
    "name": "수염 서릿발",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "chill_wave-S-o-s4102",
+   "case_id": "chill_wave-S-o-s4401",
    "fit_size": null,
    "decision": "0118"
   },
@@ -627,7 +627,7 @@
    "name": "혜성",
    "owner": "star_spirit",
    "composition": "scene",
-   "case_id": "comet-S-o-s4101",
+   "case_id": "comet-S-o-s4304",
    "fit_size": null,
    "decision": "0118"
   },
@@ -636,7 +636,7 @@
    "name": "살금",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "creep-S-o-s4102",
+   "case_id": "creep-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -645,7 +645,7 @@
    "name": "맞바람",
    "owner": "common",
    "composition": "scene",
-   "case_id": "crosswind-S-o-s4102",
+   "case_id": "crosswind-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -654,8 +654,8 @@
    "name": "깊은 숨",
    "owner": "common",
    "composition": "symbol",
-   "case_id": "deep_breath-M-o-s4102",
-   "fit_size": 0.52,
+   "case_id": "deep_breath-M-o-s4401",
+   "fit_size": 0.56,
    "decision": "0118"
   },
   {
@@ -663,7 +663,7 @@
    "name": "깊은 빙결",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "deep_freeze-S-o-s4102",
+   "case_id": "deep_freeze-S-o-s4403__r15",
    "fit_size": null,
    "decision": "0118"
   },
@@ -699,7 +699,7 @@
    "name": "만년설",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "eternal_ice-S-o-s4101",
+   "case_id": "eternal_ice-S-o-s4402__r15",
    "fit_size": null,
    "decision": "0118"
   },
@@ -717,7 +717,7 @@
    "name": "태풍의 눈",
    "owner": "common",
    "composition": "scene",
-   "case_id": "eye_of_storm-S-o-s4101",
+   "case_id": "eye_of_storm-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -726,8 +726,8 @@
    "name": "빈틈 찾기",
    "owner": "common",
    "composition": "symbol",
-   "case_id": "find_weakness-M-o-s4101",
-   "fit_size": 0.52,
+   "case_id": "find_weakness-M-o-s4402",
+   "fit_size": 0.5,
    "decision": "0118"
   },
   {
@@ -771,7 +771,7 @@
    "name": "안개 이불",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "fog-S-o-s4102",
+   "case_id": "fog-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -789,7 +789,7 @@
    "name": "찬 발톱",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "frost_bite-S-o-s4101",
+   "case_id": "frost_bite-S-o-s4404",
    "fit_size": null,
    "decision": "0118"
   },
@@ -798,7 +798,7 @@
    "name": "찬 입김",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "frost_breath-S-o-s4101",
+   "case_id": "frost_breath-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -807,7 +807,7 @@
    "name": "돌풍",
    "owner": "common",
    "composition": "scene",
-   "case_id": "gust-S-o-s4102",
+   "case_id": "gust-S-o-s4404",
    "fit_size": null,
    "decision": "0118"
   },
@@ -843,8 +843,8 @@
    "name": "보살핌",
    "owner": "common",
    "composition": "symbol",
-   "case_id": "mend-M-o-s4102",
-   "fit_size": 0.52,
+   "case_id": "mend-M-o-s4401",
+   "fit_size": 0.6,
    "decision": "0118"
   },
   {
@@ -870,7 +870,7 @@
    "name": "입김",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "mist_breath-S-o-s4102",
+   "case_id": "mist_breath-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -897,7 +897,7 @@
    "name": "물장구",
    "owner": "common",
    "composition": "scene",
-   "case_id": "paw_splash-S-o-s4202",
+   "case_id": "paw_splash-S-o-s4403",
    "fit_size": null,
    "decision": "0118"
   },
@@ -942,17 +942,17 @@
    "name": "별의 장막",
    "owner": "star_spirit",
    "composition": "symbol",
-   "case_id": "star_veil-M-o-s4101",
-   "fit_size": 0.52,
+   "case_id": "star_veil-M-o-s4402",
+   "fit_size": 0.56,
    "decision": "0118"
   },
   {
    "id": "step_forward",
    "name": "앞으로 나서기",
    "owner": "common",
-   "composition": "scene",
-   "case_id": "step_forward-S-o-s4203",
-   "fit_size": null,
+   "composition": "symbol",
+   "case_id": "step_forward-M-o-s4402",
+   "fit_size": 0.5,
    "decision": "0118"
   },
   {
@@ -996,7 +996,7 @@
    "name": "플레어",
    "owner": "common",
    "composition": "scene",
-   "case_id": "tech_flare-S-o-s4102",
+   "case_id": "tech_flare-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -1005,7 +1005,7 @@
    "name": "플레어",
    "owner": "common",
    "composition": "scene",
-   "case_id": "tech_flare-S-o-s4102",
+   "case_id": "tech_flare-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -1014,7 +1014,7 @@
    "name": "플레어",
    "owner": "common",
    "composition": "scene",
-   "case_id": "tech_flare-S-o-s4102",
+   "case_id": "tech_flare-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -1077,7 +1077,7 @@
    "name": "화이트아웃",
    "owner": "common",
    "composition": "symbol",
-   "case_id": "tech_whiteout-M-o-s4102",
+   "case_id": "tech_whiteout-M-o-s4401__r17",
    "fit_size": 0.5,
    "decision": "0118"
   },
@@ -1086,7 +1086,7 @@
    "name": "화이트아웃",
    "owner": "common",
    "composition": "symbol",
-   "case_id": "tech_whiteout-M-o-s4102",
+   "case_id": "tech_whiteout-M-o-s4401__r17",
    "fit_size": 0.5,
    "decision": "0118"
   },
@@ -1095,7 +1095,7 @@
    "name": "화이트아웃",
    "owner": "common",
    "composition": "symbol",
-   "case_id": "tech_whiteout-M-o-s4102",
+   "case_id": "tech_whiteout-M-o-s4401__r17",
    "fit_size": 0.5,
    "decision": "0118"
   },
@@ -1131,7 +1131,7 @@
    "name": "회오리 베기",
    "owner": "common",
    "composition": "scene",
-   "case_id": "whirl_slash-S-o-s4101",
+   "case_id": "whirl_slash-S-o-s4402",
    "fit_size": null,
    "decision": "0118"
   },
@@ -1140,7 +1140,7 @@
    "name": "잔물결",
    "owner": "mist_cat",
    "composition": "scene",
-   "case_id": "whisker_twitch-S-o-s4102",
+   "case_id": "whisker_twitch-S-o-s4401",
    "fit_size": null,
    "decision": "0118"
   },
