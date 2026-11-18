@@ -220,3 +220,8 @@
 
 ## 모션 3차 (2026-11-17, 0092 "남은 것")
 - 새 모양이 필요한 여덟 곳의 움직이는 시안(상태 칩 · 방어도 깨짐 · 차징 시작 · 브레이크 · 해방 · 전투 시작 · 승리 · 패배): https://claude.ai/artifact/7evJqo9bQqUkuXZbYMHN6M
+
+## 카드 연출 R1 (2026-11-18, Lucy 선택 대기)
+- 같은 카드 13장 + 속성 견본 7 + 한 턴 재생을 다섯 방향으로(A 지금 그대로 · B 붓 한 획 · C 손맛 · D 카드가 열린다 · E 정령이 연기한다): https://claude.ai/artifact/2rKZWWa7p92aXrszDpitDE
+- 브리프 · 무대 · 방향 파일 소스: 공유 폴더 `design/card-vfx-r1/`. 체계: `docs/design/systems/card-fx.md`, 카드별 표: `design/card/fx/CARDS.md`. 조사: 공유 폴더 `research/vfx/card-play-references.md`
+- 한 턴(카드 다섯 + 적 둘) 길이: A 3.15초 · B 3.65초 · C 3.9초 · D 3.5초 · E 3.3초
