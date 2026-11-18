@@ -3,7 +3,7 @@ import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
 import { Rng } from "./rng";
 import { equipSlots, maxHpOf, resonanceOf } from "./stats";
 import { ENEMY_TRAITS } from "./types";
-import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, EventOutcome, Obtain, Rarity, RunEquip, RunSpirit } from "./types";
+import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, EventOutcome, Obtain, Rarity, RunEquip, RunSpirit, SpiritDef } from "./types";
 
 export type NodeType = "battle" | "elite" | "event" | "shop" | "rest" | "boss";
 
@@ -146,15 +146,7 @@ export class Run {
       rs.hp = maxHpOf(rs);
       return rs;
     });
-    // 시작 덱 (0040): 모든 정령이 배우는 카드(startEach)는 정령마다, 정령 카드는 start 수만큼 그 주인에게
-    for (const card of CARDS) {
-      if (card.startEach) for (const s of party) for (let i = 0; i < card.startEach; i++) this.addCard(card.id, s.id);
-      if (!card.start) continue;
-      // 주인이 정해진 카드는 그 정령만 받아요 (같은 속성의 다른 정령에게 가지 않아요)
-      const owner = card.startOwner ? party.find((s) => s.id === card.startOwner) : party.find((s) => s.element === card.element);
-      if (!owner) continue;
-      for (let i = 0; i < card.start; i++) this.addCard(card.id, owner.id);
-    }
+    this.dealStart(party);
     this.dealt = true;
     this.generateMap();
     const drawn = this.rng.pick(C.acts[0].elements as Element[]);
@@ -264,6 +256,31 @@ export class Run {
     run.bossDefeated = s.bossDefeated;
     run.bundleLeft = { ...(s.bundleLeft ?? { battle: 0, elite: 0 }) };
     return run;
+  }
+
+  /** 시작 덱 (0040): 모든 정령이 배우는 카드(startEach)는 정령마다, 정령 카드는 start 수만큼 그 주인에게 */
+  private dealStart(party: SpiritDef[]) {
+    for (const card of CARDS) {
+      if (card.startEach) for (const s of party) for (let i = 0; i < card.startEach; i++) this.addCard(card.id, s.id);
+      if (!card.start) continue;
+      // 주인이 정해진 카드는 그 정령만 받아요 (같은 속성의 다른 정령에게 가지 않아요)
+      const owner = card.startOwner ? party.find((s) => s.id === card.startOwner) : party.find((s) => s.element === card.element);
+      if (!owner) continue;
+      for (let i = 0; i < card.start; i++) this.addCard(card.id, owner.id);
+    }
+  }
+
+  /**
+   * 판 가운데 정령이 합류해요 (0156: 첫 판의 둘째 정령). 꽉 찬 HP로 들어오고, 그 정령의 시작 덱이 덱에 더해져요.
+   * 시작 덱은 받은 카드(갈래 조건)로 세지 않아요. 적 세기는 다음 전투부터 인원을 따라가요
+   */
+  addSpirit(rs: RunSpirit) {
+    if (this.spirits.some((s) => s.id === rs.id)) throw new Error(`이미 판에 있는 정령: ${rs.id}`);
+    const def = SPIRITS.find((s) => s.id === rs.id) ?? missing(rs.id);
+    this.spirits.push({ ...rs, hp: maxHpOf(rs) });
+    this.dealt = false;
+    this.dealStart([def]);
+    this.dealt = true;
   }
 
   addCard(cardId: string, owner: string) {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { C, CARDS, GROWTH, SPIRITS, enemyDef, partyScale, scaleEnemy } from "./data";
 import {
-  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, joinCandidates, defaultFront, setFront, join, joinOffer, keepEquipment, levelOf, newGarden,
+  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, grantMidJoin, isFinalStage, joinCandidates, defaultFront, setFront, join, joinOffer, keepEquipment, levelOf, newGarden,
   seeEpisode, startGarden, todos, unlockKeys, type Garden,
 } from "./garden";
 import { Run } from "./run";
@@ -141,6 +141,19 @@ describe("처음 세 마리 (0053)", () => {
     expect(g.spirits.map((s) => s.id)).toEqual([startGarden(7).spirits[0].id, offer[0]]);
     expect(joinOffer(g)).toEqual([]);
     expect(joinOffer(endRun(g))).toEqual([]);
+  });
+
+  it("첫 판 가운데 깃들면(0156) 판 끝에 더 주지 않고, 첫 판이 아니면 가운데 깃들기가 없어요", () => {
+    let g = grantMidJoin(startGarden(7));
+    expect(joinOffer(g)).toHaveLength(2);
+    expect(grantMidJoin(g)).toBe(g);
+    g = join(g, joinOffer(g)[0]);
+    expect(g.spirits).toHaveLength(2);
+    g = endRun(g);
+    expect(g.runs).toBe(1);
+    expect(joinOffer(g)).toEqual([]);
+    const later = endRun(join(endRun(startGarden(7)), joinOffer(endRun(startGarden(7)))[0]));
+    expect(grantMidJoin(later)).toBe(later);
   });
 
   it("첫 보스를 가라앉히면 셋째가 깃들고, 다시 가라앉혀도 더 주지 않아요", () => {

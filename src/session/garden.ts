@@ -1,7 +1,7 @@
 // 정원 세션: 화면이 보내는 명령을 받아 core/garden 규칙을 부르고, 바뀐 상태를 알려요.
 // 화면은 상태를 직접 고치지 않아요 (아키텍처 0001 "화면은 명령만 보내고"). 저장은 snapshot/restore로 (다음 단계에서 platform에 연결).
 import {
-  addDeed, endRun, evolve, feed, grantBattle, join, keepEquipment, markGuide, markSeen, setFront, openBranches, startGarden, seeEpisode, spiritUnlocks, gardenSpirit, GARDEN_VERSION,
+  addDeed, endRun, evolve, feed, grantBattle, grantMidJoin, join, keepEquipment, markGuide, markSeen, setFront, openBranches, startGarden, seeEpisode, spiritUnlocks, gardenSpirit, GARDEN_VERSION,
   type BattleTier, type Garden,
 } from "../core/garden";
 import { SPIRITS } from "../core/data";
@@ -37,6 +37,8 @@ export type GardenCommand =
   | { kind: "keepEquipment"; party: readonly RunSpirit[]; keep: Record<string, string[]> }
   /** 깃들기 후보 가운데 하나를 골랐어요 (0053) */
   | { kind: "join"; id: string }
+  /** 혼자 떠난 첫 판이 정한 층을 마쳤어요. 둘째 정령이 깃들 차례예요 (0156) */
+  | { kind: "grantMidJoin" }
   /** 출전 준비에서 앞열을 정하고 떠나요. 다음 출전 준비의 기본값이 돼요 (0076 14) */
   | { kind: "setFront"; id: string }
   /** 안내를 한 번 짚었어요 (0095) */
@@ -86,6 +88,7 @@ export class GardenSession {
       case "endRun": return endRun(cmd.received ? openBranches(g, cmd.received) : g);
       case "keepEquipment": return keepEquipment(g, cmd.party, cmd.keep);
       case "join": return join(g, cmd.id);
+      case "grantMidJoin": return grantMidJoin(g);
       case "setFront": return setFront(g, cmd.id);
       case "guide": return markGuide(g, cmd.id);
       case "seeUnlocks": {
