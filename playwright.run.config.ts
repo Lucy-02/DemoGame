@@ -6,7 +6,7 @@ const PORT = 5233;
 export default defineConfig({
   testDir: "tests/run",
   // 판 길이는 밸런스에 따라 출렁여요(시드 7 봇이 2막에 닿기까지 판 수). CI 러너에서 20~30분이라 여유를 둬요
-  timeout: 50 * 60_000,
+  timeout: 30 * 60_000,
   reporter: "list",
   // 한 번에 하나씩: 소프트웨어 렌더러로 여러 화면을 같이 그리면 코어가 적은 CI에서 프레임이 크게 느려져요
   workers: 1,

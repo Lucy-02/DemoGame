@@ -28,7 +28,7 @@ jobs:
   # 화면으로 한 판을 도는 점검. 크로미움 설치와 실행이 길어서 따로 돌려요
   screen-run:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
