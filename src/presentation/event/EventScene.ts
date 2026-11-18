@@ -7,7 +7,7 @@ import { tokens } from "../../design/tokens";
 import type { EventSession } from "../../session/event";
 import { preloadHandCard } from "../card/HandCard";
 import { drawBackdrop } from "../run/backdrop";
-import { CHOICE_ICONS, type ChoiceVM, type FaceFx } from "../run/choices";
+import { CHOICE_ICONS, choiceUnderPointer, type ChoiceVM, type FaceFx } from "../run/choices";
 import { COPY as RUN_COPY } from "../run/copy";
 import { DECK_PICK_ICONS, drawDeckPick } from "../run/deckPick";
 import { cardVM, deckCardVM, lane } from "../run/fromCore";
@@ -75,13 +75,26 @@ export class EventScene extends Phaser.Scene {
     preloadStage(this, this.session.run.act);
   }
 
+  /** 포인터를 한 번이라도 움직였나 (고정 장면의 ?hover= 를 지우지 않으려고) */
+  private pointerLive = false;
+
   create() {
+    this.pointerLive = false;
+    this.input.once("pointermove", () => { this.pointerLive = true; });
     this.input.setPollAlways();
     this.paint();
     Object.assign(window, { __screenReady: EVENT_SCENE });
   }
 
   update() {
+    // 가리킴은 포인터가 지금 있는 곳을 따라요: 다시 그린 뒤 벗어남 사건이 안 와도 테가 남지 않아요
+    if (this.pointerLive && this.input.enabled && this.session.step.kind === "choose") {
+      const at = choiceUnderPointer(this);
+      if (at !== this.hover) {
+        this.hover = at;
+        this.redraw();
+      }
+    }
     if (!this.dirty) return;
     this.dirty = false;
     // 호버 · 누름으로 다시 그릴 때 앞 모습이 흐려지며 바뀌어요 (0092)
@@ -126,7 +139,10 @@ export class EventScene extends Phaser.Scene {
         if (max) return [{ face: l.face, from: max.from, to: max.to, max: true }];
         return hp ? [{ face: l.face, from: hp.from, to: hp.to }] : [];
       });
-      return { label: o.label, faces, fx: outcomesFx(o.outcome), enabled: s.canChoose(i) };
+      const fx = outcomesFx(o.outcome);
+      // 칩으로 못 보이는 효과(정예 특성 다시 뽑기 · 보스 차징 알기 · 틈 늘리기)는 효과문을 그대로 보여요. `변화 없음`은 결과가 빈 선택지에만 (P3-04)
+      const note = o.outcome.length && !fx.length && !faces.length ? o.desc : undefined;
+      return { label: o.label, faces, fx, note, enabled: s.canChoose(i) };
     });
     drawStoryPanel(this, {
       title: s.event.title, story: s.event.text, items, hot: this.hover, none: RUN_COPY.fx.none,

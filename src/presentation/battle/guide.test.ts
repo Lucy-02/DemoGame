@@ -13,9 +13,16 @@ describe("첫 판 안내: 짚는 차례 (0088)", () => {
     expect(guideStep({ turn: 1, placed: true, charging: true, spent: true, canBreak: false }, { steps: true })).toBe("end");
   });
   it("둘째 턴부터는 아직 안 본 차징만 짚어요", () => {
-    expect(guideStep({ turn: 2, placed: false, charging: true, spent: false, canBreak: false }, { steps: true })).toBe("charge");
-    expect(guideStep({ turn: 2, placed: false, charging: true, spent: false, canBreak: false }, { steps: true,  charge: true })).toBeNull();
-    expect(guideStep({ turn: 2, placed: true, charging: false, spent: false, canBreak: false }, { steps: true })).toBeNull();
+    expect(guideStep({ turn: 2, placed: false, charging: true, spent: false, canBreak: false }, { steps: true, placed: true })).toBe("charge");
+    expect(guideStep({ turn: 2, placed: false, charging: true, spent: false, canBreak: false }, { steps: true, placed: true, charge: true })).toBeNull();
+    expect(guideStep({ turn: 2, placed: true, charging: false, spent: false, canBreak: false }, { steps: true, placed: true })).toBeNull();
+  });
+  it("첫 턴을 카드 없이 넘겼으면 한 장 놓을 때까지 손패를 다시 짚어요 (P3-09)", () => {
+    expect(guideStep({ turn: 2, placed: false, charging: true, spent: false, canBreak: false }, { steps: true })).toBe("place");
+    expect(guideStep({ turn: 3, placed: false, charging: false, spent: false, canBreak: false }, { steps: true })).toBe("place");
+    // 낼 카드가 없는 턴에는 짚지 않고, 안내가 없는 전투에서도 짚지 않아요
+    expect(guideStep({ turn: 2, placed: false, charging: false, spent: true, canBreak: false }, { steps: true })).toBeNull();
+    expect(guideStep({ turn: 2, placed: false, charging: false, spent: false, canBreak: false }, {})).toBeNull();
   });
   it("브레이크는 손에 카드가 있고 차징 중인 적이 있을 때, 어느 전투든 짚어요 (0095)", () => {
     const f = { turn: 3, placed: false, charging: true, spent: false, canBreak: true };
