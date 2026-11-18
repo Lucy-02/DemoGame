@@ -77,7 +77,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
   await Promise.all([loadFonts(), live ? waitForLegacyFonts() : undefined]);
   // 큰 모니터에서는 같은 화면을 배수만큼 촘촘히 그려요. 화면 좌표는 그대로 1280×800이에요 (style/resolution.ts)
   const res = pickResolution(FRAME, { w: window.screen.width, h: window.screen.height }, window.devicePixelRatio || 1, opts.res);
-  installResolution(res);
+  installResolution(res, Phaser.Cameras.Scene2D.CameraManager);
   return new Phaser.Game({
     type: Phaser.WEBGL,
     parent,

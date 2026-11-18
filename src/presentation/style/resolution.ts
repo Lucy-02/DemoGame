@@ -1,7 +1,7 @@
 // 그리는 해상도 배수. 화면 좌표는 늘 1280×800이고, 큰 모니터에서는 같은 화면을 배수만큼 촘촘히 그려요.
 // 배수는 게임을 켤 때 모니터 크기로 한 번 정해요(창 크기를 바꿔도 그대로). 창에 맞추는 일은 Scale.FIT이 맡아요 (0084 4번).
 // 화면 코드는 배수를 몰라도 돼요: 카메라가 배수만큼 키워 그리고, 글자 · 기호 · 구운 텍스처만 여기 값을 읽어 촘촘히 만들어요.
-import * as Phaser from "phaser";
+import type * as Phaser from "phaser";
 
 /** 가장 큰 배수. 4K(2.7배)까지 덮어요 */
 const MAX = 3;
@@ -26,11 +26,12 @@ let installed = false;
  * 게임을 만들기 전에 한 번 불러요. 이 뒤로 만드는 카메라는 모두 화면 좌표(1280×800 기준)로 받고 배수만큼 키워 그려요.
  * 카메라 자리 · 크기는 화면 좌표로 넘기고, 스크롤도 화면 좌표 그대로예요.
  */
-export function installResolution(k: number) {
+export function installResolution(k: number, cameras: typeof Phaser.Cameras.Scene2D.CameraManager) {
   res = k;
   if (installed) return;
   installed = true;
-  const proto = Phaser.Cameras.Scene2D.CameraManager.prototype;
+  // Phaser는 넘겨받아요: 이 파일을 읽는 글자 · 기호 코드가 브라우저 없는 테스트에서도 돌게
+  const proto = cameras.prototype;
   const add = proto.add;
   proto.add = function (this: Phaser.Cameras.Scene2D.CameraManager, x?: number, y?: number, width?: number, height?: number, makeMain?: boolean, name?: string) {
     const s = (v: number | undefined) => (v === undefined ? v : v * res);
