@@ -4,7 +4,7 @@
 import { GardenSession } from "./garden";
 import { RunSession, type BattleOutcome, type BattleWin } from "./run";
 import { C } from "../core/data";
-import { deepStartOpen, defaultFront, type Garden } from "../core/garden";
+import { deepStartOpen, defaultFront, toRunSpirit, type Garden } from "../core/garden";
 import { Rng } from "../core/rng";
 import type { Run, RunOptions } from "../core/run";
 import type { Element } from "../core/types";
@@ -195,6 +195,35 @@ export class GameSession {
   /** 판 끝에 고를 깃들기가 남았나 (0076 9: 미루지 않아요) */
   get joinPending(): boolean {
     return (this.garden.state.joins ?? 0) > 0;
+  }
+
+  /**
+   * 첫 판 가운데의 깃들기를 고를 때인가 (0156): 혼자 떠난 첫 판이 1막의 정한 층(run_pool.join_floor)을 마치고 지도로 돌아왔어요.
+   * 화면은 이때 beginMidJoin → 깃들기 고르기 → joinMidRun 순서로 불러요
+   */
+  get midJoinDue(): boolean {
+    const run = this._run;
+    if (!run || this.trialOpts || run.phase.kind !== "map" || !run.run.firstRun || run.run.act !== 1) return false;
+    return run.run.spirits.length === 1 && this.garden.state.spirits.length === 1 && (run.run.current?.floor ?? 0) >= C.run_pool.join_floor;
+  }
+
+  /** 첫 판 가운데의 깃들기를 정원에 걸어요. 고르기는 판 끝의 깃들기와 같은 화면이에요 (0156) */
+  beginMidJoin() {
+    if (this.midJoinDue) this.garden.dispatch({ kind: "grantMidJoin" });
+  }
+
+  /**
+   * 첫 판 가운데 깃든 정령을 지금 판에 합류시켜요 (0156). 정원에는 있고 판에는 없는 둘째 정령이 들어와요.
+   * 고르는 도중에 껐다 켜도 이어하기에서 여기로 와서 합류해요. 합류했으면 true
+   */
+  joinMidRun(): boolean {
+    const run = this._run;
+    if (!run || this.trialOpts || !run.run.firstRun || run.run.spirits.length !== 1) return false;
+    const mate = this.garden.state.spirits.find((s) => !run.party.includes(s.id));
+    if (!mate) return false;
+    run.run.addSpirit(toRunSpirit(mate));
+    this.saveRun();
+    return true;
   }
 
   /**

@@ -52,6 +52,8 @@ export interface Garden {
   runs?: number;
   /** 아직 고르지 않은 깃들기 수 (0053) */
   joins?: number;
+  /** 첫 판 가운데 둘째 정령이 깃들었는지 (0156). 그러면 첫 판 끝에는 더 주지 않아요 */
+  midJoined?: boolean;
   /** 지난 판의 앞열. 출전 준비의 기본값이에요 (0076 14) */
   front?: string;
   /** 한 번 짚어 준 안내 (0095). 다시 나오지 않아요 */
@@ -128,10 +130,18 @@ export function setFront(g: Garden, id: string): Garden {
 const grantJoin = (g: Garden): Garden =>
   (C.start_pool as string[]).filter((id) => !g.spirits.some((s) => s.id === id)).length > (g.joins ?? 0) ? { ...g, joins: (g.joins ?? 0) + 1 } : g;
 
-/** 판이 끝났어요(져도). 첫 판을 끝내면 둘째 정령이 깃들어요 (0053) */
+/**
+ * 첫 판 가운데의 깃들기 (0156): 혼자 떠난 첫 판이 정한 층(run_pool.join_floor)을 마치면 둘째 정령이 깃들어요.
+ * 첫 판이고, 정령이 하나뿐이고, 고를 깃들기가 없을 때만이에요. 고른 정령은 그 판에 바로 합류해요(GameSession)
+ */
+export function grantMidJoin(g: Garden): Garden {
+  return !(g.runs ?? 0) && g.spirits.length === 1 && !g.joins && !g.midJoined ? { ...grantJoin(g), midJoined: true } : g;
+}
+
+/** 판이 끝났어요(져도). 첫 판을 끝내면 둘째 정령이 깃들어요 (0053). 판 가운데서 이미 깃들었으면 더 주지 않아요 (0156) */
 export function endRun(g: Garden): Garden {
   const runs = (g.runs ?? 0) + 1;
-  return runs === 1 ? grantJoin({ ...g, runs }) : { ...g, runs };
+  return runs === 1 && !g.midJoined ? grantJoin({ ...g, runs }) : { ...g, runs };
 }
 
 export function gardenSpirit(g: Garden, id: string): GardenSpirit {

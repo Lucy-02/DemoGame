@@ -44,13 +44,14 @@ export const PATH_MODES: PathMode[] = ["fight", "default", "avoid"];
  *   offer:N     정령마다 N장씩 보여 줘요 (혼자 판의 "1장 받기 / 넘기기"를 넓힘)
  *   start:N     시작할 때 보상을 N번 먼저 골라요 (혼자 판의 시작 덱 장수)
  *   winheal:P   전투를 이기면 모두 최대 HP의 P%를 회복해요
- *   join:N      혼자 떠난 판의 N층 칸을 마친 뒤 시작 풀의 다른 정령 하나가 시작 덱을 들고 합류해요 (0이면 처음부터 = 임시 동료). 적 세기는 그때부터 둘에 맞춰요
+ *   join:N      혼자 떠난 유체 판에 둘째 정령이 합류하는 층을 바꿔요 (0이면 처음부터). 규칙(0156)은 run_pool.join_floor층을 마친 뒤예요
+ *   nojoin      혼자 떠난 판에 둘째 정령이 합류하지 않아요 (0156 전의 첫 판)
  *   cards:M     보상으로 나오는 카드(시작 덱에 없는 일반 · 고급 · 희귀)의 숫자를 M배 해요 (올림)
  *   foe:M       길 전투(잡몹 · 정예)의 적 피해를 M배 해요. 보스는 그대로
  *   mate:N      join과 같은 때에 정령 풀 밖의 임시 동료가 붙어요: 능력치 모두 기준값(10) · HP 20 · 무속성, 할퀴기 2 · 막기 2, 보상 카드 없음.
  *               코어에 없는 정령이라 안 쓰는 정령 정의 하나를 판 동안만 빌려 써요 (MATE_STAND_IN)
  */
-export interface WhatIf { cards?: number; foe?: number; mate?: number; join?: number; swap?: boolean; noskipgold?: boolean; earlyfights?: boolean; upgraded?: boolean; offer?: number; start?: number; winheal?: number }
+export interface WhatIf { nojoin?: boolean; cards?: number; foe?: number; mate?: number; join?: number; swap?: boolean; noskipgold?: boolean; earlyfights?: boolean; upgraded?: boolean; offer?: number; start?: number; winheal?: number }
 
 export interface SimOptions { reward?: RewardMode; path?: PathMode; whatif?: WhatIf }
 export const BOT_KINDS: BotKind[] = ["basic", "smart", "search"];
@@ -248,20 +249,19 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
   // 뒤 막에서 출발한 판은 출발 묶음부터 받아요 (0108)
   for (let r = run.rollBundleReward(); r; r = run.rollBundleReward()) takeReward(r);
   for (let i = 0; i < (wi.start ?? 0); i++) { const r = run.rollBattleReward("battle"); run.gold -= r.gold; takeReward(r); }
-  // 둘째 정령 합류 (whatif join): 시작 풀에서 하나를 뽑아 유체 · 시작 덱으로 더해요. 코어의 시작 덱 규칙(Run 생성자)과 같아요
-  const joinAt = wi.mate ?? wi.join;
+  // 둘째 정령 합류 (0156): 혼자 떠난 유체 판은 정한 층을 마치면 시작 풀의 다른 정령 하나가 유체 · 시작 덱으로 합류해요 (Run.addSpirit)
+  const soloBaby = run.spirits.length === 1 && !adult && !awakened && !startAct;
+  const joinAt = wi.mate ?? wi.join ?? (soloBaby && !wi.nojoin ? (C.run_pool.join_floor as number) : undefined);
   let joined = joinAt === undefined || run.spirits.length !== 1;
   const join = () => {
     joined = true;
     const def = wi.mate !== undefined ? spiritDef(MATE_STAND_IN) : spiritDef(new Rng(seed * 7 + 3).pick((C.start_pool as string[]).filter((id) => id !== run.spirits[0].id)));
-    const mate = { ...structuredClone(run.spirits[0]), id: def.id, maxHpBonus: 0, equipment: [], branch: undefined };
+    const first = run.spirits[0];
+    const mate = { id: def.id, hp: 0, maxHpBonus: 0, stage: first.stage, level: first.level, personality: first.personality, equipment: [] };
+    if (wi.mate === undefined) return run.addSpirit(mate);
     mate.hp = maxHpOf(mate);
     run.spirits.push(mate);
-    if (wi.mate !== undefined) { for (const id of ["basic_claw", "basic_claw", "basic_block", "basic_block"]) run.addCard(id, def.id); return; }
-    for (const card of CARDS) {
-      for (let i = 0; i < (card.startEach ?? 0); i++) run.addCard(card.id, def.id);
-      if (card.start && (card.startOwner ? card.startOwner === def.id : card.element === def.element)) for (let i = 0; i < card.start; i++) run.addCard(card.id, def.id);
-    }
+    for (const id of ["basic_claw", "basic_claw", "basic_block", "basic_block"]) run.addCard(id, def.id);
   };
   if (!joined && joinAt === 0) join();
   inBundle = false;
@@ -425,7 +425,7 @@ function parseWhatIf(arg: string): WhatIf {
   const out: WhatIf = {};
   for (const part of arg.split(",").filter(Boolean)) {
     const [k, v] = part.split(":");
-    if (k === "swap" || k === "noskipgold" || k === "earlyfights" || k === "upgraded") out[k] = true;
+    if (k === "nojoin" || k === "swap" || k === "noskipgold" || k === "earlyfights" || k === "upgraded") out[k] = true;
     else if (k === "offer" || k === "start" || k === "winheal" || k === "join" || k === "mate" || k === "cards" || k === "foe") out[k] = Number(v);
     else throw new Error(`모르는 whatif: ${part}`);
   }
