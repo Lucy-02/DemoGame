@@ -2,6 +2,7 @@
 import type * as Phaser from "phaser";
 import { rgba } from "./color";
 import { FONT_STACK } from "./fonts";
+import { RES } from "./resolution";
 
 /** 정본 프레임의 line-height (.frame line-height:1.25) */
 export const LINE_HEIGHT = 1.25;
@@ -60,6 +61,8 @@ export function textStyle(size: string, color: string, letterSpacing = 0, look: 
     color,
     letterSpacing,
     metrics: { ascent, descent, fontSize: ascent + descent },
+    // 글자 캔버스를 그리는 배수만큼 촘촘하게 (큰 모니터에서 흐려지지 않게)
+    resolution: RES(),
     ...(look.bold ? { fontStyle: "bold" } : {}),
     ...(look.outline ? { stroke: look.outline.color, strokeThickness: look.outline.width * 2, padding: { x: outlineInset(look) - look.outline.width, y: outlineInset(look) - look.outline.width } } : {}),
   };

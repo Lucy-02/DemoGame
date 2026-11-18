@@ -1,6 +1,7 @@
 // CSS 그라데이션을 canvas 2D로 그대로 그려요 (재질 띠·배경용).
 // linear-gradient(<deg>, …), repeating-linear-gradient, radial-gradient(circle at x% y%, … px) 타일.
 import type * as Phaser from "phaser";
+import { createCanvas } from "./resolution";
 
 /** 색 멈춤: at = 0~1 비율 또는 { px } 절대 길이 */
 export type Stop = [color: string, at: number | { px: number }];
@@ -74,7 +75,7 @@ export function canvasTexture(
   scene: Phaser.Scene, key: string, w: number, h: number, paint: (ctx: CanvasRenderingContext2D) => void,
 ): string {
   if (!scene.textures.exists(key)) {
-    const tex = scene.textures.createCanvas(key, w, h)!;
+    const tex = createCanvas(scene, key, w, h);
     paint(tex.getContext());
     tex.refresh();
   }

@@ -1,5 +1,6 @@
 // CSS 바깥 box-shadow(0 y blur color)를 canvas로 구워요. canvas shadowBlur = CSS blur 반경.
 import type * as Phaser from "phaser";
+import { createCanvas } from "./resolution";
 
 export interface Shadow {
   y: number;
@@ -14,7 +15,7 @@ export function shadowTexture(
   const margin = s.blur + Math.abs(s.y);
   const key = `shadow:${w}x${h}r${radius}:${s.y},${s.blur},${s.color}${hollow ? ":hollow" : ""}`;
   if (!scene.textures.exists(key)) {
-    const tex = scene.textures.createCanvas(key, w + margin * 2, h + margin * 2)!;
+    const tex = createCanvas(scene, key, w + margin * 2, h + margin * 2);
     const ctx = tex.getContext();
     // 상자는 캔버스 밖으로 밀고 그림자만 제자리에 떨어지게 해요
     const shift = (w + margin * 2) * 2;

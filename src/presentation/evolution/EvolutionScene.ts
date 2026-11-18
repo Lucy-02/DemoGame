@@ -9,6 +9,7 @@ import { spiritArt, spiritArtFile } from "../spiritArt";
 import { FONT_STACK } from "../style/fonts";
 import { cleanEdges } from "./edges";
 import { BEAT, EVO } from "./layout";
+import { RES } from "../style/resolution";
 
 export const EVOLUTION_SCENE = "evolution";
 
@@ -107,7 +108,7 @@ export class EvolutionScene extends Phaser.Scene {
     const crest = this.add.image(CX + E.crest.dx, E.crest.y, `evo:el:${def.element}`).setTint(glow).setDisplaySize(E.crest.size, E.crest.size).setDepth(10);
     const role = this.add.image(CX + E.role.dx, E.role.y, `evo:role:${def.role}`).setTint(color(E.ink)).setDisplaySize(E.role.size, E.role.size).setDepth(10);
     const label = (x: number, t: string, c: string) =>
-      this.add.text(x, E.label.y, t, { fontFamily: FONT_STACK, fontSize: E.label.size, color: c }).setOrigin(0.5).setDepth(10);
+      this.add.text(x, E.label.y, t, { fontFamily: FONT_STACK, fontSize: E.label.size, color: c, resolution: RES() }).setOrigin(0.5).setDepth(10);
     const elText = label(CX + E.crest.dx, ELEMENT_NAME[def.element], glowCss);
     const roleText = label(CX + E.role.dx, ROLE_NAME[def.role] ?? def.role, E.ink);
 
@@ -116,21 +117,21 @@ export class EvolutionScene extends Phaser.Scene {
     const band = this.add.container(B.x, E.h - B.bottom);
     let chipX = 0;
     const chip = (t: string, c: string) => {
-      const o = this.add.text(chipX, B.chipY, t, { fontFamily: FONT_STACK, fontSize: B.chip, color: c, backgroundColor: E.chipBg, padding: B.chipPad });
+      const o = this.add.text(chipX, B.chipY, t, { fontFamily: FONT_STACK, fontSize: B.chip, color: c, backgroundColor: E.chipBg, padding: B.chipPad, resolution: RES() });
       chipX += o.width + B.chipGap;
       band.add(o);
     };
     chip(ELEMENT_NAME[def.element], glowCss);
     chip(ROLE_NAME[def.role] ?? def.role, E.ink);
     if (this.d.personality) chip(personalityDef(this.d.personality).name, E.ink2);
-    band.add(this.add.text(0, B.nameY, `${def.name} ${this.d.stageName}`, { fontFamily: FONT_STACK, fontSize: B.name, color: E.ink }));
+    band.add(this.add.text(0, B.nameY, `${def.name} ${this.d.stageName}`, { fontFamily: FONT_STACK, fontSize: B.name, color: E.ink, resolution: RES() }));
 
     const vignette = cam.filters.external.addVignette(0.5, 0.5, E.vignette.radius, E.vignette.strength[0], 0x000000);
     // 글자는 따로 그리는 카메라로. 이름 띠 뒤 사선 흐림: 같은 장면을 흐린 카메라로 한 번 더 그리고 사선 마스크로 잘라요
     cam.ignore(band);
     const blurCam = this.cameras.add(0, 0, E.w, E.h).setAlpha(0);
     blurCam.ignore(band);
-    blurCam.filters.external.addBlur(1, 2, 2, E.bandBlur.strength, 0xffffff, E.bandBlur.steps);
+    blurCam.filters.external.addBlur(1, 2 * RES(), 2 * RES(), E.bandBlur.strength, 0xffffff, E.bandBlur.steps);
     blurCam.filters.external.addVignette(0.5, 0.5, E.vignette.radius, E.vignette.strength[BEAT.last], 0x000000);
     blurCam.filters.external.addMask("evo:bandMask");
     const uiCam = this.cameras.add(0, 0, E.w, E.h);

@@ -13,6 +13,7 @@ import { GLASS } from "../tooltip/skins";
 import { COPY } from "./copy";
 import { FRAME, SETTINGS as S } from "./layout";
 import { settingsRows, sliderValue, type SettingsMarks, type TipId } from "./views/settings";
+import { pointerAt } from "../style/resolution";
 
 const T = tokens.provisional.text.result;
 
@@ -76,7 +77,7 @@ export class SettingsScene extends Phaser.Scene {
   private slide(p: Phaser.Input.Pointer) {
     const r = this.drag && this.marks.sliders.get(this.drag);
     if (!this.drag || !r || !p.isDown) return;
-    this.settings.set({ volume: { [this.drag]: sliderValue(r, p.x) } });
+    this.settings.set({ volume: { [this.drag]: sliderValue(r, pointerAt(p).x) } });
   }
 
   private setHover(id?: TipId) {
