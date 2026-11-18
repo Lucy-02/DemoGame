@@ -20,6 +20,16 @@ describe("웹 플랫폼", () => {
     expect(await p.read("run")).toBeNull();
   });
 
+  it("직전 저장은 없고, 못 읽는 저장은 치워 둔다", async () => {
+    const store = memoryStore();
+    const p = createWebPlatform(store);
+    await p.write("run", "{");
+    expect(await p.readBackup("run")).toBeNull();
+    await p.setAside("run");
+    expect(await p.read("run")).toBeNull();
+    expect(store.getItem("demogame:run:broken")).toBe("{");
+  });
+
   it("경로처럼 생긴 키를 거부한다", async () => {
     const p = createWebPlatform(memoryStore());
     await expect(p.write("../evil", "x")).rejects.toThrow(/invalid storage key/);

@@ -26,10 +26,12 @@ function battleWith(party: string[], hand: [cardId: string, owner: string][], en
   const b = new Battle(run.spirits, [], enemies, run.frontId, new Rng(1));
   b.hand = hand.map(([cardId, owner], i) => card(cardId, owner, i));
   b.mana = 99;
-  for (const s of b.spirits) s.critPity = -10;
   b.drain();
   return b;
 }
+
+/** 카드 데이터의 숫자 (보상 카드 값이 바뀌어도 테스트가 따라와요, 0132) */
+const cardValue = (id: string, op: string) => (cardDef(id).effects.find((e) => e.op === op) as { value: number }).value;
 
 const card = (cardId: string, owner: string, i: number): BCard =>
   ({ uid: 100 + i, cardId, owner, tempCostDelta: 0, locked: false, isCopy: false, grow: 0, held: false, heldFast: false });
@@ -123,16 +125,16 @@ describe("벽 (유리 도롱뇽)", () => {
     b.endTurn();
     const blocks = b.drain().filter((e) => e.k === "block" && e.ref.side === "s" && e.ref.id === "glass_salamander");
     const g = guardScale(b, "glass_salamander");
-    expect(blocks.map((e) => e.k === "block" && e.amount)).toEqual([Math.round(4 * g), Math.round(2 * g) + 3]);
+    expect(blocks.map((e) => e.k === "block" && e.amount)).toEqual([Math.round(cardValue("heated_glass", "wall") * g), Math.round(cardValue("glass_scale", "wall") * g) + cardValue("heated_glass", "wallHeat")]);
   });
 
   it("잔열: 이번 턴 벽이 깨지면 다음 턴 시작에 벽을 다시 얻어요", () => {
-    const b = battleWith(PARTY, [["afterglow", "glass_salamander"]]);
+    const b = battleWith(PARTY, [["afterglow", "glass_salamander"]], ["grimbark"]);
     const sal = b.spirit("glass_salamander");
     b.play(100);
     b.endTurn();
     expect(b.drain().some((e) => e.k === "log" && e.text.includes("잔열"))).toBe(true);
-    expect(sal.block).toBe(Math.round(4 * guardScale(b, "glass_salamander")));
+    expect(sal.block).toBe(Math.round(cardValue("afterglow", "afterglow") * guardScale(b, "glass_salamander")));
     expect(sal.status.afterglow).toBeUndefined();
   });
 
@@ -163,7 +165,7 @@ describe("품기 (진주조개)", () => {
     b.endTurn();
     const [d] = enemyDamages(b.drain());
     const power = b.stat(b.spirit("pearl_oyster"), "power") / (C.stat_base as number);
-    expect(d.amount).toBe(Math.round(6 * (C.hold_mult as number) * power));
+    expect(d.amount).toBe(Math.round(cardValue("current", "damage") * (C.hold_mult as number) * power));
   });
 
   it("화면이 물으면 품기 직전에 멈추고, 고른 카드를 품은 뒤 다음 턴으로 넘어가요 (0075)", () => {
@@ -245,7 +247,7 @@ describe("숨음과 받아칠 기회 (프리즘 카멜레온)", () => {
     const [d] = enemyDamages(b.drain());
     const power = b.stat(cham, "power") / (C.stat_base as number);
     const pulled = Math.floor((C.ready_big_at as number) * 0.5);
-    expect(d.amount).toBe(Math.round((6 * (C.ready_mult as number) + pulled) * power));
+    expect(d.amount).toBe(Math.round((cardValue("snap", "damage") * (C.ready_mult as number) + pulled) * power));
     expect(statusN(cham, "ready")).toBe(0);
   });
 
@@ -290,7 +292,7 @@ describe("카드 수정안 (갈래 규칙과 카드 수정안 2026-11-12)", () =
     b.play(100, FOX);
     b.endTurn();
     expect(statusN(b.enemy(1), "star")).toBe(0);
-    expect(b.spirit("fire_fox").status.hitBonus?.strength).toBe(9);
+    expect(b.spirit("fire_fox").status.hitBonus?.strength).toBe(3 * cardValue("astrolabe", "starsToHitBonus"));
   });
 
   it("길조는 별이 새겨진 적을 칠 때만 쓰여요", () => {
@@ -355,7 +357,7 @@ describe("카드 수정안 (갈래 규칙과 카드 수정안 2026-11-12)", () =
     b.endTurn();
     const [d] = enemyDamages(b.drain());
     const power = b.stat(cham, "power") / (C.stat_base as number);
-    expect(d.amount).toBe(Math.round(3 * (C.ready_mult_small as number) * power));
+    expect(d.amount).toBe(Math.round(cardValue("flick", "damage") * (C.ready_mult_small as number) * power));
   });
 });
 
@@ -395,7 +397,7 @@ describe("불여우 · 안개 고양이 갈래 카드 (갈래 규칙과 카드 �
   });
 
   it("살금 · 상강 · 깊은 빙결은 적의 행동을 늦추고, 깊은 빙결은 한 턴에 정한 번까지만 더 늦춰요", () => {
-    const b = battleWith(PARTY, [["creep", "mist_cat"], ["deep_freeze", "mist_cat"], ["deep_freeze", "mist_cat"]], ["moss_slime"], "glass_salamander");
+    const b = battleWith(PARTY, [["creep", "mist_cat"], ["deep_freeze", "mist_cat"], ["deep_freeze", "mist_cat"]], ["grimbark"], "glass_salamander");
     b.play(100, E1);
     b.play(101, E1);
     b.play(102, E1);

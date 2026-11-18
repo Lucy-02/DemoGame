@@ -220,3 +220,10 @@
 
 ## 모션 3차 (2026-11-17, 0092 "남은 것")
 - 새 모양이 필요한 여덟 곳의 움직이는 시안(상태 칩 · 방어도 깨짐 · 차징 시작 · 브레이크 · 해방 · 전투 시작 · 승리 · 패배): https://claude.ai/artifact/7evJqo9bQqUkuXZbYMHN6M
+
+## 성장 표시 라운드 S (2026-11-18, BRIEF "라운드 S", Lucy 고르기 대기)
+- S1 표지 하나: https://claude.ai/artifact/BLLRs2T8T9cUiwypJnycDf
+- S2 정령 줄이 기록: https://claude.ai/artifact/Ptt23Ahp9eKnGmBkT5NTW1
+- S3 다음 문턱: https://claude.ai/artifact/PyAYGmjpdBQCWvL6ebrTbc
+- 프레임: /mnt/project-files/design/round-growth/S1~S3/ (f1 전투 결과 · f2 갈래 카드에 올림 · f3 경험이 참 · f4 판 결과 · f5 성장 길 문 · f6 전투 속 성격 · f7 출전 준비 성체 그림 가 · 나), 바탕 캡처 /mnt/project-files/design/round-growth/assets/
+- 시안의 갈래 배정 · 자람 조건 · 공명 숫자와 성격 풀이 문장은 임시예요

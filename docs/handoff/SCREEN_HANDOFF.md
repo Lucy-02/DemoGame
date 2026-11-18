@@ -78,7 +78,7 @@
 
 - **다시 그리기 방식**: 상태가 바뀌면 `dirty = true`, `update()`에서 전부 지우고 다시 그려요. 입력은 `this.input.setPollAlways()`. 화면이 작아서 충분히 빠르고, 상태별 캡처가 쉬워요.
 - **세션**: `src/session/`에 화면마다 하나(`RewardSession`, `ShopSession`). 명령을 받아 `Run`을 바꾸고, 화면은 세션만 알아요. 세션 없이 고정 장면으로도 열려야 해요.
-- **런 연결**: 판은 `src/session/game.ts`(`GameSession`: 정원 + 판 + 저장)와 `src/session/run.ts`(`RunSession`: 판의 자리 `phase`와 명령)가 들고, 화면 사이 이동은 `src/presentation/flow.ts`(`GameFlow`)만 해요. 새 화면을 이으려면 `GameFlow.resume()`에서 그 `phase`를 맡던 임시 장면 대신 새 씬을 열고, 같은 PR에서 임시 장면을 지워요. 임시 장면은 registry의 `LegacyFlow`(`placeholder/flow.ts`)로 명령만 보내요. 저장은 칸에 들어간 직후와 칸을 마친 뒤에만 해요(전투 중간에 끄면 그 전투 처음부터, 0047).
+- **런 연결**: 판은 `src/session/game.ts`(`GameSession`: 정원 + 판 + 저장)와 `src/session/run.ts`(`RunSession`: 판의 자리 `phase`와 명령)가 들고, 화면 사이 이동은 `src/presentation/flow.ts`(`GameFlow`)만 해요. 새 화면을 이으려면 `GameFlow.resume()`에서 그 `phase`를 맡던 임시 장면 대신 새 씬을 열고, 같은 PR에서 임시 장면을 지워요. 임시 장면은 registry의 `LegacyFlow`(`placeholder/flow.ts`)로 명령만 보내요. 저장은 칸에 들어간 직후와 칸을 마친 뒤에만 해요(전투 중간에 끄면 그 전투 처음부터, 0047). 못 읽는 저장은 `GameSession.load`가 복구해요(정원은 직전 저장 → 새 정원, 판은 버림, 파일은 `.broken`으로 치움). 저장 형식을 바꾸면 버전을 올리고 `src/session/migrate.ts` 방식으로 올리기 함수와 옛 저장 고정 파일(`src/session/saves/`)을 더해요.
 - **공용 뼈대** `src/presentation/run/`: `drawLane`(정령 줄: 얼굴 링·HP·능력치·카드 칸, 상태는 `LaneState`), `drawGold`, `drawBackdrop`, `cardWithFace`, `drawCardTip`, `fromCore.ts`(`cardVM`, `lane`, `statOf`). 런 밖 화면에서 정령 줄이 필요하면 이것부터 봐요.
 - **재사용 먼저**: 카드는 `createHandCard`(`scale` 옵션은 글자·기호를 다시 또렷하게 구워요), 얼굴은 `faceTexture`·`ringTexture`, 유리판·배지는 `spirits/views/parts.ts`, 배치는 `style/flex.ts`. 시안 HTML을 옮기지 않아요(Lucy 2026-11-09).
 

@@ -195,8 +195,10 @@ describe("처음 세 마리 (0053)", () => {
   it("정원의 정령만큼 떠나고, 인원이 적으면 적이 약해져요", () => {
     const solo = new Run({ seed: 1, frontId: startGarden(7).spirits[0].id, garden: startGarden(7), adult: false, unlockAll: false });
     expect(solo.spirits).toHaveLength(1);
-    expect(solo.enemyScale()).toEqual(partyScale(1));
-    expect(new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: false, unlockAll: false }).enemyScale()).toBeUndefined();
+    // 지도 위(길 전투)에서는 길 전투 피해 배율이 곱해져요 (0132)
+    const path = (C.path_scale as { dmg: number }).dmg;
+    expect(solo.enemyScale()).toEqual({ hp: partyScale(1)!.hp, dmg: partyScale(1)!.dmg * path });
+    expect(new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: false, unlockAll: false }).enemyScale()).toEqual({ hp: 1, dmg: path });
     const boss = enemyDef("grimbark");
     const weak = scaleEnemy(boss, { hp: 0.5, dmg: 0.5 });
     expect(weak.hp).toBe(boss.hp / 2);

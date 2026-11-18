@@ -163,6 +163,15 @@ function elementTexture(scene: Phaser.Scene, el: string): string {
   });
 }
 
+/** HP 값마다 따로 굽는 텍스처 (막대 · 잔상). 전투가 끝나면 버려요: 판이 길어도 쌓이지 않게 */
+const VALUE_TEXTURES = ["battle:bar:", "battle:trail:"];
+
+export function dropValueTextures(scene: Phaser.Scene) {
+  for (const key of scene.textures.getTextureKeys()) {
+    if (VALUE_TEXTURES.some((p) => key.startsWith(p))) scene.textures.remove(key);
+  }
+}
+
 /** 약점 배지 바탕 (.weak): 어두운 원 + 십자 틈이 난 조준 테. on = 맞는 속성 카드를 든 동안 (warn 원, 바깥 warn 테, 1.25배) */
 export function weakTexture(scene: Phaser.Scene, on: boolean): { key: string; d: number } {
   const W = I.weak, k = on ? W.on.scale : 1;
@@ -536,7 +545,7 @@ function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false):
     : on ? { width: INTENT.onRing, color: P.ink }
     : debuff
       ? { width: INTENT.debuffRing, color: P.debuffLine }
-      : { width: charge ? INTENT.chargeRing : INTENT.ring, color: charge ? P.warn : P.glassLine };
+      : { width: charge ? INTENT.chargeRing : INTENT.ring, color: charge ? P.accHi : P.glassLine };
   const order: Node | undefined = it.order === undefined ? undefined : {
     t: "row", w: INTENT.order, h: INTENT.order, round: !debuff, radius: INTENT.orderDebuffRadius,
     justify: "center", align: "center", style: { fill: P.chip },
@@ -555,14 +564,14 @@ function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false):
   } else {
     target = { t: "image", key: faceKey(it.target), w: INTENT.face, h: INTENT.face, round: true, outline: { width: INTENT.faceRing, color: P.glassD } };
   }
-  const iconTint = charge ? P.warn : debuff ? P.ink2 : P.ink;
+  const iconTint = charge ? P.accHi : debuff ? P.ink2 : P.ink;
   // 끊김: 수치만 흐린 글자 + 취소선 (.intent.cut .amt)
   const strike = cut ? { strike: { color: P.accHi, width: PV.intentCut.strike } } : {};
   // 연타 ×N은 작고 흐리게 (.intent .x)
   const [amount, ...mult] = it.amount.split("×");
   const amountNode = debuff
     ? text(amount, T.intentAmountDebuff, cut ? P.ink2 : P.ink, strike)
-    : text(amount, T.intentAmount, cut ? P.ink2 : charge ? P.warn : P.ink, strike);
+    : text(amount, T.intentAmount, cut ? P.ink2 : charge ? P.accHi : P.ink, strike);
   return {
     t: "row", h: INTENT.h, pad: INTENT.pad, radius: debuff ? INTENT.debuffRadius : INTENT.radius, gap: INTENT.gap, align: "center",
     style: { fill: P.glassD, ring },
