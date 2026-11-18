@@ -227,3 +227,8 @@
 - S3 다음 문턱: https://claude.ai/artifact/PyAYGmjpdBQCWvL6ebrTbc
 - 프레임: /mnt/project-files/design/round-growth/S1~S3/ (f1 전투 결과 · f2 갈래 카드에 올림 · f3 경험이 참 · f4 판 결과 · f5 성장 길 문 · f6 전투 속 성격 · f7 출전 준비 성체 그림 가 · 나), 바탕 캡처 /mnt/project-files/design/round-growth/assets/
 - 시안의 갈래 배정 · 자람 조건 · 공명 숫자와 성격 풀이 문장은 임시예요
+
+## 카드 연출 R1 (2026-11-18, Lucy 선택 대기)
+- 같은 카드 13장 + 속성 견본 7 + 한 턴 재생을 다섯 방향으로(A 지금 그대로 · B 붓 한 획 · C 손맛 · D 카드가 열린다 · E 정령이 연기한다): https://claude.ai/artifact/2rKZWWa7p92aXrszDpitDE
+- 브리프 · 무대 · 방향 파일 소스: 공유 폴더의 design 아래 card-vfx-r1. 체계: `docs/design/systems/card-fx.md`, 카드별 표: `design/card/fx/CARDS.md`. 조사: 공유 폴더 `research/vfx/card-play-references.md`
+- 한 턴(카드 다섯 + 적 둘) 길이: A 3.15초 · B 3.65초 · C 3.9초 · D 3.5초 · E 3.3초
