@@ -28,6 +28,7 @@ import { RAIL_ICONS, drawFacts, drawRail } from "./views/rail";
 import { BRANCH, FRAME, STRIP } from "./layout";
 import { STRIP_ICONS, clampFrom, drawStrip, stripFit } from "./views/strip";
 import { TOP_ICONS, drawTopbar } from "./views/topbar";
+import { RES, pointerAt } from "../style/resolution";
 
 export const SPIRITS_SCENE = "spirits";
 
@@ -103,7 +104,7 @@ export class SpiritsScene extends Phaser.Scene {
     this.reveal(this.selected);
     // 아래 띠 위에서 휠을 굴리면 타일을 한 칸씩 넘겨요
     this.input.on("wheel", (p: Phaser.Input.Pointer, _o: unknown, dx: number, dy: number) => {
-      if (p.y < FRAME.h - STRIP.h) return;
+      if (pointerAt(p).y < FRAME.h - STRIP.h) return;
       const step = Math.sign(dy || dx);
       if (!step) return;
       this.stripFrom += step;
@@ -258,7 +259,7 @@ export class SpiritsScene extends Phaser.Scene {
     // 아래 화면은 흐린 본 카메라, 창은 위 카메라 (.bw-bg blur)
     const over = this.children.list.filter((o) => !under.includes(o));
     main.ignore(over);
-    main.filters.internal.addBlur(BRANCH.blur.quality, BRANCH.blur.x, BRANCH.blur.y, BRANCH.blur.strength);
+    main.filters.internal.addBlur(BRANCH.blur.quality, BRANCH.blur.x * RES(), BRANCH.blur.y * RES(), BRANCH.blur.strength);
     this.pickCam = this.cameras.add(0, 0, FRAME.w, FRAME.h);
     this.pickCam.ignore(under);
   }

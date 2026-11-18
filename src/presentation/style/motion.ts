@@ -4,6 +4,7 @@ import { tokens } from "../../design/tokens";
 import { cubicBezier, ms } from "./ease";
 import { gather } from "./gather";
 import { colorMatrix, opacityOf } from "./opacity";
+import { RES } from "./resolution";
 
 const M = tokens.provisional.motion;
 
@@ -69,9 +70,10 @@ export function fadeOutOld(scene: Phaser.Scene, drawOld: () => void) {
 export function crossPaint(scene: Phaser.Scene, paint: () => void) {
   const before = [...scene.children.list];
   if (reducedMotion() || !before.length) return paint();
+  // 그리는 배수 그대로 떠서(선명하게) 화면 크기로 놓아요
   const { width, height } = scene.scale;
-  const shot = scene.make.renderTexture({ x: 0, y: 0, width, height }, false).setOrigin(0).setScrollFactor(0);
-  shot.camera.setScroll(scene.cameras.main.scrollX, scene.cameras.main.scrollY);
+  const shot = scene.make.renderTexture({ x: 0, y: 0, width, height }, false).setOrigin(0).setScrollFactor(0).setScale(1 / RES());
+  shot.camera.setOrigin(0, 0).setZoom(RES()).setScroll(scene.cameras.main.scrollX, scene.cameras.main.scrollY);
   shot.draw(before).render();
   paint();
   scene.add.existing(shot).setDepth(Number.MAX_SAFE_INTEGER);

@@ -15,6 +15,7 @@
 // 개발 빌드에서만: window.session · window.game 으로 세션과 장면을 볼 수 있고(자동 점검 tools/screenBot.ts가 써요), ?seed= 로 새 판 · 새 정원의 시드를 고정해요.
 // 데모 빌드(.env.demo의 VITE_DEMO=1, `pnpm dist:demo`)는 판의 범위를 데모로 묶고 데모 끝 화면을 켜요 (0101). 개발 빌드에서는 ?demo 로도 켜요.
 // ?slow=4 는 모션을 4배 느리게 (어느 화면이든).
+// ?res=2 는 그리는 해상도 배수를 고정 (없으면 모니터 크기로 골라요, presentation/style/resolution.ts).
 // ?screen=legacy 는 정원·저장 없이 바로 떠나는 시험 판(&party=a,b,c&adult&unlockAll&seed=). 칸마다 새 화면이 없으면 임시 장면이 맡아요.
 import { C, SPIRITS } from "../core/data";
 import { getPlatform } from "../platform";
@@ -55,6 +56,7 @@ async function start() {
     screen: fixture, session, settings, trial: screen === "legacy", quit: () => void platform.quit(), version: versionOf(demo), demo,
     hover: get("hover"), scene: get("scene"), lift: get("lift"), stage: params.has("stage") ? Number(get("stage")) : undefined, select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
     slow: Number(params.get("slow")) || undefined,
+    res: Number(params.get("res")) || undefined,
   });
   // 시험용 문: 개발 빌드에서만 열어요
   if (DEV) Object.assign(window, { session, settings, game });

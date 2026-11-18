@@ -3,6 +3,7 @@ import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { transparentOf } from "../style/color";
 import { linear, radialTiles, type Stop } from "../style/gradient";
+import { createCanvas } from "../style/resolution";
 import type { FaceId } from "../faces";
 import { cardArtKey, type CardArtId } from "./art";
 import { HAND_CARD as C, WINDOW_PATH } from "./layout";
@@ -55,7 +56,7 @@ export function bandTexture(scene: Phaser.Scene, m: Material): string {
   const key = `card:band:${m}`;
   if (scene.textures.exists(key)) return key;
   const { w, h, radius } = C.band;
-  const tex = scene.textures.createCanvas(key, w, h)!;
+  const tex = createCanvas(scene, key, w, h);
   const ctx = tex.getContext();
   bottomRounded(ctx, 0, 0, w, h, radius);
   ctx.save();
@@ -81,7 +82,7 @@ export function windowTexture(scene: Phaser.Scene, owner: FaceId, art?: CardArtI
   const key = `card:win:${owner}:${art ?? "none"}`;
   if (scene.textures.exists(key)) return key;
   const { w, h } = C.win;
-  const tex = scene.textures.createCanvas(key, w, h)!;
+  const tex = createCanvas(scene, key, w, h);
   const ctx = tex.getContext();
   const path = new Path2D(WINDOW_PATH[owner]);
   ctx.fillStyle = P.paper2;
@@ -108,7 +109,7 @@ export function liftedBodyTexture(scene: Phaser.Scene, m: Material): string {
   const key = `card:lifted:${m}`;
   if (scene.textures.exists(key)) return key;
   const { w, h, radius, border } = C;
-  const tex = scene.textures.createCanvas(key, w, h)!;
+  const tex = createCanvas(scene, key, w, h);
   const ctx = tex.getContext();
   ctx.beginPath();
   ctx.roundRect(0, 0, w, h, radius);

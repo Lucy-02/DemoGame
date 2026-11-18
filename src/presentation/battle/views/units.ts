@@ -11,6 +11,7 @@ import { gather } from "../../style/gather";
 import { canvasTexture, linear } from "../../style/gradient";
 import { iconFit, loadIcon, paintIcon } from "../../style/icons";
 import { placeholderArt } from "../../style/placeholder";
+import { createCanvas } from "../../style/resolution";
 import { shadowTexture } from "../../style/shadow";
 import { inlineLine, lineBox, measure, type Span } from "../../style/text";
 import type { RichText } from "../../tooltip/content";
@@ -246,7 +247,7 @@ function allDotsTexture(scene: Phaser.Scene): { key: string; w: number; h: numbe
   const w = step * 2 + A.dot + A.ring * 2, h = A.dot + A.ring * 2;
   const key = "battle:intent-all";
   if (!scene.textures.exists(key)) {
-    const tex = scene.textures.createCanvas(key, Math.ceil(w), Math.ceil(h))!;
+    const tex = createCanvas(scene, key, w, h);
     const ctx = tex.getContext();
     for (let k = 0; k < 3; k++) {
       const cx = A.ring + A.dot / 2 + k * step, cy = h / 2;
@@ -719,7 +720,7 @@ const GROUND_KEY = "battle:ground";
 /** 발밑 그림자: 발 y에 가운데 */
 function ground(scene: Phaser.Scene, cx: number, feet: number) {
   if (!scene.textures.exists(GROUND_KEY)) {
-    const tex = scene.textures.createCanvas(GROUND_KEY, GROUND.w, GROUND.h)!;
+    const tex = createCanvas(scene, GROUND_KEY, GROUND.w, GROUND.h);
     const ctx = tex.getContext();
     // closest-side 타원 그라데이션: 원을 세로로 눌러서 그려요
     const rx = GROUND.w / 2, ry = GROUND.h / 2;

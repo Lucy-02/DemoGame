@@ -5,6 +5,7 @@ import type * as Phaser from "phaser";
 import { box, circle, type BoxStyle } from "./draw";
 import { icon as drawIcon, iconFit } from "./icons";
 import { rgba } from "./color";
+import { createCanvas } from "./resolution";
 import { LINE_HEIGHT, digitInkShift, fontBox, measure, outlineInset, px, strikeLine, textStyle, wrapSpans, type TextLook } from "./text";
 
 interface Margins {
@@ -264,7 +265,7 @@ function roundTexture(scene: Phaser.Scene, key: string, d: number): string {
   const out = `${key}@round${d}`;
   if (scene.textures.exists(out)) return out;
   const src = scene.textures.get(key).getSourceImage() as CanvasImageSource & { width: number; height: number };
-  const tex = scene.textures.createCanvas(out, d, d)!;
+  const tex = createCanvas(scene, out, d, d);
   const ctx = tex.getContext();
   const s = Math.max(d / src.width, d / src.height);
   ctx.beginPath();

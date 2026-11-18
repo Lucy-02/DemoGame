@@ -34,6 +34,8 @@ const isIdentity = (a: ColorAdjust) =>
 /** 컨테이너에 색 조정 필터를 하나 붙여요. 돌려준 함수로 값을 바꿔요. */
 export function adjustColor(root: Phaser.GameObjects.Container, initial: ColorAdjust = {}): (a: ColorAdjust) => void {
   const fx = root.enableFilters().filters!.internal.addColorMatrix();
+  // 필터는 장면 카메라를 본뜬 카메라로 한 번 떠서 입혀요. 장면 카메라처럼 왼쪽 위 기준으로 키워야 제자리에 떠요 (style/resolution.ts)
+  root.filterCamera?.setOrigin(0, 0);
   const apply = (a: ColorAdjust) => {
     // 컨테이너가 지워지면 Phaser가 필터의 행렬을 비워요. 그 뒤에 도는 트윈(흐려지는 중에 화면을 다시 그릴 때)은 아무 일도 하지 않아요
     if (!fx.colorMatrix) return;

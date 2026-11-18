@@ -7,6 +7,7 @@ import type { Stage } from "../../core/types";
 import { tokens } from "../../design/tokens";
 import { withAlpha } from "../style/color";
 import { ART, FRAME, STRIP, TOP } from "./layout";
+import { RES } from "../style/resolution";
 
 const P = tokens.provisional.palette;
 
@@ -71,9 +72,11 @@ export function paintArt(ctx: CanvasRenderingContext2D, src: CanvasImageSource, 
   gc.drawImage(src, at.x * A.scale, at.y * A.scale, at.w * A.scale, at.h * A.scale);
 
   const bodyCanvas = document.createElement("canvas");
-  bodyCanvas.width = FRAME.w;
-  bodyCanvas.height = FRAME.h;
+  // 그림은 그리는 배수만큼 촘촘하게 (색 번짐은 흐린 것이라 그대로)
+  bodyCanvas.width = FRAME.w * RES();
+  bodyCanvas.height = FRAME.h * RES();
   const bc = bodyCanvas.getContext("2d")!;
+  bc.scale(RES(), RES());
   bc.drawImage(src, at.x, at.y, at.w, at.h);
   // 아래 띠에 걸리는 그림만 서서히 사라지게 (몸 전체가 보이는 유체는 그대로)
   if (at.y + at.h > bottom) fadeOut(bc, bottom);
@@ -85,7 +88,7 @@ export function paintArt(ctx: CanvasRenderingContext2D, src: CanvasImageSource, 
   ctx.globalAlpha = A.alpha;
   ctx.drawImage(glow, 0, 0, FRAME.w, FRAME.h);
   ctx.globalAlpha = 1;
-  if (body) ctx.drawImage(bodyCanvas, 0, 0);
+  if (body) ctx.drawImage(bodyCanvas, 0, 0, FRAME.w, FRAME.h);
   ctx.restore();
 }
 
