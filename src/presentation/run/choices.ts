@@ -28,6 +28,8 @@ export interface FaceFx {
 
 export interface ChoiceVM {
   label: string;
+  /** 칩으로 못 보이는 효과의 풀이 (효과문). 칩이 없을 때 none 글 대신 보여요 */
+  note?: string;
   /** 영향받는 정령 얼굴 칩 (앞에 와요) */
   faces?: FaceFx[];
   /** 기호 칩. 칩이 하나도 없으면 none 글(있을 때)만, 없으면 이름만 */
@@ -91,7 +93,9 @@ function plate(c: ChoiceVM, w: number, none?: string): Node {
     t: "col", w, pad: K.pad, gap: K.inner,
     children: [
       text(c.label, T.optLabel, fade(P.ink)),
-      ...(has ? [chips(c, fade, w - K.pad[1] - K.pad[3])] : none ? [text(none, T.optText, fade(P.ink3Spirit))] : []),
+      ...(has ? [chips(c, fade, w - K.pad[1] - K.pad[3])]
+        : c.note ? [text(c.note, T.optText, fade(P.ink2), { wrap: w - K.pad[1] - K.pad[3], keepAll: true })]
+        : none ? [text(none, T.optText, fade(P.ink3Spirit))] : []),
     ],
   };
 }
@@ -99,6 +103,17 @@ function plate(c: ChoiceVM, w: number, none?: string): Node {
 /** 판 묶음의 높이 (판이 내용을 감쌀 때) */
 export function choicesHeight(items: ChoiceVM[], w: number, none?: string): number {
   return items.reduce((a, c) => a + size(plate(c, w, none)).h, 0) + (items.length - 1) * CHOICE.gap;
+}
+
+const CHOICE_DATA = "choice";
+
+/**
+ * 지금 포인터 아래의 선택지 번호 (없으면 undefined).
+ * 다시 그리면 판정 영역이 새로 생겨서 벗어남 사건이 안 올 때가 있어요. 화면의 update가 이걸로 가리킴을 맞춰요 (P3-07).
+ */
+export function choiceUnderPointer(scene: Phaser.Scene): number | undefined {
+  const hit = scene.input.hitTestPointer(scene.input.activePointer).find((o) => o.getData(CHOICE_DATA) !== undefined);
+  return hit?.getData(CHOICE_DATA) as number | undefined;
 }
 
 /** 판 묶음. (x, top)부터 아래로 쌓고, 마지막 판 아래 끝 y를 돌려줘요 */
@@ -114,7 +129,7 @@ export function drawChoices(scene: Phaser.Scene, items: ChoiceVM[], at: { x: num
     box(g, at.x, y, at.w, h, K.radius, { fill: P.glass, ring: { width: 1, color: lit ? P.accHi : c.enabled ? P.glassLine : withAlpha(P.glassLine, K.offAlpha) } });
     render(scene, node, at.x, y);
     if (c.enabled) {
-      scene.add.zone(at.x, y, at.w, h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+      scene.add.zone(at.x, y, at.w, h).setOrigin(0, 0).setData(CHOICE_DATA, i).setInteractive({ useHandCursor: true })
         .on("pointerover", () => on.over(i))
         .on("pointerout", () => on.out(i))
         .on("pointerup", () => on.click(i));

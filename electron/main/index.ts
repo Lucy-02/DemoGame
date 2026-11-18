@@ -1,8 +1,9 @@
 // Electron main 프로세스: 창, 앱 프로토콜, 저장 IPC만 맡아요. 게임 규칙은 모르고 렌더러에 있어요.
-import { app, BrowserWindow, ipcMain, net, protocol, shell } from "electron";
+import { app, BrowserWindow, ipcMain, net, protocol, screen, shell } from "electron";
 import { join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { IPC } from "../../src/platform/bridge";
+import { fitResize, fitSnapped, fitStart } from "./aspect";
 import { createErrorLog } from "./errorLog";
 import { createFileStorage } from "./storage";
 
@@ -97,8 +98,38 @@ function createWindow() {
       sandbox: true,
     },
   });
-  // 창 모드에서는 화면 비율대로만 늘어나서 남는 곳이 없어요
-  win.setAspectRatio(BASE.w / BASE.h);
+  // 창 모드에서는 화면 비율대로만 늘어나서 남는 곳이 없어요.
+  // 윈도의 setAspectRatio는 창틀까지 포함한 바깥 크기에 비율을 걸어서(안쪽이 넓어져요), 끌 때마다 안쪽 기준으로 다시 계산해요
+  if (process.platform === "win32") {
+    win.on("will-resize", (e, next, details) => {
+      const [outerW, outerH] = win.getSize();
+      const [innerW, innerH] = win.getContentSize();
+      const frame = { width: outerW - innerW, height: outerH - innerH };
+      e.preventDefault();
+      win.setBounds(fitResize(win.getBounds(), next, details.edge, frame, BASE.w / BASE.h, { width: BASE.w / 2, height: BASE.h / 2 }));
+    });
+    // 윈도 스냅(아래 끝까지 끌기)은 will-resize를 거치지 않아서, 끝난 뒤 비율이 어긋나 있으면 다시 맞춰요
+    win.on("resized", () => {
+      if (win.isFullScreen() || win.isMaximized() || win.isMinimized()) return;
+      const [outerW, outerH] = win.getSize();
+      const [innerW, innerH] = win.getContentSize();
+      if (Math.abs(innerW - (innerH * BASE.w) / BASE.h) <= 2) return;
+      const frame = { width: outerW - innerW, height: outerH - innerH };
+      win.setBounds(fitSnapped(win.getBounds(), frame, BASE.w / BASE.h, screen.getDisplayMatching(win.getBounds()).workArea));
+    });
+  } else win.setAspectRatio(BASE.w / BASE.h);
+  // 기준 크기가 화면에 다 안 들어가면 OS가 한쪽만 잘라 비율이 깨져요. 들어갈 만큼 비율대로 줄여서 열어요
+  const [outerW, outerH] = win.getSize();
+  const [innerW, innerH] = win.getContentSize();
+  const start = fitStart(
+    { width: BASE.w, height: BASE.h },
+    screen.getDisplayMatching(win.getBounds()).workAreaSize,
+    { width: outerW - innerW, height: outerH - innerH },
+  );
+  if (start.width !== innerW || start.height !== innerH) {
+    win.setContentSize(start.width, start.height);
+    win.center();
+  }
   win.once("ready-to-show", () => win.show());
 
   // 게임 창 밖으로 나가는 탐색은 막고, 외부 링크는 기본 브라우저로 열어요.

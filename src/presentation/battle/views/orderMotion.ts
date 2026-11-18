@@ -4,6 +4,7 @@ import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { rgba } from "../../style/color";
 import { cubicBezier, ms } from "../../style/ease";
+import { settingsOf } from "../../menu/hooks";
 import { FAST, MOVE, reducedMotion } from "../../style/motion";
 import type { OrderCursor, OrderMark } from "./order";
 
@@ -82,7 +83,8 @@ export function playOrderMotion(scene: Phaser.Scene, prev: OrderSnapshot | undef
       scene.tweens.addCounter({ from: 1, to: m.fade, duration: d, delay: d, ease: FAST.ease, onUpdate: (t) => { a.value = t.getValue() ?? m.fade; } });
       if (!still) scene.tweens.addCounter({ from: 0, to: 1, duration: d, ease: "Sine.easeInOut", onUpdate: (t) => pose(m, 1 + (T.act.scale - 1) * Math.sin(Math.PI * (t.getValue() ?? 1))) });
     }
-    if (m.cut && !was.cut) {
+    // 끊김 번쩍임 (0077). 설정에서 화면 흔들림을 끄면 번쩍이지 않아요: 끊김은 흐린 얼굴과 배지로 남아요 (0090 8번)
+    if (m.cut && !was.cut && settingsOf(scene)?.shake !== false) {
       const c = rgba(P.accHi);
       const veil = scene.add.circle(m.x, m.y, m.d / 2, c.color).setAlpha(0);
       scene.tweens.add({ targets: veil, alpha: T.cut.peak, duration: ms(T.cut.duration) / 2, yoyo: true, ease: "Sine.easeInOut", onComplete: () => veil.destroy() });

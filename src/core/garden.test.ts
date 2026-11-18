@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { C, CARDS, GROWTH, SPIRITS, enemyDef, partyScale, scaleEnemy } from "./data";
 import {
-  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, isFinalStage, joinCandidates, defaultFront, setFront, join, joinOffer, keepEquipment, levelOf, newGarden,
+  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, grantMidJoin, isFinalStage, joinCandidates, defaultFront, setFront, join, joinOffer, keepEquipment, levelOf, newGarden,
   seeEpisode, startGarden, todos, unlockKeys, type Garden,
 } from "./garden";
 import { Run } from "./run";
@@ -143,6 +143,19 @@ describe("처음 세 마리 (0053)", () => {
     expect(joinOffer(endRun(g))).toEqual([]);
   });
 
+  it("첫 판 가운데 깃들면(0156) 판 끝에 더 주지 않고, 첫 판이 아니면 가운데 깃들기가 없어요", () => {
+    let g = grantMidJoin(startGarden(7));
+    expect(joinOffer(g)).toHaveLength(2);
+    expect(grantMidJoin(g)).toBe(g);
+    g = join(g, joinOffer(g)[0]);
+    expect(g.spirits).toHaveLength(2);
+    g = endRun(g);
+    expect(g.runs).toBe(1);
+    expect(joinOffer(g)).toEqual([]);
+    const later = endRun(join(endRun(startGarden(7)), joinOffer(endRun(startGarden(7)))[0]));
+    expect(grantMidJoin(later)).toBe(later);
+  });
+
   it("첫 보스를 가라앉히면 셋째가 깃들고, 다시 가라앉혀도 더 주지 않아요", () => {
     let g = endRun(startGarden(7));
     g = join(g, joinOffer(g)[0]);
@@ -199,6 +212,10 @@ describe("처음 세 마리 (0053)", () => {
     const path = (C.path_scale as { dmg: number }).dmg;
     expect(solo.enemyScale()).toEqual({ hp: partyScale(1)!.hp, dmg: partyScale(1)!.dmg * path });
     expect(new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: false, unlockAll: false }).enemyScale()).toEqual({ hp: 1, dmg: path });
+    // 막별 세기 (0155): 3막에서 출발하면 그 막의 배율이 곱해져요
+    const act3 = (C.acts[2] as { scale?: { hp: number; dmg: number } }).scale!;
+    const deep = new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: true, unlockAll: false, startAct: 3 });
+    expect(deep.enemyScale()).toEqual({ hp: act3.hp, dmg: path * act3.dmg });
     const boss = enemyDef("grimbark");
     const weak = scaleEnemy(boss, { hp: 0.5, dmg: 0.5 });
     expect(weak.hp).toBe(boss.hp / 2);

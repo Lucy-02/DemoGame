@@ -156,6 +156,15 @@ export class GameFlow implements LegacyFlow {
     const phase = run.phase;
     switch (phase.kind) {
       case "map": {
+        // 첫 판 가운데의 깃들기 (0156): 정한 층을 마치고 지도로 오면 판 끝과 같은 깃들기 화면에서 고르고, 고른 정령이 바로 합류해요
+        this.session.joinMidRun();
+        if (this.session.midJoinDue || (this.session.joinPending && run.run.firstRun && run.run.spirits.length === 1)) {
+          this.session.beginMidJoin();
+          return this.join(undefined, () => {
+            this.session.joinMidRun();
+            this.resume();
+          });
+        }
         const data: MapSceneData = { run: run.run, onEnter: (id) => this.enter(id), onDeck: (scene) => this.deck(scene) };
         return this.go(MAP_SCENE, data);
       }

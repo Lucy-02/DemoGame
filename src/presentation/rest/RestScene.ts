@@ -9,7 +9,7 @@ import { upgradedId } from "../../core/data";
 import type { RestSession } from "../../session/rest";
 import { preloadHandCard } from "../card/HandCard";
 import { drawBackdrop } from "../run/backdrop";
-import { CHOICE_ICONS, type ChoiceVM } from "../run/choices";
+import { CHOICE_ICONS, choiceUnderPointer, type ChoiceVM } from "../run/choices";
 import { COPY as RUN_COPY } from "../run/copy";
 import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
 import { cardVM, deckCardVM, lane } from "../run/fromCore";
@@ -82,13 +82,26 @@ export class RestScene extends Phaser.Scene {
     preloadStage(this, this.session.run.act);
   }
 
+  /** 포인터를 한 번이라도 움직였나 (고정 장면의 ?hover= 를 지우지 않으려고) */
+  private pointerLive = false;
+
   create() {
+    this.pointerLive = false;
+    this.input.once("pointermove", () => { this.pointerLive = true; });
     this.input.setPollAlways();
     this.paint();
     Object.assign(window, { __screenReady: REST_SCENE });
   }
 
   update() {
+    // 가리킴은 포인터가 지금 있는 곳을 따라요: 다시 그린 뒤 벗어남 사건이 안 와도 테가 남지 않아요
+    if (this.pointerLive && this.input.enabled && !this.upgrading && !this.rested) {
+      const at = choiceUnderPointer(this);
+      if (at !== this.hover) {
+        this.hover = at;
+        this.redraw();
+      }
+    }
     if (!this.dirty) return;
     this.dirty = false;
     // 호버 · 누름으로 다시 그릴 때 앞 모습이 흐려지며 바뀌어요 (0092)
