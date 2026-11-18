@@ -1,11 +1,26 @@
 // 정원 세션: 화면이 보내는 명령을 받아 core/garden 규칙을 부르고, 바뀐 상태를 알려요.
 // 화면은 상태를 직접 고치지 않아요 (아키텍처 0001 "화면은 명령만 보내고"). 저장은 snapshot/restore로 (다음 단계에서 platform에 연결).
 import {
-  addDeed, endRun, evolve, feed, grantBattle, join, keepEquipment, markGuide, markSeen, setFront, openBranches, startGarden, seeEpisode, spiritUnlocks, gardenSpirit, GARDEN_VERSION,
+  addDeed, endRun, evolve, feed, grantBattle, grantMidJoin, join, keepEquipment, markGuide, markSeen, setFront, openBranches, startGarden, seeEpisode, spiritUnlocks, gardenSpirit, GARDEN_VERSION,
   type BattleTier, type Garden,
 } from "../core/garden";
-import type { RunSpirit } from "../core/types";
+import { SPIRITS } from "../core/data";
+import { STAGES, type RunSpirit } from "../core/types";
 import type { DeedKind, DeedTally } from "./deeds";
+import { upgradeSave, type SaveStep } from "./migrate";
+
+/** 옛 정원 저장을 올리는 함수 (버전 n → n + 1). 지금은 버전 1뿐이라 비어 있어요 */
+const GARDEN_STEPS: Readonly<Record<number, SaveStep>> = {};
+
+/** 저장에서 읽은 정원이 쓸 수 있는 모양인지 봐요. 아니면 던져요 (GameSession.load가 복구해요) */
+function checkGarden(g: Garden): Garden {
+  if (!Array.isArray(g.spirits) || g.spirits.length === 0) throw new Error("정원 저장에 정령이 없어요");
+  for (const s of g.spirits) {
+    const ok = typeof s === "object" && s !== null && SPIRITS.some((d) => d.id === s.id) && Number.isFinite(s.exp) && STAGES.includes(s.stage) && Array.isArray(s.seen);
+    if (!ok) throw new Error(`정원 저장의 정령을 읽을 수 없어요: ${JSON.stringify(s)?.slice(0, 80)}`);
+  }
+  return g;
+}
 
 export type GardenCommand =
   /** 키우기. 갈래 고르기면 고른 갈래 id (0027) */
@@ -22,6 +37,8 @@ export type GardenCommand =
   | { kind: "keepEquipment"; party: readonly RunSpirit[]; keep: Record<string, string[]> }
   /** 깃들기 후보 가운데 하나를 골랐어요 (0053) */
   | { kind: "join"; id: string }
+  /** 혼자 떠난 첫 판이 정한 층을 마쳤어요. 둘째 정령이 깃들 차례예요 (0156) */
+  | { kind: "grantMidJoin" }
   /** 출전 준비에서 앞열을 정하고 떠나요. 다음 출전 준비의 기본값이 돼요 (0076 14) */
   | { kind: "setFront"; id: string }
   /** 안내를 한 번 짚었어요 (0095) */
@@ -71,6 +88,7 @@ export class GardenSession {
       case "endRun": return endRun(cmd.received ? openBranches(g, cmd.received) : g);
       case "keepEquipment": return keepEquipment(g, cmd.party, cmd.keep);
       case "join": return join(g, cmd.id);
+      case "grantMidJoin": return grantMidJoin(g);
       case "setFront": return setFront(g, cmd.id);
       case "guide": return markGuide(g, cmd.id);
       case "seeUnlocks": {
@@ -87,8 +105,7 @@ export class GardenSession {
   }
 
   static restore(text: string): GardenSession {
-    const g = JSON.parse(text) as Garden;
-    if (g.version !== GARDEN_VERSION) throw new Error(`정원 저장 형식이 달라요: ${g.version}`);
-    return new GardenSession(g);
+    const g = upgradeSave(JSON.parse(text), GARDEN_VERSION, GARDEN_STEPS, "정원") as unknown as Garden;
+    return new GardenSession(checkGarden(g));
   }
 }

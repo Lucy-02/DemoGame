@@ -10,7 +10,7 @@ export interface RunEndLaneVM {
 
 export interface RunEndVM {
   victory: boolean;
-  /** 기록 한 줄: 1막 · 8층 · 승리 */
+  /** 기록 한 줄: 1막 · 6층 · 승리 */
   record: string;
   /** 첫 판 전멸 안내 (없으면 안 그려요) */
   keep?: string;

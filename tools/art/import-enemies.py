@@ -1,4 +1,4 @@
-# 적 그림(임시 선택, 0100 · 0114)을 게임용 파일로 옮겨요.
+# 적 그림(임시 선택, 0100 · 0114 ~ 0117)을 게임용 파일로 옮겨요.
 # 쓰는 법: python -I tools/art/import-enemies.py <jjal 전달 폴더 (tools/enemy_deliver.py 결과)> <저장소 루트>
 # 만드는 것: public/assets/enemies/<적 id>.webp (알파로 잘린 누끼, 긴 변 LONG)
 #          design/concepts/enemies/picks.json (어느 후보를 연결했는지)
@@ -10,6 +10,14 @@ from pathlib import Path
 from PIL import Image
 
 LONG = 768
+# 누끼 공정 (전달 폴더 meta.json의 matte). 정식 = 정령과 같은 공정 (jjal 정본 8절 2 · 3단계, luddal-win)
+PICK = "Claude가 후보 시트에서 임시로 고름 (Lucy 선택 전). "
+TAIL = ", 알파 기준으로 자르고 긴 변 768로 줄임, webp 변환"
+WORK = {
+    "rembg": PICK + "배경 제거(rembg isnet-anime) 뒤 갇힌 배경색 덩어리 비우기 · 경계 1px 정리 · 배경색 빼기" + TAIL,
+    "final": PICK + "배경 제거(ToonOut · BiRefNet · ISNet 하이브리드 + ViTMatte) · 경계 1px 정리, 2배 업스케일(RealESRGAN anime_6B, RGB · 알파 따로)" + TAIL,
+    "rembg+up": PICK + "배경 제거(rembg isnet-anime, 색 차이로 따기: 정식 공정이 점 무리 바깥을 버려서 유지) · 경계 1px 정리, 2배 업스케일(RealESRGAN anime_6B, RGB · 알파 따로)" + TAIL,
+}
 MODELS = {"nai-diffusion-4-5-full": "NovelAI Diffusion V4.5 Full"}
 src, root = Path(sys.argv[1]), Path(sys.argv[2])
 meta = json.load(open(src / "meta.json"))
@@ -31,7 +39,7 @@ for eid, m in sorted(meta.items()):
         "model": MODELS.get(m["model"], m["model"]), "prompt_sheet": f"jjal {m['run_id']} {m['case_id']}",
         "prompt": m["prompt"], "negative": m["negative"], "seed": m["seed"], "settings": m["settings"], "references": None,
         "source_png": f"jjal runs/{m['run_id']} {m['request_id']} (sha256 {m['source_sha256']})",
-        "human_work": "Claude가 후보 시트에서 임시로 고름 (Lucy 선택 전). 배경 제거(rembg isnet-anime) 뒤 갇힌 배경색 덩어리 비우기 · 경계 1px 정리 · 배경색 빼기, 알파 기준으로 자르고 긴 변 768로 줄임, webp 변환",
+        "human_work": WORK[m.get("matte", "rembg")],
         "note": "임시 선택 (0100 · 0114). Lucy가 후보 시트에서 고르면 바꿔요",
     }
     lines = [l for l in lines if json.loads(l).get("path") != path]

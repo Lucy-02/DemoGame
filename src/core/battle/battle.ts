@@ -4,6 +4,7 @@ import { activePersonality, maxHpOf, round } from "../stats";
 import type {
   AuraId, CardDef, CardOp, DeckCard, Element, EnemyMove, EnemyScale, EnemyTargetRule, EnemyTrait, RunSpirit, StatKey,
 } from "../types";
+import { join } from "../clauses";
 import { ENEMY_ACTIONS, intentKind } from "./enemy-actions";
 import { exhaustsAfterUse, handlerOf, resolveOp, usesReady, type EffectContext } from "./effects";
 import type { Engine, HurtOptions, MultHook } from "./engine";
@@ -98,6 +99,10 @@ export class Battle implements Engine {
   private nextUid = 10000;
   /** 미리 돌려 보는 사본에서만 있어요: 아군마다 받은 피해(막기 전)를 모아요 */
   private tally: Map<string, number> | null = null;
+  /** 놓은 카드를 되돌릴 수 있게 놓기 직전 상태를 남겨요 (전투 세션이 켜요, 0074 7번). 봇 · 시뮬레이션은 끈 채로 돌아요 */
+  keepUndo = false;
+  /** 되돌릴 수 있는 놓기마다 그 직전 상태 (놓은 순서) */
+  private undos: object[] = [];
   /** 미리 돌려 보는 사본에서만: 지켜볼 카드와 그 카드가 재생되는 동안 적마다 생긴 일 */
   private watch: Planned | null = null;
   private watched: Map<number, CardOutcome> | null = null;
@@ -116,7 +121,7 @@ export class Battle implements Engine {
     for (const rs of runSpirits) {
       this.spirits.push({
         id: rs.id, def: spiritDef(rs.id), run: rs, personality: activePersonality(rs),
-        hp: rs.hp, maxHp: maxHpOf(rs), block: 0, status: {}, release: 0, releaseUsed: false, critPity: 0,
+        hp: rs.hp, maxHp: maxHpOf(rs), block: 0, status: {}, release: 0, releaseUsed: false,
         downed: rs.hp <= 0, auras: new Map(), playedThisTurn: 0, stubbornUsed: false,
       });
     }
@@ -218,11 +223,12 @@ export class Battle implements Engine {
     const move = this.currentMove(e);
     const slot = this.slots.find((x) => x.uid === e.uid && !x.done);
     const at = slot ? slot.at : null;
-    const zone = move.zones?.length ? [`방전 칸 ${move.zones.length}곳 피해 ${move.zoneDmg ?? 0}`] : [];
-    const desc = [...zone, ...move.actions.map((a) => ENEMY_ACTIONS[a.type].text(this, e, a as never))].join(", ");
-    if (!slot && move.charge && e.charging) return { name: move.name, at, text: `차징 중 → 다음 턴 ${desc}`, kind: "charge" };
-    if (!slot) return { name: move.name, at, text: "이번 턴 행동 없음", kind: "skip" };
-    if (move.charge && e.charging) return { name: move.name, at, text: `${desc} (끊기 가능)`, kind: "chargeReady" };
+    const zone = move.zones?.length ? [`방전 칸을 ${move.zones.length}곳 깝니다. 방전 칸에서 끝난 카드의 주인에게 피해를 ${move.zoneDmg ?? 0} 입힙니다.`] : [];
+    // 호버 풀이: 효과문 문장 틀 (TEXT_RULES 1절). 끊을 수 있는지는 화면이 `브레이크 가능` 칩으로 보여요
+    const desc = join([...zone, ...move.actions.map((a) => ENEMY_ACTIONS[a.type].text(this, e, a as never))]);
+    if (!slot && move.charge && e.charging) return { name: move.name, at, text: `다음 턴에 행동합니다. ${desc}`, kind: "charge" };
+    if (!slot) return { name: move.name, at, text: "이번 턴에는 행동하지 않습니다.", kind: "skip" };
+    if (move.charge && e.charging) return { name: move.name, at, text: desc, kind: "chargeReady" };
     return { name: move.name, at, text: desc, kind: intentKind(move.actions) };
   }
 
@@ -394,11 +400,23 @@ export class Battle implements Engine {
           if (firing && move.big) this.openGap(e, "delay");
           break;
         }
-        this.slots.push({ uid: e.uid, at, done: false });
+        this.slots.push({ uid: e.uid, at, done: false, aim: this.rollAim(move) });
         last = at;
         if (firing) break;
       }
     }
+  }
+
+  /** 무작위 대상은 턴 시작에 뽑아 둬요: 행동 순서대로, 공격은 타격마다 하나씩 (0128) */
+  private rollAim(move: EnemyMove): string[] | undefined {
+    const alive = this.aliveSpirits();
+    const n = move.actions.reduce((sum, a) => sum + (!("target" in a) || a.target !== "random" ? 0 : a.type === "attack" ? a.hits ?? 1 : 1), 0);
+    return n && alive.length ? Array.from({ length: n }, () => this.rng.pick(alive).id) : undefined;
+  }
+
+  /** 이 행동이 무작위로 노리는 정령들 (미리 뽑은 차례에서 살아 있는 정령만, 겹침 없이) */
+  aimOf(slot: EnemySlot): string[] {
+    return [...new Set(slot.aim ?? [])].filter((id) => !this.spirit(id).downed);
   }
 
   /** 지금 행동을 없애고 다음 패턴으로 넘겨요 */
@@ -647,11 +665,13 @@ export class Battle implements Engine {
   /** 턴 종료: 계획한 카드와 적 행동을 시각 순서로 재생해요. 같은 시각이면 아군 먼저 (0036). 고르지 않은 낙하는 사라져요. */
   endTurn() {
     if (this.result !== "ongoing" || this.replaying) return;
+    this.undos = [];
     const left = this.replay();
     if (!left) return;
     // 재생이 끝나지 못한 카드(전투 종료)는 버린 더미로
     for (const p of left) if (p.card) this.discard.push(p.card);
     this.planned = [];
+    this.emit({ k: "turnEnd" });
     this.finishTurn(0);
   }
 
@@ -674,7 +694,7 @@ export class Battle implements Engine {
         nextEnemy.done = true;
         this.now = nextEnemy.at;
         const e = this.enemy(nextEnemy.uid);
-        if (!e.dead) this.enemyAct(e);
+        if (!e.dead) this.enemyAct(e, nextEnemy);
       }
       if (this.checkEnd()) return null;
     }
@@ -728,9 +748,43 @@ export class Battle implements Engine {
 
   /** 전투 상태의 사본. 턴 흐름 목록은 옮기지 않아서 재생(replay)만 할 수 있어요 */
   private fork(): Battle {
-    const skip = ["rng", "events", "turnStartSteps", "turnEndSteps", "roundEndSteps"];
-    const state = Object.fromEntries(Object.entries(this).filter(([k, v]) => !skip.includes(k) && typeof v !== "function"));
-    return Object.assign(Object.create(Battle.prototype) as Battle, structuredClone(state), { rng: new NoLuck(0), events: [], tally: new Map<string, number>() });
+    return Object.assign(Object.create(Battle.prototype) as Battle, this.copyState(), { rng: new NoLuck(0), events: [], tally: new Map<string, number>(), keepUndo: false, undos: [] });
+  }
+
+  /** 지금 상태의 깊은 사본 (난수 · 이벤트 · 턴 흐름 목록 · 되돌리기 기록은 빼요) */
+  private copyState(): object {
+    const skip = ["rng", "events", "turnStartSteps", "turnEndSteps", "roundEndSteps", "undos"];
+    return structuredClone(Object.fromEntries(Object.entries(this).filter(([k, v]) => !skip.includes(k) && typeof v !== "function")));
+  }
+
+  // ───────────────────────── 되돌리기 ─────────────────────────
+
+  /** 놓기 직전: 되돌리기를 켰으면 지금 상태를 떠 둬요 */
+  private beforePlace() {
+    return this.keepUndo ? { state: this.copyState(), rng: this.rng.state, draw: this.draw.length } : null;
+  }
+
+  /** 놓은 뒤: 새 정보를 연 놓기(뽑기 · 난수 · 낙하 고르기)는 되돌릴 수 없고, 그 앞으로도 못 돌아가요 (0074 7번) */
+  private afterPlace(before: ReturnType<Battle["beforePlace"]>) {
+    if (!before) return;
+    const opened = this.rng.state !== before.rng || this.draw.length !== before.draw || !!this.stars.choice || this.result !== "ongoing";
+    if (opened) this.undos = [];
+    else this.undos.push(before.state);
+  }
+
+  /** 마지막에 놓은 카드(해방 포함)를 되돌릴 수 있는지 */
+  canUndo(): boolean {
+    return this.result === "ongoing" && !this.replaying && !this.holdChoice && this.undos.length > 0;
+  }
+
+  /** 마지막에 놓은 카드를 되돌려요: 놓기 직전 상태로 돌아가요 (마력 · 손패 · 놓는 즉시 처리된 효과까지). 거꾸로 하나씩 되돌릴 수 있어요 */
+  undo(): boolean {
+    if (!this.canUndo()) return false;
+    // 판의 정령(run)은 전투 밖과 이어져 있어서 지금 것을 그대로 써요
+    const runs = new Map(this.spirits.map((s) => [s.id, s.run]));
+    Object.assign(this, this.undos.pop());
+    for (const s of this.spirits) s.run = runs.get(s.id)!;
+    return true;
   }
 
   /**
@@ -770,9 +824,10 @@ export class Battle implements Engine {
   // ───────────────────────── 적 행동 ─────────────────────────
 
   /** 박힌 시각에 적 행동 하나 */
-  private enemyAct(e: BEnemy) {
+  private enemyAct(e: BEnemy, slot: EnemySlot) {
     const move = this.currentMove(e);
     e.charging = false;
+    e.aim = slot.aim;
     // 땅속에 있던 적은 움직이면서 올라와요
     if (statusN(e, "burrow") > 0 && !move.actions.some((a) => a.type === "burrow")) delete e.status.burrow;
     this.emit({ k: "enemyAct", uid: e.uid, move: move.name });
@@ -784,11 +839,14 @@ export class Battle implements Engine {
     e.patternIdx++;
   }
 
-  pickTargets(rule: EnemyTargetRule): BSpirit[] {
+  pickTargets(rule: EnemyTargetRule, by?: BEnemy): BSpirit[] {
     const alive = this.aliveSpirits();
     if (!alive.length) return [];
     if (this.rng instanceof NoLuck) this.rng.asked = false;
-    const picked = runStages(ENEMY_TARGET_STAGES, { b: this, rule, alive, picked: null }).picked ?? [];
+    // 무작위 대상은 턴 시작에 뽑아 둔 차례에서 하나씩 꺼내요 (배열은 사본과 나눠 쓰니 고치지 않고 갈아 끼워요)
+    const aimed = rule === "random" ? by?.aim?.[0] : undefined;
+    if (aimed !== undefined && by) by.aim = by.aim!.slice(1);
+    const picked = runStages(ENEMY_TARGET_STAGES, { b: this, rule, alive, aimed, picked: null }).picked ?? [];
     // 미리 돌려 볼 때: 운으로 고른 대상은 누가 맞을지 몰라요
     if (this.rng instanceof NoLuck && this.rng.asked && alive.length > 1) return [];
     return picked;
@@ -851,6 +909,7 @@ export class Battle implements Engine {
     if (!c) return false;
     const chk = this.canPlay(c);
     if (!chk.ok) return false;
+    const before = this.beforePlace();
     const def = cardDef(c.cardId);
     const owner = this.spirit(c.owner);
     const cost = this.cardCost(c);
@@ -872,6 +931,7 @@ export class Battle implements Engine {
     for (const [p, v] of passivesOf(owner)) p.afterPlay?.(this, owner, v, c, def);
     this.playedByElement[def.element] = (this.playedByElement[def.element] ?? 0) + 1;
     c.tempCostDelta = 0;
+    this.afterPlace(before);
     return true;
   }
 
@@ -1003,6 +1063,7 @@ export class Battle implements Engine {
     if (!ch || this.replaying) return false;
     const ids = [...new Set(cardIds)].filter((id) => ch.options.includes(id)).slice(0, ch.picks);
     if (!ids.length) return false;
+    this.undos = [];
     for (const id of ids) {
       this.hand.push({
         uid: this.newCardUid(), cardId: id, owner: ch.owner,
@@ -1297,11 +1358,13 @@ export class Battle implements Engine {
   /** 해방을 그 정령 줄 끝에 계획해요. 끝나는 시각에 켜지고, 끊기지 않아요 (0036 4절). */
   release(id: string): boolean {
     if (!this.canRelease(id)) return false;
+    const before = this.beforePlace();
     const s = this.spirit(id);
     s.releaseUsed = true;
     this.mana -= C.release_cost;
     const start = this.laneEnd(id);
     this.planned.push({ card: null, owner: id, start, end: start + C.release_ms, comboCount: this.playedThisTurn.length, repeat: false });
+    this.afterPlace(before);
     return true;
   }
 

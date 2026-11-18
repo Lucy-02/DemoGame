@@ -67,8 +67,8 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       const again = op.againIf === "burned" ? `대상이 화상 상태이면 피해를 추가로 ${hits} ${polite("입히")}.` : undefined;
       const burned = [
         op.burnedBonus ? `대상이 화상 상태이면 피해가 ${op.burnedBonus} ${polite("늘어나")}.` : "",
-        op.perBurn ? `대상의 화상 ${Math.round(1 / op.perBurn)}마다 피해가 1 ${polite("늘어나")}.${op.perBurnMax ? ` 최대 ${op.perBurnMax}.` : ""}` : "",
-        op.perPulled ? `받아칠 기회를 쓰면 끌어온 공격 피해의 ${Math.round(op.perPulled * 100)}%만큼 피해가 ${polite("늘어나")}.${op.pulledMax ? ` 최대 ${op.pulledMax}.` : ""}` : "",
+        op.perBurn ? `대상의 화상 ${Math.round(1 / op.perBurn)}마다 피해가 1 ${polite("늘어나")}.${op.perBurnMax ? ` 늘어나는 피해는 최대 ${op.perBurnMax}입니다.` : ""}` : "",
+        op.perPulled ? `받아칠 기회를 쓰면 끌어온 공격 피해의 ${Math.round(op.perPulled * 100)}%만큼 피해가 ${polite("늘어나")}.${op.pulledMax ? ` 늘어나는 피해는 최대 ${op.pulledMax}입니다.` : ""}` : "",
       ].filter(Boolean).join(" ");
       return [{ to: t.foe, core: `피해를 ${hits} 입히`, after: again ?? (star || burned || undefined) }];
     },
@@ -302,7 +302,7 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       const n = Math.min(op.max, ctx.b.aliveEnemies().filter((e) => statusN(e, "chill") > 0).length);
       if (n > 0) ctx.b.drawCards(n);
     },
-    describe: (op) => [{ to: "", core: "냉기가 있는 적 하나마다 카드를 1장 뽑", after: `최대 ${op.max}장.` }],
+    describe: (op) => [{ to: "", core: "냉기가 있는 적 하나마다 카드를 1장 뽑", after: `뽑는 카드는 최대 ${op.max}장입니다.` }],
   },
   frostGuardAll: {
     resolve(ctx, op) {

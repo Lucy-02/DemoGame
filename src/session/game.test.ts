@@ -26,6 +26,39 @@ describe("게임 세션", () => {
     expect(JSON.parse(store.data.get(SAVE_KEYS.garden)!).spirits).toHaveLength(1);
   });
 
+  it("혼자 떠난 첫 판은 정한 층을 마치면 둘째 정령이 깃들어 바로 합류해요 (0156)", async () => {
+    const store = new MemoryStore();
+    const game = await GameSession.load(store, seeds);
+    const run = game.startRun();
+    const first = run.party[0];
+    const deck = run.run.deck.length;
+    // 정한 층 전까지는 깃들 때가 아니에요
+    for (let f = 1; f <= C.run_pool.join_floor; f++) {
+      expect(game.midJoinDue).toBe(false);
+      run.enter(run.run.reachable()[0].id);
+      if (run.phase.kind === "battle") {
+        game.finishBattle(outcome(run, true));
+        run.finishReward();
+      } else run.leave();
+    }
+    expect(run.run.current!.floor).toBe(C.run_pool.join_floor);
+    expect(game.midJoinDue).toBe(true);
+    game.beginMidJoin();
+    const offer = joinOffer(game.garden.state);
+    expect(offer).toHaveLength(2);
+    game.garden.dispatch({ kind: "join", id: offer[0] });
+    expect(game.joinMidRun()).toBe(true);
+    expect(run.party).toEqual([first, offer[0]]);
+    expect(run.run.deck.length).toBeGreaterThan(deck);
+    expect(run.run.receivedBySpirit()[offer[0]]).toBeUndefined();
+    expect(game.midJoinDue).toBe(false);
+    expect(game.joinMidRun()).toBe(false);
+    // 판이 끝나도 더 깃들지 않아요
+    game.abandonRun();
+    expect(game.garden.state.spirits).toHaveLength(2);
+    expect(game.joinPending).toBe(false);
+  });
+
   it("판은 정원의 정령으로 떠나고, 이긴 전투는 정원에 경험·재료를 남겨요", async () => {
     const store = new MemoryStore();
     const game = await GameSession.load(store, seeds);
@@ -138,6 +171,26 @@ describe("게임 세션", () => {
     expect(run.run.strongElement).toBe(plan.strongElement);
     expect(game.garden.state.front).toBe(pick);
     expect(game.planRun().front).toBe(pick);
+  });
+
+  it("끝난 판마다 어디서 어떻게 끝났는지 이 기계에만 기록해요 (플레이테스트용)", async () => {
+    const store = new MemoryStore();
+    const game = await GameSession.load(store, seeds);
+    const first = game.startRun();
+    first.enter(first.run.reachable()[0].id);
+    game.finishBattle(outcome(first, false));
+    game.startRun();
+    game.abandonRun();
+    await game.flush();
+    const log = JSON.parse(store.data.get(SAVE_KEYS.runLog)!);
+    expect(log.map((e: { end: string; act: number; floor: number; fights: number }) => [e.end, e.act, e.floor, e.fights])).toEqual([["defeat", 1, 1, 1], ["abandon", 1, 0, 0]]);
+    expect(log[0].party).toEqual(first.party);
+    // 깨진 기록은 버리고 새로 시작해요
+    store.data.set(SAVE_KEYS.runLog, "{깨짐");
+    game.startRun();
+    game.abandonRun();
+    await game.flush();
+    expect(JSON.parse(store.data.get(SAVE_KEYS.runLog)!)).toHaveLength(1);
   });
 
   it("탐험 포기는 패배와 같아요: 판이 닫히고 이긴 전투의 경험은 남아요 (0084)", async () => {

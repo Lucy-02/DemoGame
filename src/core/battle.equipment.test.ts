@@ -17,7 +17,6 @@ function battleWith(equip: [id: string, resonance: number] | null, hand: string[
   b.hand = hand.map((cardId, i): BCard =>
     ({ uid: 100 + i, cardId, owner: "fire_fox", tempCostDelta: 0, locked: false, isCopy: false, grow: 0, held: false, heldFast: false }));
   b.mana = 99;
-  for (const s of b.spirits) s.critPity = -10;
   b.drain();
   return b;
 }
@@ -40,7 +39,7 @@ describe("범용 장비", () => {
   });
 
   it("뼈 검: 공명 1은 턴 첫 타격만, 공명 3은 가장 긴 카드의 타격만 세져요", () => {
-    const hand = ["basic_claw", "backfire"];
+    const hand = ["basic_claw", "horn_strike"];
     const plain = hits(playAll(battleWith(null, hand)));
     const first = hits(playAll(battleWith(["bone_sword", 1], hand)));
     const long = hits(playAll(battleWith(["bone_sword", 3], hand)));

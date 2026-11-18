@@ -1,5 +1,158 @@
 {
   "voices": 8,
-  "sfx": {},
-  "music": {}
+  "sfx": {
+    "release": {
+      "files": [
+        "release-1.ogg"
+      ]
+    },
+    "victory": {
+      "files": [
+        "victory-1.ogg"
+      ]
+    },
+    "defeat": {
+      "files": [
+        "defeat-1.ogg"
+      ]
+    },
+    "evolve": {
+      "files": [
+        "evolve-1.ogg"
+      ]
+    },
+    "join": {
+      "files": [
+        "join-1.ogg"
+      ]
+    },
+    "down.ally": {
+      "files": [
+        "down-ally-1.ogg"
+      ]
+    },
+    "down.enemy": {
+      "files": [
+        "down-enemy-1.ogg"
+      ]
+    },
+    "break": {
+      "files": [
+        "break-1.ogg"
+      ]
+    },
+    "charge": {
+      "files": [
+        "charge-1.ogg"
+      ]
+    },
+    "hit.heavy": {
+      "files": [
+        "hit-heavy-1.ogg",
+        "hit-heavy-2.ogg"
+      ]
+    },
+    "hit.medium": {
+      "files": [
+        "hit-medium-1.ogg",
+        "hit-medium-2.ogg"
+      ]
+    },
+    "hit.light": {
+      "files": [
+        "hit-light-1.ogg",
+        "hit-light-2.ogg"
+      ]
+    },
+    "block": {
+      "files": [
+        "block-1.ogg",
+        "block-2.ogg"
+      ]
+    },
+    "heal": {
+      "files": [
+        "heal-1.ogg"
+      ]
+    },
+    "status": {
+      "files": [
+        "status-1.ogg"
+      ]
+    },
+    "reward": {
+      "files": [
+        "reward-1.ogg"
+      ]
+    },
+    "equip": {
+      "files": [
+        "equip-1.ogg"
+      ]
+    },
+    "upgrade": {
+      "files": [
+        "upgrade-1.ogg"
+      ]
+    },
+    "buy": {
+      "files": [
+        "buy-1.ogg"
+      ]
+    },
+    "rest": {
+      "files": [
+        "rest-1.ogg"
+      ]
+    },
+    "card.play": {
+      "files": [
+        "card-play-1.ogg",
+        "card-play-2.ogg"
+      ]
+    },
+    "turn.end": {
+      "files": [
+        "turn-end-1.ogg"
+      ]
+    },
+    "map.move": {
+      "files": [
+        "map-move-1.ogg"
+      ]
+    },
+    "card.deny": {
+      "files": [
+        "card-deny-1.ogg"
+      ]
+    },
+    "card.pick": {
+      "files": [
+        "card-pick-1.ogg"
+      ]
+    },
+    "card.place": {
+      "files": [
+        "card-place-1.ogg"
+      ]
+    },
+    "ui.click": {
+      "files": [
+        "ui-click-1.ogg",
+        "ui-click-2.ogg"
+      ]
+    },
+    "ui.hover": {
+      "files": [
+        "ui-hover-1.ogg",
+        "ui-hover-2.ogg"
+      ]
+    }
+  },
+  "music": {
+    "menu": "menu.ogg",
+    "map": "map.ogg",
+    "battle": "battle.ogg",
+    "boss": "boss.ogg"
+  }
 }

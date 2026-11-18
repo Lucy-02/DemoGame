@@ -5,11 +5,12 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-async function launch(): Promise<{ app: ElectronApplication; userData: string }> {
-  const userData = await mkdtemp(join(tmpdir(), "demogame-e2e-"));
+async function launch(dir?: string): Promise<{ app: ElectronApplication; userData: string }> {
+  const userData = dir ?? await mkdtemp(join(tmpdir(), "demogame-e2e-"));
   // GPU 없는 CI에서도 WebGL이 돌게 소프트웨어 렌더러를 써요. 루트(컨테이너)에서는 샌드박스를 끌 수밖에 없어요.
   // 맥에서는 이 플래그가 WebGL을 깨뜨려서(ANGLE 초기화 실패) 리눅스에서만 써요.
-  const args = process.platform === "linux" ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] : [];
+  // GPU 없는 윈도 CI도 같은 길을 써요 (DEMOGAME_SOFTWARE_GL=1)
+  const args = process.platform === "linux" || process.env.DEMOGAME_SOFTWARE_GL ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] : [];
   if (process.getuid?.() === 0) args.unshift("--no-sandbox");
   const exe = process.env.DEMOGAME_EXE;
   const app = await electron.launch({ ...(exe ? { executablePath: exe, args } : { args: [...args, "."] }), env: { ...process.env, DEMOGAME_USER_DATA: userData } });
@@ -41,6 +42,26 @@ test("앱이 뜨고 platform 저장이 파일로 남는다", async () => {
 
     // 렌더러에는 Node가 없어야 해요.
     expect(await page.evaluate(() => typeof (globalThis as { require?: unknown }).require)).toBe("undefined");
+  } finally {
+    await app.close();
+  }
+});
+
+test("같은 저장 폴더로 두 번 실행하면 둘째는 바로 꺼져요", async () => {
+  const { app, userData } = await launch();
+  try {
+    await expect((await app.firstWindow()).locator("#game canvas")).toBeVisible({ timeout: 20_000 });
+    // 둘째는 창을 만들기 전에 꺼져요: 붙기도 전에 꺼지면 launch가 실패하고, 붙었다면 곧 닫혀요
+    const gone = await launch(userData).then(
+      (second) => Promise.race([
+        new Promise<boolean>((done) => second.app.on("close", () => done(true))),
+        new Promise<boolean>((done) => setTimeout(() => done(false), 15_000)),
+      ]),
+      () => true,
+    );
+    expect(gone).toBe(true);
+    // 먼저 뜬 창은 그대로예요
+    expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(1);
   } finally {
     await app.close();
   }
@@ -97,13 +118,17 @@ test("창 크기를 바꾸면 비율을 지키며 늘고, 설정의 전체화면
       const c = await canvasBox(page);
       await page.mouse.click(c.x + (p.x * c.w) / BASE.w, c.y + (p.y * c.h) / BASE.h);
     };
-    await page.waitForTimeout(500);
-    await click(AT.homeSettings);
-    await page.waitForTimeout(800);
-    await click(AT.fullscreen);
-    await expect.poll(() => win((w) => w.isFullScreen()), { timeout: 10_000 }).toBe(true);
+    // 고정 대기 대신 설정 창이 실제로 뜬 것을 기다려요 (소프트웨어 렌더러 CI는 프레임이 300ms를 넘어요). 첫 화면이 아직 입력을 안 받으면 다시 눌러요
+    await expect(async () => {
+      await click(AT.homeSettings);
+      await page.waitForFunction(() => (window as { __screenReady?: string }).__screenReady === "settings", undefined, { timeout: 3_000 });
+    }).toPass({ timeout: 30_000 });
     await settle(page);
-    await expect.poll(async () => (await saved()).fullscreen).toBe(true);
+    await click(AT.fullscreen);
+    // 스위치가 눌렸는지(저장)와 창이 따랐는지를 따로 봐서, 실패하면 어느 쪽인지 드러나요
+    await expect.poll(async () => (await saved()).fullscreen, { message: "전체화면 스위치가 눌려 설정에 저장돼요", timeout: 10_000 }).toBe(true);
+    await expect.poll(() => win((w) => w.isFullScreen()), { message: "창이 전체화면으로 바뀌어요", timeout: 10_000 }).toBe(true);
+    await settle(page);
     // 창 관리자가 있는 곳(맥 · 윈도)에서는 화면을 채우고 비율을 지켜요
     if (process.platform !== "linux") {
       const c = await canvasBox(page);

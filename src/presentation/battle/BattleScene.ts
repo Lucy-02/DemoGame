@@ -17,7 +17,7 @@ import { reducedMotion } from "../style/motion";
 import { playbackFrames } from "./playback";
 import { audioOf, type SfxId } from "../audio";
 import { cuesOf, playbackCues } from "../audio/battleCues";
-import { dimmed, focusFor, type Focus, type Over } from "./targeting";
+import { aimsAtEnemy, dimmed, focusFor, type Focus, type Over } from "./targeting";
 import { preloadStage } from "../stage";
 import { drawBackdrop } from "./views/backdrop";
 import { drawGuide, type GuideBox } from "./views/guide";
@@ -29,8 +29,8 @@ import { GLASS } from "../tooltip/skins";
 import { ALLY, BAND, DRAG, END, ENEMY, FRAME, INTENT, LIFT_STYLES, SYS, TARGETING } from "./layout";
 import { playOrderMotion, snapshotOrder, type OrderSnapshot } from "./views/orderMotion";
 import { SYS_ICONS, drawSys } from "./views/topbar";
-import { playUnitMotion, type UnitActor } from "./views/unitMotion";
-import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
+import { hitSpan, playUnitMotion, type UnitActor } from "./views/unitMotion";
+import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, dropValueTextures, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 
 export const BATTLE_SCENE = "battle";
@@ -96,6 +96,7 @@ export class BattleScene extends Phaser.Scene {
     this.guideBoxes = [];
     this.guideArmed = false;
     this.guideCharge = false;
+    this.leaving = false;
     this.playback = data.playback;
     this.cues = data.cues;
     this.vm = data.playback?.[0] ?? (data.session ? battleVM(data.session.battle, data.place) : data.vm ?? canonRest);
@@ -121,13 +122,38 @@ export class BattleScene extends Phaser.Scene {
 
   preload() {
     for (const id of SYS_ICONS) loadIcon(this, id, SYS.icon);
-    preloadOrder(this, this.vm.order);
-    for (const p of Object.values(this.vm.plays)) if (p.slot) preloadOrderIcon(this, p.slot.token.icon);
     preloadStage(this, this.stage);
-    preloadUnits(this, this.vm);
-    preloadHand(this, this.vm);
-    if (this.vm.pick) preloadPick(this, this.vm.pick);
+    this.preloadFor(this.vm);
     if (this.session) preloadSpiritArt(this, this.session.battle.spirits.map((s) => s.id));
+  }
+
+  /** 이 화면 데이터를 그리는 데 드는 기호 · 그림 */
+  private preloadFor(vm: BattleVM) {
+    preloadOrder(this, vm.order);
+    for (const p of Object.values(vm.plays)) if (p.slot) preloadOrderIcon(this, p.slot.token.icon);
+    preloadUnits(this, vm);
+    preloadHand(this, vm);
+    if (vm.pick) preloadPick(this, vm.pick);
+  }
+
+  /** 다음 장면으로 넘어가는 중 (그동안 카드 · 턴 종료는 받지 않아요) */
+  private leaving = false;
+
+  /**
+   * 다음 장면으로 다시 시작해요. 새 장면이 쓸 기호를 지금 장면이 보이는 동안 먼저 읽어 둬서,
+   * 다시 시작한 장면이 불러오느라 화면이 비는 프레임이 없어요 (P6-02).
+   */
+  private restartWith(data: BattleSceneData) {
+    if (this.leaving) return;
+    this.leaving = true;
+    // 재생이면 남은 걸음 모두와 재생 뒤의 확정 상태까지
+    const next = [...(data.playback ?? []), ...(data.session ? [battleVM(data.session.battle, data.place)] : [])];
+    for (const vm of next) this.preloadFor(vm);
+    const go = () => this.scene.restart(data);
+    if (!this.load.list.size) return go();
+    // 못 읽은 파일이 있어도 넘어가요 (그 기호만 빠져요)
+    this.load.once(Phaser.Loader.Events.COMPLETE, go);
+    this.load.start();
   }
 
   // 필드: 모든 필드 장은 이 층 안에 있어서, 나중에 그린 미리보기도 손패 띠 아래에 놓여요
@@ -145,6 +171,8 @@ export class BattleScene extends Phaser.Scene {
   private dragging: string | null = null;
   private held: string | null = null;
   private onOtherCard = false;
+  /** 재생의 다음 걸음 타이머 (건너뛸 때 바로 꺼요) */
+  private stepTimer?: Phaser.Time.TimerEvent;
   /** 열린 가운데 고르기 창 (0075). 보이는 동안 아래 화면의 조작은 쉬어요 */
   private pick: PickView | null = null;
   /** 앞 장면의 순서표 (장면을 다시 그려도 남아요) */
@@ -179,7 +207,17 @@ export class BattleScene extends Phaser.Scene {
     const sound = () => { for (const id of cues) audioOf(this)?.play(id); };
     if (this.playback && cues.length && !reducedMotion()) this.time.delayedCall(ms(tokens.provisional.motion.hit.recoil.delay), sound);
     else sound();
-    if (this.playback) this.time.delayedCall(ms(tokens.provisional.motion.playback.step), () => this.step());
+    if (this.playback) {
+      // 첫 걸음(아무것도 지나가지 않음)은 재생 위치 선이 자라는 동안만 머물러요. 여러 번 치는 걸음은 타격 수만큼 길어져요 (0093)
+      const M = tokens.provisional.motion;
+      const stay = this.vm.acted ? ms(M.playback.step) + hitSpan(this.vm) : ms(M.orderToken.cursor.grow);
+      this.stepTimer = this.time.delayedCall(stay, () => this.step());
+      // 재생 중에 누르거나 스페이스 · 엔터를 누르면 끝 상태로 바로 넘어가요 (0093)
+      const skip = () => this.skip();
+      this.input.once("pointerdown", skip);
+      this.input.keyboard?.once("keydown-SPACE", skip);
+      this.input.keyboard?.once("keydown-ENTER", skip);
+    }
     // 가리킨 유닛의 풀이는 마우스가 손패로 가거나 카드를 고르는 동안 숨겨요. 마우스는 한 곳에만 있으니까요.
     const hov = this.vm.enemies.findIndex((e) => e.hovered);
     this.showHover(hov < 0 ? null : { side: "enemy", i: hov });
@@ -278,6 +316,7 @@ export class BattleScene extends Phaser.Scene {
     if (!b || !this.guide || this.playback || this.pick) return;
     const charging = b.enemies.filter((e) => !e.dead && e.charging);
     const breaks = b.hand.filter((c) => this.vm.plays[cardKey(c)] && b.cardDefOf(c).effects.some((o) => o.op === "ram" || o.op === "breakCharging"));
+    if (b.playedThisTurn.length > 0) this.guide.placed = true;
     const step = guideStep({
       turn: b.turn, placed: b.playedThisTurn.length > 0, charging: charging.length > 0,
       spent: !Object.keys(this.vm.plays).length, canBreak: breaks.length > 0,
@@ -491,6 +530,7 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
     if (p.rightButtonReleased()) return this.cancel();
+    if (!this.dragging && !this.press && !this.held && this.undoAt(p.x, p.y)) return;
     const over = this.overAt(p.x, p.y);
     if (this.dragging) {
       const card = this.dragging;
@@ -531,10 +571,23 @@ export class BattleScene extends Phaser.Scene {
     this.showField(null);
   }
 
+  /** 마지막에 놓은 토큰을 누르면 그 카드를 되돌려요 (0074 7번) */
+  private undoAt(x: number, y: number): boolean {
+    const s = this.session;
+    const hit = this.orderHits.find((h) => inside(h, x, y));
+    if (!s || this.playback || hit?.kind !== "ally" || !this.vm.order.bundles?.[hit.bundle]?.[hit.i]?.undo) return false;
+    if (!s.battle.canUndo()) return false;
+    s.dispatch({ kind: "undo" });
+    audioOf(this)?.play("card.place");
+    this.settle();
+    return true;
+  }
+
   /** 카드 내기: 세션에 명령을 보내고 바뀐 상태로 다시 그려요. 고정 장면이면 기록만 해요 */
   private play(card: string, target?: UnitRef) {
     const s = this.session;
     if (!s) return console.info("[battle] 카드 사용", card, target ?? "(대상 고르기 없음)");
+    if (this.leaving) return;
     const release = releaseId(card);
     audioOf(this)?.play("card.play");
     const events = s.dispatch(release ? { kind: "release", id: release } : { kind: "play", uid: cardUid(card), target: refOf(s.battle, target) });
@@ -544,11 +597,11 @@ export class BattleScene extends Phaser.Scene {
 
   private endTurn() {
     const s = this.session;
-    if (!s || this.dragging || this.playback || this.pick) return;
+    if (!s || this.dragging || this.playback || this.pick || this.leaving) return;
     const cast = { allies: s.battle.spirits.map((x) => x.id), enemies: s.battle.enemies.filter((e) => !e.dead).map((e) => e.uid) };
     const events = s.dispatch({ kind: "endTurn" });
     const frames = playbackFrames(this.vm, cast, events);
-    this.scene.restart({ session: s, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide, playback: frames, cues: playbackCues(events) } satisfies BattleSceneData);
+    this.restartWith({ session: s, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide, playback: frames, cues: playbackCues(events) } satisfies BattleSceneData);
   }
 
   /** 재생: 다음 장면으로. 남은 장면이 없으면 확정된 상태로 */
@@ -559,7 +612,17 @@ export class BattleScene extends Phaser.Scene {
       if (this.session && !this.session.over) audioOf(this)?.play("hand.new");
       return this.settle();
     }
-    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide, playback: rest, cues: this.cues?.slice(1) } satisfies BattleSceneData);
+    this.restartWith({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide, playback: rest, cues: this.cues?.slice(1) } satisfies BattleSceneData);
+  }
+
+  /** 재생 건너뛰기: 남은 걸음을 보지 않고 확정된 상태로 (0093) */
+  private skip() {
+    if (!this.playback) return;
+    this.playback = [];
+    // 걸어 둔 다음 걸음과 소리는 거둬요. removeAllEvents는 다음 프레임에야 지워서, 같은 프레임에 걸음이 한 번 더 나가지 않게 바로 꺼요
+    this.stepTimer?.remove(false);
+    this.time.removeAllEvents();
+    this.step();
   }
 
   /**
@@ -567,8 +630,12 @@ export class BattleScene extends Phaser.Scene {
    * 전투가 끝났으면 바로 나가요.
    */
   private settle() {
-    if (this.session?.over) return this.onOver?.(this);
-    this.scene.restart({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide } satisfies BattleSceneData);
+    if (this.session?.over) {
+      // 값마다 구운 막대 텍스처는 전투가 끝나면 버려요 (P8-10)
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => dropValueTextures(this));
+      return this.onOver?.(this);
+    }
+    this.restartWith({ session: this.session, onOver: this.onOver, onDeck: this.onDeck, place: this.place, guide: this.guide } satisfies BattleSceneData);
   }
 
   // ── 대상 강조 ──────────────────────────────────────────
@@ -654,7 +721,7 @@ export class BattleScene extends Phaser.Scene {
       this.vm.enemies.forEach((e, i) => {
         const ref = { side: "enemy", i } as const;
         unit(ref, () => {
-          const v = drawEnemy(this, e, i, { outcome: o?.enemies[i], lit: lit(ref), weakOn: !!element && element === e.weakTo });
+          const v = drawEnemy(this, e, i, { outcome: o?.enemies[i], lit: lit(ref), weakOn: !!element && element === e.weakTo && aimsAtEnemy(this.vm.plays[card!], i) });
           if (!f) this.rested(ref, v);
           return v;
         });

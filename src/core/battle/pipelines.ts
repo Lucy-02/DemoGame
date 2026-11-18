@@ -105,10 +105,10 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
   {
     id: "crit", order: 40,
     apply(c) {
-      let chance = critStat(c.attacker.run, "crit_chance") + c.attacker.critPity;
+      // 치명은 장비로만 생겨요 (0154). 확률이 없으면 난수도 쓰지 않아요
+      let chance = critStat(c.attacker.run, "crit_chance");
       for (const [p, v] of passivesOf(c.attacker)) chance += p.critChance?.(c.attacker, v, c.target) ?? 0;
-      c.crit = c.b.rng.next() < chance;
-      c.attacker.critPity = c.crit ? 0 : c.attacker.critPity + C.crit_pity;
+      c.crit = chance > 0 && c.b.rng.next() < chance;
       c.amount *= c.crit ? critStat(c.attacker.run, "crit_mult") : 1;
     },
   },
@@ -168,6 +168,8 @@ export interface TargetPick {
   b: Engine;
   rule: EnemyTargetRule;
   alive: BSpirit[];
+  /** 무작위 대상으로 턴 시작에 미리 뽑아 둔 정령 (0128). 없으면 그 자리에서 뽑아요 */
+  aimed?: string;
   picked: BSpirit[] | null;
 }
 
@@ -204,7 +206,9 @@ export const ENEMY_TARGET_STAGES: Stage<TargetPick>[] = [
       if (c.picked) return;
       if (c.rule === "front") c.picked = [c.alive.find((s) => s.id === c.b.frontId) ?? c.alive[0]];
       else if (c.rule === "lowest") c.picked = [c.alive.slice().sort((a, b) => a.hp - b.hp)[0]];
-      else c.picked = [c.b.rng.pick(c.alive)];
+      else if (c.aimed === undefined) c.picked = [c.b.rng.pick(c.alive)];
+      // 미리 뽑은 정령이 그사이 쓰러졌으면 앞열이 맞아요
+      else c.picked = [c.alive.find((s) => s.id === c.aimed) ?? c.alive.find((s) => s.id === c.b.frontId) ?? c.alive[0]];
     },
   },
 ];

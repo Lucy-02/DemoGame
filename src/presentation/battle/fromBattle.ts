@@ -1,10 +1,11 @@
 // core 전투 상태 → 전투 화면 VM. 고정 장면(fixtures/) 대신 실제 전투를 그릴 때 써요.
 // 화면은 이 VM만 알고 Battle은 몰라요. 카드 key는 `c<uid>`예요 (cardRef로 되돌려요).
 import { C, cardDef } from "../../core/data";
-import { statusN, type BCard, type BEnemy, type BSpirit, type Battle, type Forecast, type Planned, type Ref, type StatusId } from "../../core/battle";
+import { statusN, type BCard, type BEnemy, type BSpirit, type Battle, type EnemySlot, type Forecast, type Planned, type Ref, type StatusId } from "../../core/battle";
 import type { EnemyAction, EnemyTargetRule } from "../../core/types";
 import { ELEMENT_ICON, faceKey } from "../faces";
-import { cardVM, equipVM, releaseVM, type CardStats } from "../run/fromCore";
+import { cardVM, equipVM, releaseVM, richText, type CardStats } from "../run/fromCore";
+import type { RichText } from "../tooltip/content";
 import { STAT_IDS, type StatId } from "../run/viewmodel";
 import { COPY } from "./copy";
 import type { AllyTokenVM, AllyVM, BandVM, BattleVM, EnemyVM, IntentTarget, IntentVM, OrderSlotVM, OrderTipVM, OutcomeVM, PickVM, PlayVM, StatusVM, UnitRef } from "./viewmodel";
@@ -121,18 +122,18 @@ function orderOf(b: Battle): OrderEntry[] {
     const charge = e.charging || undefined;
     const tip: OrderTipVM = {
       title: e.def.name, kind: charge && COPY.order.charge,
-      result: main?.type === "attack" ? { who: whoOf(b, main), value: amountOf(b, e, main) } : undefined,
-      text: [{ text: b.intent(e).text }],
+      result: main?.type === "attack" ? { who: whoOf(b, main, x), value: amountOf(b, e, main) } : undefined,
+      text: richText(b.intent(e).text),
       chips: [{ text: COPY.order.n(i + 1) }, ...(charge ? [{ text: COPY.order.breakable, tone: "acc" as const }] : [])],
     };
     return { uid: x.uid, slot: { key: `t${b.turn}:s${b.slots.indexOf(x)}`, n: i + 1, art: e.def.id, action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
   });
 }
 
-/** 한 아군을 노리는 행동이면 그 아군 이름 (전체 · 무작위는 비워요) */
-function whoOf(b: Battle, a: EnemyAction): string | undefined {
-  if (!("target" in a) || a.target === "all" || a.target === "random") return undefined;
-  const id = aims(b, a.target)[0];
+/** 한 아군을 노리는 행동이면 그 아군 이름 (전체, 여럿에게 갈리는 무작위는 비워요) */
+function whoOf(b: Battle, a: EnemyAction, slot: EnemySlot): string | undefined {
+  if (!("target" in a) || a.target === "all") return undefined;
+  const id = aims(b, a.target, slot)[0];
   return id === undefined ? undefined : b.spirit(id).def.name;
 }
 
@@ -192,7 +193,7 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
       title: b.spirit(p.owner).def.release.name, kind: vm.name, text: vm.detail.text,
       chips: k < slots ? [{ text: COPY.order.before(k + 1) }] : [],
     };
-    return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", tip }, owner: p.owner };
+    return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", undo: undoOf(b, p), tip }, owner: p.owner };
   }
   const icon = cardVM(p.card.cardId, p.owner).values[0]?.icon ?? CHARGE_ICON;
   const vm = handCard(b, p.card, p.n === undefined ? undefined : b.planned[p.n]);
@@ -201,8 +202,11 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
     title: vm.name, kind: COPY.order.card, text: vm.detail.text,
     chips: [...(k < slots ? [{ text: COPY.order.before(k + 1) }] : []), ...(gap ? [{ text: COPY.order.gap, tone: "warn" as const }] : []), ...liveZones(b).filter((z) => p.end >= z.from && p.end < z.to).map((z) => ({ text: COPY.band.chip(z.dmg) }))],
   };
-  return { token: { key: keyOf(b, p), face: p.owner, icon, mark: gap ? "gap" : undefined, tip }, cardId: p.card.cardId, owner: p.owner };
+  return { token: { key: keyOf(b, p), face: p.owner, icon, mark: gap ? "gap" : undefined, undo: undoOf(b, p), tip }, cardId: p.card.cardId, owner: p.owner };
 }
+
+/** 마지막에 놓은 토큰이고 되돌릴 수 있으면 표시해요 (0074 7번) */
+const undoOf = (b: Battle, p: Lane) => (p.n === b.planned.length - 1 && b.canUndo()) || undefined;
 
 const lanesOf = (b: Battle): Lane[] => b.planned.map((p, n) => ({ end: p.end, owner: p.owner, card: p.card, target: p.target, n }));
 
@@ -264,7 +268,7 @@ function allyVM(b: Battle, s: BSpirit, incoming: Forecast): AllyVM {
 }
 
 /** 이 규칙이 지금 노리는 아군 (의도에 그리는 대상) */
-function aims(b: Battle, rule: EnemyTargetRule): string[] {
+function aims(b: Battle, rule: EnemyTargetRule, slot?: EnemySlot): string[] {
   const alive = b.aliveSpirits();
   if (rule === "all") return alive.map((s) => s.id);
   if (rule === "front") return [b.frontId];
@@ -272,8 +276,10 @@ function aims(b: Battle, rule: EnemyTargetRule): string[] {
     const low = alive.reduce<BSpirit | undefined>((m, s) => (!m || s.hp < m.hp ? s : m), undefined);
     return low ? [low.id] : [];
   }
-  // 무작위: 아군이 하나뿐이면 그 아군이 맞아요. 여럿이면 누가 맞을지 몰라요
-  return alive.length === 1 ? [alive[0].id] : [];
+  // 무작위: 턴 시작에 뽑아 둔 대상이 한 아군이면 그 아군 (0128). 여럿에게 갈리면 얼굴 하나로 못 그려요
+  if (alive.length === 1) return [alive[0].id];
+  const picked = slot ? b.aimOf(slot) : [];
+  return picked.length === 1 ? picked : [];
 }
 
 function statusesOf(h: BSpirit | BEnemy): StatusVM[] {
@@ -302,9 +308,17 @@ function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[]): EnemyVM {
     traits: traitsOf(e),
     buried: statusN(e, "burrow") > 0 || undefined,
     intent: intentOf(b, e, order),
-    tip: { name: e.def.name, rank: COPY.rank[e.def.tier], lines: [[{ text: b.intent(e).text }]] },
+    tip: { name: e.def.name, rank: COPY.rank[e.def.tier], lines: tipLines(b, e) },
   };
 }
+
+/** 유닛 풀이 (정본 H1): 행동 이름 · 효과문, 차징 중이면 이름 줄에 `브레이크 가능` (0067) */
+function tipLines(b: Battle, e: BEnemy): RichText[] {
+  const it = b.intent(e);
+  const action = it.kind === "skip" ? richText(it.text) : [{ text: `${it.name} · ` }, ...richText(it.text)];
+  return e.charging ? [action, BREAKABLE] : [action];
+}
+const BREAKABLE: RichText = richText(COPY.order.breakable);
 
 /** 특성 칩 (0072 7번): 되돌리기는 이번 턴 첫 타격을 받으면 꺼져요 (0096) */
 function traitsOf(e: BEnemy): EnemyVM["traits"] {
@@ -321,7 +335,7 @@ function intentOf(b: Battle, e: BEnemy, order: OrderEntry[]): IntentVM | undefin
   const move = b.moveQueue(e)[0]?.move ?? b.currentMove(e);
   const main = move.actions.find((a) => a.type === "attack") ?? move.actions[0];
   const at = n < 0 ? undefined : n + 1;
-  const target = main ? targetOf(b, main) : "none";
+  const target = main ? targetOf(b, main, b.slots.find((x) => x.uid === e.uid && !x.done)) : "none";
   const amount = main ? amountOf(b, e, main) : "";
   if (it.kind === "charge" || it.kind === "chargeReady") return { kind: "charge", order: at, icon: CHARGE_ICON, amount, target };
   const icon = (main && ACTION_ICON[main.type]) ?? CHARGE_ICON;
@@ -329,11 +343,10 @@ function intentOf(b: Battle, e: BEnemy, order: OrderEntry[]): IntentVM | undefin
   return { kind: it.kind, order: at, icon, amount, target };
 }
 
-function targetOf(b: Battle, a: EnemyAction): IntentTarget {
+function targetOf(b: Battle, a: EnemyAction, slot?: EnemySlot): IntentTarget {
   if (!("target" in a)) return "none";
   if (a.target === "all") return "all";
-  if (a.target === "random") return "random";
-  return aims(b, a.target)[0] ?? "none";
+  return aims(b, a.target, slot)[0] ?? (a.target === "random" ? "random" : "none");
 }
 
 function amountOf(b: Battle, e: BEnemy, a: EnemyAction): string {
