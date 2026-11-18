@@ -1,0 +1,188 @@
+{
+ "sheet_id": "fire-fox-looks-r1-20261116",
+ "model": "NovelAI Diffusion V4.5 Full",
+ "settings": {
+  "width": 1024,
+  "height": 1024,
+  "steps": 28,
+  "scale": 5.0,
+  "sampler": "k_euler_ancestral",
+  "noise_schedule": "karras",
+  "cfg_rescale": 0.0,
+  "quality_toggle": false,
+  "uc_preset": "none (negative written out)"
+ },
+ "styles": {
+  "S1": "안개 고양이·도롱뇽·산양 묶음 (scottie · sushispin · tokkyu)",
+  "S2": "거울 공작·진주조개·카멜레온 묶음 (ohisashiburi · ask …)",
+  "S3": "수달 묶음 (rurudo · imoko · yukisame …), scale 8.5 · rescale 0.4"
+ },
+ "note": "후보 생성용. 확정 아님. 원본 PNG는 메타데이터 보존(바이트 그대로).",
+ "jobs": [
+  {
+   "id": "ff-A-baby",
+   "concept": "A",
+   "concept_name": "잿불",
+   "stage": "baby",
+   "style": "S1",
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, creature, chibi, baby fox, fox kit, round fluffy body, big eyes, cute face, ash white fur, light grey fur, smoky grey ear tips, 1.2::glowing ember orange tail tip like a live coal::, faint orange glow under the fur, flame mark on forehead, forehead mark, amber eyes, blush, gentle smile, curled up sitting in a small pile of soft grey ash, tiny floating embers, cel shading, thick outline, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, very aesthetic, masterpiece, no text",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, multiple tails, blue fire, pale blue hair, sleepy",
+   "seeds": [
+    8101,
+    8102,
+    8103,
+    8104
+   ]
+  },
+  {
+   "id": "ff-A-adult",
+   "concept": "A",
+   "concept_name": "잿불",
+   "stage": "adult",
+   "style": "S1",
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, 1girl, solo, young adult woman, adult, slender, medium breasts, fox ears, fox tail, fluffy tail, 1.2::glowing ember orange tail tip::, ash white hair, light grey hair, 1.2::gradient hair, hair ends glowing ember orange::, long hair, loose low ponytail, flame mark on forehead, forehead mark, amber eyes, warm gentle smile, loose oversized ash grey robe, ember orange sash, sleeves past wrists, crouching, cupping a small glowing ember in both hands, blowing on the ember, tiny floating embers, cel shading, thick outline, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, very aesthetic, masterpiece, no text",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, multiple tails, blue fire, pale blue hair, sleepy",
+   "seeds": [
+    8101,
+    8102,
+    8103,
+    8104
+   ]
+  },
+  {
+   "id": "ff-A-awakened",
+   "concept": "A",
+   "concept_name": "잿불",
+   "stage": "awakened",
+   "style": "S1",
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, 1girl, solo, mature female, adult, tall, slender, medium breasts, fox ears, large fluffy fox tail trailing sparks, ash white hair, very long hair, floating hair, 1.2::hair ends dissolving into glowing embers::, flame mark on forehead, forehead mark, glowing amber eyes, calm smile, elegant layered grey and crimson gown, long sleeves, holding a single glowing ember orb, floating embers all around, standing, cel shading, thick outline, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, very aesthetic, masterpiece, no text",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, multiple tails, blue fire, pale blue hair, sleepy",
+   "seeds": [
+    8101,
+    8102,
+    8103,
+    8104
+   ]
+  },
+  {
+   "id": "ff-B-baby",
+   "concept": "B",
+   "concept_name": "여우불 꼬리",
+   "stage": "baby",
+   "style": "S1",
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, creature, chibi, baby fox, fox kit, round fluffy body, big eyes, cute face, deep vermilion fur, cream belly, cream muzzle, single fluffy tail, 1.1::white-gold flame on the tail tip::, a small white-gold foxfire wisp floating above its head, flame mark on forehead, forehead mark, golden eyes, blush, happy, open mouth, sitting, looking up at the wisp, cel shading, thick outline, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, very aesthetic, masterpiece, no text",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, miko, shrine maiden, hakama, blue fire, glass",
+   "seeds": [
+    8101,
+    8102,
+    8103,
+    8104
+   ]
+  },
+  {
+   "id": "ff-B-adult",
+   "concept": "B",
+   "concept_name": "여우불 꼬리",
+   "stage": "adult",
+   "style": "S1",
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, 1girl, solo, young adult woman, adult, slender, medium breasts, fox ears, 1.3::three fox tails::, multiple tails, deep vermilion hair, long hair, high ponytail, white-gold hair tips, flame mark on forehead, forehead mark, golden eyes, confident smile, crimson short jacket with wide sleeves, white shorts, gold cord accents, 1.2::three white-gold foxfire orbs floating around her::, one hand raised gathering the orbs, dynamic pose, cel shading, thick outline, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, very aesthetic, masterpiece, no text",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, miko, shrine maiden, hakama, blue fire, glass",
+   "seeds": [
+    8101,
+    8102,
+    8103,
+    8104
+   ]
+  },
+  {
+   "id": "ff-B-awakened",
+   "concept": "B",
+   "concept_name": "여우불 꼬리",
+   "stage": "awakened",
+   "style": "S1",
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, 1girl, solo, mature female, adult, tall, slender, medium breasts, fox ears, 1.3::nine fox tails fanned out behind her::, kyuubi, multiple tails, deep vermilion hair, very long hair, floating hair, white-gold hair tips, flame mark on forehead, forehead mark, glowing golden eyes, serene smile, elegant layered crimson and white gown, long trailing sleeves, gold ornaments, 1.2::many white-gold foxfire orbs floating in a ring around her::, standing, majestic, cel shading, thick outline, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, very aesthetic, masterpiece, no text",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, miko, shrine maiden, hakama, blue fire, glass",
+   "seeds": [
+    8101,
+    8102,
+    8103,
+    8104
+   ]
+  },
+  {
+   "id": "ff-C-baby",
+   "concept": "C",
+   "concept_name": "불티",
+   "stage": "baby",
+   "style": "S1",
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, creature, chibi, baby fox, fox kit, round body, big eyes, cute face, golden orange fur, white chest, black ear tips, black paws, 1.3::fox tail turning into fire at the end::, flame tail, flame mark on forehead, forehead mark, orange eyes, mischievous grin, fang, crouching ready to pounce, butt up, little sparks flying, cel shading, thick outline, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, very aesthetic, masterpiece, no text",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, multiple tails, blue fire, aqua hair, gradient hair",
+   "seeds": [
+    8101,
+    8102,
+    8103,
+    8104
+   ]
+  },
+  {
+   "id": "ff-C-adult",
+   "concept": "C",
+   "concept_name": "불티",
+   "stage": "adult",
+   "style": "S1",
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, 1girl, solo, young adult woman, adult, slender, medium breasts, toned, fox ears, black ear tips, 1.3::fox tail turning into fire at the end::, flame tail, golden orange hair, short hair, messy hair, black hair tips, flame mark on forehead, forehead mark, orange eyes, toothy grin, fang, cropped orange jacket, white tank top, black shorts, black gloves, black thighhighs, crouching, flicking sparks from fingertips, sparks flying, cel shading, thick outline, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, very aesthetic, masterpiece, no text",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, multiple tails, blue fire, aqua hair, gradient hair",
+   "seeds": [
+    8101,
+    8102,
+    8103,
+    8104
+   ]
+  },
+  {
+   "id": "ff-C-awakened",
+   "concept": "C",
+   "concept_name": "불티",
+   "stage": "awakened",
+   "style": "S1",
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, 1girl, solo, mature female, adult, tall, slender, medium breasts, fox ears, black ear tips, 1.3::huge fox tail made of fire::, golden orange hair, very long hair, wild hair, floating hair, 1.2::hair ends turning into flames::, flame mark on forehead, forehead mark, glowing orange eyes, confident grin, black and orange bodysuit, flowing cape of flame, black gloves, standing, one hand on hip, sparks swirling, cel shading, thick outline, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, very aesthetic, masterpiece, no text",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, multiple tails, blue fire, aqua hair, gradient hair",
+   "seeds": [
+    8101,
+    8102,
+    8103,
+    8104
+   ]
+  },
+  {
+   "id": "ff-B-adult-S2",
+   "concept": "B",
+   "concept_name": "여우불 꼬리",
+   "stage": "adult",
+   "style": "S2",
+   "prompt": "1.4:: artist:ohisashiburi ::, 1.4:: artist:ask (askzy) ::, 1.4:: artist:96yottea ::, 1.0:: artist:neco ::,1.0:: artist:Dishwasher1910 ::, 1.0:: artist:pochi (pochi-goya) ::, 1.0:: artist:rella ::, 1.0:: artist:liduke ::, 1.0:: artist:ciloranko ::, 1.0:: artist:ningen mame ::, 1.0:: artist:kieed ::,0.5:: artist:rei (sanbonzakura) ::,0.5:: artist:gogalking ::, -3::artist collaboration::, 1.6:: lineart, black outline, game cg ::, year 2025, year:2024, best illumination, best shadow, highres, depth of field, 1girl, solo, young adult woman, adult, slender, medium breasts, fox ears, 1.3::three fox tails::, multiple tails, deep vermilion hair, long hair, high ponytail, white-gold hair tips, flame mark on forehead, forehead mark, golden eyes, confident smile, crimson short jacket with wide sleeves, white shorts, gold cord accents, 1.2::three white-gold foxfire orbs floating around her::, one hand raised gathering the orbs, dynamic pose, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, 1.4::masterpiece, best quality, amazing quality, very aesthetic, highres::, -3.0::simple illustration::, -3.0::multiple views::, -3.0::blurry::, -3.0::unfinished::, 1.5::detailed eyes ::",
+   "negative": "nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite, upskirt, panties, close-up, dark background, glass, crystal, lava, magma, cracked skin, miko, shrine maiden, hakama, blue fire, glass",
+   "seeds": [
+    8101,
+    8102
+   ]
+  },
+  {
+   "id": "ff-B-adult-S3",
+   "concept": "B",
+   "concept_name": "여우불 꼬리",
+   "stage": "adult",
+   "style": "S3",
+   "prompt": "1girl, solo, young adult woman, adult, slender, medium breasts, fox ears, 1.3::three fox tails::, multiple tails, deep vermilion hair, long hair, high ponytail, white-gold hair tips, flame mark on forehead, forehead mark, golden eyes, confident smile, crimson short jacket with wide sleeves, white shorts, gold cord accents, 1.2::three white-gold foxfire orbs floating around her::, one hand raised gathering the orbs, dynamic pose, grey background, simple background, wide shot, 2::full body::, -2::close-up, upper body, cowboy shot, portrait::, facing viewer, looking at viewer, highly detailed, masterpiece, best quality, very aesthetic, newest, 0.7::artist:dore (gilles dore)::, 0.7::artist:yoya yogurt::, 0.4::artist:qiandaiyiyu::, 0.9::artist:wanke::, 1.0::artist:yukisame::, 0.9::artist:kimichinoname::, 1.2::artist:imoko (imonatsuki)::, 1.6::artist:rurudo::, year 2024, year 2025, 0.3::beautiful gunbari::, solo artist, -6::artist collaboration::, -1::faux retro artstyle::, -1::film grain::, -1::clean text::, -1::flat color::, natural, soft shadows, ligne clair, no text",
+   "negative": "nsfw, lowres, artistic error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, dithering, halftone, screentone, multiple views, logo, too many watermarks, negative space, blank page, 3d, fused legs, poorly drawn, bad fingers, blurry, bokeh, extra digits, extra limbs, long body, bad anatomy, disfigured, deformed, mutation, upskirt, panties, close-up, cropped, dark background, child, loli, glass, crystal, lava, magma, cracked skin, miko, shrine maiden, hakama, blue fire, glass",
+   "seeds": [
+    8101,
+    8102
+   ],
+   "settings_override": {
+    "scale": 8.5,
+    "cfg_rescale": 0.4
+   }
+  }
+ ]
+}

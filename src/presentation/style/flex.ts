@@ -17,6 +17,8 @@ interface Margins {
   self?: "start" | "end";
   /** 누르면 부를 함수. 노드 상자 크기의 클릭 영역을 만들어요 (손 모양 커서) */
   onClick?: () => void;
+  /** 누를 때 날 소리 사건 이름. false면 소리 없음. 없으면 버튼 소리 (audio/index.ts SFX_DATA) */
+  sfx?: string | false;
 }
 
 export interface TextNode extends Margins, TextLook {
@@ -154,7 +156,10 @@ export function place(
 ): void {
   const s = size(n);
   const W = w ?? s.w, H = h ?? s.h;
-  if (n.onClick) hitArea(scene, x, y, W, H, n.onClick);
+  if (n.onClick) {
+    const zone = hitArea(scene, x, y, W, H, n.onClick);
+    if (n.sfx !== undefined) zone.setData("sfx", n.sfx);
+  }
   switch (n.t) {
     case "text": {
       const b = fontBox(px(n.size));

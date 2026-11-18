@@ -127,7 +127,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private at(n: MapNodeVM): Pt {
-    return { x: PATH.cx + (n.col - (this.vm.cols - 1) / 2) * PATH.colStep, y: PATH.bottom - n.floor * PATH.rowStep };
+    return { x: PATH.cx + (n.col - (this.vm.cols - 1) / 2) * PATH.colStep, y: Math.round(PATH.bottom - (n.floor * (PATH.bottom - PATH.top)) / Math.max(1, this.vm.top)) };
   }
 
   private drawPath() {

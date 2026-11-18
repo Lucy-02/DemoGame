@@ -58,8 +58,11 @@ export interface Engine {
 
   /** 아군 카드의 직접 피해 1타. 피해 파이프라인을 거쳐요. */
   hit(owner: BSpirit, e: BEnemy, base: number, element: Element, noPower: boolean): void;
+  /** 무작위 적 하나. 적이 없으면(미리 돌려 볼 때는 누가 맞을지 모르면) 없어요 */
+  randomEnemy(): BEnemy | undefined;
   /** 적 공격의 대상. 대상 파이프라인을 거쳐요. */
-  pickTargets(rule: EnemyTargetRule): BSpirit[];
+  /** by: 행동하는 적. 무작위 대상은 이 적이 턴 시작에 미리 뽑아 둔 차례를 써요 (0128) */
+  pickTargets(rule: EnemyTargetRule, by?: BEnemy): BSpirit[];
   /** 적 공격 1타. 피해 파이프라인 → 피해 받기 → 맞은 뒤 반응 */
   enemyHit(e: BEnemy, s: BSpirit, base: number, pierce: boolean): void;
   /** 적 공격 1타의 미리보기 수치 (대상 상태 제외) */

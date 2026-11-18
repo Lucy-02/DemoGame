@@ -18,6 +18,9 @@ export function preloadFaces(scene: Phaser.Scene) {
   }
 }
 
+/** 역할 id → 역할 기호 */
+export const ROLE_ICON: Record<string, string> = { attack: "role-attack", guard: "role-guard", support: "role-support", disrupt: "role-disrupt" };
+
 /** 속성 id → 속성 기호 */
 export const ELEMENT_ICON: Record<string, string> = {
   fire: "el-fire", water: "el-water", forest: "el-forest", wind: "el-wind", light: "el-light", earth: "el-earth", none: "el-none",

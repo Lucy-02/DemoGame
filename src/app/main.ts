@@ -52,12 +52,15 @@ async function start() {
   const screen = params.get("screen");
   const get = (k: string) => params.get(k) ?? undefined;
   const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "demoEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" || screen === "menu" || screen === "settings" || screen === "glossary" ? screen : undefined;
-  const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform, DEV ? devSeeds(params) : undefined, demo ? demoScope() : {});
+  const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform, DEV ? devSeeds(params) : undefined, demo ? demoScope() : {}, (text) => {
+    void platform.logError(`v${versionOf(demo)} save ${text}`).catch(() => {});
+  });
   // 설정은 어느 화면이든 읽어요(소리 볼륨). 전체화면은 저장에 이어진 게임에서만 창에 입혀요: 설정이 정본이고, 창이 바뀌면(F11 · Esc) 설정이 따라가요 (0084 3 · 4번)
   const settings = await SettingsSession.load(platform);
   if (!fixture && screen !== "legacy") followFullscreen(platform, settings);
   const game = await startGame("game", {
-    screen: fixture, session, settings, trial: screen === "legacy", quit: () => void platform.quit(), version: versionOf(demo), demo,
+    screen: fixture, session, settings, trial: screen === "legacy", // 기다리는 저장을 다 쓴 뒤에 꺼요
+    quit: () => void (session?.flush() ?? Promise.resolve()).then(() => platform.quit()), version: versionOf(demo), demo,
     hover: get("hover"), scene: get("scene"), lift: get("lift"), stage: params.has("stage") ? Number(get("stage")) : undefined, select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
     slow: Number(params.get("slow")) || undefined,
     res: Number(params.get("res")) || undefined,

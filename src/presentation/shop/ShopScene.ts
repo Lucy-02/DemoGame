@@ -17,7 +17,9 @@ import { CARD_FOCUS, FRAME } from "../run/layout";
 import { STAT_ICON } from "../run/copy";
 import { drawSlimLane, type SlimState } from "../run/slimLane";
 import { preloadSpiritArt } from "../spiritArt";
+import { preloadPlace } from "../stage";
 import { loadIcon } from "../style/icons";
+import { audioOf } from "../audio";
 import { shopSession } from "./fixtures";
 import { shopVM } from "./fromShop";
 import { SHOP_LANE, STOCK } from "./layout";
@@ -73,6 +75,7 @@ export class ShopScene extends Phaser.Scene {
   }
 
   preload() {
+    preloadPlace(this, "shop");
     for (const [id, w] of [...RUN_TOP_ICONS, ...SERVICE_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
     for (const id of Object.values(STAT_ICON)) loadIcon(this, id, SHOP_LANE.stat.icon);
     const vm = shopVM(this.session);
@@ -124,6 +127,7 @@ export class ShopScene extends Phaser.Scene {
     const sold = shopVM(this.session).cards[slot];
     this.leaving = sold ? { slot, card: sold.card } : undefined;
     this.session.dispatch({ kind: "buy", slot, spirit });
+    audioOf(this)?.play("buy");
   }
 
   private paint() {
@@ -137,7 +141,7 @@ export class ShopScene extends Phaser.Scene {
     const focus = focusSlot === undefined ? undefined : vm.cards[focusSlot];
     const healing = hover?.kind === "heal" && vm.heal.enabled;
 
-    drawBackdrop(this);
+    drawBackdrop(this, "shop");
     // 빈 곳을 누르면 집은 카드를 내려놓아요 (맨 아래에 깔아서 다른 입력이 먼저 받아요)
     this.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive().on("pointerup", () => {
       if (this.held === undefined) return;
@@ -248,7 +252,7 @@ export class ShopScene extends Phaser.Scene {
   /** 빼기: 왼쪽에 덱. 올리면 주인 줄에 덱 장수 a→b, 고르면 그 줄 아래에 취소 · 빼기 */
   private paintRemove(vm: ShopVM) {
     const { hover, pick } = this;
-    drawBackdrop(this);
+    drawBackdrop(this, "shop");
     drawRunTop(this, vm.gold - (pick === undefined ? 0 : vm.remove.price), pick === undefined ? {} : { was: vm.gold });
     drawDeckPick(this, {
       lanes: vm.lanes, rows: vm.deck, mode: "remove", pick,

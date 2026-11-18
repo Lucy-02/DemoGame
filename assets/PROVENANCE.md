@@ -15,7 +15,10 @@ TTI(NovelAI Diffusion V5 / V4.5)가 들어간 파일은 모두 `assets/provenanc
 | `human_work` | 선별, 인페인트, 페인트오버, 합성, 재작도와 정도 |
 | `note` | 기타 |
 
-검사: `npm run check:assets` (보고), `npm run check:assets -- --release` (기록 없음·임시 에셋이 있으면 실패).
+검사 (0139):
+- `pnpm check:assets`: 기록 없는 파일, 기록과 해시가 다른 파일, 생성 값(seed · prompt)이 없거나 모델이 추정 · 미확인인데 `release`인 줄이 있으면 실패. `pnpm check`와 CI에서 돌아요.
+- `pnpm check:assets --release`: 위에 더해 임시 에셋이 있으면 실패. `--summary`: 스팀 AI 공개 설문에 쓸 집계 (`docs/release/AI_DISCLOSURE.md`).
+- 생성 모델을 쓰지 않은 파일(기호 · 커서)도 한 줄씩 적어요. `model`은 `없음 (…)`으로 시작해요.
 
 ## 소리
 

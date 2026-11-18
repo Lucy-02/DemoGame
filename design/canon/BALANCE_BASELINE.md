@@ -69,7 +69,7 @@
 
 ## 7. 재는 법 (2026-11-11)
 
-`pnpm runsim [판 수] [파티] [--adult] [--bot basic|smart|search|ladder]`이 1막 한 판을 처음부터 보스까지 돌려요.
+`pnpm runsim [판 수] [파티] [--adult] [--bot basic|smart|search|ladder]`이 1막 한 판을 처음부터 보스까지 돌려요. 판 단위 버릇(보상 · 길)만 바꿔 재는 표는 `--policies` · `--cards` · `--floors` · `--elites`, 규칙 후보 미리 재기는 `--whatif`예요 (0130).
 
 - **봇은 실력이 다른 셋을 나란히 봐요.** 숫자는 절댓값이 아니에요. 봇 사이 격차와 바꾸기 전후를 읽어요.
   - `basic`: 공격 카드부터 내고 보상은 아무거나. 처음 하는 사람보다 못해요.

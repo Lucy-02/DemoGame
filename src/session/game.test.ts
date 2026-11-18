@@ -140,6 +140,26 @@ describe("게임 세션", () => {
     expect(game.planRun().front).toBe(pick);
   });
 
+  it("끝난 판마다 어디서 어떻게 끝났는지 이 기계에만 기록해요 (플레이테스트용)", async () => {
+    const store = new MemoryStore();
+    const game = await GameSession.load(store, seeds);
+    const first = game.startRun();
+    first.enter(first.run.reachable()[0].id);
+    game.finishBattle(outcome(first, false));
+    game.startRun();
+    game.abandonRun();
+    await game.flush();
+    const log = JSON.parse(store.data.get(SAVE_KEYS.runLog)!);
+    expect(log.map((e: { end: string; act: number; floor: number; fights: number }) => [e.end, e.act, e.floor, e.fights])).toEqual([["defeat", 1, 1, 1], ["abandon", 1, 0, 0]]);
+    expect(log[0].party).toEqual(first.party);
+    // 깨진 기록은 버리고 새로 시작해요
+    store.data.set(SAVE_KEYS.runLog, "{깨짐");
+    game.startRun();
+    game.abandonRun();
+    await game.flush();
+    expect(JSON.parse(store.data.get(SAVE_KEYS.runLog)!)).toHaveLength(1);
+  });
+
   it("탐험 포기는 패배와 같아요: 판이 닫히고 이긴 전투의 경험은 남아요 (0084)", async () => {
     const store = new MemoryStore();
     const game = await GameSession.load(store, seeds);

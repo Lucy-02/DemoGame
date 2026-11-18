@@ -16,6 +16,7 @@ from fit_art import fit  # noqa: E402
 
 OUT_DIR = "public/assets/cards"
 OUT_PX = 512
+CENTER_CY = 0.5  # 오브제 · 상징은 그림 한가운데 (Lucy 2026-11-18)
 WEBP_QUALITY = 90
 PROVENANCE = "assets/provenance.jsonl"
 ART_IDS = "src/presentation/card/artIds.json"
@@ -23,11 +24,12 @@ MODEL_NAMES = {"nai-diffusion-4-5-full": "NovelAI Diffusion V4.5 Full"}
 SELECTION = {
     "0042": "Lucy가 후보 중 선별(0042)",
     "0063": "Claude가 고른 1순위를 Lucy가 승인(0063)",
+    "0063-r10": "Lucy 지적(이치에 안 맞음) 뒤 R10에서 Claude가 다시 고름(0063)",
     "0118": "Claude가 임시로 고름, Lucy 확인 전(0118)",
 }
 HUMAN_WORK = {
-    "object": "{selection}. fit_art.py로 물체를 그림 창 가운데로 옮기고 크기를 맞춤(fit_size {size}), 모자란 바탕은 원본 바탕으로 이어 그림. {px}px webp 변환",
-    "symbol": "{selection}. fit_art.py로 물체를 그림 창 가운데로 옮기고 크기를 맞춤(fit_size {size}), 모자란 바탕은 원본 바탕으로 이어 그림. {px}px webp 변환",
+    "object": "{selection}. fit_art.py로 물체를 그림 한가운데로 옮기고 크기를 맞춤(fit_size {size}), 모자란 바탕은 원본 바탕으로 이어 그림. {px}px webp 변환",
+    "symbol": "{selection}. fit_art.py로 물체를 그림 한가운데로 옮기고 크기를 맞춤(fit_size {size}), 모자란 바탕은 원본 바탕으로 이어 그림. {px}px webp 변환",
     "scene": "{selection}. {px}px webp 변환만",
     "backdrop": "{selection}. {px}px webp 변환만",
 }
@@ -40,7 +42,7 @@ def sha256(data: bytes) -> str:
 def build(card: dict, src_dir: str) -> tuple[str, bytes]:
     src = Image.open(os.path.join(src_dir, f"{card['case_id']}.png")).convert("RGB")
     if card["fit_size"] is not None:
-        src, _, _ = fit(src, card["fit_size"], out_px=src.width)
+        src, _, _ = fit(src, card["fit_size"], cy=CENTER_CY, out_px=src.width)
     out = src.resize((OUT_PX, OUT_PX), Image.LANCZOS)
     buf = io.BytesIO()
     out.save(buf, "WEBP", quality=WEBP_QUALITY, method=6)

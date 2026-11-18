@@ -77,8 +77,6 @@ function factNode(f: FactVM, open: (tab: TabId) => void): Node {
         ],
       };
     }
-    case "bond":
-      return { t: "col", gap: FACTS.innerGap, children: [label(), big(String(f.have), COPY.of(f.total))] };
     case "todo":
       return {
         t: "col", gap: FACTS.innerGap + FACTS.valueGap / 2,

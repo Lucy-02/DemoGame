@@ -37,5 +37,9 @@ export function cloneBattle(src: Battle, rng?: Rng): Battle {
 /** 복제가 아는 Battle 필드. 여기에 없는 필드가 생기면 테스트가 실패해요. */
 export const CLONED_FIELDS = ["spirits", "enemies", "draw", "hand", "discard", "exhaust", "sealed", "playedThisTurn", "planned", "slots", "zones", "stars", "hold", "askHold", "holdChoice",
   "pulled", "playedByElement", "repeatNext", "mana", "turn", "frontId", "result", "nextTurnMana", "replaying", "resolving", "now", "pendingCostUp", "pendingSeal", "nextUid", "echoingReady", "firstGapBonus", "events", "rng", "scale",
+  // 받을 피해를 미리 돌려 보는 사본(Battle.forecast)에서만 채워져요. 전투에서는 늘 null이라 복사하지 않아요
+  "tally", "watch", "watched",
+  // 놓은 카드 되돌리기(0074 7번)는 전투 세션만 켜요. 봇이 쓰는 복제에는 옮기지 않아요
+  "keepUndo", "undos",
   // 생성자가 새 전투에 묶어 만드는 단계 목록이라 복사하지 않아요
   "turnStartSteps", "turnEndSteps", "roundEndSteps"];

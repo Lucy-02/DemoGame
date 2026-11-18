@@ -81,6 +81,8 @@ export interface BEnemy extends StatusHolder {
   maxHp: number;
   block: number;
   patternIdx: number;
+  /** 지금 하는 행동의 남은 무작위 대상 차례 (행동할 때 칸에서 받아 와요, 0128) */
+  aim?: string[];
   phase: 1 | 2;
   charging: boolean;
   /** 차징을 시작한 턴. 그 턴에는 행동하지 않고 다음 턴 박힌 시각에 터져요. */
@@ -143,6 +145,8 @@ export interface EnemySlot {
   uid: number;
   at: number;
   done: boolean;
+  /** 이 행동의 무작위 대상: 턴 시작에 미리 뽑은 정령 id를 고르는 차례대로 (0128) */
+  aim?: string[];
 }
 
 /** 별 정령: 새긴 별을 세고 낙하를 내줘요 */
@@ -197,16 +201,19 @@ export const refOf = (h: BSpirit | BEnemy): Ref => (isEnemy(h) ? { side: "e", ui
 /** 연출용 이벤트. 확정된 결과만 담아요 (0001). */
 export type BattleEvent =
   | { k: "log"; text: string }
-  | { k: "damage"; ref: Ref; amount: number; blocked: number; crit?: boolean; weakHit?: boolean; resist?: boolean; opening?: boolean; wall?: number }
+  /** by = 재생 중인 카드의 주인(적이 받은 피해), keeper = 벽으로 대신 막은 정령. 자람 조건을 세는 데 써요 (0021 · 0045) */
+  | { k: "damage"; ref: Ref; amount: number; blocked: number; crit?: boolean; weakHit?: boolean; resist?: boolean; opening?: boolean; wall?: number; by?: string; keeper?: string }
   | { k: "heal"; ref: Ref; amount: number }
   | { k: "block"; ref: Ref; amount: number }
   | { k: "status"; ref: Ref; text: string }
-  | { k: "freeze"; uid: number }
+  | { k: "freeze"; uid: number; by?: string }
   | { k: "delay"; uid: number; ms: number; nextTurn: boolean }
   | { k: "cancel"; uid: number; reason: string }
   | { k: "charge"; uid: number; move: string }
   | { k: "enemyAct"; uid: number; move: string }
   | { k: "spiritAct"; id: string; card: string }
+  /** 시간축 재생이 끝나고 턴 끝 처리(화상 등)가 시작돼요. 이 뒤의 피해는 누구의 행동도 아니에요 */
+  | { k: "turnEnd" }
   | { k: "release"; id: string }
   | { k: "releaseEnd"; id: string }
   | { k: "downed"; id: string }
@@ -222,7 +229,7 @@ export interface Intent {
   name: string;
   /** 이번 턴 이 행동이 일어나는 시각(ms). 이번 턴에 행동하지 않으면 null */
   at: number | null;
-  /** "피해 6", "4×2" 같은 짧은 표기 */
+  /** 호버 풀이: 효과문 문장 틀의 완결문 (TEXT_RULES 1절) */
   text: string;
   kind: "attack" | "defend" | "debuff" | "buff" | "charge" | "chargeReady" | "skip";
 }

@@ -3,6 +3,7 @@
 import { Battle, type BCard, type BattleEvent, type Ref } from "../core/battle";
 import { Rng } from "../core/rng";
 import type { Run } from "../core/run";
+import { tallyDeeds, type DeedTally } from "./deeds";
 import type { BattleOutcome } from "./run";
 
 export type BattleCommand =
@@ -14,12 +15,16 @@ export type BattleCommand =
   /** 열린 낙하 고르기에서 받을 카드 */
   | { kind: "fall"; cards: string[] }
   /** 턴 끝 품기 고르기에서 품을 카드 */
-  | { kind: "hold"; uids: number[] };
+  | { kind: "hold"; uids: number[] }
+  /** 마지막에 놓은 카드를 되돌려요 (0074 7번) */
+  | { kind: "undo" };
 
 export class BattleSession {
   readonly battle: Battle;
   /** 싸우는 막 (배경 그림을 고를 때 써요) */
   readonly act: number;
+  /** 이 전투에서 정령마다 센 자람 조건 (0021 · 0045) */
+  private deeds: DeedTally = {};
 
   /** 판의 지금 상태로 전투를 열어요. 난수는 판의 난수에서 하나 뽑아 써요 (legacy와 같은 자리) */
   constructor(run: Run, enemies: string[]) {
@@ -28,6 +33,8 @@ export class BattleSession {
     this.battle.firstGapBonus = run.battleGapBonus();
     // 품을 카드는 재생 뒤 고르기 창에서 물어요 (0075)
     this.battle.askHold = true;
+    // 놓은 카드는 마지막 것부터 되돌릴 수 있어요 (0074 7번)
+    this.battle.keepUndo = true;
     // 여는 동안 생긴 이벤트(전투 시작 기록 · 첫 뽑기)는 화면이 처음 그릴 때 이미 반영돼 있어요
     this.battle.drain();
   }
@@ -56,8 +63,13 @@ export class BattleSession {
       case "hold":
         if (!b.confirmHold(cmd.uids)) return [];
         break;
+      case "undo":
+        if (!b.undo()) return [];
+        break;
     }
-    return b.drain();
+    const events = b.drain();
+    tallyDeeds(this.deeds, events);
+    return events;
   }
 
   /** 이 카드가 대상을 골라야 하는지 (적이 하나면 고르지 않아요) */
@@ -69,6 +81,6 @@ export class BattleSession {
   outcome(): BattleOutcome {
     const b = this.battle;
     if (!this.over) throw new Error("전투가 아직 끝나지 않았어요");
-    return { won: b.result === "victory", spirits: b.spirits.map((s) => ({ id: s.id, hp: s.hp, downed: s.downed })) };
+    return { won: b.result === "victory", spirits: b.spirits.map((s) => ({ id: s.id, hp: s.hp, downed: s.downed })), deeds: this.deeds };
   }
 }

@@ -24,7 +24,7 @@ import { EQUIP_MINI } from "../../run/layout";
 import { TERMS, termOfIcon } from "../../glossary/terms";
 import { COPY, elementName, statusName } from "../copy";
 import { ALLY, ENEMY, FRAME, GROUND, INFO as I, INTENT, PREVIEW as PV, TIP } from "../layout";
-import type { AllyVM, BattleVM, Change, EnemyOutcomeVM, EnemyVM, IntentVM, StatusVM, TraitVM } from "../viewmodel";
+import type { AllyVM, BattleVM, EnemyOutcomeVM, EnemyVM, IncomingChange, IntentVM, StatusVM, TraitVM } from "../viewmodel";
 
 const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
@@ -162,6 +162,15 @@ function elementTexture(scene: Phaser.Scene, el: string): string {
     disc(ctx, E.d / 2, E.d / 2, E.d / 2, P.floor);
     disc(ctx, E.d / 2, E.d / 2, E.d / 2 - E.line, color);
   });
+}
+
+/** HP 값마다 따로 굽는 텍스처 (막대 · 잔상). 전투가 끝나면 버려요: 판이 길어도 쌓이지 않게 */
+const VALUE_TEXTURES = ["battle:bar:", "battle:trail:"];
+
+export function dropValueTextures(scene: Phaser.Scene) {
+  for (const key of scene.textures.getTextureKeys()) {
+    if (VALUE_TEXTURES.some((p) => key.startsWith(p))) scene.textures.remove(key);
+  }
 }
 
 /** 약점 배지 바탕 (.weak): 어두운 원 + 십자 틈이 난 조준 테. on = 맞는 속성 카드를 든 동안 (warn 원, 바깥 warn 테, 1.25배) */
@@ -495,17 +504,19 @@ function drawInfo(scene: Phaser.Scene, cx: number, feet: number, bar: Bar, hp: {
 
 /** 받을 피해로 깎일 HP (방어도를 뺀 만큼, 남은 HP까지) */
 const lossOf = (a: AllyVM, incoming: number) => Math.min(a.hp, Math.max(0, incoming - (a.block ?? 0)));
+/** 지금 놓은 카드대로면 깎일 HP */
+const lossNow = (a: AllyVM) => a.loss ?? lossOf(a, a.incoming ?? 0);
 
 /** pv = 이 아군의 받을 피해 a→b (조준 결과). 바뀐 값만 강조색으로 보여요 */
-function allyInfo(scene: Phaser.Scene, a: AllyVM, i: number, pv?: Change, pulse = false): InfoView {
+function allyInfo(scene: Phaser.Scene, a: AllyVM, i: number, pv?: IncomingChange, pulse = false): InfoView {
   const incoming = pv ? pv.to : (a.incoming ?? 0);
-  const loss = lossOf(a, incoming);
+  const loss = pv ? Math.min(a.hp, pv.loss ?? lossOf(a, incoming)) : lossNow(a);
   const lethal = loss > 0 && loss >= a.hp;
-  const showInc = a.incoming !== undefined && (a.incoming > 0 || !!pv);
+  const showInc = incoming > 0 || (!!pv && pv.to !== pv.from);
   const chips: Chip[] = [
     ...(a.element ? [elementChip(scene, a.element)] : []),
     ...(a.block ? [blockChip(a.block)] : []),
-    ...(showInc ? [incomingChip(scene, incoming, lethal, !!pv)] : []),
+    ...(showInc ? [incomingChip(scene, incoming, lethal, !!pv && pv.to !== pv.from)] : []),
     ...a.statuses.map(statusChip),
   ];
   return drawInfo(scene, ALLY.xs[i], ALLY.feet, { max: a.maxHp, keep: a.hp - loss, loss, lethal }, { n: a.hp }, chips, pulse && loss > 0);
@@ -535,7 +546,7 @@ function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false):
     : on ? { width: INTENT.onRing, color: P.ink }
     : debuff
       ? { width: INTENT.debuffRing, color: P.debuffLine }
-      : { width: charge ? INTENT.chargeRing : INTENT.ring, color: charge ? P.warn : P.glassLine };
+      : { width: charge ? INTENT.chargeRing : INTENT.ring, color: charge ? P.accHi : P.glassLine };
   const order: Node | undefined = it.order === undefined ? undefined : {
     t: "row", w: INTENT.order, h: INTENT.order, round: !debuff, radius: INTENT.orderDebuffRadius,
     justify: "center", align: "center", style: { fill: P.chip },
@@ -554,14 +565,14 @@ function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false):
   } else {
     target = { t: "image", key: faceKey(it.target), w: INTENT.face, h: INTENT.face, round: true, outline: { width: INTENT.faceRing, color: P.glassD } };
   }
-  const iconTint = charge ? P.warn : debuff ? P.ink2 : P.ink;
+  const iconTint = charge ? P.accHi : debuff ? P.ink2 : P.ink;
   // 끊김: 수치만 흐린 글자 + 취소선 (.intent.cut .amt)
   const strike = cut ? { strike: { color: P.accHi, width: PV.intentCut.strike } } : {};
   // 연타 ×N은 작고 흐리게 (.intent .x)
   const [amount, ...mult] = it.amount.split("×");
   const amountNode = debuff
     ? text(amount, T.intentAmountDebuff, cut ? P.ink2 : P.ink, strike)
-    : text(amount, T.intentAmount, cut ? P.ink2 : charge ? P.warn : P.ink, strike);
+    : text(amount, T.intentAmount, cut ? P.ink2 : charge ? P.accHi : P.ink, strike);
   return {
     t: "row", h: INTENT.h, pad: INTENT.pad, radius: debuff ? INTENT.debuffRadius : INTENT.radius, gap: INTENT.gap, align: "center",
     style: { fill: P.glassD, ring },
@@ -778,12 +789,12 @@ export interface UnitView {
 const HALF = I.w / 2 + I.chips.over;
 
 /** pv.outcome: 이 아군의 받을 피해 a→b */
-export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<Change> = {}): UnitView {
+export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<IncomingChange> = {}): UnitView {
   const cx = ALLY.xs[i];
   const bodyX = cx - ALLY.body.w / 2, bodyTop = ALLY.feet - ALLY.body.h;
   if (pv.lit) glow(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, 0, true);
   const art = gather(scene, 0, 0, () => {
-    if (!(a.stage && drawAllyArt(scene, a.face, a.stage, cx, ALLY.feet, ALLY.body, ALLY.art))) placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
+    if (!(a.stage && ALLY.art.stages.includes(a.stage) && drawAllyArt(scene, a.face, a.stage, cx, ALLY.feet, ALLY.body, ALLY.art))) placeholderArt(scene, bodyX, bodyTop, ALLY.body.w, ALLY.body.h, P.ink3);
   });
   // 쓰러진 아군은 그림이 흐려요 (0086)
   if (a.hp <= 0) art.setAlpha(tokens.provisional.motion.hit.down.alpha);
@@ -806,8 +817,16 @@ export function drawAllyPulse(scene: Phaser.Scene, a: AllyVM, i: number) {
   allyInfo(scene, a, i, undefined, true);
 }
 
+/** 유닛의 정보 묶음만 다시 그려요 (재생 중 맞기 전 값으로 잠깐 덮어 그릴 때, 0086) */
+export function drawUnitInfo(scene: Phaser.Scene, side: "ally" | "enemy", unit: AllyVM | EnemyVM, i: number): Phaser.GameObjects.Container {
+  return gather(scene, 0, 0, () => {
+    if (side === "ally") allyInfo(scene, unit as AllyVM, i);
+    else enemyInfo(scene, unit as EnemyVM, i, undefined, false);
+  });
+}
+
 /** 이 아군이 받을 피해로 HP가 깎이는지 */
-export const losesHp = (a: AllyVM) => lossOf(a, a.incoming ?? 0) > 0;
+export const losesHp = (a: AllyVM) => lossNow(a) > 0;
 
 /** 이 적의 의도가 이 아군을 노리는지 */
 /** 무작위는 누구든 맞을 수 있어서 모두를 노리는 것으로 봐요 */

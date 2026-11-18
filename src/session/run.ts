@@ -4,6 +4,11 @@
 import { returnHp } from "../core/stats";
 import { RUN_SAVE_VERSION, Run, type BattleReward, type MapNode, type RunOptions, type RunSave } from "../core/run";
 import type { BattleTier } from "../core/garden";
+import type { DeedTally } from "./deeds";
+import { upgradeSave, type SaveStep } from "./migrate";
+
+/** 옛 판 저장을 올리는 함수 (버전 n → n + 1). 지금은 버전 1뿐이라 비어 있어요 */
+const RUN_STEPS: Readonly<Record<number, SaveStep>> = {};
 
 /** 판 안에서 지금 있는 자리 */
 export type RunPhase =
@@ -24,6 +29,8 @@ export type RunPhase =
 export interface BattleOutcome {
   won: boolean;
   spirits: { id: string; hp: number; downed: boolean }[];
+  /** 이 전투에서 센 자람 조건 (0021 · 0045). 이긴 전투만 정원에 남아요 */
+  deeds?: DeedTally;
 }
 
 export interface RunSaveFile {
@@ -36,6 +43,7 @@ export interface RunSaveFile {
 export interface BattleWin {
   party: string[];
   tier: BattleTier;
+  deeds?: DeedTally;
 }
 
 export class RunSession {
@@ -105,7 +113,7 @@ export class RunSession {
       this.set({ kind: "over", victory: false });
       return undefined;
     }
-    const win = { party: this.party, tier };
+    const win: BattleWin = { party: this.party, tier, ...(outcome.deeds ? { deeds: outcome.deeds } : {}) };
     if (tier === "boss" && this.run.hasNextAct()) {
       // 막 사이: 정예와 같은 보상을 받고 다음 막 지도로 가요
       const reward = this.run.rollBattleReward("elite");
@@ -138,8 +146,9 @@ export class RunSession {
     return { version: RUN_SAVE_VERSION, run: this.run.save(), phase: structuredClone(this._phase) };
   }
 
-  static restore(file: RunSaveFile): RunSession {
-    if (file.version !== RUN_SAVE_VERSION) throw new Error(`판 저장 형식이 달라요: ${file.version}`);
+  static restore(raw: unknown): RunSession {
+    const file = upgradeSave(raw, RUN_SAVE_VERSION, RUN_STEPS, "판") as unknown as RunSaveFile;
+    if (typeof file.phase?.kind !== "string") throw new Error("판 저장에 자리가 없어요");
     return new RunSession(Run.load(file.run), structuredClone(file.phase));
   }
 }

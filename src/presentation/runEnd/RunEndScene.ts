@@ -9,6 +9,7 @@ import type { RunRecord } from "../../session/game";
 import { createHandCard, preloadHandCard } from "../card/HandCard";
 import { HAND_CARD } from "../card/layout";
 import { drawBackdrop } from "../run/backdrop";
+import { preloadStage } from "../stage";
 import { cardWithFace } from "../run/cards";
 import { COPY as RUN_COPY } from "../run/copy";
 import { LANE_ICONS, drawLane } from "../run/lanes";
@@ -45,6 +46,7 @@ export interface RunEndSceneData {
 export class RunEndScene extends Phaser.Scene {
   private vm!: RunEndVM;
   private data_?: RunEndSceneData;
+  private act = 1;
 
   constructor() {
     super(RUN_END_SCENE);
@@ -52,18 +54,21 @@ export class RunEndScene extends Phaser.Scene {
 
   init(data: RunEndSceneData) {
     this.data_ = data;
-    this.vm = runEndVM(data.record ?? runEndRecord(data.scene));
+    const record = data.record ?? runEndRecord(data.scene);
+    this.act = record.run.act;
+    this.vm = runEndVM(record);
   }
 
   preload() {
     for (const [id, w] of [...LANE_ICONS, ["i-coin", R.only.icon], ["g-up", R.keepIcon]] as const) loadIcon(this, id, w);
     for (const c of this.vm.cards) preloadHandCard(this, c.card, { showRarity: true, scale: THUMB_SCALE });
     preloadSpiritArt(this, this.vm.lanes.map((l) => l.lane.id));
+    preloadStage(this, this.act);
   }
 
   create() {
     const vm = this.vm;
-    drawBackdrop(this);
+    drawBackdrop(this, this.act);
     // 덩어리마다 모아 두고, 다 그린 뒤 차례로 나타나요 (0086): 기록 → 남는 것 → 이번 판에서만 → 정령 줄 → 버튼
     const parts: Phaser.GameObjects.Container[] = [];
     const part = (draw: () => void) => parts.push(gather(this, 0, 0, draw));

@@ -5,6 +5,8 @@ export interface PlatformBridge {
   read(key: string): Promise<string | null>;
   write(key: string, text: string): Promise<void>;
   remove(key: string): Promise<void>;
+  readBackup(key: string): Promise<string | null>;
+  setAside(key: string): Promise<void>;
   setFullscreen(on: boolean): Promise<void>;
   isFullscreen(): Promise<boolean>;
   quit(): Promise<void>;
@@ -15,6 +17,8 @@ export const IPC = {
   read: "platform:read",
   write: "platform:write",
   remove: "platform:remove",
+  readBackup: "platform:readBackup",
+  setAside: "platform:setAside",
   setFullscreen: "platform:setFullscreen",
   isFullscreen: "platform:isFullscreen",
   quit: "platform:quit",
