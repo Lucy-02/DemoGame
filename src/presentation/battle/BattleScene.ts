@@ -609,6 +609,8 @@ export class BattleScene extends Phaser.Scene {
   private step() {
     const rest = this.playback?.slice(1) ?? [];
     if (!rest.length) {
+      // 다 본 재생은 비워 둬요: 같은 프레임에 건너뛰기가 겹쳐도 확정 상태로 한 번만 가요
+      this.playback = [];
       // 재생이 끝나고 새 손패가 들어와요
       if (this.session && !this.session.over) audioOf(this)?.play("hand.new");
       return this.settle();
@@ -618,7 +620,8 @@ export class BattleScene extends Phaser.Scene {
 
   /** 재생 건너뛰기: 남은 걸음을 보지 않고 확정된 상태로 (0093) */
   private skip() {
-    if (!this.playback || this.leaving) return;
+    // 이미 끝났거나 건너뛴 재생은 다시 넘기지 않아요 (전투 끝이 두 번 불려요)
+    if (!this.playback?.length || this.leaving) return;
     this.playback = [];
     // 걸어 둔 다음 걸음과 소리는 거둬요. removeAllEvents는 다음 프레임에야 지워서, 같은 프레임에 걸음이 한 번 더 나가지 않게 바로 꺼요
     this.stepTimer?.remove(false);
