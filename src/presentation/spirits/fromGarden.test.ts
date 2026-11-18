@@ -38,7 +38,7 @@ describe("정령 관리 화면 데이터", () => {
     expect(vm.roster).toHaveLength(4 + MOCKUPS.length - 1);
   });
 
-  it("일러스트: 지금 단계 그림 (불여우는 임시 선택 그림)", () => {
+  it("일러스트: 지금 단계 그림 (불여우 포함)", () => {
     const vm = spiritsVM(GARDENS.mixed, "mist_cat");
     expect(vm.roster.map((t) => t.face?.key)).toEqual(["spirit:fire_fox:baby:body", "spirit:glass_salamander:adult:body", "spirit:mist_cat:awakened:body"]);
     expect(vm.detail.art).toMatchObject({ key: "spirit:mist_cat:awakened:body", frame: { k: "face" } });

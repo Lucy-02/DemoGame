@@ -1,5 +1,5 @@
-# 정령 하나의 후처리 끝난 그림(배경 없는 재묘사본)을 게임 파일로 옮겨요. Lucy 칸 선택 전 임시 선택용이라 갈아 끼우기 쉽게 정령 하나만 다뤄요.
-# 쓰는 법: python -I tools/art/import-spirit-provisional.py <전달 폴더> <정령 id(fire_fox)> <저장소 루트>
+# 정령 하나의 후처리 끝난 그림(배경 없는 재묘사본)을 게임 파일로 옮겨요. 임시 선택이든 Lucy 선택이든 정령 하나만 갈아 끼워요(meta.json status가 confirmed면 Lucy 선택).
+# 쓰는 법: python -I tools/art/import-spirit-one.py <전달 폴더> <정령 id(fire_fox)> <저장소 루트>
 #   전달 폴더: <stage>.rgba.png(baby·adult·awakened, 배경 제거 → 2× → 재묘사 끝난 것), <stage>.orig.png(원본 PNG), meta.json, faces.json
 # 만드는 것: public/assets/spirits/<정령>/<단계>.webp (import-spirits.py와 같은 규격), spiritFrames.json의 그 정령 줄,
 #          assets/provenance.jsonl의 그 정령 줄 (status placeholder, note에 임시 선택 표시)
@@ -65,9 +65,10 @@ def main(src: Path, sid: str, repo: Path):
             "prompt": m["prompt"], "negative": m["negative"], "seed": m["seed"], "settings": m["settings"],
             "prompt_sheet": f"jjal {m['run_id']} ({m['case_id']})",
             "references": None,
-            "source_png": f"Lucy 맥 ~/workspace/jjal exports/fire-fox-ash-provisional-20261118/transfer/{folder}/{stage}.orig.png (sha256 {m['orig_sha256']})",
-            "human_work": f"Lucy 생성 라인(잿불 라인 = 기존 라인 형태 + 잿불 색) 위에서 Claude가 후보 생성·임시 선택. 후처리(luddal-win): {steps}. 게임 반입: 알파 기준 자르기, 바깥 테두리 색 정리, 긴 변 {base.LONG} webp",
-            "note": "임시 선택 (provisional): Lucy 칸 선택 전. 고르면 같은 명령으로 갈아 끼워요",
+            "source_png": f"Lucy 맥 ~/workspace/jjal {meta.get('export_dir', 'exports/fire-fox-ash-final-20261118')}/transfer/{folder}/{stage}.orig.png (sha256 {m['orig_sha256']})",
+            "human_work": f"Lucy 생성 라인(잿불 라인 = 기존 라인 형태 + 잿불 색) 위에서 Claude가 후보 생성, Lucy 선택(meta status). 후처리(luddal-win): {steps}. 게임 반입: 알파 기준 자르기, 바깥 테두리 색 정리, 긴 변 {base.LONG} webp",
+            "note": (f"Lucy 선택: {meta['status'].split('—', 1)[-1].strip()}" if str(meta.get("status", "")).startswith("confirmed")
+                     else "임시 선택 (provisional): Lucy 칸 선택 전. 고르면 같은 명령으로 갈아 끼워요"),
         })
     fj = repo / "src/presentation/spiritFrames.json"
     cur = json.loads(fj.read_text(encoding="utf-8"))
