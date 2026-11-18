@@ -24,3 +24,14 @@ export function fitResize(current: Bounds, next: Bounds, edge: string, frame: Si
     width, height,
   };
 }
+
+/**
+ * 처음 열 때의 안쪽 크기. base(기준 해상도)가 화면의 쓸 수 있는 곳(work)에 창틀까지 들어가면 그대로,
+ * 안 들어가면(1366×768 같은 작은 화면) 비율을 지키며 들어갈 만큼 줄여요.
+ */
+export function fitStart(base: Size, work: Size, frame: Size): Size {
+  const scale = Math.min(1, (work.width - frame.width) / base.width, (work.height - frame.height) / base.height);
+  if (scale >= 1) return base;
+  const width = Math.floor(base.width * scale);
+  return { width, height: Math.round((width * base.height) / base.width) };
+}

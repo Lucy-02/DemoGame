@@ -1,9 +1,9 @@
 // Electron main 프로세스: 창, 앱 프로토콜, 저장 IPC만 맡아요. 게임 규칙은 모르고 렌더러에 있어요.
-import { app, BrowserWindow, ipcMain, net, protocol, shell } from "electron";
+import { app, BrowserWindow, ipcMain, net, protocol, screen, shell } from "electron";
 import { join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { IPC } from "../../src/platform/bridge";
-import { fitResize } from "./aspect";
+import { fitResize, fitStart } from "./aspect";
 import { createErrorLog } from "./errorLog";
 import { createFileStorage } from "./storage";
 
@@ -109,6 +109,18 @@ function createWindow() {
       win.setBounds(fitResize(win.getBounds(), next, details.edge, frame, BASE.w / BASE.h, { width: BASE.w / 2, height: BASE.h / 2 }));
     });
   } else win.setAspectRatio(BASE.w / BASE.h);
+  // 기준 크기가 화면에 다 안 들어가면 OS가 한쪽만 잘라 비율이 깨져요. 들어갈 만큼 비율대로 줄여서 열어요
+  const [outerW, outerH] = win.getSize();
+  const [innerW, innerH] = win.getContentSize();
+  const start = fitStart(
+    { width: BASE.w, height: BASE.h },
+    screen.getDisplayMatching(win.getBounds()).workAreaSize,
+    { width: outerW - innerW, height: outerH - innerH },
+  );
+  if (start.width !== innerW || start.height !== innerH) {
+    win.setContentSize(start.width, start.height);
+    win.center();
+  }
   win.once("ready-to-show", () => win.show());
 
   // 게임 창 밖으로 나가는 탐색은 막고, 외부 링크는 기본 브라우저로 열어요.

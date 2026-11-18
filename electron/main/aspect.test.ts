@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fitResize, type Bounds } from "./aspect";
+import { fitResize, fitStart, type Bounds } from "./aspect";
 
 const FRAME = { width: 16, height: 39 };
 const MIN = { width: 640, height: 400 };
@@ -35,5 +35,23 @@ describe("창 끌기 비율 맞춤", () => {
   it("가장 작은 크기 아래로는 줄지 않아요", () => {
     const b = fitResize(cur, { ...cur, width: 200 }, "right", FRAME, RATIO, MIN);
     expect(inner(b)).toEqual([640, 400]);
+  });
+});
+
+describe("fitStart", () => {
+  const BASE = { width: 1280, height: 800 };
+  const FRAME = { width: 16, height: 39 };
+
+  it("화면에 들어가면 기준 크기 그대로 열어요", () => {
+    expect(fitStart(BASE, { width: 1920, height: 1040 }, FRAME)).toEqual(BASE);
+  });
+
+  it("작은 화면에서는 창틀까지 들어가게 비율대로 줄여요", () => {
+    for (const work of [{ width: 1366, height: 728 }, { width: 1024, height: 728 }, { width: 1280, height: 760 }]) {
+      const s = fitStart(BASE, work, FRAME);
+      expect(s.width + FRAME.width).toBeLessThanOrEqual(work.width);
+      expect(s.height + FRAME.height).toBeLessThanOrEqual(work.height + 1);
+      expect(s.width / s.height).toBeCloseTo(1.6, 2);
+    }
   });
 });

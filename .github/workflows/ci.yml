@@ -58,6 +58,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm dist:demo
+      # 러너 기본 화면(1024×768)은 기준 창(1280×800)보다 작아서, 창 크기 테스트가 재는 크기를 OS가 잘라요
+      - name: Set display to 1920x1080
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
       - name: Packaged smoke test
         run: pnpm exec playwright test
         env:
