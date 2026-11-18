@@ -199,6 +199,10 @@ describe("처음 세 마리 (0053)", () => {
     const path = (C.path_scale as { dmg: number }).dmg;
     expect(solo.enemyScale()).toEqual({ hp: partyScale(1)!.hp, dmg: partyScale(1)!.dmg * path });
     expect(new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: false, unlockAll: false }).enemyScale()).toEqual({ hp: 1, dmg: path });
+    // 막별 세기 (0155): 3막에서 출발하면 그 막의 배율이 곱해져요
+    const act3 = (C.acts[2] as { scale?: { hp: number; dmg: number } }).scale!;
+    const deep = new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: true, unlockAll: false, startAct: 3 });
+    expect(deep.enemyScale()).toEqual({ hp: act3.hp, dmg: path * act3.dmg });
     const boss = enemyDef("grimbark");
     const weak = scaleEnemy(boss, { hp: 0.5, dmg: 0.5 });
     expect(weak.hp).toBe(boss.hp / 2);
