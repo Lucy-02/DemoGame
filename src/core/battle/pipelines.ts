@@ -105,10 +105,10 @@ export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
   {
     id: "crit", order: 40,
     apply(c) {
-      let chance = critStat(c.attacker.run, "crit_chance") + c.attacker.critPity;
+      // 치명은 장비로만 생겨요 (0154). 확률이 없으면 난수도 쓰지 않아요
+      let chance = critStat(c.attacker.run, "crit_chance");
       for (const [p, v] of passivesOf(c.attacker)) chance += p.critChance?.(c.attacker, v, c.target) ?? 0;
-      c.crit = c.b.rng.next() < chance;
-      c.attacker.critPity = c.crit ? 0 : c.attacker.critPity + C.crit_pity;
+      c.crit = chance > 0 && c.b.rng.next() < chance;
       c.amount *= c.crit ? critStat(c.attacker.run, "crit_mult") : 1;
     },
   },

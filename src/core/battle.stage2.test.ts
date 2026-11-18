@@ -26,7 +26,6 @@ function battleWith(party: string[], hand: [cardId: string, owner: string][], en
   const b = new Battle(run.spirits, [], enemies, run.frontId, new Rng(1));
   b.hand = hand.map(([cardId, owner], i) => card(cardId, owner, i));
   b.mana = 99;
-  for (const s of b.spirits) s.critPity = -10;
   b.drain();
   return b;
 }

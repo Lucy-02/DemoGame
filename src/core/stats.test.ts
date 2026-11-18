@@ -36,7 +36,7 @@ describe("능력치 층", () => {
     expect(resolveStat(rs, "power").parts.map((p) => p.source)).toEqual(["base", "stage"]);
     expect(resolveStat(rs, "hp").parts.map((p) => p.source)).toEqual(["base", "level"]);
     expect(maxHpOf(rs)).toBe(24 + 4);
-    expect(critStat(rs, "crit_chance")).toBe(C.crit_base);
+    expect(critStat(rs, "crit_chance")).toBe(0);
   });
 
   it("공명 단계가 층을 고르고, 대가는 늘 붙어요", () => {
@@ -68,7 +68,7 @@ describe("능력치 층", () => {
     expect(resolveStat(s.run, "power").value).toBe(calm);
     s.hp = Math.floor(s.maxHp / 2);
     expect(b.stat(s, "power")).toBe(calm * 1.2);
-    expect(critStat(s.run, "crit_chance")).toBeCloseTo(C.crit_base + 0.1);
+    expect(critStat(s.run, "crit_chance")).toBeCloseTo(0.1);
   });
 
   it("장비 효과는 정령에 붙은 것으로 들어가요", () => {

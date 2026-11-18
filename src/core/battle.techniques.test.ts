@@ -14,7 +14,6 @@ function battleWith(hand: [cardId: string, owner: string][], enemies = ["grimbar
   b.hand = hand.map(([cardId, owner], i): BCard =>
     ({ uid: 100 + i, cardId, owner, tempCostDelta: 0, locked: false, isCopy: false, grow: 0, held: false, heldFast: false }));
   b.mana = 99;
-  for (const s of b.spirits) s.critPity = -10;
   b.drain();
   return b;
 }

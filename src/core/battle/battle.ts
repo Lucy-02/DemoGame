@@ -121,7 +121,7 @@ export class Battle implements Engine {
     for (const rs of runSpirits) {
       this.spirits.push({
         id: rs.id, def: spiritDef(rs.id), run: rs, personality: activePersonality(rs),
-        hp: rs.hp, maxHp: maxHpOf(rs), block: 0, status: {}, release: 0, releaseUsed: false, critPity: 0,
+        hp: rs.hp, maxHp: maxHpOf(rs), block: 0, status: {}, release: 0, releaseUsed: false,
         downed: rs.hp <= 0, auras: new Map(), playedThisTurn: 0, stubbornUsed: false,
       });
     }
