@@ -1,0 +1,72 @@
+{
+ "round": "card-art-r17",
+ "note": "화이트아웃 다시: R16은 눈발이 없어 물 · 빛 · 바람으로 읽힘. 흩날리는 눈송이를 앞세움.",
+ "variants": [
+  {
+   "tag": "o",
+   "mode": "intact"
+  }
+ ],
+ "seeds": [
+  4401,
+  4402,
+  4403,
+  4404
+ ],
+ "common": {
+  "composition": "1.2::one bold chunky silhouette that fits inside the central half of the image, wide empty margin on every side::, centered, wide shot, floating in the air, 1.1::soft front lighting from slightly above::, simple background, clean lineart, cel shading, thick outline, 1.1::the four corners are plain dark background::",
+  "quality": "very aesthetic, masterpiece, best quality, no text",
+  "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic",
+  "composition_S": "1.2::a dynamic scene, the main action happens in the center, readable at a glance::, medium shot, simple shapes, clean lineart, cel shading, thick outline, limited palette, 1.1::beautiful atmospheric lighting, evocative mood::, 1.1::the four corners are plain dark background::",
+  "composition_P": "1.2::scenery, wide shot, landscape, one clear focal point in the center::, simple shapes, clean lineart, cel shading, thick outline, limited palette, atmospheric perspective",
+  "composition_M": "1.2::symbolic still life, one central object, centered, wide empty margin::, simple background, clean lineart, cel shading, thick outline, 1.1::elegant, evocative::, 1.1::the four corners are plain dark background::",
+  "uc_S": "1girl, 1boy, person, people, human, face, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.2::cluttered, crowded, busy::",
+  "uc_P": "1girl, 1boy, person, people, human, character, animal, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.1::cluttered, crowded::",
+  "uc_M": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic"
+ },
+ "tones": {
+  "sal": "1.2::plain soft dark warm grey background::, 1.1::thin white edge highlights::",
+  "ibex": "1.2::plain soft dark charcoal grey background::, 1.1::bright rim light outlining the silhouette::",
+  "star": "1.2::plain soft dark navy grey background::",
+  "sal_S": "1.1::warm red, amber and dark brown palette::",
+  "sal_P": "1.1::warm red, amber and dark brown palette::",
+  "ibex_S": "1.1::charcoal grey and molten orange palette::",
+  "ibex_P": "1.1::charcoal grey and molten orange palette::",
+  "star_S": "1.1::deep navy and pale gold palette::",
+  "star_P": "1.1::deep navy and pale gold palette::",
+  "pearl": "1.2::plain soft dark teal grey background::, 1.1::soft pearly highlights::",
+  "pearl_S": "1.1::deep teal, sea blue and pearl white palette::",
+  "pearl_P": "1.1::deep teal, sea blue and pearl white palette::",
+  "cham": "1.2::plain soft dark moss green grey background::",
+  "cham_S": "1.2::plain soft dark moss green grey background::, 1.1::muted deep green palette, low saturation::",
+  "cham_P": "1.1::deep green palette with small soft rainbow accents::",
+  "fox": "1.2::plain soft dark warm charcoal background::, 1.1::warm ember rim light::",
+  "fox_S": "1.1::deep crimson, ember orange and charcoal palette::",
+  "fox_P": "1.1::deep crimson, ember orange and charcoal palette::",
+  "cat": "1.2::plain dark slate blue background, night::, 1.1::cold pale highlights::",
+  "cat_S": "1.2::night, dark slate blue and deep navy palette with pale frost highlights::",
+  "cat_P": "1.1::slate blue, frost white and pale cyan palette::",
+  "common": "1.2::plain dark warm charcoal background::",
+  "common_S": "1.2::dim warm lamplight at night, dark warm charcoal and muted amber palette::",
+  "common_P": "1.1::muted warm neutral palette with one soft accent color::",
+  "wind": "1.2::plain dark teal grey background::",
+  "wind_S": "1.2::dusk, dark teal and deep green palette with pale wind streaks::",
+  "wind_P": "1.1::pale sky blue, soft green and cream palette::"
+ },
+ "cards": [
+  {
+   "id": "tech_whiteout",
+   "owner": "cat",
+   "comp": "S",
+   "subject": "no humans, 1.4::heavy blizzard, countless white snowflakes blowing sideways::, 1.2::thick driving snow over dark jagged frozen rocks at night, frost covering everything::, snowing, snowstorm",
+   "uc_extra": "white background, light background, bright background, beige background, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue, waterfall, river, water, light beam, pillar of light::, 1.3::cube, block, square, box, pedestal, platform, base::"
+  },
+  {
+   "id": "tech_whiteout",
+   "owner": "cat",
+   "comp": "M",
+   "subject": "no humans, still life, 1.4::a whirling cluster of large white snowflakes and blowing snow::, 1.2::six-pointed snowflakes, ice crystals, snowstorm::, snowing",
+   "uc_extra": "white background, light background, bright background, beige background, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue, waterfall, river, water, light beam, pillar of light::, 1.3::cube, block, square, box, pedestal, platform, base::"
+  }
+ ]
+}
