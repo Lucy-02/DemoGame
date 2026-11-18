@@ -2,7 +2,7 @@ import { mkdtemp, readdir, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { createFileStorage } from "./storage";
+import { createFileStorage, renameSteady } from "./storage";
 
 describe("파일 저장소", () => {
   it("덮어쓸 때 직전 판을 .bak으로 남기고 임시 파일은 남기지 않는다", async () => {
@@ -21,5 +21,16 @@ describe("파일 저장소", () => {
   it("경로 조작 키를 거부한다", async () => {
     const s = createFileStorage(tmpdir());
     await expect(s.write("../../etc/x", "x")).rejects.toThrow(/invalid storage key/);
+  });
+
+  it("이름 바꾸기가 잠깐 막히면 다시 하고, 다른 오류는 바로 던진다", async () => {
+    const busy = Object.assign(new Error("busy"), { code: "EPERM" });
+    let calls = 0;
+    await renameSteady("a", "b", async () => { if (++calls < 3) throw busy; });
+    expect(calls).toBe(3);
+    const gone = Object.assign(new Error("gone"), { code: "ENOENT" });
+    calls = 0;
+    await expect(renameSteady("a", "b", async () => { calls++; throw gone; })).rejects.toThrow("gone");
+    expect(calls).toBe(1);
   });
 });

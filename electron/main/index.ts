@@ -3,6 +3,7 @@ import { app, BrowserWindow, ipcMain, net, protocol, shell } from "electron";
 import { join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { IPC } from "../../src/platform/bridge";
+import { fitResize } from "./aspect";
 import { createErrorLog } from "./errorLog";
 import { createFileStorage } from "./storage";
 
@@ -78,12 +79,15 @@ function createWindow() {
     },
   });
   // 창 모드에서는 화면 비율대로만 늘어나서 남는 곳이 없어요.
-  // 윈도는 비율을 창틀까지 포함한 바깥 크기에 걸어서, 창틀만큼을 빼고 맞추게 알려 줘요. 비율을 걸 때 바뀐 크기는 기준 크기로 되돌려요
+  // 윈도의 setAspectRatio는 창틀까지 포함한 바깥 크기에 비율을 걸어서(안쪽이 넓어져요), 끌 때마다 안쪽 기준으로 다시 계산해요
   if (process.platform === "win32") {
-    const [outerW, outerH] = win.getSize();
-    const [innerW, innerH] = win.getContentSize();
-    win.setAspectRatio(BASE.w / BASE.h, { width: outerW - innerW, height: outerH - innerH });
-    win.setContentSize(BASE.w, BASE.h);
+    win.on("will-resize", (e, next, details) => {
+      const [outerW, outerH] = win.getSize();
+      const [innerW, innerH] = win.getContentSize();
+      const frame = { width: outerW - innerW, height: outerH - innerH };
+      e.preventDefault();
+      win.setBounds(fitResize(win.getBounds(), next, details.edge, frame, BASE.w / BASE.h, { width: BASE.w / 2, height: BASE.h / 2 }));
+    });
   } else win.setAspectRatio(BASE.w / BASE.h);
   win.once("ready-to-show", () => win.show());
 
