@@ -22,6 +22,7 @@
     "boss": 2400
   },
   "party_size": 3,
+  "path_scale": { "dmg": 0.8 },
   "party_scale": {
     "1": { "hp": 0.6, "dmg": 0.4, "boss": { "hp": 0.85, "dmg": 0.5 } },
     "2": { "hp": 0.85, "dmg": 0.85 }
