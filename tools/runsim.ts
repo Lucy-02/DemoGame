@@ -111,6 +111,8 @@ export interface RunSimResult {
   offered: string[];
   taken: string[];
   skips: number;
+  /** 보상 카드를 고른 막과 받았는지 (막별 받기 비율, 0132). 출발 묶음은 빼요 */
+  picks: { act: number; took: boolean }[];
   /** 끝난 칸의 종류 (클리어면 boss) */
   endedType: string;
   /** 들어간 칸 수 (종류별) */
@@ -200,6 +202,8 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
   const offered: string[] = [], taken: string[] = [];
   const nodes: Record<string, number> = {};
   let skips = 0;
+  const picks: RunSimResult["picks"] = [];
+  let inBundle = true;
   const mode = sim.reward ?? "default";
   const choose = (cards: RewardCard[]): string | null => {
     if (mode === "skip") return null;
@@ -216,6 +220,7 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
       for (let i = 1; i < (wi.offer ?? 1); i++) for (const c of run.rollSpiritCards(C.reward[reward.kind === "elite" ? "rarity_elite" : "rarity_normal"])) if (!reward.cards.some((o) => o.cardId === c.cardId)) reward.cards.push(c);
       offered.push(...reward.cards.map((c) => c.cardId));
       const id = choose(reward.cards);
+      if (!inBundle) picks.push({ act: run.act, took: !!id });
       if (id) {
         const owner = reward.cards.find((c) => c.cardId === id)!.owner;
         run.takeRewardCard(reward, id);
@@ -259,6 +264,7 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
     }
   };
   if (!joined && joinAt === 0) join();
+  inBundle = false;
   for (let guard = 0; guard < 30 * run.lastAct; guard++) {
     if (!joined && run.act === 1 && (run.current?.floor ?? 0) >= joinAt!) join();
     const node = pickNode(run, rng, sim.path);
@@ -272,7 +278,7 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
       if (node.type === "battle") mobTurns.push(turns);
       else if (node.type === "elite") eliteTurns.push(turns);
       if (node.type === "boss") bosses.push({ act: run.act, hpPct: before.bossHpPct, turns, won });
-      const tail = { battles, mobTurns, eliteTurns, act: run.act, actsCleared: run.act - (won && node.type === "boss" ? 0 : 1), bosses, offered, taken, skips, nodes, endedType: node.type };
+      const tail = { battles, mobTurns, eliteTurns, act: run.act, actsCleared: run.act - (won && node.type === "boss" ? 0 : 1), bosses, offered, taken, skips, picks, nodes, endedType: node.type };
       if (node.type === "boss" && !(won && run.hasNextAct())) return { won, endedAt: won ? "clear" : enc.id, floor: node.floor, reachedBoss: true, ...before, bossTurns: turns, ...tail };
       if (!won) return { won: false, endedAt: enc.id, floor: node.floor, reachedBoss: bosses.length > 0, ...tail };
       takeReward(run.rollBattleReward(node.type === "boss" ? "elite" : node.type));
@@ -406,9 +412,12 @@ function report(label: string, s: Setup) {
     const met = rs.flatMap((r) => r.bosses.filter((x) => x.act === i + 1));
     return `  ${i + 1}막 통과 ${pct(rs.filter((r) => r.actsCleared > i).length / n)} (보스 도착 HP ${pct(avg(met.map((x) => x.hpPct)))} · ${avg(met.map((x) => x.turns)).toFixed(1)}턴)`;
   }).join("") : "";
+  const picks = rs.flatMap((r) => r.picks);
+  const takeRate = (xs: typeof picks) => (xs.length ? `${((xs.filter((x) => x.took).length / xs.length) * 100).toFixed(0)}%` : "-");
+  const byAct = Array.from({ length: acts ?? 1 }, (_, i) => takeRate(picks.filter((x) => x.act === i + 1))).join(" · ");
   console.log(
     `${label.padEnd(30)} ${kind.padEnd(6)} n=${String(n).padEnd(5)} 클리어 ${pct(wins.length / n)} [${(lo * 100).toFixed(1)}–${(hi * 100).toFixed(1)}]  보스 도달 ${pct(boss.length / n)}  ` +
-    `보스 때 덱 ${avg(boss.map((r) => r.bossDeck!)).toFixed(1).padStart(4)}장 · HP ${pct(avg(boss.map((r) => r.bossHpPct!)))} · ${avg(boss.map((r) => r.bossTurns!)).toFixed(1)}턴  잡몹 ${avg(rs.flatMap((r) => r.mobTurns)).toFixed(1)}턴 · 정예 ${avg(rs.flatMap((r) => r.eliteTurns)).toFixed(1)}턴  끝난 곳: ${top}${perAct}`,
+    `보스 때 덱 ${avg(boss.map((r) => r.bossDeck!)).toFixed(1).padStart(4)}장 · HP ${pct(avg(boss.map((r) => r.bossHpPct!)))} · ${avg(boss.map((r) => r.bossTurns!)).toFixed(1)}턴  잡몹 ${avg(rs.flatMap((r) => r.mobTurns)).toFixed(1)}턴 · 정예 ${avg(rs.flatMap((r) => r.eliteTurns)).toFixed(1)}턴  받기 ${takeRate(picks)} (막별 ${byAct})  끝난 곳: ${top}${perAct}`,
   );
 }
 
