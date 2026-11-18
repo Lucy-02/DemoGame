@@ -442,13 +442,14 @@ export class Run {
     return this.current?.trait ? [this.current.trait] : [];
   }
 
-  /** 지금 칸의 적 세기: 인원에 맞춘 세기 (0053)에 길 전투(잡몹 · 정예) 피해 배율 (0132)을 곱해요. 둘 다 없으면 undefined */
+  /** 지금 칸의 적 세기: 인원에 맞춘 세기 (0053)에 길 전투(잡몹 · 정예) 피해 배율 (0132)과 막별 세기 (0155)를 곱해요. 모두 없으면 undefined */
   enemyScale(): EnemyScale | undefined {
     const boss = this.current?.type === "boss";
     const party = partyScale(this.spirits.length, boss);
     const path = boss ? 1 : (C.path_scale as { dmg: number }).dmg;
-    if (path === 1) return party;
-    return { hp: party?.hp ?? 1, dmg: (party?.dmg ?? 1) * path };
+    const act = (C.acts[this.act - 1] as { scale?: EnemyScale }).scale;
+    if (path === 1 && !act) return party;
+    return { hp: (party?.hp ?? 1) * (act?.hp ?? 1), dmg: (party?.dmg ?? 1) * path * (act?.dmg ?? 1) };
   }
 
   pickEvent(): EventDef {

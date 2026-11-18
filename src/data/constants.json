@@ -57,9 +57,7 @@
     "light": "shadow",
     "shadow": "light"
   },
-  "crit_base": 0.05,
   "crit_mult": 1.5,
-  "crit_pity": 0.02,
   "release_damage_mult": {
     "fire_fox": 1.5
   },
@@ -120,9 +118,9 @@
   "acts": [
     { "elements": ["fire", "forest", "wind"] },
     { "elements": ["earth", "electric", "light"] },
-    { "elements": ["ice", "water", "shadow"] },
+    { "elements": ["ice", "water", "shadow"], "scale": { "hp": 1.1, "dmg": 1.1 } },
     { "elements": ["wind", "light", "shadow"] },
-    { "elements": ["none"], "floors": 4 }
+    { "elements": ["none"], "floors": 4, "scale": { "hp": 1.05, "dmg": 1.05 } }
   ],
   "acts_enabled": 5,
   "demo": { "acts": 2 },
