@@ -1,0 +1,105 @@
+{
+ "run_id": "card-art-r16-20261118-20261118T000924Z-487ec5b1",
+ "model": "nai-diffusion-4-5-full",
+ "width": 1024,
+ "height": 1024,
+ "steps": 28,
+ "cases": {
+  "tech_whiteout-S-o-s4401": {
+   "seed": 4401,
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, 1.2::a blinding wall of white blizzard sweeping through a dark frozen ravine at night, frost crawling over jagged dark rocks::, strong wind streaks, 1.2::a dynamic scene, the main action happens in the center, readable at a glance::, medium shot, simple shapes, clean lineart, cel shading, thick outline, limited palette, 1.1::beautiful atmospheric lighting, evocative mood::, 1.1::the four corners are plain dark background::, 1.2::night, dark slate blue and deep navy palette with pale frost highlights::, very aesthetic, masterpiece, no text, very aesthetic, masterpiece, best quality, no text",
+   "uc": "1girl, 1boy, person, people, human, face, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.2::cluttered, crowded, busy::, white background, light background, bright background, beige background, snow field, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue::, 1.3::cube, ice cube, block, square, box, rectangular, pedestal, platform, base, plinth, slab::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite",
+   "style_key": "b07_v2",
+   "variant": "o",
+   "scale": 6,
+   "cfg_rescale": 0.1,
+   "skip_cfg_above_sigma": null,
+   "source_png": "runs/card-art-r16-20261118-20261118T000924Z-487ec5b1/images/req_000000_3828f342e528.png",
+   "image_sha256": "ea6aee566cd9414dc95ef1dd26212d0e1c59db7024bd9cf69efa91303fdde676"
+  },
+  "tech_whiteout-S-o-s4402": {
+   "seed": 4402,
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, 1.2::a blinding wall of white blizzard sweeping through a dark frozen ravine at night, frost crawling over jagged dark rocks::, strong wind streaks, 1.2::a dynamic scene, the main action happens in the center, readable at a glance::, medium shot, simple shapes, clean lineart, cel shading, thick outline, limited palette, 1.1::beautiful atmospheric lighting, evocative mood::, 1.1::the four corners are plain dark background::, 1.2::night, dark slate blue and deep navy palette with pale frost highlights::, very aesthetic, masterpiece, no text, very aesthetic, masterpiece, best quality, no text",
+   "uc": "1girl, 1boy, person, people, human, face, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.2::cluttered, crowded, busy::, white background, light background, bright background, beige background, snow field, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue::, 1.3::cube, ice cube, block, square, box, rectangular, pedestal, platform, base, plinth, slab::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite",
+   "style_key": "b07_v2",
+   "variant": "o",
+   "scale": 6,
+   "cfg_rescale": 0.1,
+   "skip_cfg_above_sigma": null,
+   "source_png": "runs/card-art-r16-20261118-20261118T000924Z-487ec5b1/images/req_000001_54b6d3366598.png",
+   "image_sha256": "b59a859200830b2408b7cadccb063addf2b9538117a12dff2110e63ae6a79bc1"
+  },
+  "tech_whiteout-S-o-s4403": {
+   "seed": 4403,
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, 1.2::a blinding wall of white blizzard sweeping through a dark frozen ravine at night, frost crawling over jagged dark rocks::, strong wind streaks, 1.2::a dynamic scene, the main action happens in the center, readable at a glance::, medium shot, simple shapes, clean lineart, cel shading, thick outline, limited palette, 1.1::beautiful atmospheric lighting, evocative mood::, 1.1::the four corners are plain dark background::, 1.2::night, dark slate blue and deep navy palette with pale frost highlights::, very aesthetic, masterpiece, no text, very aesthetic, masterpiece, best quality, no text",
+   "uc": "1girl, 1boy, person, people, human, face, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.2::cluttered, crowded, busy::, white background, light background, bright background, beige background, snow field, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue::, 1.3::cube, ice cube, block, square, box, rectangular, pedestal, platform, base, plinth, slab::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite",
+   "style_key": "b07_v2",
+   "variant": "o",
+   "scale": 6,
+   "cfg_rescale": 0.1,
+   "skip_cfg_above_sigma": null,
+   "source_png": "runs/card-art-r16-20261118-20261118T000924Z-487ec5b1/images/req_000002_0650d3827c2f.png",
+   "image_sha256": "0f8c35fb20af518a2e84f9d5a2abcde43ec25f8bc27b6c99d4b3306b507eeb1a"
+  },
+  "tech_whiteout-S-o-s4404": {
+   "seed": 4404,
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, 1.2::a blinding wall of white blizzard sweeping through a dark frozen ravine at night, frost crawling over jagged dark rocks::, strong wind streaks, 1.2::a dynamic scene, the main action happens in the center, readable at a glance::, medium shot, simple shapes, clean lineart, cel shading, thick outline, limited palette, 1.1::beautiful atmospheric lighting, evocative mood::, 1.1::the four corners are plain dark background::, 1.2::night, dark slate blue and deep navy palette with pale frost highlights::, very aesthetic, masterpiece, no text, very aesthetic, masterpiece, best quality, no text",
+   "uc": "1girl, 1boy, person, people, human, face, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, comic, panels, 1.2::vignette::, 1.1::lens flare, bloom::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, 1.2::cluttered, crowded, busy::, white background, light background, bright background, beige background, snow field, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue::, 1.3::cube, ice cube, block, square, box, rectangular, pedestal, platform, base, plinth, slab::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite",
+   "style_key": "b07_v2",
+   "variant": "o",
+   "scale": 6,
+   "cfg_rescale": 0.1,
+   "skip_cfg_above_sigma": null,
+   "source_png": "runs/card-art-r16-20261118-20261118T000924Z-487ec5b1/images/req_000003_4f3169f5c589.png",
+   "image_sha256": "d9fab01f1acff94d64ce4f80ab4215605794dd3cdfed01fd2939cddf227e00df"
+  },
+  "tech_whiteout-M-o-s4401": {
+   "seed": 4401,
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, still life, object focus, 1.2::a tight spiraling vortex of blowing white snow and sharp ice shards, a small snowstorm::, 1.2::symbolic still life, one central object, centered, wide empty margin::, simple background, clean lineart, cel shading, thick outline, 1.1::elegant, evocative::, 1.1::the four corners are plain dark background::, 1.2::plain dark slate blue background, night::, 1.1::cold pale highlights::, very aesthetic, masterpiece, no text, very aesthetic, masterpiece, best quality, no text",
+   "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, white background, light background, bright background, beige background, snow field, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue::, 1.3::cube, ice cube, block, square, box, rectangular, pedestal, platform, base, plinth, slab::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite",
+   "style_key": "b07_v2",
+   "variant": "o",
+   "scale": 6,
+   "cfg_rescale": 0.1,
+   "skip_cfg_above_sigma": null,
+   "source_png": "runs/card-art-r16-20261118-20261118T000924Z-487ec5b1/images/req_000004_515d49214080.png",
+   "image_sha256": "12ee7784d55a087bcccbd3c5e72e7e29fd0897342b3dec9da52bf58ffa15cbac"
+  },
+  "tech_whiteout-M-o-s4402": {
+   "seed": 4402,
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, still life, object focus, 1.2::a tight spiraling vortex of blowing white snow and sharp ice shards, a small snowstorm::, 1.2::symbolic still life, one central object, centered, wide empty margin::, simple background, clean lineart, cel shading, thick outline, 1.1::elegant, evocative::, 1.1::the four corners are plain dark background::, 1.2::plain dark slate blue background, night::, 1.1::cold pale highlights::, very aesthetic, masterpiece, no text, very aesthetic, masterpiece, best quality, no text",
+   "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, white background, light background, bright background, beige background, snow field, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue::, 1.3::cube, ice cube, block, square, box, rectangular, pedestal, platform, base, plinth, slab::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite",
+   "style_key": "b07_v2",
+   "variant": "o",
+   "scale": 6,
+   "cfg_rescale": 0.1,
+   "skip_cfg_above_sigma": null,
+   "source_png": "runs/card-art-r16-20261118-20261118T000924Z-487ec5b1/images/req_000005_9f81e7d11166.png",
+   "image_sha256": "a63b8d443208c040cda1fdfc609ebe4a457657969275d50b7d77721f7a99e295"
+  },
+  "tech_whiteout-M-o-s4403": {
+   "seed": 4403,
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, still life, object focus, 1.2::a tight spiraling vortex of blowing white snow and sharp ice shards, a small snowstorm::, 1.2::symbolic still life, one central object, centered, wide empty margin::, simple background, clean lineart, cel shading, thick outline, 1.1::elegant, evocative::, 1.1::the four corners are plain dark background::, 1.2::plain dark slate blue background, night::, 1.1::cold pale highlights::, very aesthetic, masterpiece, no text, very aesthetic, masterpiece, best quality, no text",
+   "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, white background, light background, bright background, beige background, snow field, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue::, 1.3::cube, ice cube, block, square, box, rectangular, pedestal, platform, base, plinth, slab::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite",
+   "style_key": "b07_v2",
+   "variant": "o",
+   "scale": 6,
+   "cfg_rescale": 0.1,
+   "skip_cfg_above_sigma": null,
+   "source_png": "runs/card-art-r16-20261118-20261118T000924Z-487ec5b1/images/req_000006_ff823670a4fc.png",
+   "image_sha256": "e204450afd6b8820dd530a94f06b30eb1adbdce670149ed0cc435f73546e14a6"
+  },
+  "tech_whiteout-M-o-s4404": {
+   "seed": 4404,
+   "prompt": "0.8::scottie_(phantom2) ::, 1.4::sushispin::, 1.1::tokkyu::, year 2024, year 2025, no humans, still life, object focus, 1.2::a tight spiraling vortex of blowing white snow and sharp ice shards, a small snowstorm::, 1.2::symbolic still life, one central object, centered, wide empty margin::, simple background, clean lineart, cel shading, thick outline, 1.1::elegant, evocative::, 1.1::the four corners are plain dark background::, 1.2::plain dark slate blue background, night::, 1.1::cold pale highlights::, very aesthetic, masterpiece, no text, very aesthetic, masterpiece, best quality, no text",
+   "uc": "1girl, 1boy, person, people, human, face, eyes, hands, text, logo, watermark, signature, letters, writing, kanji, frame, border, picture frame, card, card frame, multiple views, split screen, close-up, cropped, cut off, out of frame, 1.2::vignette::, 1.2::floor, ground, table, pedestal, cast shadow, horizon::, 1.1::lens flare, bloom, sparkles, light particles::, 1.2::cluttered, crowded, busy background, detailed background, scenery, landscape::, depth of field, bokeh, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing, 1.2::pixel art, pixelated, halftone, screentone, dithering::, 3d, photorealistic, white background, light background, bright background, beige background, snow field, daylight, 1.3::pixel art, pixelated, dithering, color banding::, face, eyes, cute, chibi, 1.2::creature, monster, golem, statue::, 1.3::cube, ice cube, block, square, box, rectangular, pedestal, platform, base, plinth, slab::, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, very displeasing, multiple views, reference sheet, text, logo, watermark, signature, scenery, detailed background, cropped, out of frame, bad anatomy, realistic, child, loli, petite",
+   "style_key": "b07_v2",
+   "variant": "o",
+   "scale": 6,
+   "cfg_rescale": 0.1,
+   "skip_cfg_above_sigma": null,
+   "source_png": "runs/card-art-r16-20261118-20261118T000924Z-487ec5b1/images/req_000007_0d11ba647704.png",
+   "image_sha256": "2e9285b93f7fcbc1e80ed1581db73d3ddce1633c031b7bd5418dcc2da51db28d"
+  }
+ }
+}
