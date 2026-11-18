@@ -4,10 +4,11 @@ import { FRAME, GOLD_AT, GRID, LANE, SLIM_LANE } from "../run/layout";
 
 export { FRAME, GOLD_AT };
 
-/** 큰 지도: 한 막 전체(출발 + 층들 + 보스)를 줄 간격을 줄여 한 번에 보여요 (Lucy 2026-11-17, 미니맵 없음). 아래가 출발, 위가 보스 */
+/** 큰 지도: 한 막 전체(출발 + 층들 + 보스)를 한 번에 보여요 (Lucy 2026-11-17, 미니맵 없음). 아래가 출발(bottom), 위가 보스(top).
+ *  줄 간격은 그 막의 층 수로 나눠요: 막이 5층이든 4층이든 출발과 보스가 같은 자리에 와요 (top은 7층 막일 때 보스가 있던 자리) */
 export const PATH = {
   /** 왼쪽 열(48~612) 가로 가운데에 네 줄 */
-  cx: GRID.gutter + (GRID.lanesX - GRID.gutter * 2 - 4) / 2, colStep: 100, bottom: 716, rowStep: 78,
+  cx: GRID.gutter + (GRID.lanesX - GRID.gutter * 2 - 4) / 2, colStep: 100, bottom: 716, top: 92,
   /** 칸: 원판 40, 기호 18 · 지금 있는 칸은 바깥 테 4 띄워 2 */
   /** 표지(미리 본 보스 차징): 칸 오른쪽 아래 둘레 45° 자리의 작은 원, 바깥 테는 바닥 색 */
   badge: { d: 18, icon: 11, outline: 2, ring: 1 },

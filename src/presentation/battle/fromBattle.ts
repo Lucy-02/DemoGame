@@ -1,7 +1,7 @@
 // core 전투 상태 → 전투 화면 VM. 고정 장면(fixtures/) 대신 실제 전투를 그릴 때 써요.
 // 화면은 이 VM만 알고 Battle은 몰라요. 카드 key는 `c<uid>`예요 (cardRef로 되돌려요).
 import { C, cardDef } from "../../core/data";
-import { statusN, type BCard, type BEnemy, type BSpirit, type Battle, type Forecast, type Planned, type Ref, type StatusId } from "../../core/battle";
+import { statusN, type BCard, type BEnemy, type BSpirit, type Battle, type EnemySlot, type Forecast, type Planned, type Ref, type StatusId } from "../../core/battle";
 import type { EnemyAction, EnemyTargetRule } from "../../core/types";
 import { ELEMENT_ICON, faceKey } from "../faces";
 import { cardVM, equipVM, releaseVM, richText, type CardStats } from "../run/fromCore";
@@ -122,7 +122,7 @@ function orderOf(b: Battle): OrderEntry[] {
     const charge = e.charging || undefined;
     const tip: OrderTipVM = {
       title: e.def.name, kind: charge && COPY.order.charge,
-      result: main?.type === "attack" ? { who: whoOf(b, main), value: amountOf(b, e, main) } : undefined,
+      result: main?.type === "attack" ? { who: whoOf(b, main, x), value: amountOf(b, e, main) } : undefined,
       text: richText(b.intent(e).text),
       chips: [{ text: COPY.order.n(i + 1) }, ...(charge ? [{ text: COPY.order.breakable, tone: "acc" as const }] : [])],
     };
@@ -130,10 +130,10 @@ function orderOf(b: Battle): OrderEntry[] {
   });
 }
 
-/** 한 아군을 노리는 행동이면 그 아군 이름 (전체 · 무작위는 비워요) */
-function whoOf(b: Battle, a: EnemyAction): string | undefined {
-  if (!("target" in a) || a.target === "all" || a.target === "random") return undefined;
-  const id = aims(b, a.target)[0];
+/** 한 아군을 노리는 행동이면 그 아군 이름 (전체, 여럿에게 갈리는 무작위는 비워요) */
+function whoOf(b: Battle, a: EnemyAction, slot: EnemySlot): string | undefined {
+  if (!("target" in a) || a.target === "all") return undefined;
+  const id = aims(b, a.target, slot)[0];
   return id === undefined ? undefined : b.spirit(id).def.name;
 }
 
@@ -268,7 +268,7 @@ function allyVM(b: Battle, s: BSpirit, incoming: Forecast): AllyVM {
 }
 
 /** 이 규칙이 지금 노리는 아군 (의도에 그리는 대상) */
-function aims(b: Battle, rule: EnemyTargetRule): string[] {
+function aims(b: Battle, rule: EnemyTargetRule, slot?: EnemySlot): string[] {
   const alive = b.aliveSpirits();
   if (rule === "all") return alive.map((s) => s.id);
   if (rule === "front") return [b.frontId];
@@ -276,8 +276,10 @@ function aims(b: Battle, rule: EnemyTargetRule): string[] {
     const low = alive.reduce<BSpirit | undefined>((m, s) => (!m || s.hp < m.hp ? s : m), undefined);
     return low ? [low.id] : [];
   }
-  // 무작위: 아군이 하나뿐이면 그 아군이 맞아요. 여럿이면 누가 맞을지 몰라요
-  return alive.length === 1 ? [alive[0].id] : [];
+  // 무작위: 턴 시작에 뽑아 둔 대상이 한 아군이면 그 아군 (0128). 여럿에게 갈리면 얼굴 하나로 못 그려요
+  if (alive.length === 1) return [alive[0].id];
+  const picked = slot ? b.aimOf(slot) : [];
+  return picked.length === 1 ? picked : [];
 }
 
 function statusesOf(h: BSpirit | BEnemy): StatusVM[] {
@@ -333,7 +335,7 @@ function intentOf(b: Battle, e: BEnemy, order: OrderEntry[]): IntentVM | undefin
   const move = b.moveQueue(e)[0]?.move ?? b.currentMove(e);
   const main = move.actions.find((a) => a.type === "attack") ?? move.actions[0];
   const at = n < 0 ? undefined : n + 1;
-  const target = main ? targetOf(b, main) : "none";
+  const target = main ? targetOf(b, main, b.slots.find((x) => x.uid === e.uid && !x.done)) : "none";
   const amount = main ? amountOf(b, e, main) : "";
   if (it.kind === "charge" || it.kind === "chargeReady") return { kind: "charge", order: at, icon: CHARGE_ICON, amount, target };
   const icon = (main && ACTION_ICON[main.type]) ?? CHARGE_ICON;
@@ -341,11 +343,10 @@ function intentOf(b: Battle, e: BEnemy, order: OrderEntry[]): IntentVM | undefin
   return { kind: it.kind, order: at, icon, amount, target };
 }
 
-function targetOf(b: Battle, a: EnemyAction): IntentTarget {
+function targetOf(b: Battle, a: EnemyAction, slot?: EnemySlot): IntentTarget {
   if (!("target" in a)) return "none";
   if (a.target === "all") return "all";
-  if (a.target === "random") return "random";
-  return aims(b, a.target)[0] ?? "none";
+  return aims(b, a.target, slot)[0] ?? (a.target === "random" ? "random" : "none");
 }
 
 function amountOf(b: Battle, e: BEnemy, a: EnemyAction): string {

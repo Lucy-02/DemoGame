@@ -31,9 +31,9 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
     },
     run(b, e, a) {
       const hits = a.hits ?? 1;
-      const fixed = a.target === "random" ? null : b.pickTargets(a.target);
+      const fixed = a.target === "random" ? null : b.pickTargets(a.target, e);
       for (let h = 0; h < hits; h++) {
-        const targets = fixed ?? b.pickTargets("random");
+        const targets = fixed ?? b.pickTargets("random", e);
         for (const s of targets) {
           if (s.downed) continue;
           b.enemyHit(e, s, a.dmg, !!a.pierce);
@@ -54,22 +54,22 @@ export const ENEMY_ACTIONS: { [K in ActionId]: EnemyActionHandler<K> } = {
   weak: {
     kind: "debuff",
     text: (_b, _e, a) => ({ to: TO[a.target], core: `약화를 ${a.turns}턴 부여하` }),
-    run(b, _e, a) {
-      for (const s of b.pickTargets(a.target)) b.addStatus(s, "weak", a.turns, { fresh: b.replaying });
+    run(b, e, a) {
+      for (const s of b.pickTargets(a.target, e)) b.addStatus(s, "weak", a.turns, { fresh: b.replaying });
     },
   },
   vulnerable: {
     kind: "debuff",
     text: (_b, _e, a) => ({ to: TO[a.target], core: `취약을 ${a.turns}턴 부여하` }),
-    run(b, _e, a) {
-      for (const s of b.pickTargets(a.target)) b.addStatus(s, "vuln", a.turns, { fresh: b.replaying, strength: C.vuln_base });
+    run(b, e, a) {
+      for (const s of b.pickTargets(a.target, e)) b.addStatus(s, "vuln", a.turns, { fresh: b.replaying, strength: C.vuln_base });
     },
   },
   burn: {
     kind: "debuff",
     text: (_b, _e, a) => ({ to: TO[a.target], core: `화상을 ${a.value} 부여하` }),
-    run(b, _e, a) {
-      for (const s of b.pickTargets(a.target)) b.addStatus(s, "burn", a.value);
+    run(b, e, a) {
+      for (const s of b.pickTargets(a.target, e)) b.addStatus(s, "burn", a.value);
     },
   },
   buffMinions: {

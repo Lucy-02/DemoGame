@@ -6,7 +6,7 @@ import {
 } from "../../core/garden";
 import { baseStat, equipSlots, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
 import { describeCard } from "../../core/text";
-import { ELEMENT_ICON } from "../faces";
+import { ELEMENT_ICON, ROLE_ICON } from "../faces";
 import { awakenedPuppet } from "../puppet/puppetIds";
 import { equipSheet, equipVM } from "../run/fromCore";
 import { spiritArt } from "../spiritArt";
@@ -26,7 +26,7 @@ const shownTodos = (s: GardenSpirit) => todos(s).filter((t): t is Todo & { kind:
 
 const STAT_ORDER: StatKey[] = ["hp", "power", "guard", "focus", "speed"];
 const STAT_LABEL: Record<StatKey, string> = { hp: "HP", power: "파워", guard: "가드", focus: "포커스", speed: "스피드" };
-export const ROLE_ICON: Record<string, string> = { attack: "role-attack", guard: "role-guard", support: "role-support", disrupt: "role-disrupt" };
+export { ROLE_ICON };
 
 /** 이 정령의 전용 카드 (해금 키 순서: lv2, lv3, adult) */
 function exclusiveCards(id: string): { card: CardDef; key: string; at: string }[] {

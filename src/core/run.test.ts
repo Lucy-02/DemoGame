@@ -228,7 +228,7 @@ describe("카드 강화 (0080)", () => {
     const up = cardDef("fire_claw+");
     expect(up.name).toBe(base.name);
     expect(up.effects).toEqual([{ op: "damage", value: 8 }]);
-    expect(cardDef("glass_scale+").effects).toEqual([{ op: "wall", value: 3 }]);
+    expect(cardDef("glass_scale+").effects).toEqual([{ op: "wall", value: (cardDef("glass_scale").effects[0] as { value: number }).value + 1 }]);
   });
 
   it("강화는 카드당 한 번, 전투 덱에는 강화한 id로", () => {

@@ -25,19 +25,19 @@ describe("카드 효과 문구 (0022)", () => {
 
   it("Lucy 예시 그대로: 서술어가 있는 합니다체, 조건은 앞에", () => {
     expect(text("fire_claw")).toBe("피해를 6 입힙니다.");
-    expect(text("backfire")).toBe("피해를 8 입힙니다. 대상이 화상 상태이면 피해를 추가로 8 입힙니다.");
+    expect(text("backfire")).toBe("피해를 12 입힙니다. 대상이 화상 상태이면 피해를 추가로 12 입힙니다.");
   });
 
   it("대상은 효과마다. 같은 대상이 이어지면 한 번만", () => {
-    expect(text("fire_storm")).toBe("모든 적에게 피해를 5 입히고 화상을 3 부여합니다.");
-    expect(text("glass_skin")).toBe("벽 방어도를 4 얻습니다. 반격을 2 얻습니다.");
+    expect(text("fire_storm")).toBe("모든 적에게 피해를 8 입히고 화상을 5 부여합니다.");
+    expect(text("glass_skin")).toBe("벽 방어도를 6 얻습니다. 반격을 3 얻습니다.");
     expect(text("bubble_shield")).toBe("아군 하나에게 방어도를 5 줍니다.");
     expect(text("mend")).toBe("아군 하나의 HP를 4 회복합니다.");
   });
 
   it("다단 히트·연속·소멸·지속", () => {
-    expect(text("double_strike")).toBe("피해를 3씩 2번 입힙니다.");
-    expect(text("whirl_slash")).toBe("피해를 3 입힙니다. 연속 2: 피해를 3씩 2번 입힙니다.");
+    expect(text("double_strike")).toBe("피해를 5씩 2번 입힙니다.");
+    expect(text("whirl_slash")).toBe("피해를 5 입힙니다. 연속 2: 피해를 5씩 2번 입힙니다.");
     expect(text("eternal_ice")).toBe("빙결시킵니다. 보스에게는 대신 냉기를 5 부여합니다. 소멸.");
     expect(text("blaze_aura")).toBe("지속. 이 정령이 화상을 부여할 때마다 화상을 1 더 부여합니다.");
   });
