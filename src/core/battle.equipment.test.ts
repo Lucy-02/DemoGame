@@ -49,7 +49,7 @@ describe("범용 장비", () => {
     expect(long[0]).toBeLessThan(first[0]);
   });
 
-  it("원형 방패: HP가 절반 아래일 때 가드가 더 올라요. 공명 3은 HP가 가득이 아니면 올라요", () => {
+  it("원형 방패: HP가 절반 이하일 때 가드가 더 올라요. 공명 3은 HP가 가득이 아니면 올라요", () => {
     const guard = (res: number, hp: number) => {
       const b = battleWith(["round_shield", res], []);
       const fox = b.spirit("fire_fox");

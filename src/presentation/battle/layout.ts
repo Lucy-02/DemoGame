@@ -16,18 +16,22 @@ export const FLOOR = { top: 330, stops: [[0, 0], [0.3, 0.55], [1, 0.9]] as const
 
 /** .sys right:16px top:10px gap:6px; .ib 34px; .ic 16px */
 export const SYS = { right: 16, top: 10, gap: 6, button: 34, icon: 16 };
+/** 오른쪽 위 버튼 셋(덱 · 기록 · 설정)이 차지하는 폭 */
+const SYS_W = 3 * SYS.button + 2 * SYS.gap;
 
 /** 순서표: 0074 시안(https://claude.ai/artifact/2Dn6Yso4LzqHk57eLj6xyg) 값 그대로 (Lucy 2026-11-16 "시안대로"). 화면 가운데 위 한 줄 판 (0038).
  *  .rt height 64 padding 0 16 radius 22 */
 const ORDER_FACE = 40;
 export const ORDER = {
   cx: FRAME.w / 2, top: 10, h: 64, padX: 16, radius: 22,
+  /** 판은 가운데에서 자라다 오른쪽 위 버튼 앞에서 멈춰요 (0160). 버튼과의 틈 = 버튼의 화면 여백 */
+  maxW: FRAME.w - 2 * (SYS.right + SYS_W + SYS.right),
   /** .rt .head padding-right 14, margin-right 4, border-right 1 (height 38) · .tn gap 6 · .dot 6 */
   head: { padR: 14, mr: 4, h: 38, line: 1, gap: 6, dot: 6, playRing: 1.5 },
   /** 재생 위치 선 (.ph): width 2 height 44 margin 0 3 radius 1. 재생 중 점 (.dot.play): 테 1.5 */
   cursor: { w: 2, h: 44, mx: 3, radius: 1 },
   /** .rt .ln width 18 height 1 */
-  line: { w: 18, h: 1 },
+  line: { w: 18, h: 1, min: 4 },
   /** .tok.en gap 4, padding 0 4 · .num width 10 */
   enemy: { gap: 4, padX: 4, numW: 10 },
   /** 적 얼굴 EN = 40 · 자리 그림 .fc svg 62% */
