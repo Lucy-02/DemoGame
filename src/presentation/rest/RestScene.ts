@@ -75,8 +75,8 @@ export class RestScene extends Phaser.Scene {
   preload() {
     for (const [id, w] of [...DECK_PICK_ICONS, ...CHOICE_ICONS, ...RUN_TOP_ICONS]) loadIcon(this, id, w);
     for (const row of Object.values(this.rows())) for (const c of row) {
-      preloadHandCard(this, c.card, { showRarity: true });
-      if (c.after) preloadHandCard(this, c.after, { showRarity: true });
+      preloadHandCard(this, c.card);
+      if (c.after) preloadHandCard(this, c.after);
     }
     preloadSpiritArt(this, this.session.run.spirits.map((s) => s.id));
     preloadStage(this, this.session.run.act);

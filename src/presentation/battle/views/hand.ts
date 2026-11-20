@@ -8,15 +8,13 @@ import { place, render, size, type Node } from "../../style/flex";
 import { gather } from "../../style/gather";
 import { loadIcon } from "../../style/icons";
 import { FAST, MOVE, fadeOutOld, reducedMotion } from "../../style/motion";
-import { opacityOf } from "../../style/opacity";
-import { cardTipContent } from "../../card/cardTip";
 import { createHandCard, preloadHandCard, type HandCardView } from "../../card/HandCard";
-import { HAND_CARD } from "../../card/layout";
-import { PAPER } from "../../tooltip/skins";
-import { TooltipHost, clampLeft } from "../../tooltip/Tooltip";
+import { BIG_CARD, HAND_CARD } from "../../card/layout";
+import { cardPeek } from "../../card/peek";
+import { clampLeft } from "../../tooltip/Tooltip";
 import type { CardVM } from "../../card/viewmodel";
 import { COPY } from "../copy";
-import { BAND, DRAG, END, FRAME, HAND, HOVER, LIFT, MANA, type LiftStyle } from "../layout";
+import { BAND, DRAG, END, FRAME, HAND, HOVER, MANA } from "../layout";
 import type { BattleVM } from "../viewmodel";
 import { faceKey } from "../../faces";
 
@@ -81,8 +79,6 @@ export interface HandOptions {
   onChange?: (key: string | null, held: boolean) => void;
   /** 카드를 눌렀을 때 (끌기·집기는 장면이 정해요) */
   onPress?: (key: string, pointer: Phaser.Input.Pointer) => void;
-  /** 들기 크기·밀림 (없으면 Lucy가 고른 LIFT) */
-  lift?: LiftStyle;
   /** 앞 장면의 손패. 주면 이어서 움직여요: 남은 카드는 자리를 좁히고, 새 카드는 흐리게 나타나고, 빠진 카드는 제자리에서 흐려져요 (0086) */
   prev?: HandSnapshot;
   /** 새 손패 (전투 시작 · 새 턴): 모든 카드가 왼쪽부터 차례로 나타나요 */
@@ -169,11 +165,17 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
   playHandMotion(scene, all, opts);
   const snap: HandSnapshot = Object.fromEntries(all.map((c) => [c.vm.key, { x: c.x, y: c.y, vm: c.vm }]));
 
-  const L = opts.lift ?? LIFT;
-  const tips = new TooltipHost(scene);
-  // 말풍선 아래 끝은 들린 카드 위에서 정본과 같은 거리 (정본: 카드 위 606.2, 말풍선 598)
-  const restBottom = HAND.y + HAND.group.pad + HAND_CARD.h;
-  const bubbleGap = restBottom - HOVER.lift - HAND_CARD.h * HOVER.scale - HOVER.bubbleBottom;
+  // 가리킨 카드는 제자리에서 큰 얼굴로 펼쳐져요 (0159). 아래 끝은 화면 아래에 맞추고, 머물면 곁쪽지가 옆에 떠요
+  const PEEK = BIG_CARD.peek;
+  const peekW = BIG_CARD.w * PEEK.scale, peekH = BIG_CARD.h * PEEK.scale;
+  const frame = { w: FRAME.w, h: FRAME.h, edge: HOVER.edge };
+  let peek: Phaser.GameObjects.Container | null = null;
+  const closePeek = () => {
+    if (!peek) return;
+    scene.tweens.killTweensOf(peek);
+    peek.destroy();
+    peek = null;
+  };
   // undefined = 아직 안 그림 (같은 key여도 다시 그려요)
   let current: string | null | undefined;
   let held: string | null = null;
@@ -185,43 +187,40 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
   };
 
   const setHover = (pointer: string | null, instant = false) => {
-    // 정본 스크립트: 다른 카드에 올리면 "호버만", 손패에서 벗어나면 집어 둔 카드로 돌아와요. 끄는 동안엔 손패가 쉬어요
+    // 다른 카드에 올리면 "보기만", 손패에서 벗어나면 집어 둔 카드로 돌아와요. 끄는 동안엔 손패가 쉬어요
     const key = drag ? null : pointer ?? held;
     if (key === current) return;
     current = key;
     const isHeld = key !== null && key === held;
     opts.onChange?.(key, isHeld);
     const gi = groups.findIndex((g) => g.cards.some((c) => c.vm.key === key));
-    groups.forEach((g, i) => {
-      to(g.root, { x: gi < 0 || i === gi ? 0 : i < gi ? -L.shiftGroup : L.shiftGroup }, instant);
+    groups.forEach((g) => {
       const ci = g.cards.findIndex((c) => c.vm.key === key);
-      g.cards.forEach((c, j) => {
-        const on = j === ci;
-        c.view.setLifted(on);
-        // 집은 카드는 다른 카드를 보는 동안에도 제자리에서 테를 남겨요 (Lucy 판정 2 나, 정본은 테를 지움)
-        c.view.setHeld(c.vm.key === held);
-        to(c.view.root, {
-          x: c.x + (i !== gi || on ? 0 : j < ci ? -L.shiftIn : L.shiftIn),
-          y: c.y - (on ? L.lift : 0),
-          scale: on ? L.scale : 1,
-        }, instant);
-        to(c.view, { opacity: gi < 0 || on ? 1 : HOVER.dim }, instant);
+      g.cards.forEach((c) => {
+        // 집은 카드는 작은 얼굴 그대로 떠올라 테를 둘러요. 다른 카드를 보는 동안에도 테는 남아요 (Lucy 판정 2 나)
+        const up = c.vm.key === held;
+        c.view.setLifted(up);
+        c.view.setHeld(up);
+        to(c.view.root, { y: c.y - (up ? HOVER.lift : 0) }, instant);
       });
-      // 든 카드는 얼굴·옆 카드 위로, 내려놓으면 얼굴이 다시 위로
-      if (ci >= 0) g.root.bringToTop(g.cards[ci].view.root);
+      // 집은 카드는 얼굴·옆 카드 위로, 내려놓으면 얼굴이 다시 위로
+      const hi = g.cards.findIndex((c) => c.vm.key === held);
+      if (hi >= 0) g.root.bringToTop(g.cards[hi].view.root);
       else g.face.forEach((o) => g.root.bringToTop(o));
+      if (ci >= 0) scene.children.bringToTop(g.root);
     });
 
-    tips.hide();
-    if (gi < 0) return;
-    scene.children.bringToTop(groups[gi].root);
+    closePeek();
+    if (gi < 0 || isHeld) return;
     const card = groups[gi].cards.find((c) => c.vm.key === key)!;
-    // 말풍선은 든 카드의 쉬는 자리 가운데를 가리켜요 (옆 카드 밀림 전 기준, 정본 offsetLeft와 같음).
-    // 정본은 집은 카드의 말풍선을 왼쪽으로 비켜 조준선 자리를 비웠지만, 0013에서 조준선이 없어져 가운데로 둬요
-    const cx = card.x;
-    const left = clampLeft(cx - PAPER.w / 2, PAPER.w, FRAME.w, HOVER.edge);
-    const bottom = card.y - L.lift - HAND_CARD.h * L.scale - bubbleGap;
-    tips.show({ skin: PAPER, content: cardTipContent(card.vm.detail), at: { left, bottom, tailX: cx - left } }, { instant });
+    const left = clampLeft(card.x - peekW / 2, peekW, FRAME.w, HOVER.edge);
+    const top = FRAME.h - PEEK.bottom - peekH;
+    peek = cardPeek(scene, card.vm, left, top, frame, { scale: PEEK.scale, values: true, why: true, instantNote: instant });
+    peek.setDepth(DRAG.depth - 1);
+    if (!instant && !reducedMotion()) {
+      peek.setAlpha(0).setY(PEEK.enterY);
+      scene.tweens.add({ targets: peek, alpha: 1, y: 0, duration, ease });
+    }
   };
 
   // 포인터: 카드에 들어가면 그 카드, 손패 밖으로 나가면 쉬는 상태. 카드 사이 틈에서 깜빡이지 않게 한 틱 늦춰요.
@@ -248,6 +247,7 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
     ghost.root.setDepth(DRAG.depth);
     ghost.setLifted(true);
     ghost.setHeld(true);
+    closePeek();
     card.view.root.setVisible(false);
     drag = { key, ghost, at: { field: false, target: false } };
     held = null;

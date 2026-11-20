@@ -1,17 +1,16 @@
 // 상점 화면만의 배치 수치. 공용 뼈대는 run/layout.ts.
-// 진열을 키움 (Lucy 2026-11-17, 공용 UI 기획 r8 big): 카드 폭 120 → 150, 행 y · 행 사이는 시험 화면에서 잰 임시 값.
-import { HAND_CARD } from "../card/layout";
+// 진열 카드는 큰 얼굴 (0159 L1 시안): 3×2, 카드 사이 5는 시안 값. 첫 행 y 80 · 행 사이(값 줄 포함) 44는 떠나기 버튼과 겹치지 않게 잡은 임시 값이에요.
+import { BIG_CARD } from "../card/layout";
 import { GRID, SLIM_LANE } from "../run/layout";
 
-/** TODO_TOKEN: 카드 폭 150은 시험 값 (r8-big-shop) */
-const CARD_W = 150;
-const CARD_H = (HAND_CARD.h * CARD_W) / HAND_CARD.w;
-/** TODO_TOKEN: 첫 행 y 100, 행 사이(값 줄 포함) 70은 시험 값 */
-const ROW0 = 100, ROW_GAP = 70;
-/** 카드 격자 3×2 (0050): 간격 20. 값은 카드 아래 10, 높이 20 가운데 (동전 14 gap 5) */
+const CARD_W = BIG_CARD.w;
+const CARD_H = BIG_CARD.h;
+/** TODO_TOKEN: 첫 행 y · 행 사이 */
+const ROW0 = 80, ROW_GAP = 44;
+/** 카드 격자 3×2 (0050). 값은 카드 아래 8, 높이 20 가운데 (동전 14 gap 5) */
 export const STOCK = {
-  x: GRID.gutter, rows: [ROW0, ROW0 + CARD_H + ROW_GAP], cols: 3, w: CARD_W, h: CARD_H, gap: 20, scale: CARD_W / HAND_CARD.w,
-  price: { dy: CARD_H + 10, h: 20, coin: 14, gap: 5 },
+  x: GRID.gutter, rows: [ROW0, ROW0 + CARD_H + ROW_GAP], cols: 3, w: CARD_W, h: CARD_H, gap: 5,
+  price: { dy: CARD_H + 8, h: 20, coin: 14, gap: 5 },
 };
 
 /** .svt 빼기·치료 칸: 격자 오른쪽(카드 간격 하나 띄움), 폭 144 · 높이는 카드 + 값 줄, 행마다 하나 · 사방 1px 의미색 테 (.55)

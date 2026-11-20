@@ -9,10 +9,10 @@ import { bindMenuKey } from "../menu/hooks";
 import { MOVE, crossPaint, fadeAway, fadeInScene, reducedMotion } from "../style/motion";
 import * as Phaser from "phaser";
 import type { RewardSession } from "../../session/reward";
-import { createHandCard, preloadHandCard } from "../card/HandCard";
-import { HAND_CARD } from "../card/layout";
+import { createBigCard, preloadBigCard } from "../card/BigCard";
+import { preloadHandCard } from "../card/HandCard";
 import { drawBackdrop as drawStage } from "../battle/views/backdrop";
-import { cardWithFace, drawCardTip } from "../run/cards";
+import { cardWithFace, drawCardNote } from "../run/cards";
 import { GOLD_ICONS, drawGold } from "../run/gold";
 import { preloadEquipArt } from "../run/equip";
 import { LANE_ICONS, drawLane, slotAt, type LaneState } from "../run/lanes";
@@ -101,10 +101,10 @@ export class ResultScene extends Phaser.Scene {
 
   preload() {
     for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...REWARD_ICONS, ...EQUIP_ICONS]) loadIcon(this, id, w);
-    for (const c of this.vm.cards) preloadHandCard(this, c.card, { showRarity: true, scale: REWARD.scale });
+    for (const c of this.vm.cards) preloadBigCard(this, c.card);
     const options = [...Object.values(this.vm.equip?.takers ?? {}).flat(), ...(this.vm.equip ? [{ tip: this.vm.equip.tip }] : [])];
     for (const o of options) {
-      if (o.tip.sheet.card) preloadHandCard(this, o.tip.sheet.card.vm, { showRarity: true });
+      if (o.tip.sheet.card) preloadHandCard(this, o.tip.sheet.card.vm);
     }
     preloadEquipArt(this, [
       ...(this.vm.equip ? [this.vm.equip.item.id] : []),
@@ -290,12 +290,11 @@ export class ResultScene extends Phaser.Scene {
     vm.cards.forEach((c, i) => {
       if (got?.card === i && leaving !== i) return;
       const x = at.col.x + i * (REWARD.w + REWARD.gap), y = at.cardsY;
-      const card = cardWithFace(this, c.card, c.owners.length === 1 ? lane(c.owners[0]) : undefined, REWARD.scale);
-      const view = createHandCard(this, card, x + (REWARD.w - HAND_CARD.w) / 2, y + REWARD.h - HAND_CARD.h, { showRarity: true, scale: REWARD.scale });
+      const card = cardWithFace(this, c.card, c.owners.length === 1 ? lane(c.owners[0]) : undefined);
+      const view = createBigCard(this, card, x, y);
       if (got?.card === i) return fadeAway(this, view);
       const on = focusI === i;
       view.setHeld(on);
-      view.setLifted(on);
       if (done) view.opacity = REWARD.sunk;
       else if (focusI !== undefined && !on) view.opacity = REWARD.dim;
       if (done) return;
@@ -308,7 +307,8 @@ export class ResultScene extends Phaser.Scene {
           this.held = this.held === i ? undefined : i;
           this.dirty = true;
         });
-      if (on) drawCardTip(this, card, x, y, REWARD.w);
+      // 큰 얼굴이 효과문을 보여 주니, 머물면 곁쪽지만 떠요 (0159)
+      if (on) drawCardNote(this, card, x, y, REWARD.w);
     });
 
     if (!done) {

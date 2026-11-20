@@ -193,7 +193,7 @@ function tokenOf(b: Battle, p: Lane, k: number, slots: number): PlannedToken {
       title: b.spirit(p.owner).def.release.name, kind: vm.name, text: vm.detail.text,
       chips: k < slots ? [{ text: COPY.order.before(k + 1) }] : [],
     };
-    return { token: { key: keyOf(b, p), face: p.owner, icon: vm.art, mark: "release", undo: undoOf(b, p), tip }, owner: p.owner };
+    return { token: { key: keyOf(b, p), face: p.owner, icon: "i-spark", mark: "release", undo: undoOf(b, p), tip }, owner: p.owner };
   }
   const icon = cardVM(p.card.cardId, p.owner).values[0]?.icon ?? CHARGE_ICON;
   const vm = handCard(b, p.card, p.n === undefined ? undefined : b.planned[p.n]);

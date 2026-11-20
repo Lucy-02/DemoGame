@@ -5,11 +5,9 @@ import { tokens } from "../../../design/tokens";
 import { box } from "../../style/draw";
 import { render, size, type Node } from "../../style/flex";
 import { gather } from "../../style/gather";
-import { cardTipContent } from "../../card/cardTip";
-import { createHandCard, preloadHandCard, type HandCardView } from "../../card/HandCard";
-import { HAND_CARD } from "../../card/layout";
-import { PAPER } from "../../tooltip/skins";
-import { TooltipHost, clampLeft } from "../../tooltip/Tooltip";
+import { createBigCard, preloadBigCard, type BigCardView } from "../../card/BigCard";
+import { BIG_CARD } from "../../card/layout";
+import { cardNote } from "../../card/peek";
 import { COPY } from "../copy";
 import { FRAME, HOVER, PICK } from "../layout";
 import type { PickVM } from "../viewmodel";
@@ -18,7 +16,7 @@ const P = tokens.provisional.palette;
 const T = tokens.provisional.text.battle;
 
 export function preloadPick(scene: Phaser.Scene, vm: PickVM) {
-  for (const c of vm.cards) preloadHandCard(scene, c, { scale: PICK.cardW / HAND_CARD.w });
+  for (const c of vm.cards) preloadBigCard(scene, c);
 }
 
 export interface PickView {
@@ -30,8 +28,8 @@ export interface PickView {
 
 /** onDone: 고른 카드 key들 (고른 순서) */
 export function createPick(scene: Phaser.Scene, vm: PickVM, onDone: (keys: string[]) => void): PickView {
-  const SCALE = PICK.cardW / HAND_CARD.w;
-  const W = HAND_CARD.w * SCALE, H = HAND_CARD.h * SCALE;
+  // 고르는 카드는 큰 얼굴 (0159): 효과문을 읽고 골라요
+  const W = BIG_CARD.w, H = BIG_CARD.h;
   const B = PICK.button;
   const title: Node = { t: "text", text: COPY.pick[vm.kind](vm.n), size: T.endTurn, color: P.ink } as Node;
   const ts = size(title);
@@ -40,8 +38,9 @@ export function createPick(scene: Phaser.Scene, vm: PickVM, onDone: (keys: strin
   const cardsTop = top + ts.h + PICK.pad;
   const left = Math.round(PICK.cx - rowW / 2);
   const picked = [...vm.picked];
-  const views: { key: string; view: HandCardView }[] = [];
-  const tips = new TooltipHost(scene);
+  const views: { key: string; view: BigCardView }[] = [];
+  let note: Phaser.GameObjects.Container | null = null;
+  const hideNote = () => { note?.destroy(); note = null; };
   let shown = true;
   let done = false;
 
@@ -49,7 +48,7 @@ export function createPick(scene: Phaser.Scene, vm: PickVM, onDone: (keys: strin
   const finish = () => {
     if (done) return;
     done = true;
-    tips.hide();
+    hideNote();
     onDone(picked);
   };
   const choose = (key: string) => {
@@ -68,21 +67,15 @@ export function createPick(scene: Phaser.Scene, vm: PickVM, onDone: (keys: strin
     render(scene, title, Math.round(PICK.cx - ts.w / 2), top);
     vm.cards.forEach((c, i) => {
       const x = left + i * (W + PICK.gap);
-      const view = createHandCard(scene, c, x + W / 2 - HAND_CARD.w / 2, cardsTop + H - HAND_CARD.h, { scale: SCALE });
+      const view = createBigCard(scene, c, x, cardsTop, { values: true });
       views.push({ key: c.key, view });
-      view.root.setInteractive(new Phaser.Geom.Rectangle(-HAND_CARD.w / 2, -HAND_CARD.h, HAND_CARD.w, HAND_CARD.h), Phaser.Geom.Rectangle.Contains);
+      view.root.setInteractive(new Phaser.Geom.Rectangle(-W / 2, -H, W, H), Phaser.Geom.Rectangle.Contains);
       if (view.root.input) view.root.input.cursor = "pointer";
       view.root.on("pointerover", () => {
-        view.setLifted(true);
-        const cx = x + W / 2;
-        const tipLeft = clampLeft(cx - PAPER.w / 2, PAPER.w, FRAME.w, HOVER.edge);
-        tips.show({ skin: PAPER, content: cardTipContent(c.detail), at: { left: tipLeft, bottom: cardsTop - PICK.tipGap, tailX: cx - tipLeft } }, { owner: c.key })
-          .setDepth(PICK.depth + 1);
+        hideNote();
+        note = cardNote(scene, c, x, cardsTop, W, { w: FRAME.w, h: FRAME.h, edge: HOVER.edge }).setDepth(PICK.depth + 1);
       });
-      view.root.on("pointerout", () => {
-        view.setLifted(false);
-        tips.hide(c.key);
-      });
+      view.root.on("pointerout", hideNote);
       view.root.on("pointerup", () => choose(c.key));
     });
     // 버튼: 낙하 = 누르는 동안 필드 보기, 품기 = 고른 카드로 닫기
@@ -98,7 +91,7 @@ export function createPick(scene: Phaser.Scene, vm: PickVM, onDone: (keys: strin
     else {
       hit.on("pointerdown", () => {
         shown = false;
-        tips.hide();
+        hideNote();
         root.setVisible(false);
       });
     }

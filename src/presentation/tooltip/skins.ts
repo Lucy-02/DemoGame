@@ -37,34 +37,10 @@ export interface TipSkin {
   /** 결과 줄의 큰 값 (대상 이름은 body 모양) · 칩 줄의 강조 색 (칩 모양은 title.tag) */
   result?: { size: string; color: string; gap: number };
   tone?: { warn: string; acc: string };
-  /** 아래 꼬리: 45° 돌린 정사각형, 아래 두 변에 선 */
-  tail?: { size: number; line: number; lineColor: string };
-  /** 나타날 때 이만큼 아래에서 올라와요 (움직임 시간·곡선은 provisional.motion.hover) */
-  enterY?: number;
 }
 
-/** 카드 말풍선 (.bub): width 240, padding 9 11 8, radius 10, gap 5, 테 1 card-line, 그림자 0 10 24
- *  ::after 14×14 45° 회전, 아래 두 변 1px 선 · .txt line-height 1.5 · .kw 밑줄 offset 3
- *  .calc padding-top 5 (border-top은 var(--me)가 정의되지 않아 정본에서도 안 그려짐) · 바뀔 때 translateY(6)에서 올라옴 */
 const role = (size: string, strongSize: string, color: string, strongColor: string, lh: number, padTop?: number): RoleStyle =>
   ({ size, strongSize, color, strongColor, lh, padTop });
-
-export const PAPER: TipSkin = {
-  w: 240, pad: [9, 11, 8, 11], radius: 10, gap: 5,
-  fill: P.bubble, ring: { width: 1, color: P.cardLine },
-  shadow: { y: 10, blur: 24, color: P.bubbleShadow },
-  roles: {
-    body: role(T.bubbleText, T.bubbleStrong, P.paperInk, P.paperInk, 1.5),
-    calc: role(T.bubbleCalc, T.bubbleCalcStrong, P.bubbleSub, P.paperInk, 1.25, 5),
-    why: role(T.bubbleWhy, T.bubbleWhy, P.bubbleWhy, P.bubbleWhy, 1.25),
-    // 용어 풀이: 계산 줄과 같은 글자 (새 값 없음)
-    term: role(T.bubbleCalc, T.bubbleCalcStrong, P.bubbleSub, P.paperInk, 1.25),
-    meta: role(T.bubbleOwner, T.bubbleOwner, P.bubbleSub, P.bubbleSub, 1.25),
-  },
-  termOffset: 3,
-  tail: { size: 14, line: 1, lineColor: P.cardLine },
-  enterY: 6,
-};
 
 /** 적 설명판 (.etip): width 262, radius 12, padding 10 12 11, gap 5, line-height 1.45, 테 1 glass-line, 그림자 0 10 26
  *  h4 gap 6 · h4 span padding 0 6 radius 8 테 1 */
@@ -82,4 +58,19 @@ export const GLASS: TipSkin = {
   /** 0074 시안 .bt .res gap 6 · .big · 칩 강조: 허점 = 노랑, 브레이크 = 보라 */
   result: { size: T.tipResult, color: P.ink, gap: 6 },
   tone: { warn: P.warn, acc: P.accHi },
+};
+
+/** 카드 곁쪽지 (0159 L1 시안 .note): 큰 얼굴 옆에 머물면 뜨는 유리 쪽지. width 240, padding 10 12, radius 8, gap 6.
+ *  주인 줄 · 계산 줄 · 강화하면 바뀌는 효과문 · 용어 풀이. 글자는 적 설명판과 같은 값 (새 값 없음) */
+export const NOTE: TipSkin = {
+  w: 240, pad: [10, 12, 10, 12], radius: 8, gap: 6,
+  fill: P.glassD, ring: { width: 1, color: P.glassLine },
+  shadow: { y: 10, blur: 26, color: P.tipShadow },
+  roles: {
+    body: role(T.tipBody, T.tipStrong, P.ink2, P.ink, 1.45),
+    calc: role(T.tipBody, T.tipStrong, P.ink2, P.ink, 1.45),
+    term: role(T.tipBody, T.tipStrong, P.ink2, P.ink, 1.45),
+    meta: role(T.tipChip, T.tipChip, P.ink3, P.ink3, 1.45),
+  },
+  termOffset: 3,
 };

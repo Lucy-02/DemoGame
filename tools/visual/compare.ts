@@ -1,5 +1,5 @@
 // 시각 검증: 정본 프레임과 Phaser 화면을 같은 1280×800으로 찍어 나란히·겹침·차이 이미지를 만들어요.
-// 사용: pnpm visual [--crop x,y,w,h] [--frame rest] [--hover <카드 key>] [--scene aim] [--lift h1|b]
+// 사용: pnpm visual [--crop x,y,w,h] [--frame rest] [--hover <카드 key>] [--scene aim]
 //   정령 관리: pnpm visual --screen spirits [--frame s-f1..s-f5] [--scene mixed] [--select <정령>] [--tab overview|growth] [--closed]
 //   --hover: 정본 H1 프레임에서 그 카드에 마우스를 올린 상태와, 게임의 같은 호버 상태를 비교해요.
 //   --scene aim: 정본 H1 프레임의 처음 상태(물방울 휘갈기기를 집어 거북 조준)와 게임 ?scene=aim 을 비교해요.
@@ -89,9 +89,6 @@ async function shootGame(page: Page, base: string): Promise<Buffer> {
   if (args.includes("--closed")) q.set("closed", "");
   if (hover) q.set("hover", hover);
   if (scene) q.set("scene", scene);
-  // 정본 H1 프레임과 비교할 땐 들기 크기도 정본 값으로 (게임 기본은 Lucy가 고른 b)
-  const lift = opt("lift") ?? (frameId === "h1" ? "h1" : undefined);
-  if (lift) q.set("lift", lift);
   await page.goto(`${base}${q.size ? `?${q}` : ""}`);
   await page.waitForFunction((name) => (window as { __screenReady?: string }).__screenReady === name, screen, { timeout: 30_000 });
   await page.waitForTimeout(200);

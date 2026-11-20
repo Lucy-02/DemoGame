@@ -28,15 +28,15 @@ describe("용어 사전", () => {
   });
 });
 
-describe("카드 말풍선의 용어 풀이 (0105)", () => {
-  it("밑줄 용어마다 사전 풀이가 한 번씩, 주인 줄 앞에 붙어요", async () => {
-    const { cardTipContent } = await import("../card/cardTip");
-    const blocks = cardTipContent({
+describe("카드 곁쪽지의 용어 풀이 (0105 · 0159)", () => {
+  it("밑줄 용어마다 사전 풀이가 한 번씩, 주인 줄 뒤에 붙어요", async () => {
+    const { cardNoteContent } = await import("../card/cardTip");
+    const blocks = cardNoteContent({
       text: [{ text: "화상", term: true }, { text: "을 " }, { text: "2", strong: true }, { text: " 부여합니다. " }, { text: "화상", term: true }, { text: "소멸", term: true }],
       owner: "불여우",
     });
     const roles = blocks.map((b) => (b.kind === "text" ? b.role : b.kind));
-    expect(roles).toEqual(["body", "term", "term", "meta"]);
+    expect(roles).toEqual(["meta", "term", "term"]);
     expect(blocks[1]).toMatchObject({ text: [{ text: "화상", strong: true }, { text: expect.stringContaining("피해를 입습니다.") }] });
   });
 });

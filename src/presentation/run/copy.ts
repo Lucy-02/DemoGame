@@ -16,8 +16,10 @@ export const COPY = {
   dropped: "사라짐",
   /** 버튼 동사 (0046 · 0076 17번) */
   leave: "떠나기",
-  /** 강화한 카드의 말풍선 주인 줄 꼬리 (TEXT_RULES 5절 명사형, 0080) */
+  /** 강화한 카드의 곁쪽지 주인 줄 꼬리 (TEXT_RULES 5절 명사형, 0080) */
   upgraded: "강화됨",
+  /** 곁쪽지에서 강화하면 바뀌는 효과문 앞에 붙는 이름 (0159) */
+  upgrade: "강화",
   cancel: "취소",
   /** 선택지 기호 칩 (Lucy 2026-11-17 짧은 명사구, TEXT_RULES 5절 명사형). 부호는 수에 붙여요. HP 효과는 얼굴 칩이라 글이 없어요 */
   fx: {
@@ -37,6 +39,3 @@ export const COPY = {
 /** 능력치 기호 (0050 임시: 정본 기호 가운데 뜻이 가까운 것) */
 export const STAT_ICON = { power: "fx-damage", guard: "fx-block", focus: "i-spark" } as const;
 
-/** 재질 이름 (카드 말풍선 주인 줄: 정령 · 속성 · 재질, 정본 battle-r5) */
-/** 바람 재질은 이름이 아직 없어서(TODO_NAME) 비워 둬요: 주인 줄에서 빠져요 */
-export const MATERIAL_NAME: Record<string, string | undefined> = { fire: "용암석", water: "유약", none: "무지" };

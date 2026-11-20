@@ -7,10 +7,10 @@ import type { CardVM } from "../card/viewmodel";
 import { crossPaint, fadeAway } from "../style/motion";
 import * as Phaser from "phaser";
 import { ShopSession } from "../../session/shop";
-import { createHandCard, preloadHandCard } from "../card/HandCard";
-import { HAND_CARD } from "../card/layout";
+import { createBigCard, preloadBigCard } from "../card/BigCard";
+import { preloadHandCard } from "../card/HandCard";
 import { drawBackdrop } from "../run/backdrop";
-import { cardWithFace, drawCardTip, drawCardTipBeside } from "../run/cards";
+import { cardWithFace, drawCardNote } from "../run/cards";
 import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
 import { RUN_TOP_ICONS, drawRunTop } from "../run/topbar";
 import { CARD_FOCUS, FRAME } from "../run/layout";
@@ -79,8 +79,8 @@ export class ShopScene extends Phaser.Scene {
     for (const [id, w] of [...RUN_TOP_ICONS, ...SERVICE_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
     for (const id of Object.values(STAT_ICON)) loadIcon(this, id, SHOP_LANE.stat.icon);
     const vm = shopVM(this.session);
-    for (const c of vm.cards) if (c) preloadHandCard(this, c.card, { showRarity: true, scale: STOCK.scale });
-    for (const row of Object.values(vm.deck)) for (const c of row) preloadHandCard(this, c.card, { showRarity: true });
+    for (const c of vm.cards) if (c) preloadBigCard(this, c.card);
+    for (const row of Object.values(vm.deck)) for (const c of row) preloadHandCard(this, c.card);
     preloadSpiritArt(this, vm.lanes.map((l) => l.id));
   }
 
@@ -180,7 +180,7 @@ export class ShopScene extends Phaser.Scene {
       ly += L.h + L.gap;
     }
 
-    // 진열 카드 3×2 (말풍선은 다른 카드 위에 오도록 마지막에)
+    // 진열 카드 3×2 (곁쪽지는 다른 카드 위에 오도록 마지막에)
     let tip: (() => void) | undefined;
     const leaving = this.leaving;
     this.leaving = undefined;
@@ -189,18 +189,17 @@ export class ShopScene extends Phaser.Scene {
       const y = STOCK.rows[Math.floor(slot / STOCK.cols)];
       if (!c) {
         if (leaving?.slot === slot) {
-          fadeAway(this, createHandCard(this, cardWithFace(this, leaving.card, undefined, STOCK.scale), x + (STOCK.w - HAND_CARD.w) / 2, y + STOCK.h - HAND_CARD.h, { showRarity: true, scale: STOCK.scale }));
+          fadeAway(this, createBigCard(this, cardWithFace(this, leaving.card, undefined), x, y));
         }
         return;
       }
       const owner = c.learners.length === 1 ? vm.lanes.find((l) => l.id === c.learners[0]) : undefined;
-      // 골드가 모자란 카드는 손패의 못 내는 카드와 같은 모양: 카드째 회색, 값은 붉게 (0050 · 0105)
-      const card = cardWithFace(this, c.affordable ? c.card : { ...c.card, off: true }, owner, STOCK.scale);
-      const view = createHandCard(this, card, x + (STOCK.w - HAND_CARD.w) / 2, y + STOCK.h - HAND_CARD.h, { showRarity: true, scale: STOCK.scale });
+      // 골드가 모자란 카드는 손패의 못 내는 카드와 같은 말: 그림이 회색, 값은 붉게 (0050 · 0105 · 0159)
+      const card = cardWithFace(this, c.affordable ? c.card : { ...c.card, off: true }, owner);
+      const view = createBigCard(this, card, x, y);
       const on = focusSlot === slot;
       const dim = focusSlot !== undefined && !on;
       view.setHeld(on);
-      view.setLifted(on);
       if (dim) view.opacity = CARD_FOCUS.dim;
       drawPrice(this, c.price, c.affordable, x, y, dim && c.affordable ? CARD_FOCUS.dim : 1);
       this.add.zone(x, y, STOCK.w, STOCK.h).setOrigin(0, 0).setInteractive({ useHandCursor: c.affordable })
@@ -216,8 +215,8 @@ export class ShopScene extends Phaser.Scene {
           this.held = this.held === slot ? undefined : slot;
           this.redraw();
         });
-      // 윗줄은 위 띠(골드)를 가리지 않게 옆에, 아랫줄은 위에
-      if (on) tip = () => (slot < STOCK.cols ? drawCardTipBeside : drawCardTip)(this, card, x, y, STOCK.w);
+      // 큰 얼굴이 효과문을 보여 주니, 머물면 곁쪽지만 떠요 (0159)
+      if (on) tip = () => drawCardNote(this, card, x, y, STOCK.w);
     });
 
     drawService(this, "remove", vm.remove, hover?.kind === "remove", {
