@@ -69,6 +69,18 @@ export const ENEMY = {
   body: { w: 112, h: 90, mt: 14 }, art: { w: 102, h: 82 },
   /** 땅속 (0096 시안 .sunk): 몸 윗부분만 이만큼 남아요 (시안 임시 값) */
   buried: 0.4,
+  /** 도감 크기대로 세우기 (0158): 적은 균일한 칸 대신 몸 폭만큼 자리를 차지해요.
+   *  field = 적들이 서는 가로 범위 (가운데 정렬, 넘치면 왼쪽으로 밀려요) · gap = 자리 사이 · slotPad = 체력 막대 양옆 여유 */
+  field: { left: 610, center: 941, right: 1262, gap: 14, slotPad: 8 },
+  /** 크기 등급 (enemyFit.json의 size): 그림을 h × w 상자 안에 비율대로 맞춘 값이 enemyFit의 h · w예요. bar = 체력 막대 폭 (네 단계) */
+  sizes: {
+    XS: { h: 58, w: 96, bar: 88 }, S: { h: 78, w: 100, bar: 88 }, M: { h: 104, w: 132, bar: 104 },
+    L: { h: 136, w: 176, bar: 136 }, XL: { h: 172, w: 236, bar: 136 }, B: { h: 212, w: 290, bar: 184 },
+  },
+  /** 의도 알약은 머리 위 이만큼 (작은 적은 ENEMY.top 줄에 그대로) */
+  intentGap: 12,
+  /** 그림자: 몸 폭의 ratio배 (떠 있는 적은 float배 · 옅게), 폭은 min 이상, 두께는 기본의 thick 범위 */
+  shadow: { ratio: 0.82, float: 0.5, floatAlpha: 0.6, min: 44, thick: [0.8, 2] as [number, number] },
 };
 
 /** .ground 104×14, 발 y에 가운데. radial-gradient(closest-side, shade, transparent) */

@@ -8,3 +8,4 @@
 - 크기 · 발 위치: `src/presentation/battle/enemyFit.json`. 보는 장면: `?screen=battle&scene=act1-mobs-a` (`act1-mobs-b` · `-c`, `act1-toad` · `wolf` · `imp`, `act1-grimbark` · `wildfire` · `gale`).
 - 2막: 후보 시트 https://claude.ai/artifact/S4vDobYCAuUKrCaRtX6HUo, 프롬프트 시트 `prompt-sheet-act2-r1.py` · `r2.py`, 원본 `runs/enemy-act2-r1-20261118` · `r2`, 보는 장면 `?scene=act2-*`.
 - 3 · 4 · 5막: 후보 시트 https://claude.ai/artifact/Bumv4LR8TcqD4yh5scif5Z, 프롬프트 시트 `prompt-sheet-act345-r1.py` · `r2.py` · `r3.py`, 원본 `runs/enemy-act345-r1-20261118` · `r2` · `r3`, 보는 장면 `?scene=act3-*` · `act4-*` · `act5-*`.
+- 도감 초안(0158): `bestiary.json` (정체성 한 줄 · 몸 크기 · 체중 · 크기 등급). 등급을 바꾸면 `src/presentation/battle/enemyFit.json`의 `size` · `h` · `w`도 같이 바꿔요(등급 상자는 `layout.ts`의 `ENEMY.sizes`). 시안 https://claude.ai/artifact/GM3qTuN3umPNbp8y4Zabow

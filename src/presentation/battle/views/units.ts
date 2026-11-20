@@ -19,6 +19,7 @@ import { faceKey, preloadFaces } from "../../faces";
 import { miniSlotNode, preloadEquipArt } from "../../run/equip";
 import { drawAllyArt } from "../allyArt";
 import { drawEnemyArt, preloadEnemyArt } from "../enemyArt";
+import { enemySpots, type EnemySpot } from "../enemyLayout";
 import { preloadSpiritArt } from "../../spiritArt";
 import { EQUIP_MINI } from "../../run/layout";
 import { TERMS, termOfIcon } from "../../glossary/terms";
@@ -92,14 +93,14 @@ interface Bar {
 
 /** 막대 텍스처 (.bar): 어두운 외곽 캡슐 안에 구간을 틈 없이 이어 채워요. 구간 경계는 픽셀에 붙여요.
  *  part: all = 전부, base = 깎일 구간만 빼고(깜빡임 바닥), loss = 깎일 구간만(깜빡임 덮개). pulse = 밝은 테 + 바깥 어두운 테 */
-function barTexture(scene: Phaser.Scene, b: Bar, part: "all" | "base" | "loss", pulse: boolean): string {
-  const B = I.bar, m = B.margin, w = I.w;
+function barTexture(scene: Phaser.Scene, b: Bar, part: "all" | "base" | "loss", pulse: boolean, w: number): string {
+  const B = I.bar, m = B.margin;
   const inner = w - B.line * 2, ih = B.h - B.line * 2;
   const seg = b.loss ?? b.gone ?? 0;
   const end = seg > 0 ? Math.min(inner, Math.max(1, Math.round((inner * (b.keep + seg)) / b.max))) : 0;
   const k = seg > 0 ? Math.min(end - 1, Math.round((inner * b.keep) / b.max)) : Math.round((inner * b.keep) / b.max);
   const kind = seg <= 0 ? "none" : b.gone ? "gone" : b.lethal ? "lethal" : "loss";
-  return canvasTexture(scene, `battle:bar:${k}:${end}:${kind}:${part}:${pulse}`, w + m * 2, B.h + m * 2, (ctx) => {
+  return canvasTexture(scene, `battle:bar:${w}:${k}:${end}:${kind}:${part}:${pulse}`, w + m * 2, B.h + m * 2, (ctx) => {
     const capsule = (x: number, y: number, cw: number, ch: number, r: number) => {
       ctx.beginPath();
       ctx.roundRect(x, y, cw, ch, r);
@@ -137,14 +138,14 @@ function barTexture(scene: Phaser.Scene, b: Bar, part: "all" | "base" | "loss", 
 }
 
 /** 막대를 (x, y)에. pulse면 깎일 구간이 깜빡여요 (적을 가리킬 때 그 적이 노리는 아군) */
-function drawBar(scene: Phaser.Scene, x: number, y: number, b: Bar, pulse: boolean) {
+function drawBar(scene: Phaser.Scene, x: number, y: number, b: Bar, pulse: boolean, w: number) {
   const m = I.bar.margin;
   if (!pulse) {
-    scene.add.image(x - m, y - m, barTexture(scene, b, "all", false)).setOrigin(0, 0);
+    scene.add.image(x - m, y - m, barTexture(scene, b, "all", false, w)).setOrigin(0, 0);
     return;
   }
-  scene.add.image(x - m, y - m, barTexture(scene, b, "base", true)).setOrigin(0, 0);
-  const loss = scene.add.image(x - m, y - m, barTexture(scene, b, "loss", false)).setOrigin(0, 0);
+  scene.add.image(x - m, y - m, barTexture(scene, b, "base", true, w)).setOrigin(0, 0);
+  const loss = scene.add.image(x - m, y - m, barTexture(scene, b, "loss", false, w)).setOrigin(0, 0);
   const d = ms(PULSE.duration), ease = cubicBezier(PULSE.easing);
   scene.tweens.chain({
     targets: loss, loop: -1,
@@ -457,15 +458,15 @@ interface InfoView {
 }
 
 /** 정보 묶음 (.info.nv): 발 가운데 cx에 대칭. 칩은 한 줄에 가운데로, 폭을 넘으면 다음 줄 가운데로 넘겨요 (.chips flex-wrap) */
-function drawInfo(scene: Phaser.Scene, cx: number, feet: number, bar: Bar, hp: { n: number; pv?: boolean }, chips: Chip[], pulse = false): InfoView {
-  const x = Math.round(cx - I.w / 2), y = feet + I.mt;
-  drawBar(scene, x, y + I.bar.top, bar, pulse);
+function drawInfo(scene: Phaser.Scene, cx: number, feet: number, bar: Bar, hp: { n: number; pv?: boolean }, chips: Chip[], pulse = false, w: number = I.w): InfoView {
+  const x = Math.round(cx - w / 2), y = feet + I.mt;
+  drawBar(scene, x, y + I.bar.top, bar, pulse, w);
   render(scene, {
-    t: "row", w: I.w, h: I.row.h, justify: "center", align: "center",
+    t: "row", w, h: I.row.h, justify: "center", align: "center",
     children: [num(hp.n, T.hp, hp.pv ? P.accHi : P.ink, { bold: true, outline: { color: P.floor, width: I.hp.outline } })],
   }, x, y);
 
-  const C = I.chips, maxW = I.w + C.over * 2;
+  const C = I.chips, maxW = w + C.over * 2;
   // 칩 폭은 픽셀에 맞춰요 (다음 칩이 반 픽셀에 걸치지 않게)
   const sized = chips.map((c) => {
     const s = size(c.node);
@@ -532,7 +533,8 @@ function enemyInfo(scene: Phaser.Scene, e: EnemyVM, i: number, pv: EnemyOutcomeV
     ...(e.weakTo ? [weakChip(scene, e.weakTo, weakOn)] : []),
     ...e.statuses.map(statusChip),
   ];
-  return drawInfo(scene, ENEMY.xs[i], ENEMY.feet, { max: e.maxHp, keep: hp, gone: pv ? pv.hp.from - pv.hp.to : 0 }, { n: hp, pv: !!pv }, chips);
+  const at = spotOf(i);
+  return drawInfo(scene, at.x, ENEMY.feet, { max: e.maxHp, keep: hp, gone: pv ? pv.hp.from - pv.hp.to : 0 }, { n: hp, pv: !!pv }, chips, false, at.bar);
 }
 
 /** 무작위 대상 기호 (카드의 무작위 표식과 같음) */
@@ -616,14 +618,15 @@ const drawHits = (scene: Phaser.Scene, hits: number[], bodyX: number, bodyY: num
 /** 알약이 뜨는 자리: 그 유닛 몸 상자의 왼쪽 위 */
 export const popAt = (side: "ally" | "enemy", i: number) => (side === "ally"
   ? { x: ALLY.xs[i] - ALLY.body.w / 2, y: ALLY.feet - ALLY.body.h }
-  : { x: ENEMY.xs[i] - ENEMY.body.w / 2, y: ENEMY.feet - ENEMY.art.h });
+  : { x: spotOf(i).x - Math.min(spotOf(i).w, ENEMY.body.w) / 2, y: ENEMY.feet - spotOf(i).h });
 
 /** HP 막대의 깎인 구간 (from → to)만 위험색으로. 재생 중에 잠깐 남았다가 줄어들어요 (0086). 왼쪽 끝이 지금 HP 자리예요 */
 export function drawTrail(scene: Phaser.Scene, side: "ally" | "enemy", i: number, max: number, from: number, to: number): Phaser.GameObjects.Image | undefined {
-  const B = I.bar, inner = I.w - B.line * 2, ih = B.h - B.line * 2;
+  const w = side === "ally" ? I.w : spotOf(i).bar;
+  const B = I.bar, inner = w - B.line * 2, ih = B.h - B.line * 2;
   const k = Math.round((inner * to) / max), end = Math.round((inner * from) / max);
   if (end <= k) return undefined;
-  const key = canvasTexture(scene, `battle:trail:${k}:${end}`, end - k, ih, (ctx) => {
+  const key = canvasTexture(scene, `battle:trail:${w}:${k}:${end}`, end - k, ih, (ctx) => {
     // 막대 안쪽 캡슐로 잘라 끝이 둥글게 맞아요
     ctx.beginPath();
     ctx.roundRect(-k, 0, inner, ih, B.radius - B.line);
@@ -631,8 +634,8 @@ export function drawTrail(scene: Phaser.Scene, side: "ally" | "enemy", i: number
     ctx.fillStyle = P.danger;
     ctx.fillRect(0, 0, end - k, ih);
   });
-  const [cx, feet] = side === "ally" ? [ALLY.xs[i], ALLY.feet] : [ENEMY.xs[i], ENEMY.feet];
-  return scene.add.image(Math.round(cx - I.w / 2) + B.line + k, feet + I.mt + B.top + B.line, key).setOrigin(0, 0);
+  const [cx, feet] = side === "ally" ? [ALLY.xs[i], ALLY.feet] : [spotOf(i).x, ENEMY.feet];
+  return scene.add.image(Math.round(cx - w / 2) + B.line + k, feet + I.mt + B.top + B.line, key).setOrigin(0, 0);
 }
 
 // ── 풀이 ──────────────────────────────────────────────
@@ -729,7 +732,7 @@ export function drawUnitTip(scene: Phaser.Scene, u: { side: "ally"; vm: AllyVM }
 const GROUND_KEY = "battle:ground";
 
 /** 발밑 그림자: 발 y에 가운데 */
-function ground(scene: Phaser.Scene, cx: number, feet: number) {
+function ground(scene: Phaser.Scene, cx: number, feet: number, fit?: EnemySpot["shadow"]) {
   if (!scene.textures.exists(GROUND_KEY)) {
     const tex = createCanvas(scene, GROUND_KEY, GROUND.w, GROUND.h);
     const ctx = tex.getContext();
@@ -744,7 +747,8 @@ function ground(scene: Phaser.Scene, cx: number, feet: number) {
     ctx.fillRect(-rx, -rx, GROUND.w, GROUND.w);
     tex.refresh();
   }
-  scene.add.image(cx - GROUND.w / 2, feet - GROUND.h / 2, GROUND_KEY).setOrigin(0, 0);
+  const w = fit?.w ?? GROUND.w, h = fit?.h ?? GROUND.h;
+  scene.add.image(Math.round(cx - w / 2), Math.round(feet - h / 2), GROUND_KEY).setOrigin(0, 0).setDisplaySize(w, h).setAlpha(fit?.alpha ?? 1);
 }
 
 /** 대상 강조: 정본 .ring.aim의 바깥 빛(box-shadow 0 0 14 aimGlow)을 그림 상자 뒤에 깔아요.
@@ -787,6 +791,16 @@ export interface UnitView {
 
 /** 판정 영역 반 폭: 칩 줄이 넘칠 수 있는 폭까지 */
 const HALF = I.w / 2 + I.chips.over;
+
+// ── 적 자리 (0158) ──────────────────────────────────────
+// 적은 몸 크기만큼 자리를 차지해요. 그리기 전에 placeEnemies로 이번 적들의 자리를 잡아 두고, 아래 함수들이 번호로 꺼내 써요.
+let spots: EnemySpot[] = [];
+const NO_SPOT: EnemySpot = { x: ENEMY.xs[0], top: ENEMY.top, w: ENEMY.art.w, h: ENEMY.art.h, bar: I.w, slot: ENEMY.body.w, shadow: { w: GROUND.w, h: GROUND.h, alpha: 1 } };
+/** 이번에 그릴 적들의 자리를 잡아요. 적 목록이 바뀔 때마다 그리기 전에 불러요 */
+export function placeEnemies(enemies: readonly Pick<EnemyVM, "art" | "buried">[]) {
+  spots = enemySpots(enemies.map((e) => e.art), enemies.map((e) => !!e.buried));
+}
+function spotOf(i: number): EnemySpot { return spots[i] ?? NO_SPOT; }
 
 /** pv.outcome: 이 아군의 받을 피해 a→b */
 export function drawAlly(scene: Phaser.Scene, a: AllyVM, i: number, pv: UnitPreview<IncomingChange> = {}): UnitView {
@@ -837,27 +851,29 @@ export function drawIntent(scene: Phaser.Scene, e: EnemyVM, i: number, st: { cut
   if (!e.intent) return { w: 0, h: 0 };
   const node = intentNode(scene, e.intent, st.cut, st.on);
   const s = size(node);
-  render(scene, node, ENEMY.xs[i] - s.w / 2, ENEMY.top);
+  render(scene, node, spotOf(i).x - s.w / 2, spotOf(i).top);
   return s;
 }
 
 /** weakOn: 든 카드의 속성이 이 적의 약점이면 약점 배지를 켜요 */
 export function drawEnemy(scene: Phaser.Scene, e: EnemyVM, i: number, pv: UnitPreview<EnemyOutcomeVM> & { weakOn?: boolean } = {}): UnitView {
-  const cx = ENEMY.xs[i];
+  const at = spotOf(i), cx = at.x;
   let intentH = 0, intentW = 0;
   const intent = gather(scene, 0, 0, () => { ({ w: intentW, h: intentH } = drawIntent(scene, e, i, { cut: !!pv.outcome?.cut })); });
-  const bodyTop = ENEMY.top + intentH + ENEMY.body.mt;
-  const artX = cx - ENEMY.art.w / 2, artY = ENEMY.feet - ENEMY.art.h;
-  if (pv.lit) glow(scene, artX, artY, ENEMY.art.w, ENEMY.art.h, 0, true);
+  const bodyTop = at.top + intentH + ENEMY.body.mt;
+  const artX = cx - at.w / 2, artY = ENEMY.feet - at.h;
+  if (pv.lit) glow(scene, artX, artY, at.w, at.h, 0, true);
   // 땅속: 몸 윗부분만 남아요 (0096). 그림은 발 선에서 잘라요
   const show = e.buried ? ENEMY.buried : 1;
-  const artH = ENEMY.art.h * show;
+  const artH = at.h * show;
   const art = gather(scene, 0, 0, () => {
-    if (!drawEnemyArt(scene, e.art, cx, ENEMY.feet, show)) placeholderArt(scene, artX, ENEMY.feet - artH, ENEMY.art.w, artH, P.ink3);
+    if (!drawEnemyArt(scene, e.art, cx, ENEMY.feet, show)) placeholderArt(scene, artX, ENEMY.feet - artH, at.w, artH, P.ink3);
   });
-  ground(scene, cx, ENEMY.feet);
-  if (pv.outcome) drawHits(scene, pv.outcome.hits, cx - ENEMY.body.w / 2, bodyTop);
+  ground(scene, cx, ENEMY.feet, at.shadow);
+  if (pv.outcome) drawHits(scene, pv.outcome.hits, cx - Math.min(at.w, ENEMY.body.w) / 2, bodyTop);
   let v!: InfoView;
   const info = gather(scene, 0, 0, () => { v = enemyInfo(scene, e, i, pv.outcome, !!pv.weakOn); });
-  return { bounds: { x: cx - HALF, y: ENEMY.top, w: HALF * 2, h: v.bottom - ENEMY.top }, info, marks: v.marks, bottom: v.bottom, intent, art, intentBox: { x: cx - intentW / 2, y: ENEMY.top, w: intentW, h: intentH } };
+  // 고르는 범위: 몸 폭과 체력 막대 가운데 넓은 쪽
+  const half = Math.max(at.w, at.bar + I.chips.over * 2) / 2;
+  return { bounds: { x: cx - half, y: at.top, w: half * 2, h: v.bottom - at.top }, info, marks: v.marks, bottom: v.bottom, intent, art, intentBox: { x: cx - intentW / 2, y: at.top, w: intentW, h: intentH } };
 }
