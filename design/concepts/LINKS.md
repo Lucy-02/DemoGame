@@ -240,3 +240,7 @@
 - K3 숫자 단: https://claude.ai/artifact/Ts79xnQCaNLzpnsy8FzcRZ
 - K4 두 얼굴: https://claude.ai/artifact/HxoJb5qKsCrkc5r7zN5vw6
 - 소스: 공유 폴더 `card-round-k/src.tgz` (공용 재료 `kit/` + 안별 폴더, `python3 kit/build.py <폴더>`)
+- Lucy 11/20: K1 · K4를 살림(섞어도 됨), K1은 이름 위 숫자를 조금 작게 → 라운드 K2 (`BRIEF.md` "카드 라운드 K2"). Lucy 확인 대기.
+  - L1 유리 두 얼굴: https://claude.ai/artifact/9UzXGeVYwJi6JkwwwsS55B
+  - L2 유리 손패, 종이 읽기: https://claude.ai/artifact/KqrHuHAUHPj7EsBzdSQ1LF
+  - L3 종이 두 얼굴, 큰 그림: https://claude.ai/artifact/7vAGyJYYBbV9NUyJH4Z4nR
