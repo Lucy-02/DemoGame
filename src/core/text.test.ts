@@ -71,7 +71,7 @@ describe("장비 효과문", () => {
 
   it("조건 없는 기본 능력치는 숫자로 보여서 문장에서 빠지고, 조건부와 치명은 문장으로 써요", () => {
     expect(describeEquipTier(equipDef("bone_sword").tiers[0])).toEqual(["내 턴의 첫 타격은 피해를 추가로 1 입힙니다."]);
-    expect(describeEquipTier(equipDef("round_shield").tiers[0])).toEqual(["HP가 절반 아래이면 가드가 2 더 높습니다."]);
+    expect(describeEquipTier(equipDef("round_shield").tiers[0])).toEqual(["HP가 절반 이하이면 가드가 2 더 높습니다."]);
     expect(describeEquipTier(equipDef("crystal_dagger").tiers[1])).toEqual([
       "치명 확률이 3% 높습니다.", "치명 피해가 10% 높습니다.", "대상의 HP가 가득이면 치명 확률이 10% 높습니다.",
     ]);

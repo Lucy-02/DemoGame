@@ -105,7 +105,7 @@ const TEXT_STATS: readonly EquipStat[] = ["speed", "crit_chance", "crit_mult"];
 const RATIO_STATS: readonly EquipStat[] = ["crit_chance", "crit_mult"];
 
 const WHEN: Record<StatCondition["k"], (w: StatCondition) => string> = {
-  hpBelow: (w) => (w.k === "hpBelow" && w.ratio !== 0.5 ? `HP가 ${pct(w.ratio)}% 아래이면 ` : "HP가 절반 아래이면 "),
+  hpBelow: (w) => (w.k === "hpBelow" && w.ratio !== 0.5 ? `HP가 ${pct(w.ratio)}% 이하이면 ` : "HP가 절반 이하이면 "),
   released: () => "해방 중이면 ",
   hurt: () => "HP가 가득이 아니면 ",
 };
