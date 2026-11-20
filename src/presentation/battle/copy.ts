@@ -32,8 +32,6 @@ export const COPY = {
   floor: (n: number) => `${n}층`,
   /** 순서표 토큰 풀이의 칩 (0074 9번 · 0067). 순서는 원 숫자, 아군 카드는 그 적 "앞" */
   order: {
-    /** 해방 배지 글자 (시안) */
-    release: "✦",
     card: "카드", charge: "차징", gap: "허점", breakable: "브레이크 가능",
     n: (n: number) => String.fromCharCode(CIRCLED_ONE + n - 1),
     before: (n: number) => `${String.fromCharCode(CIRCLED_ONE + n - 1)} 앞`,

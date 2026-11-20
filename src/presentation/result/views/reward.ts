@@ -1,22 +1,22 @@
 // 왼쪽 열: 넘기기 버튼. 골드는 run/gold.ts, 보상 카드는 장면이 카드 컴포넌트로 직접 놓아요.
 import type * as Phaser from "phaser";
-import { box } from "../../style/draw";
 import { render, size, type Node } from "../../style/flex";
 import { P, text } from "../../spirits/views/parts";
 import { tokens } from "../../../design/tokens";
 import { COPY } from "../copy";
 import { SKIP } from "../layout";
+import { strokePlaceholder } from "../../style/placeholder";
 
 const T = tokens.provisional.text.result;
 
 export const REWARD_ICONS = [["i-coin", SKIP.gold.coin]] as const;
 
-/** 넘기기: 받을 골드가 있으면 버튼 안에 늘 붙어 있어요 (0051). 넘기기 기호는 아직 없어서 점선 칸으로 비워 둬요 (TODO_ICON) */
+/** 넘기기: 받을 골드가 있으면 버튼 안에 늘 붙어 있어요 (0051). 넘기기 기호는 아직 없어서 X 상자로 비워 둬요 (TODO_ICON) */
 export function drawSkip(scene: Phaser.Scene, gold: number | undefined, hover: boolean, at: { x: number; y: number }, on: { click: () => void; over: () => void; out: () => void }) {
   const S = SKIP;
   const todo: Node = {
     t: "block", w: S.todo.size, h: S.todo.size,
-    draw: (g, x, y, w, h) => box(g, x, y, w, h, S.todo.radius, { ring: { width: S.todo.ring, color: P.gold, dash: S.todo.dash } }),
+    draw: (g, x, y, w, h) => strokePlaceholder(g, x, y, w, h, P.gold),
   };
   const node: Node = {
     t: "row", w: S.w, h: S.h, radius: S.radius, gap: S.gap, justify: "center", align: "center",
