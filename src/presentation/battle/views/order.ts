@@ -13,6 +13,7 @@ import { LINE_HEIGHT, fontBox, measure, px, textStyle } from "../../style/text";
 import { COPY } from "../copy";
 import { drawEnemyFace, preloadEnemyArt } from "../enemyArt";
 import { ORDER as O } from "../layout";
+import { fitOrder, type OrderFit } from "../orderFit";
 import type { AllyTokenVM, BandVM, BattleVM, OrderSlotVM } from "../viewmodel";
 
 const P = tokens.provisional.palette;
@@ -238,8 +239,17 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   // 칸마다 두 장 자리를 미리 잡아서, 카드를 놓아도 적 토큰이 움직이지 않아요. 넘칠 때만 모든 칸이 함께 늘어요 (0077 0번)
   const bandsIn = (k: number) => (vm.bands ?? []).filter((b) => b.cell === k);
   const plans = bundles.map((b, k) => (bandsIn(k).length ? planCell(b.length, bandsIn(k)) : undefined));
-  const cellW = Math.max(vm.bundles ? bundleWidth(O.bundle.reserve) : 0, ...bundles.map((b, k) => plans[k]?.w ?? (b.length ? bundleWidth(b.length) : 0)));
   const dividerW = O.head.padR + O.head.line + O.head.mr;
+  const ownW = (k: number) => plans[k]?.w ?? (bundles[k]?.length ? bundleWidth(bundles[k].length) : 0);
+  const cellsOf = (f: OrderFit): number[] => {
+    const spare = vm.bundles && f.reserve ? bundleWidth(f.reserve) : 0;
+    const own = Array.from({ length: vm.slots.length + 1 }, (_, k) => ownW(k));
+    return f.even ? own.map(() => Math.max(spare, ...own)) : own.map((w) => Math.max(spare, w));
+  };
+  const slotsW = (f: OrderFit) => vm.slots.length * (slotW + f.line * 2) + cellsOf(f).reduce((a, w) => a + w, 0);
+  // 판이 버튼을 덮지 않게: 넘치면 빈 칸의 자리 → 선 순서로 줄여요 (0160)
+  const fit = fitOrder(O.maxW, (f) => headW + dividerW + slotsW(f) + O.padX * 2, { even: true, reserve: O.bundle.reserve, line: O.line.w }, O.line.min);
+  const cellW = cellsOf(fit);
   // 재생 위치: 아직 다 지나가지 않은 첫 칸(묶음 또는 적) 앞
   const pastCell = (k: number) => (bundles[k] ?? []).every((t) => t.past);
   const pastSlot = (s: OrderSlotVM) => s.state === "past" || s.cut === "done";
@@ -251,7 +261,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
     }
   }
   const cursorW = cursorAt ? O.cursor.w + O.cursor.mx * 2 : 0;
-  const innerW = headW + dividerW + vm.slots.length * (slotW + O.line.w * 2) + (vm.slots.length + 1) * cellW + cursorW;
+  const innerW = headW + dividerW + slotsW(fit) + cursorW;
   const w = innerW + O.padX * 2;
   const x0 = O.cx - w / 2;
   const cy = O.top + O.h / 2;
@@ -302,8 +312,8 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   const cell = (k: number) => {
     const list = bundles[k] ?? [];
     const plan = plans[k];
-    const bw = plan ? plan.w : list.length ? bundleWidth(list.length) : 0;
-    line(cellW - bw);
+    const bw = ownW(k);
+    line(cellW[k] - bw);
     if (!bw) return;
     cursor("cell", k);
     const d = O.allyFace;
@@ -357,7 +367,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
   for (const [k, s] of vm.slots.entries()) {
     cell(k);
     cursor("slot", k);
-    line(O.line.w);
+    line(fit.line);
     const nx = x + O.enemy.padX;
     const fx = nx + O.enemy.numW + O.enemy.gap + O.face / 2;
     const badge = () => drawBadge(scene, fx, cy, ENEMY_BADGE, enemyBadge(s));
@@ -375,7 +385,7 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
       badge();
     }, s.state === "past" ? O.fade.past : undefined, { key: s.key, kind: "enemy", x: fx, y: cy, d: O.face, past: s.state === "past", cut: s.cut === "done" });
     x += slotW;
-    line(O.line.w);
+    line(fit.line);
   }
   cell(vm.slots.length);
   return { g, hits: [...hits, ...bandHits], marks, cursor: cursorMark };
