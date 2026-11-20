@@ -1,4 +1,4 @@
-// 카드 그림을 카드 모양으로 구워요 (0159): 둥근 모서리로 자른 그림 + 아래 띠 + 1px 테.
+// 카드 그림을 카드 모양으로 구워요 (0161): 둥근 모서리로 자른 그림 + 아래 띠 + 1px 테.
 // 키운 카드는 키운 만큼 촘촘하게 구워서 흐려지지 않아요.
 import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";

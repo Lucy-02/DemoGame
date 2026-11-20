@@ -53,7 +53,7 @@ export function drawCost(scene: Phaser.Scene, c: CardVM, x: number, y: number, K
   render(scene, n, cx - s.w / 2, cy - s.h / 2);
 }
 
-/** 수치 줄: 기호 + 최종 수치 (연타는 ×N). 오른 값은 숫자 색으로 알려요 (0159: ▲ 대신) */
+/** 수치 줄: 기호 + 최종 수치 (연타는 ×N). 오른 값은 숫자 색으로 알려요 (0161: ▲ 대신) */
 export function valuesRow(values: CardValueVM[], sz: string, K: { icon: number; gap: number; between: number }): Node {
   return {
     t: "row", align: "center", gap: K.between,

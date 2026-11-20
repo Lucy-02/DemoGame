@@ -1,4 +1,4 @@
-// 카드 두 얼굴의 배치 (0159, 카드 라운드 K2 L1 시안 https://claude.ai/artifact/9UzXGeVYwJi6JkwwwsS55B). 값은 시안에서 옮긴 임시 값이에요.
+// 카드 두 얼굴의 배치 (0161, 카드 라운드 K2 L1 시안 https://claude.ai/artifact/9UzXGeVYwJi6JkwwwsS55B). 값은 시안에서 옮긴 임시 값이에요.
 // 좌표는 카드 바깥 상자 왼쪽 위 기준.
 
 /** 작은 얼굴 (손패 · 덱 보기): 그림이 카드 전체, 아래 어두운 띠에 수치 + 이름. 5:7 */

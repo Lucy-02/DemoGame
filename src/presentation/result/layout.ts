@@ -3,7 +3,7 @@ import { BIG_CARD } from "../card/layout";
 import { CARD_FOCUS, FRAME, GOLD, GRID, LANE } from "../run/layout";
 
 const REWARD_W = BIG_CARD.w;
-/** 보상 카드: 큰 얼굴을 가로로 (0159). 왼→오 = 정령 줄 위→아래. 창 안에서는 카드 사이 12 (라운드 X1) */
+/** 보상 카드: 큰 얼굴을 가로로 (0161). 왼→오 = 정령 줄 위→아래. 창 안에서는 카드 사이 12 (라운드 X1) */
 export const REWARD = {
   w: REWARD_W, h: BIG_CARD.h, gap: 12,
   /** .acd.sunk (고르고 난 뒤 남은 카드) */

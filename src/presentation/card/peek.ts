@@ -1,4 +1,4 @@
-// 카드 들여다보기 (0159): 작은 얼굴을 가리키면 큰 얼굴이 뜨고, 머물면 그 옆에 곁쪽지가 떠요.
+// 카드 들여다보기 (0161): 작은 얼굴을 가리키면 큰 얼굴이 뜨고, 머물면 그 옆에 곁쪽지가 떠요.
 import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { ms } from "../style/ease";

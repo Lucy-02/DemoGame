@@ -60,7 +60,7 @@ export const GLASS: TipSkin = {
   tone: { warn: P.warn, acc: P.accHi },
 };
 
-/** 카드 곁쪽지 (0159 L1 시안 .note): 큰 얼굴 옆에 머물면 뜨는 유리 쪽지. width 240, padding 10 12, radius 8, gap 6.
+/** 카드 곁쪽지 (0161 L1 시안 .note): 큰 얼굴 옆에 머물면 뜨는 유리 쪽지. width 240, padding 10 12, radius 8, gap 6.
  *  주인 줄 · 계산 줄 · 강화하면 바뀌는 효과문 · 용어 풀이. 글자는 적 설명판과 같은 값 (새 값 없음) */
 export const NOTE: TipSkin = {
   w: 240, pad: [10, 12, 10, 12], radius: 8, gap: 6,

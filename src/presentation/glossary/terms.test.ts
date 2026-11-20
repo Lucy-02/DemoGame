@@ -28,7 +28,7 @@ describe("용어 사전", () => {
   });
 });
 
-describe("카드 곁쪽지의 용어 풀이 (0105 · 0159)", () => {
+describe("카드 곁쪽지의 용어 풀이 (0105 · 0161)", () => {
   it("밑줄 용어마다 사전 풀이가 한 번씩, 주인 줄 뒤에 붙어요", async () => {
     const { cardNoteContent } = await import("../card/cardTip");
     const blocks = cardNoteContent({

@@ -184,7 +184,7 @@ export const PREVIEW = {
   intentCut: { ring: 1.5, strike: 2 },
 };
 
-/** 손패에서 카드를 가리킬 때 (0159): 가리킨 카드는 큰 얼굴로 펼쳐지고(card/layout BIG_CARD.peek), 집은 카드는 작은 얼굴 그대로 30 떠올라요.
+/** 손패에서 카드를 가리킬 때 (0161): 가리킨 카드는 큰 얼굴로 펼쳐지고(card/layout BIG_CARD.peek), 집은 카드는 작은 얼굴 그대로 30 떠올라요.
  *  dim = 대상이 아닌 것을 흐리는 값, edge = 화면 가장자리 여백 */
 export const HOVER = { lift: 30, dim: 0.62, edge: 8 };
 
@@ -196,7 +196,7 @@ export const TARGETING = { dim: HOVER.dim };
 export const DRAG = { threshold: 6, scale: 0.6, overTarget: HOVER.dim, depth: 1000 };
 
 /** 가운데 고르기 창 (0075, 낙하 · 품기 공용). 화면 한가운데에 제목 · 카드 · 버튼을 한 덩어리로 놓아요.
- *  Lucy 2026-11-16 "카드 크기 증가, 여백 증가, 더 어둡게, 가운데 정렬": 카드 = 큰 얼굴 (0159, card/layout BIG_CARD),
+ *  Lucy 2026-11-16 "카드 크기 증가, 여백 증가, 더 어둡게, 가운데 정렬": 카드 = 큰 얼굴 (0161, card/layout BIG_CARD),
  *  카드 사이 28(전투 위 창 열 사이), 제목 · 카드 · 버튼 사이 48(런 화면 격자 여백), 버튼 = 턴 종료 버튼. 모두 임시 값이에요 */
 export const PICK = {
   gap: 28, pad: 48,

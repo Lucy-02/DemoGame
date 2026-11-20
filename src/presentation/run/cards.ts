@@ -19,7 +19,7 @@ export function cardWithFace(scene: Phaser.Scene, card: CardVM, owner: Pick<Lane
 
 const clamp = (v: number, size: number, max: number) => Math.max(GRID.gutter, Math.min(max - GRID.gutter - size, v));
 
-/** 카드(왼쪽 위 x, y · 폭 w) 위에 큰 얼굴. 위에 자리가 없으면 옆에 떠요. 머물면 곁쪽지가 이어 떠요 (0159) */
+/** 카드(왼쪽 위 x, y · 폭 w) 위에 큰 얼굴. 위에 자리가 없으면 옆에 떠요. 머물면 곁쪽지가 이어 떠요 (0161) */
 export function drawCardTip(scene: Phaser.Scene, card: CardVM, x: number, y: number, w: number) {
   const top = y - CARD_FOCUS.tipGap - BIG_CARD.h;
   if (top < GRID.gutter) return drawCardTipBeside(scene, card, x, y, w);

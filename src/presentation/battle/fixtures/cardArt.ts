@@ -18,7 +18,7 @@ export const exampleCardArt: BattleVM = {
   })),
 };
 
-/** 예시: 가운데 고르기 창 (0075 낙하). 고르는 카드는 큰 얼굴이에요 (0159) */
+/** 예시: 가운데 고르기 창 (0075 낙하). 고르는 카드는 큰 얼굴이에요 (0161) */
 export const examplePick: BattleVM = {
   ...exampleCardArt,
   pick: { kind: "fall", n: 1, cards: exampleCardArt.hand.flatMap((g) => g.cards).filter((c) => ["pierce", "claw", "zap"].includes(c.key)).map((c) => ({ ...c, off: undefined })), picked: [] },

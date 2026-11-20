@@ -1,4 +1,4 @@
-// 카드 곁쪽지의 내용 (0159): 주인 줄 · 계산 줄 · 강화하면 바뀌는 효과문 · 용어 풀이. 모양은 툴팁 공용 스킨 NOTE.
+// 카드 곁쪽지의 내용 (0161): 주인 줄 · 계산 줄 · 강화하면 바뀌는 효과문 · 용어 풀이. 모양은 툴팁 공용 스킨 NOTE.
 // 효과문에서 밑줄 친 용어는 용어 사전의 풀이가 이어 떠요 (0105). 효과문과 못 내는 사유는 큰 얼굴이 직접 보여요.
 import { termBody, termOfName } from "../glossary/terms";
 import type { TipBlock, TipContent } from "../tooltip/content";

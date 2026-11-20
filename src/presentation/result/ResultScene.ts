@@ -307,7 +307,7 @@ export class ResultScene extends Phaser.Scene {
           this.held = this.held === i ? undefined : i;
           this.dirty = true;
         });
-      // 큰 얼굴이 효과문을 보여 주니, 머물면 곁쪽지만 떠요 (0159)
+      // 큰 얼굴이 효과문을 보여 주니, 머물면 곁쪽지만 떠요 (0161)
       if (on) drawCardNote(this, card, x, y, REWARD.w);
     });
 

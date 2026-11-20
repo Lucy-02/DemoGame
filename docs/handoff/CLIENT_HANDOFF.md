@@ -36,7 +36,7 @@
 | 프레임 | 내용 | 구현 |
 | --- | --- | --- |
 | rest | 쉬는 상태 전체 | ✅ (차이 3.75%, 대부분 플레이스홀더 그림) |
-| H1 | 손패 호버: 0159부터 가리킨 카드가 큰 얼굴로 펼쳐져요 (정본 H1의 들기 · 밀림 · 말풍선은 대체됨) | 0159 |
+| H1 | 손패 호버: 0161부터 가리킨 카드가 큰 얼굴로 펼쳐져요 (정본 H1의 들기 · 밀림 · 말풍선은 대체됨) | 0161 |
 | H2 | 카드 집기·끌어 대기·대상 강조와 결과 미리보기 (0013, 조준선 없음) | ✅ |
 | H3 | (정본 프레임 참고) | ❌ |
 | gimmick | 기믹·차징 상태 | ❌ |
@@ -102,7 +102,7 @@ src/presentation/battle/
   guide.ts, views/guide.ts     첫 판 안내 (0088): 첫 판의 첫 전투에서 카드 놓기 → 차징 → 턴 종료를 테 하나로 한 번씩 짚어요. flow.ts가 phase.first일 때 guide를 넘겨요
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
-  HandCard.ts                  작은 얼굴 (0159). createHandCard → { root(원점=아래 가운데), setLifted(on), setHeld(on), opacity }. 몸(그림 + 띠 · 수치 · 이름)에만 회색 필터, 비용 동전 · 표지는 그 위에
+  HandCard.ts                  작은 얼굴 (0161). createHandCard → { root(원점=아래 가운데), setLifted(on), setHeld(on), opacity }. 몸(그림 + 띠 · 수치 · 이름)에만 회색 필터, 비용 동전 · 표지는 그 위에
   BigCard.ts                   큰 얼굴. createBigCard(scene, vm, x, y, { scale, values, why, shadow }) → { root, setHeld(on), opacity }. 유리 판에 이름 줄 · 효과문 · 기호 줄
   peek.ts                      cardPeek(큰 얼굴 띄우기 + 머물면 곁쪽지), cardNote(곁쪽지만)
   artTexture.ts, parts.ts      카드 모양으로 구운 그림(키운 배율로 구움) · 두 얼굴이 같이 쓰는 조각(비용 동전, 수치 줄, 바깥 테)
@@ -179,7 +179,7 @@ scripts/                       build-tokens, check-literals, check-assets
 - `gather(scene, x, y, draw)`: draw 안에서 장면에 바로 올린 객체를 Container로 옮겨요. 기존 그리기 코드를 고치지 않고 통째로 움직이거나 키울 때 써요(카드, 묶음, 툴팁).
 - CSS `opacity`는 자식들을 한 장으로 합친 뒤 흐리게 해요. 컨테이너 `alpha`는 자식마다 따로 흐려서 겹친 부분이 탁해져요. → `root.enableFilters().filters.internal.addColorMatrix()`로 행렬 alpha를 써요(`HandCardView.opacity`).
 - CSS `filter: grayscale() contrast() brightness()` + `opacity`는 `style/opacity.ts`의 `adjustColor(container, {grayscale, contrast, brightness, opacity})` 하나로 걸어요(행렬은 `colorMatrix`, 덧셈 열은 0~255). 못 내는 카드는 몸 컨테이너에만 걸고, 흐리면 안 되는 것은 그 컨테이너 밖에 그려요.
-- 손패에서 카드를 가리킬 때 (0159, `HOVER` · `BIG_CARD.peek`)
+- 손패에서 카드를 가리킬 때 (0161, `HOVER` · `BIG_CARD.peek`)
   - 가리킨 카드: 그 자리에서 큰 얼굴 1.2배, 아래 끝은 화면 아래에서 6, 가로는 화면 안으로 맞춤. 이름 줄 끝 최종 수치, 못 내는 사유 표지. 머물면 오른쪽(없으면 왼쪽)에 곁쪽지.
   - 집은 카드: 작은 얼굴 그대로 30 떠오르고 그림자 + 바깥 테.
   - 카드 사이를 옮겨 다닐 때 깜빡이지 않게 pointerout은 1ms 늦게 처리해요.

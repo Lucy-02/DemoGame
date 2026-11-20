@@ -28,7 +28,7 @@ export interface PickView {
 
 /** onDone: 고른 카드 key들 (고른 순서) */
 export function createPick(scene: Phaser.Scene, vm: PickVM, onDone: (keys: string[]) => void): PickView {
-  // 고르는 카드는 큰 얼굴 (0159): 효과문을 읽고 골라요
+  // 고르는 카드는 큰 얼굴 (0161): 효과문을 읽고 골라요
   const W = BIG_CARD.w, H = BIG_CARD.h;
   const B = PICK.button;
   const title: Node = { t: "text", text: COPY.pick[vm.kind](vm.n), size: T.endTurn, color: P.ink } as Node;

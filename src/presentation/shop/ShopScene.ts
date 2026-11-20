@@ -194,7 +194,7 @@ export class ShopScene extends Phaser.Scene {
         return;
       }
       const owner = c.learners.length === 1 ? vm.lanes.find((l) => l.id === c.learners[0]) : undefined;
-      // 골드가 모자란 카드는 손패의 못 내는 카드와 같은 말: 그림이 회색, 값은 붉게 (0050 · 0105 · 0159)
+      // 골드가 모자란 카드는 손패의 못 내는 카드와 같은 말: 그림이 회색, 값은 붉게 (0050 · 0105 · 0161)
       const card = cardWithFace(this, c.affordable ? c.card : { ...c.card, off: true }, owner);
       const view = createBigCard(this, card, x, y);
       const on = focusSlot === slot;
@@ -215,7 +215,7 @@ export class ShopScene extends Phaser.Scene {
           this.held = this.held === slot ? undefined : slot;
           this.redraw();
         });
-      // 큰 얼굴이 효과문을 보여 주니, 머물면 곁쪽지만 떠요 (0159)
+      // 큰 얼굴이 효과문을 보여 주니, 머물면 곁쪽지만 떠요 (0161)
       if (on) tip = () => drawCardNote(this, card, x, y, STOCK.w);
     });
 

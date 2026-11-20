@@ -165,7 +165,7 @@ export function createHand(scene: Phaser.Scene, hand: BattleVM["hand"], opts: Ha
   playHandMotion(scene, all, opts);
   const snap: HandSnapshot = Object.fromEntries(all.map((c) => [c.vm.key, { x: c.x, y: c.y, vm: c.vm }]));
 
-  // 가리킨 카드는 제자리에서 큰 얼굴로 펼쳐져요 (0159). 아래 끝은 화면 아래에 맞추고, 머물면 곁쪽지가 옆에 떠요
+  // 가리킨 카드는 제자리에서 큰 얼굴로 펼쳐져요 (0161). 아래 끝은 화면 아래에 맞추고, 머물면 곁쪽지가 옆에 떠요
   const PEEK = BIG_CARD.peek;
   const peekW = BIG_CARD.w * PEEK.scale, peekH = BIG_CARD.h * PEEK.scale;
   const frame = { w: FRAME.w, h: FRAME.h, edge: HOVER.edge };
