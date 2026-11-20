@@ -60,17 +60,15 @@ function factNode(f: FactVM, open: (tab: TabId) => void): Node {
       return {
         t: "col", gap: FACTS.innerGap,
         children: [
-          label(f.fresh ? text(COPY.freshCount(f.fresh), T.factLabel, P.ink) : undefined),
+          label(),
           big(String(f.have), COPY.ofCards(f.total)),
           {
             t: "row", gap: C.gap,
             children: Array.from({ length: f.total }, (_, i): Node => {
-              // 열고 본 칸 = 상아, 새로 열린 칸 = 강조 테, 잠긴 칸 = 옅은 막 (.q-cells i.l / .u / 기본)
-              const state = i < f.have - f.fresh ? "seen" : i < f.have ? "fresh" : "locked";
+              // 열린 칸 = 상아, 잠긴 칸 = 옅은 막 (.q-cells i.l / 기본)
               return {
                 t: "block", w: C.w, h: C.h,
-                draw: (g, x, y, w, h) => box(g, x, y, w, h, C.radius,
-                  state === "seen" ? { fill: P.ink } : state === "fresh" ? { ring: { width: C.ring, color: P.accHi } } : { fill: P.veil["10"], ring: { width: 1, color: P.glassLine } }),
+                draw: (g, x, y, w, h) => box(g, x, y, w, h, C.radius, i < f.have ? { fill: P.ink } : { fill: P.veil["10"], ring: { width: 1, color: P.glassLine } }),
               };
             }),
           },

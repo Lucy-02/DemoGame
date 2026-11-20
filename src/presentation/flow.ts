@@ -4,6 +4,7 @@
 import * as Phaser from "phaser";
 import type { Run } from "../core/run";
 import { hasGuide } from "../core/garden";
+import { isBranching } from "../core/growth";
 import type { GameSession } from "../session/game";
 import type { SettingsSession } from "../session/settings";
 import { BattleSession } from "../session/battle";
@@ -34,6 +35,7 @@ import { REST_SCENE, type RestSceneData } from "./rest/RestScene";
 import { RESULT_SCENE, type ResultSceneData } from "./result/ResultScene";
 import { RUN_END_SCENE, type RunEndSceneData } from "./runEnd/RunEndScene";
 import { SHOP_SCENE, type ShopSceneData } from "./shop/ShopScene";
+import { gardenSource, runSource } from "./spirits/roster";
 import { SPIRITS_SCENE, type SpiritsSceneData } from "./spirits/SpiritsScene";
 import { VEIL_SCENE, VeilScene } from "./veil";
 
@@ -79,10 +81,10 @@ export class GameFlow implements LegacyFlow {
   home() {
     this.current = undefined;
     const data: HomeSceneData = {
-      vm: homeVM(this.session.garden.state, this.session.run?.run, this.opts.version),
+      vm: homeVM(this.session.run?.run, this.opts.version),
       onPrimary: () => (this.session.run ? this.resume() : this.depart()),
       onItem: (id) => {
-        if (id === "spirits") this.go(SPIRITS_SCENE, { session: this.session.garden, onBack: () => this.home() } satisfies SpiritsSceneData);
+        if (id === "spirits") this.go(SPIRITS_SCENE, { source: gardenSource(this.session.garden), onBack: () => this.home() } satisfies SpiritsSceneData);
         if (id === "quit") this.opts.quit?.();
         if (id === "settings" || id === "glossary") {
           const home = this.game.scene.getScene(HOME_SCENE);
@@ -165,6 +167,9 @@ export class GameFlow implements LegacyFlow {
             this.resume();
           });
         }
+        // 키울 수 있는 정령이 있으면 지도에 앞서 정령 화면에서 키워요 (0157). 미루면 다음 지도 차례에 다시 물어요
+        const due = run.growDue();
+        if (due.length) return this.grow(run, due[0]);
         const data: MapSceneData = { run: run.run, onEnter: (id) => this.enter(id), onDeck: (scene) => this.deck(scene) };
         return this.go(MAP_SCENE, data);
       }
@@ -209,6 +214,22 @@ export class GameFlow implements LegacyFlow {
       }
       case "over": return this.home();
     }
+  }
+
+  /**
+   * 판 안에서 키우기 (0157, 작업 가정: 때와 자리는 Lucy 확인 전). 지금 판의 정령으로 정령 화면을 열어요.
+   * 갈래 고르기면 갈래 창을 연 채로, 아니면 성장 길 탭의 키우기 버튼으로 키워요. 돌아가면 남은 정령은 다음 지도 차례로 미뤄요.
+   */
+  private grow(run: RunSession, id: string) {
+    const data: SpiritsSceneData = {
+      source: runSource(run), select: id, tab: "growth", pick: isBranching(run.run.spirit(id)),
+      onLater: (later) => run.deferGrow(later),
+      onBack: () => {
+        for (const left of run.growDue()) run.deferGrow(left);
+        this.resume();
+      },
+    };
+    this.go(SPIRITS_SCENE, data);
   }
 
   enter(nodeId: string) {

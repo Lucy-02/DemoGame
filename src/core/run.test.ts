@@ -104,7 +104,7 @@ describe("정예 장비 (0048 1절 · 0051)", () => {
     expect(reward.equipment).toEqual({ equipId: "test_elite_any" });
     expect(reward.equipDone).toBe(false);
     r.giveRewardEquipment(reward, "glass_salamander");
-    expect(r.spirit("glass_salamander").equipment).toEqual([{ id: "test_elite_any", resonance: 1, from: "run" }]);
+    expect(r.spirit("glass_salamander").equipment).toEqual([{ id: "test_elite_any", resonance: 1 }]);
     expect(reward.equipDone).toBe(true);
     expect(() => r.giveRewardEquipment(reward, "fire_fox")).toThrow();
   });
@@ -115,7 +115,7 @@ describe("정예 장비 (0048 1절 · 0051)", () => {
     const reward = r.rollBattleReward("elite");
     expect(r.canSkipRewardEquipment(reward)).toBe(false);
     expect(() => r.skipRewardEquipment(reward)).toThrow();
-    for (const s of r.spirits) s.equipment = [{ id: "test_other", resonance: 1, from: "run" }];
+    for (const s of r.spirits) s.equipment = [{ id: "test_other", resonance: 1 }];
     expect(r.canSkipRewardEquipment(reward)).toBe(true);
     r.skipRewardEquipment(reward);
     expect(reward.equipDone).toBe(true);
@@ -163,13 +163,13 @@ describe("장비 칸 · 바꿔 끼기 · 대표 카드 변형 (0055 · 0056)", (
     expect(r.spirit("fire_fox").equipment).toHaveLength(2);
   });
 
-  it("같은 장비를 또 얻으면 이번 런 동안 공명이 올라요", () => {
+  it("같은 장비를 또 얻으면 공명이 올라요", () => {
     EQUIPMENT.push(SPEAR);
     const r = run(3);
     r.giveEquipment("test_spear", "fire_fox");
     expect(r.needsReplace("test_spear", "fire_fox")).toBe(false);
     r.giveEquipment("test_spear", "fire_fox");
-    expect(r.spirit("fire_fox").equipment).toEqual([{ id: "test_spear", resonance: 1, from: "run", runBonus: 1 }]);
+    expect(r.spirit("fire_fox").equipment).toEqual([{ id: "test_spear", resonance: 2 }]);
   });
 
   it("전용 무기는 대표 카드 한 장을 갈래의 기술로 바꿔요. 덱 장수는 그대로예요", () => {

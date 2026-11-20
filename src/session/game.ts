@@ -1,10 +1,10 @@
 // 게임 세션: 정원 하나와 진행 중인 판 하나를 묶고, 둘을 저장소에 남겨요.
-// 정원 ↔ 판 연결은 여기서만 해요: 판을 떠날 때 정원의 정령으로(toRunSpirit), 이긴 전투마다 경험·재료(grantBattle),
-// 판이 끝나면 판 수와 갈래 조건(endRun · openBranches). 저장은 platform의 문자열 저장만 써요 (아키텍처 0001).
+// 정원 ↔ 판 연결은 여기서만 해요: 판을 떠날 때 정원의 정령으로(toRunSpirit, 늘 유체 Lv1), 첫 보스의 깃들기(grantBattle),
+// 판이 끝나면 판 수와 완주로 연 성격(endRun). 성장과 장비는 판 안에서 끝나요 (0157 · 0159). 저장은 platform의 문자열 저장만 써요 (아키텍처 0001).
 import { GardenSession } from "./garden";
 import { RunSession, type BattleOutcome, type BattleWin } from "./run";
 import { C } from "../core/data";
-import { deepStartOpen, defaultFront, toRunSpirit, type Garden } from "../core/garden";
+import { defaultFront, toRunSpirit, type Garden } from "../core/garden";
 import { Rng } from "../core/rng";
 import type { Run, RunOptions } from "../core/run";
 import type { Element } from "../core/types";
@@ -162,16 +162,12 @@ export class GameSession {
    * 떠나기 전에 정하는 다음 판 (출전 준비, 0076 14): 시드, 오늘 센 기운, 가진 정령 모두, 기본 앞열(지난 판의 앞열).
    * 센 기운은 판을 만들기 전에 보여 줘야 해서 여기서 굴려 판에 넘겨요.
    */
-  planRun(deep = false): RunPlan {
+  planRun(): RunPlan {
     const g = this.garden.state;
     const seed = this.newSeed();
     const party = g.spirits.slice(0, C.party_size).map((s) => s.id);
-    // 뒤 막에서 출발하면 그 막의 센 기운을 미리 보여 줘요 (0108)
-    // 데모처럼 그 막까지 가지 않는 범위에서는 뒤 막 출발이 없어요 (0101)
-    const inScope = (this.scope.acts ?? C.acts_enabled) >= C.deep_start.act;
-    const startAct = deep && inScope && deepStartOpen(g, party) ? C.deep_start.act : undefined;
-    const strongElement = new Rng(seed ^ STRONG_SALT).pick(C.acts[(startAct ?? 1) - 1].elements as Element[]);
-    return { seed, strongElement, party, front: defaultFront(g), startAct };
+    const strongElement = new Rng(seed ^ STRONG_SALT).pick(C.acts[0].elements as Element[]);
+    return { seed, strongElement, party, front: defaultFront(g) };
   }
 
   /** 정원의 정령으로 새 판을 떠나요. plan(출전 준비)이 없으면 지금 계획으로, 앞열을 주면 그 정령이 앞열이에요 */
@@ -184,7 +180,7 @@ export class GameSession {
       const frontId = front && p.party.includes(front) ? front : p.front;
       if (frontId !== this.garden.state.front) this.garden.dispatch({ kind: "setFront", id: frontId });
       // 정령이 하나뿐인 판(첫 판)은 출전 준비 없이 떠나고 센 기운도 판이 굴려요
-      opts = { seed: p.seed, garden: this.garden.state, frontId, adult: false, unlockAll: false, ...(plan ? { strongElement: p.strongElement } : {}), ...(p.startAct ? { startAct: p.startAct } : {}), ...(this.scope.acts ? { acts: this.scope.acts } : {}) };
+      opts = { seed: p.seed, garden: this.garden.state, frontId, adult: false, unlockAll: false, ...(plan ? { strongElement: p.strongElement } : {}), ...(this.scope.acts ? { acts: this.scope.acts } : {}) };
     }
     const run = RunSession.start(opts);
     this.attach(run);
@@ -227,22 +223,19 @@ export class GameSession {
   }
 
   /**
-   * 전투가 끝났어요. 이겼으면 출전한 정령이 경험과 자람 조건을, 정원이 재료를 받아요 (져도 이긴 만큼은 남아요).
+   * 전투가 끝났어요. 이겼으면 출전한 정령이 판 안에서 경험과 자람 조건을 받아요 (0157). 정원에는 첫 보스의 깃들기만 알려요.
    * 보스를 이기거나 지면 판이 그 자리에서 닫혀요. 끝난 판은 run.phase가 over인 채로 돌려받아 결과를 그려요.
    */
   finishBattle(outcome: BattleOutcome): BattleWin | undefined {
     const run = this.need();
     const win = run.finishBattle(outcome);
-    if (win && !this.trialOpts) {
-      this.garden.dispatch({ kind: "grantBattle", party: win.party, tier: win.tier });
-      if (win.deeds) this.garden.dispatch({ kind: "deeds", tally: win.deeds });
-    }
+    if (win && !this.trialOpts) this.garden.dispatch({ kind: "grantBattle", tier: win.tier });
     if (run.phase.kind === "over") this.close(run);
     return win;
   }
 
   /**
-   * 탐험 포기 (0084 5번): 패배와 같아요. 판이 그 자리에서 닫히고, 이긴 전투의 경험과 지닌 장비는 남아요.
+   * 탐험 포기 (0084 5번): 패배와 같아요. 판이 그 자리에서 닫혀요.
    * 끝난 판은 lastRun으로 결과를 그려요.
    */
   abandonRun() {
@@ -261,18 +254,13 @@ export class GameSession {
   }
 
   /**
-   * 판을 닫고 정원으로 돌아가요. 판 수가 오르고, 이번 탐험에서 받은 카드로 갈래 조건이 쌓여요.
-   * 지닌 장비는 모두 남겨요(0056: 남기는 수 = 지닌 수, 져도 남김). 남길지 고르는 화면은 아직 없어요(OPEN_QUESTIONS).
+   * 판을 닫고 정원으로 돌아가요. 판 수가 오르고, 완주했으면 출전한 정령마다 그 판의 성격이 열려요 (0157).
+   * 레벨 · 단계 · 장비는 남지 않아요 (0157 · 0159).
    */
   private close(run: RunSession, abandoned = false) {
     const before = run.run.opts.garden ?? this.garden.state;
-    if (!this.trialOpts) {
-      const party = run.run.spirits;
-      const keep = Object.fromEntries(party.map((s) => [s.id, s.equipment.map((e) => e.id)]));
-      this.garden.dispatch({ kind: "keepEquipment", party, keep });
-      this.garden.dispatch({ kind: "endRun", received: run.run.receivedBySpirit() });
-    }
     const victory = run.phase.kind === "over" && run.phase.victory;
+    if (!this.trialOpts) this.garden.dispatch({ kind: "endRun", done: { party: run.run.spirits.map((s) => ({ id: s.id, personality: s.personality })), victory } });
     this._last = { run: run.run, victory, before, after: this.garden.state };
     if (!this.trialOpts) this.logRun({ at: new Date().toISOString(), seed: run.run.opts.seed, party: run.party, act: run.run.act, floor: run.run.current?.floor ?? 0, fights: run.run.fights, end: victory ? "victory" : abandoned ? "abandon" : "defeat", lastAct: run.run.lastAct });
     this._run = undefined;
@@ -338,8 +326,6 @@ export interface RunPlan {
   strongElement: Element;
   party: string[];
   front: string;
-  /** 3막에서 출발 (0108). 없으면 1막부터 */
-  startAct?: number;
 }
 
 const STRONG_SALT = 0x5e7a;

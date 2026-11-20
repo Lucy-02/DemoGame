@@ -1,16 +1,15 @@
-// 정원 상태 → 정령 관리 화면 데이터. 규칙 판단(키울 수 있나, 할 일)은 모두 core/garden 함수에 맡겨요.
+// 보여 줄 정령들(Roster) → 정령 관리 화면 데이터. 규칙 판단(키울 수 있나)은 모두 core/growth 함수에 맡겨요.
+// 판 밖에서는 떠날 때의 모습(유체 Lv 1), 판 안에서는 그 판에서 자란 모습이에요 (0157).
 import { C, CARDS, ELEMENT_NAME, GROWTH, ROLE_NAME, personalityDef, spiritDef } from "../../core/data";
-import {
-  canEvolve, evolveChoices, branchProgress, isBranchAdultCard, gardenSpirit, isFinalStage, levelOf, levelProgress,
-  spiritUnlocks, todos, toRunSpirit, type Garden, type GardenSpirit, type Todo,
-} from "../../core/garden";
+import { canEvolve, evolveChoices, branchProgress, isBranchAdultCard, isFinalStage, levelProgress, spiritUnlocks } from "../../core/growth";
 import { baseStat, equipSlots, levelHp, maxHpOf, round, stageBonus, stageRank } from "../../core/stats";
 import { describeCard } from "../../core/text";
 import { ELEMENT_ICON, ROLE_ICON } from "../faces";
 import { awakenedPuppet } from "../puppet/puppetIds";
 import { equipSheet, equipVM } from "../run/fromCore";
 import { spiritArt } from "../spiritArt";
-import { STAGES, type CardDef, type Stage, type StatKey } from "../../core/types";
+import { STAGES, type CardDef, type RunSpirit, type Stage, type StatKey } from "../../core/types";
+import type { Roster } from "./roster";
 import { COPY, DEED_LABEL, STAGE_LABEL, TAB_LABEL } from "./copy";
 import { MOCK_ELEMENT_ICON, type Mockup } from "./mockups";
 import { tokens } from "../../design/tokens";
@@ -18,11 +17,17 @@ import type {
   BranchPickVM, FactVM, GateVM, GrowthRowVM, RingVM, SpiritDetailVM, SpiritsVM, StatRowVM, TabVM, TileVM,
 } from "./viewmodel";
 
-/** 할 일 종류별 배지 기호 (정본: 새 카드 = g-cardnew) */
-/** 유대(이야기)는 MVP 밖이라 화면에 없어요 (0052 2번 · 0053 6번) */
-type ShownTodo = Exclude<Todo["kind"], "episode">;
-export const TODO_ICON: Record<ShownTodo, string> = { evolve: "g-up", unlock: "g-cardnew" };
-const shownTodos = (s: GardenSpirit) => todos(s).filter((t): t is Todo & { kind: ShownTodo } => t.kind !== "episode");
+/** 할 일 배지 기호: 키우기 */
+export const TODO_ICON = "g-up";
+
+/** 화면 안에서 정령 하나와 그 정령이 이 판에서 받은 카드 */
+interface Shown {
+  s: RunSpirit;
+  received: readonly string[];
+}
+
+const shown = (r: Roster, s: RunSpirit): Shown => ({ s, received: r.received[s.id] ?? [] });
+const ready = ({ s, received }: Shown) => !!canEvolve(s, received)?.ok;
 
 const STAT_ORDER: StatKey[] = ["hp", "power", "guard", "focus", "speed"];
 const STAT_LABEL: Record<StatKey, string> = { hp: "HP", power: "파워", guard: "가드", focus: "포커스", speed: "스피드" };
@@ -38,23 +43,23 @@ function exclusiveCards(id: string): { card: CardDef; key: string; at: string }[
 }
 
 /** 다음 단계까지 진척 0~1. 레벨 문까지는 경험, 레벨이 되면 자람 조건 (0021 6절) */
-function stageProgress(s: GardenSpirit): number {
-  const check = canEvolve(s);
+function stageProgress({ s, received }: Shown): number {
+  const check = canEvolve(s, received);
   if (!check) return 1;
   if (!check.level) {
     const into = GROWTH.evolutions.find((e) => e.spirit === s.id && e.to === s.stage);
     const start = into ? GROWTH.levels[into.level - 1] : 0;
     const end = GROWTH.levels[check.evo.level - 1];
-    return Math.min(1, (s.exp - start) / (end - start));
+    return Math.max(0, Math.min(1, (s.exp - start) / (end - start)));
   }
   const deed = check.evo.deed;
   return deed ? Math.min(1, s.deed / deed.n) : 1;
 }
 
-function ring(s: GardenSpirit): RingVM {
-  if (isFinalStage(s)) return { kind: "final", value: 1 };
-  if (canEvolve(s)?.ok) return { kind: "ready", value: 1 };
-  return { kind: "progress", value: stageProgress(s) };
+function ring(x: Shown): RingVM {
+  if (isFinalStage(x.s)) return { kind: "final", value: 1 };
+  if (ready(x)) return { kind: "ready", value: 1 };
+  return { kind: "progress", value: stageProgress(x) };
 }
 
 function art(id: string, stage: Stage): SpiritDetailVM["art"] {
@@ -69,19 +74,19 @@ function face(id: string, stage: Stage): TileVM["face"] {
   return a?.crop && { key: a.body, crop: a.crop };
 }
 
-const chip = (s: GardenSpirit) => `${STAGE_LABEL[s.stage]} ${COPY.lv(levelOf(s.exp))}`;
+const chip = (s: RunSpirit) => `${STAGE_LABEL[s.stage]} ${COPY.lv(s.level)}`;
 
-function tile(s: GardenSpirit, deployed: boolean): TileVM {
+function tile(x: Shown, deployed: boolean): TileVM {
+  const { s } = x;
   const def = spiritDef(s.id);
   return {
-    id: s.id, name: def.name, element: ELEMENT_ICON[def.element], chip: chip(s), ring: ring(s),
-    todo: shownTodos(s).length, deployed, face: face(s.id, s.stage),
+    id: s.id, name: def.name, element: ELEMENT_ICON[def.element], chip: chip(s), ring: ring(x),
+    todo: ready(x) ? 1 : 0, deployed, face: face(s.id, s.stage),
   };
 }
 
-function statRows(s: GardenSpirit): StatRowVM[] {
-  const rs = toRunSpirit(s);
-  const def = spiritDef(s.id);
+function statRows(rs: RunSpirit): StatRowVM[] {
+  const def = spiritDef(rs.id);
   return STAT_ORDER.map((k) => {
     const base = k === "hp" ? def.stats.hp + levelHp(rs.level) : def.stats[k];
     const stage = stageBonus(rs, k);
@@ -91,28 +96,24 @@ function statRows(s: GardenSpirit): StatRowVM[] {
   });
 }
 
-function growthRows(s: GardenSpirit): GrowthRowVM[] {
-  const open = new Set(spiritUnlocks(s));
-  const rs = toRunSpirit(s);
+function growthRows(rs: RunSpirit): GrowthRowVM[] {
+  const open = new Set(spiritUnlocks(rs));
   const caster = { power: baseStat(rs, "power"), guard: baseStat(rs, "guard"), focus: baseStat(rs, "focus") };
-  const cards = exclusiveCards(s.id);
-  const rank = stageRank(s.stage);
+  const cards = exclusiveCards(rs.id);
+  const rank = stageRank(rs.stage);
   return STAGES.map((stage, i) => ({
     stage: STAGE_LABEL[stage],
     state: i < rank ? "done" : i === rank ? "now" : "next",
     // 유체 줄 = 레벨로 여는 카드, 성체 줄 = 성체 카드. 각성체는 전용 카드가 없어요 (0021 미루는 것)
     chips: cards
       .filter((c) => (stage === "baby" ? c.at !== STAGE_LABEL.adult : stage === "adult" && c.at === STAGE_LABEL.adult))
-      .map(({ card, key, at }) => ({
-        name: card.name, detail: describeCard(card, caster), at,
-        open: open.has(key), fresh: open.has(key) && !s.seen.includes(key),
-      })),
+      .map(({ card, key, at }) => ({ name: card.name, detail: describeCard(card, caster), at, open: open.has(key) })),
     notes: stage === "adult" ? [COPY.personalityOn] : [],
   }));
 }
 
-function gate(s: GardenSpirit): GateVM | undefined {
-  const check = canEvolve(s);
+function gate({ s, received }: Shown): GateVM | undefined {
+  const check = canEvolve(s, received);
   if (!check) return undefined;
   const deed = check.evo.deed;
   return {
@@ -123,51 +124,37 @@ function gate(s: GardenSpirit): GateVM | undefined {
   };
 }
 
-/** 남긴 장비 칸: 단계의 칸 수만큼, 빈 칸은 null */
-function equipSlotsOf(s: GardenSpirit): SpiritDetailVM["equip"] {
-  const rs = toRunSpirit(s);
-  return Array.from({ length: equipSlots(s.stage) }, (_, i) => {
+/** 지닌 장비 칸: 단계의 칸 수만큼, 빈 칸은 null */
+function equipSlotsOf(rs: RunSpirit): SpiritDetailVM["equip"] {
+  return Array.from({ length: equipSlots(rs.stage) }, (_, i) => {
     const e = rs.equipment[i];
-    return e ? { item: equipVM(e, s.stage), tip: { sheet: equipSheet(e, rs) } } : null;
+    return e ? { item: equipVM(e, rs.stage), tip: { sheet: equipSheet(e, rs) } } : null;
   });
 }
 
-function detail(s: GardenSpirit): SpiritDetailVM {
+function detail(x: Shown): SpiritDetailVM {
+  const { s } = x;
   const def = spiritDef(s.id);
-  const level = levelOf(s.exp);
   const rows = statRows(s);
-  const todo = shownTodos(s);
   const cards = exclusiveCards(s.id);
   const open = new Set(spiritUnlocks(s));
   const progress = levelProgress(s.exp);
   const grown = s.stage !== "baby";
   const final = isFinalStage(s);
-  const has = (kind: Todo["kind"]) => todo.some((t) => t.kind === kind);
+  const grow = ready(x);
   const tabs: TabVM[] = [
     { id: "overview", label: TAB_LABEL.overview },
-    {
-      id: "growth", label: TAB_LABEL.growth, count: COPY.lv(level),
-      badge: has("evolve") ? TODO_ICON.evolve : has("unlock") ? TODO_ICON.unlock : undefined,
-    },
+    { id: "growth", label: TAB_LABEL.growth, count: COPY.lv(s.level), badge: grow ? TODO_ICON : undefined },
   ];
   const facts: FactVM[] = [
     final
       ? { kind: "next", label: COPY.next, final: COPY.final }
-      : { kind: "next", label: COPY.next, percent: Math.round(stageProgress(s) * 100), ready: has("evolve") },
-    {
-      kind: "cells", label: COPY.exclusive, total: cards.length,
-      have: cards.filter((c) => open.has(c.key)).length, fresh: todo.filter((t) => t.kind === "unlock").length,
-    },
+      : { kind: "next", label: COPY.next, percent: Math.round(stageProgress(x) * 100), ready: grow },
+    { kind: "cells", label: COPY.exclusive, total: cards.length, have: cards.filter((c) => open.has(c.key)).length },
   ];
-  const first = todo[0];
-  if (first) {
-    facts.push({
-      kind: "todo", label: COPY.todo, badge: TODO_ICON[first.kind], tab: "growth",
-      action: first.kind === "evolve" ? COPY.grow : COPY.newCard,
-    });
-  }
+  if (grow) facts.push({ kind: "todo", label: COPY.todo, badge: TODO_ICON, tab: "growth", action: COPY.grow });
   return {
-    id: s.id, name: def.name, art: art(s.id, s.stage), stage: STAGE_LABEL[s.stage], level, final,
+    id: s.id, name: def.name, art: art(s.id, s.stage), stage: STAGE_LABEL[s.stage], level: s.level, final,
     tags: [
       { icon: ELEMENT_ICON[def.element], text: ELEMENT_NAME[def.element] },
       { icon: ROLE_ICON[def.role] ?? "role-attack", text: ROLE_NAME[def.role] ?? def.role },
@@ -186,10 +173,10 @@ function detail(s: GardenSpirit): SpiritDetailVM {
       },
     },
     growth: {
-      level,
+      level: s.level,
       exp: progress.next === undefined ? undefined : { have: s.exp - progress.from, need: progress.next - progress.from },
       rows: growthRows(s),
-      gate: final ? undefined : gate(s),
+      gate: final ? undefined : gate(x),
     },
   };
 }
@@ -238,24 +225,24 @@ function mockDetail(m: Mockup, stage: Stage): SpiritDetailVM {
   };
 }
 
-/** 목업 가운데 정원에 없는 것만. 정원에 있는 정령은 늘 실제 값으로 보여요 */
-export const mockList = (g: Garden, mocks?: MockView) => mocks?.list.filter((m) => !g.spirits.some((s) => s.id === m.id)) ?? [];
+/** 목업 가운데 가진 정령이 아닌 것만. 가진 정령은 늘 실제 값으로 보여요 */
+export const mockList = (r: Roster, mocks?: MockView) => mocks?.list.filter((m) => !r.spirits.some((s) => s.id === m.id)) ?? [];
 
-/** 화면 데이터. 고른 정령이 정원(또는 목업)에 없으면 첫 정령을 보여 줘요. 목업은 정원 정령 뒤에 붙어요 */
-export function spiritsVM(g: Garden, selected: string, mocks?: MockView): SpiritsVM {
-  const list = mockList(g, mocks);
+/** 화면 데이터. 고른 정령이 가진 정령(또는 목업)에 없으면 첫 정령을 보여 줘요. 목업은 가진 정령 뒤에 붙어요 */
+export function spiritsVM(r: Roster, selected: string, mocks?: MockView): SpiritsVM {
+  const list = mockList(r, mocks);
   const mock = list.find((m) => m.id === selected);
-  const sel = mock || g.spirits.some((s) => s.id === selected) ? selected : g.spirits[0].id;
+  const sel = mock || r.spirits.some((s) => s.id === selected) ? selected : r.spirits[0].id;
   const partySize = C.party_size;
   return {
     roster: [
-      ...g.spirits.map((s, i) => tile(s, i < partySize)),
+      ...r.spirits.map((s, i) => tile(shown(r, s), i < partySize)),
       ...list.map((m) => mockTile(m, mocks!.stage(m.id))),
     ],
-    deployed: Math.min(partySize, g.spirits.length),
+    deployed: Math.min(partySize, r.spirits.length),
     partySize,
     selected: sel,
-    detail: mock ? mockDetail(mock, mocks!.stage(mock.id)) : detail(gardenSpirit(g, sel)),
+    detail: mock ? mockDetail(mock, mocks!.stage(mock.id)) : detail(shown(r, r.spirits.find((s) => s.id === sel)!)),
   };
 }
 
@@ -269,17 +256,18 @@ const BRANCH_STATS: { k: StatKey; icon: string; color: string }[] = [
   { k: "focus", icon: "i-spark", color: tokens.provisional.palette.stat.focus },
 ];
 
-/** 갈래 고르기 창 데이터. received = 이번 탐험에서 이 정령이 받은 카드 id (런 결과에서 부를 때, 아직 정원에 더하기 전). 갈래 고르기가 아니면 undefined */
-export function branchPickVM(g: Garden, id: string, from: BranchPickVM["from"], received: readonly string[] = [], selected?: string): BranchPickVM | undefined {
-  const s = gardenSpirit(g, id);
-  const choices = evolveChoices(s);
+/** 갈래 고르기 창 데이터. 갈래 조건은 이 판에서 그 정령이 받은 카드로 세요 (0058 · 0157). 갈래 고르기가 아니면 undefined */
+export function branchPickVM(r: Roster, id: string, from: BranchPickVM["from"], selected?: string): BranchPickVM | undefined {
+  const now = r.spirits.find((x) => x.id === id);
+  if (!now) return undefined;
+  const s = now, received = r.received[id] ?? [];
+  const choices = evolveChoices(s, received);
   if (choices.length < 2) return undefined;
   const def = spiritDef(id);
-  const now = toRunSpirit(s);
   const valueOf = (rs: typeof now, k: StatKey) => (k === "hp" ? maxHpOf(rs) : round(baseStat(rs, k)));
   const branches = choices.map((c, i) => {
     const after = { ...now, stage: c.evo.to, branch: c.evo.branch };
-    const prog = branchProgress(s, c.evo, received);
+    const prog = branchProgress(c.evo, received);
     return {
       id: c.evo.branch!, n: i + 1, name: COPY.branchName, role: ROLE_ICON[def.role], open: c.open,
       stats: BRANCH_STATS.map(({ k }) => {
@@ -293,7 +281,7 @@ export function branchPickVM(g: Garden, id: string, from: BranchPickVM["from"], 
   const firstOpen = branches.findIndex((b) => b.open);
   const pick = selected ? branches.findIndex((b) => b.id === selected && b.open) : -1;
   return {
-    spiritId: id, name: def.name, level: COPY.lv(levelOf(s.exp)), element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, role: ROLE_ICON[def.role],
+    spiritId: id, name: def.name, level: COPY.lv(s.level), element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, role: ROLE_ICON[def.role],
     personality: personalityDef(s.personality).name, face: face(id, s.stage), from,
     now: BRANCH_STATS.map(({ k, icon, color }) => ({ icon, color, value: valueOf(now, k) })),
     branches, selected: pick >= 0 ? pick : firstOpen >= 0 ? firstOpen : undefined,

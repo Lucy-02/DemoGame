@@ -1,9 +1,10 @@
-import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, PERSONALITIES, SPIRITS, canUpgradeCard, cardDef, enemyDef, equipDef, partyScale, upgradedId } from "./data";
-import { isCardUnlocked, toRunSpirit, type Garden } from "./garden";
+import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, GROWTH, PERSONALITIES, SPIRITS, canUpgradeCard, cardDef, enemyDef, equipDef, partyScale, upgradedId } from "./data";
+import { rerollsOf, toRunSpirit, type Garden } from "./garden";
+import { addDeed, canEvolve, evolve, evolveChoices, freshSpirit, gainExp, isCardUnlocked, spiritAt, spiritUnlocks, type BattleTier, type EvolveCheck } from "./growth";
 import { Rng } from "./rng";
 import { equipSlots, maxHpOf, resonanceOf } from "./stats";
 import { ENEMY_TRAITS } from "./types";
-import type { CardDef, DeckCard, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, EventOutcome, Obtain, Rarity, RunEquip, RunSpirit, SpiritDef } from "./types";
+import type { CardDef, DeckCard, DeedDef, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, EventOutcome, Obtain, Rarity, RunEquip, RunSpirit, SpiritDef, Stage } from "./types";
 
 export type NodeType = "battle" | "elite" | "event" | "shop" | "rest" | "boss";
 
@@ -22,21 +23,18 @@ export interface RunOptions {
   frontId: string;
   /** 파티 정령 id. 없으면 정원의 정령(최대 party_size), 정원도 없으면 constants.default_party */
   party?: string[];
-  /** 정원 상태. 있으면 단계·레벨·성격·해금을 여기서 읽어요 (결정 0021) */
+  /** 정원 상태. 있으면 떠나는 정령 · 성격 · 다시 뽑기 수를 여기서 읽어요 (0157). 정령은 늘 유체 Lv1로 떠나요 */
   garden?: Garden;
-  /** 정원 없이 시작할 때(테스트·자동 플레이): 성체 Lv4로 시작 */
+  /** 정원 없이 시작할 때(테스트·자동 플레이): 성체 문 레벨로 시작 */
   adult: boolean;
+  /** 각성체 문 레벨로 시작 (테스트·자동 플레이). adult보다 먼저 봐요 */
+  awakened?: boolean;
   unlockAll: boolean;
   /** 오늘 센 기운을 정해 두고 시작해요 (시험 · 자동 플레이). 없으면 뽑아요 */
   strongElement?: Element;
-  /** 몇 막까지 가는지. 없으면 constants.acts_enabled (지금 5: 0108) */
+  /** 몇 막까지 가는지. 없으면 constants.acts_enabled */
   acts?: number;
-  /** 이 막에서 출발해요 (0108: 키운 정원은 3막에서). 건너뛴 막의 몫은 출발 묶음으로 받아요 */
-  startAct?: number;
 }
-
-/** 정원 없이 "성체로 시작"할 때의 레벨 (성체 문 = Lv4, growth.json evolutions) */
-const ADULT_LEVEL = 4;
 
 const missing = (id: string): never => {
   throw new Error(`정원에 정령이 없어요: ${id}`);
@@ -63,10 +61,21 @@ export interface BattleReward {
   cardsDone: boolean;
   /** 장비를 줬는지 (장비가 없으면 true) */
   equipDone: boolean;
+  /** 이 전투로 정령마다 자란 것 (0157). 보상 창의 정령 줄이 읽어요 */
+  growth?: Record<string, SpiritGrowth>;
+}
+
+/** 이긴 전투 하나로 정령 하나가 자란 것 */
+export interface SpiritGrowth {
+  /** 전투 전 · 후의 경험 */
+  expBefore: number;
+  expAfter: number;
+  /** 새로 열린 그 정령의 해금 키 */
+  unlocked: string[];
 }
 
 /** 칸 사이 저장 (아키텍처 0001 PR 2). 모양이 바뀌면 RUN_SAVE_VERSION을 올려요 */
-export const RUN_SAVE_VERSION = 1;
+export const RUN_SAVE_VERSION = 2;
 
 export interface RunSave {
   version: number;
@@ -85,8 +94,8 @@ export interface RunSave {
   recentEncounters: string[];
   normalBattles: number;
   act?: number;
-  bundleLeft?: { battle: number; elite: number };
   fights?: number;
+  rerolls: number;
   strongEliteMet?: boolean;
   bossPeeked?: boolean;
   bossGapBonus?: number;
@@ -126,6 +135,8 @@ export class Run {
   bossDefeated = false;
   /** 이번 탐험에서 받은 카드 (시작 덱 빼고). 빼기로 덱에서 나가도 남아요. 갈래 조건이 세요 (0027) */
   received: DeckCard[] = [];
+  /** 남은 보상 다시 뽑기 (0157). 떠날 때 정원에서 받아요 */
+  rerolls: number;
   private nextUid = 1;
   private dealt = false;
 
@@ -136,16 +147,12 @@ export class Run {
     // 정원이 있으면 가진 정령으로 떠나요 (최대 party_size, 0053)
     const owned = garden?.spirits.slice(0, C.party_size).map((g) => g.id);
     const party = (opts.party ?? owned ?? (C.default_party as string[])).map((id) => SPIRITS.find((s) => s.id === id) ?? missing(id));
+    const stage: Stage = opts.awakened ? "awakened" : opts.adult ? "adult" : "baby";
     this.spirits = party.map((s) => {
-      const rs: RunSpirit = garden
-        ? toRunSpirit(garden.spirits.find((g) => g.id === s.id) ?? missing(s.id))
-        : {
-          id: s.id, hp: 0, maxHpBonus: 0, stage: opts.adult ? "adult" : "baby", level: opts.adult ? ADULT_LEVEL : 1,
-          personality: this.rng.pick(PERSONALITIES).id, equipment: [],
-        };
-      rs.hp = maxHpOf(rs);
-      return rs;
+      const personality = garden ? toRunSpirit(garden.spirits.find((g) => g.id === s.id) ?? missing(s.id)).personality : this.rng.pick(PERSONALITIES).id;
+      return stage === "baby" ? freshSpirit(s.id, personality) : spiritAt(s.id, personality, stage);
     });
+    this.rerolls = garden ? rerollsOf(garden) : 0;
     this.dealStart(party);
     this.dealt = true;
     this.generateMap();
@@ -154,26 +161,6 @@ export class Run {
     const first = this.firstRun ? (C.run_pool.first_run_strong as Element) : undefined;
     this.strongElement = opts.strongElement ?? first ?? drawn;
     for (const n of this.map.values()) if (n.type === "elite") n.trait = this.rng.pick(ENEMY_TRAITS);
-    // 뒤 막에서 출발: 그 막의 지도 · 센 기운으로 바꾸고, 건너뛴 막의 몫을 출발 묶음으로 남겨 둬요 (0108)
-    const start = Math.min(opts.startAct ?? 1, this.lastAct);
-    if (start > 1) {
-      while (this.act < start) this.advanceAct();
-      if (opts.strongElement && (C.acts[this.act - 1].elements as string[]).includes(opts.strongElement)) this.strongElement = opts.strongElement;
-      const b = C.deep_start.bundle;
-      this.bundleLeft = { battle: b.battle, elite: b.elite };
-      this.gold += b.gold;
-    }
-  }
-
-  /** 출발 묶음에서 아직 안 받은 보상 수 (0108). 일반 · 정예 보상과 같은 굴림이에요 */
-  bundleLeft: { battle: number; elite: number } = { battle: 0, elite: 0 };
-
-  /** 출발 묶음의 다음 보상을 굴려요. 다 받았으면 undefined */
-  rollBundleReward(): BattleReward | undefined {
-    const kind = this.bundleLeft.elite > 0 ? "elite" : this.bundleLeft.battle > 0 ? "battle" : undefined;
-    if (!kind) return undefined;
-    this.bundleLeft[kind]--;
-    return this.rollBattleReward(kind);
   }
 
   /** 정원의 첫 판인지 (정원 없이 도는 시험 판은 아니에요) */
@@ -225,7 +212,7 @@ export class Run {
       spirits: copy(this.spirits), deck: copy(this.deck), received: copy(this.received), nextUid: this.nextUid,
       gold: this.gold, frontId: this.frontId, map: copy([...this.map.values()]), current: this.current?.id ?? null, visited: [...this.visited],
       act: this.act, fights: this.fights, strongElement: this.strongElement, recentEncounters: [...this.recentEncounters], normalBattles: this.normalBattles, strongEliteMet: this.strongEliteMet, bossPeeked: this.bossPeeked, bossGapBonus: this.bossGapBonus,
-      removals: this.removals, bossDefeated: this.bossDefeated, bundleLeft: { ...this.bundleLeft },
+      removals: this.removals, bossDefeated: this.bossDefeated, rerolls: this.rerolls,
     };
   }
 
@@ -254,7 +241,7 @@ export class Run {
     run.bossGapBonus = s.bossGapBonus ?? 0;
     run.removals = s.removals;
     run.bossDefeated = s.bossDefeated;
-    run.bundleLeft = { ...(s.bundleLeft ?? { battle: 0, elite: 0 }) };
+    run.rerolls = s.rerolls;
     return run;
   }
 
@@ -289,11 +276,51 @@ export class Run {
     if (this.dealt) this.received.push(card);
   }
 
-  /** 정령 id → 이번 탐험에서 받은 카드 id들 (garden.openBranches에 넘겨요) */
-  receivedBySpirit(): Record<string, string[]> {
-    const out: Record<string, string[]> = {};
-    for (const c of this.received) (out[c.owner] ??= []).push(c.cardId);
+  /** 이 정령이 이번 판에서 받은 카드 id들 (갈래 조건, 0058 · 0157) */
+  receivedBy(spiritId: string): string[] {
+    return this.received.filter((c) => c.owner === spiritId).map((c) => c.cardId);
+  }
+
+  // ───────────────────────── 성장 (0157) ─────────────────────────
+
+  private setSpirit(next: RunSpirit) {
+    this.spirits = this.spirits.map((s) => (s.id === next.id ? next : s));
+  }
+
+  /**
+   * 이긴 전투 하나: 출전한 정령이 똑같이 경험을 받아요(쓰러져도). deeds = 이 전투에서 센 자람 조건.
+   * 정령마다 자란 것을 돌려줘요 (보상 창의 정령 줄).
+   */
+  grantBattle(tier: BattleTier, deeds: Readonly<Record<string, Partial<Record<DeedDef["kind"], number>>>> = {}): Record<string, SpiritGrowth> {
+    const out: Record<string, SpiritGrowth> = {};
+    for (const before of this.spirits) {
+      let s = before;
+      for (const [kind, n] of Object.entries(deeds[s.id] ?? {})) s = addDeed(s, kind as DeedDef["kind"], n ?? 0);
+      s = gainExp(s, GROWTH.exp[tier]);
+      this.setSpirit(s);
+      const had = spiritUnlocks(before);
+      out[s.id] = { expBefore: before.exp, expAfter: s.exp, unlocked: spiritUnlocks(s).filter((k) => !had.includes(k)) };
+    }
     return out;
+  }
+
+  /** 이 정령이 지금 단계에서 갈 수 있는 갈래마다의 검사 */
+  evolveChoices(spiritId: string): EvolveCheck[] {
+    return evolveChoices(this.spirit(spiritId), this.receivedBy(spiritId));
+  }
+
+  /** 지금 키울 수 있는 정령 id (파티 순서) */
+  evolvable(): string[] {
+    return this.spirits.filter((s) => canEvolve(s, this.receivedBy(s.id))?.ok).map((s) => s.id);
+  }
+
+  /** 키우기. 갈래 고르기면 고른 갈래가 있어야 해요. 키웠으면 true */
+  evolve(spiritId: string, branch?: string): boolean {
+    const s = this.spirit(spiritId);
+    const next = evolve(s, this.receivedBy(spiritId), branch);
+    if (next === s) return false;
+    this.setSpirit(next);
+    return true;
   }
 
   removeCard(uid: number) {
@@ -475,11 +502,12 @@ export class Run {
 
   // ───────────────────────── 보상 ─────────────────────────
 
+  /** 해금은 이 판의 정령이 자란 만큼 열려요 (0157). 첫 보스 해금만 정원에서 읽어요 */
   isUnlocked(card: CardDef): boolean {
     if (this.opts.unlockAll || card.unlock === "start") return true;
-    if (this.opts.garden) return isCardUnlocked(this.opts.garden, card);
-    if (this.opts.adult && card.unlock.endsWith("_adult")) return true;
-    return false;
+    // 정원 없이 성체로 시작한 판(시험)은 갈래를 고르지 않았어도 성체 카드가 모두 나와요
+    if (!this.opts.garden && (this.opts.adult || this.opts.awakened) && card.unlock.endsWith("_adult")) return true;
+    return isCardUnlocked(this.spirits, card, !!this.opts.garden?.act1Boss);
   }
 
   /** 이 자리에서 나올 수 있는 카드: 해금됐고, 파티가 배울 수 있고, 얻는 곳이 맞는 카드 (0040) */
@@ -564,6 +592,19 @@ export class Run {
     reward.cardsDone = true;
   }
 
+  /** 보상 카드를 다시 뽑을 수 있나 (0157): 아직 고르지 않았고 다시 뽑기가 남았을 때 */
+  canRerollReward(reward: BattleReward): boolean {
+    return !reward.cardsDone && reward.cards.length > 0 && this.rerolls > 0;
+  }
+
+  /** 보상 카드를 통째로 새로 받아요 (0157). 다시 뽑기를 하나 써요. 희귀도는 그 전투의 확률로 다시 굴려요 */
+  rerollRewardCards(reward: BattleReward) {
+    if (!this.canRerollReward(reward)) throw new Error("다시 뽑을 수 없어요");
+    this.rerolls--;
+    reward.cards = this.rollSpiritCards(reward.kind === "elite" ? C.reward.rarity_elite : C.reward.rarity_normal);
+    reward.cardsDone = reward.cards.length === 0;
+  }
+
   /** 카드를 넘기고 골드를 조금 받아요. 경험은 없어요 (0049 1절) */
   skipRewardCards(reward: BattleReward) {
     if (reward.cardsDone) throw new Error("이미 카드를 받았거나 넘겼어요");
@@ -598,7 +639,7 @@ export class Run {
 
   /**
    * 장비를 정령에게 줘요 (0056). 다른 정령에게 옮기지 못해요.
-   * 같은 장비를 이미 지녔으면 이번 런 동안 공명이 1 올라요. 칸이 꽉 찼으면 replaceId를 내려놓고 받아요(내려놓은 장비는 사라져요).
+   * 같은 장비를 이미 지녔으면 공명이 1 올라요. 칸이 꽉 찼으면 replaceId를 내려놓고 받아요(내려놓은 장비는 사라져요).
    */
   giveEquipment(equipId: string, spiritId: string, replaceId?: string) {
     const s = this.spirit(spiritId);
@@ -617,9 +658,9 @@ export class Run {
     let equipment: RunEquip[] = s.equipment.map((e) => ({ ...e }));
     const held = equipment.find((e) => e.id === equipId);
     if (held) {
-      held.runBonus = (held.runBonus ?? 0) + 1;
+      held.resonance = Math.min(held.resonance + 1, equipDef(equipId).tiers.length);
     } else {
-      const fresh: RunEquip = { id: equipId, resonance: 1, from: "run" };
+      const fresh: RunEquip = { id: equipId, resonance: 1 };
       if (this.needsReplace(equipId, spiritId)) {
         // 내려놓은 장비의 칸에 그대로 들어가요
         if (!equipment.some((e) => e.id === replaceId)) throw new Error(`${spiritId}의 장비 칸이 꽉 찼어요`);

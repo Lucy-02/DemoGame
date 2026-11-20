@@ -2,7 +2,7 @@
 // 봇(tools/screenBot.ts)이 떠 있는 장면의 손잡이를 눌러요. 막을 넘긴 판이 끝날 때까지 판을 거듭하고, 장면 전환이 막히거나 콘솔 오류가 나면 실패해요.
 // 데모 범위(?demo, 0101: 2막까지)로 돌아요. 이긴 판은 판 결과 다음에 데모 끝 화면을 거쳐요.
 // 같은 시드로 두 번 돌아요: 한 번씩 누르기, 그리고 누른 버튼을 빠르게 다시 누르기. 두 판의 상태가 칸마다 같아야 해요(같은 명령이 두 번 나가지 않음).
-// 길이가 밸런스에 덜 흔들리게: 첫 판은 그대로 돌고, 그 뒤에는 정령을 다 키워 다시 켜요(둘째 판에 막을 넘겨요). 턴 재생은 전투마다 첫 턴만 끝까지 보고 나머지는 건너뛰어요.
+// 정령은 매 판 유체로 떠나 그 판 안에서 자라요(0157). 첫 판이 끝나면 한 번 다시 켜서, 저장을 읽어 이어 가는 길도 거쳐요. 턴 재생은 전투마다 첫 턴만 끝까지 보고 나머지는 건너뛰어요.
 // 판마다 걸린 시간과 장면마다 머문 시간을 콘솔에 남겨요.
 import { expect, test, type Browser } from "@playwright/test";
 
@@ -13,8 +13,8 @@ const SEED = 7;
 /** 한 번은 거쳐야 하는 장면 */
 const MUST = ["home", "depart", "map", "battle", "result", "event", "rest", "shop", "runEnd", "join", "2막 전투"];
 const MAX_RUNS = 12;
-/** 이만큼 판을 끝낸 뒤 정령을 다 키워요 */
-const GROW_AFTER = 1;
+/** 이만큼 판을 끝낸 뒤 한 번 다시 켜요 */
+const RELOAD_AFTER = 1;
 /** 이만큼 아무것도 못 누르면 막힌 것으로 봐요 */
 const STUCK_MS = 20_000;
 
@@ -40,25 +40,18 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
       const bot = await import(/* @vite-ignore */ "/tools/screenBot.ts" as string);
       bot.setDouble(double);
       bot.setWaitAtHome(waitAtHome);
-      Object.assign(window, { __tick: bot.tick, __fingerprint: bot.fingerprint, __grownSave: bot.grownSave });
+      Object.assign(window, { __tick: bot.tick, __fingerprint: bot.fingerprint });
     }, { double, waitAtHome });
   };
   await page.goto(`/?demo&seed=${SEED}`);
-  await boot(GROW_AFTER);
-  /**
-   * 정령을 다 키워 저장하고 다시 켜요 (저장을 읽어 이어 가는 길도 거쳐요).
-   * 첫 판(혼자 떠나 판 가운데 깃들기까지)은 그대로 돌고, 그 뒤 판은 키운 정령으로 1막을 넘겨요.
-   */
-  const grow = async () => {
-    await page.evaluate(async () => {
-      const w = window as unknown as { __grownSave(text: string): string; session: { flush(): Promise<void> }; platform: { read(key: string): Promise<string | null>; write(key: string, text: string): Promise<void> } };
-      await w.session.flush();
-      await w.platform.write("garden", w.__grownSave((await w.platform.read("garden"))!));
-    });
+  await boot(RELOAD_AFTER);
+  /** 저장을 마치고 다시 켜요 (저장을 읽어 이어 가는 길) */
+  const reload = async () => {
+    await page.evaluate(() => (window as unknown as { session: { flush(): Promise<void> } }).session.flush());
     await page.reload();
     await boot(Infinity);
   };
-  let grown = false;
+  let reloaded = false;
 
   /** 메모리 두 숫자: JS 힙(MB)과 텍스처 수. 판을 돈 뒤 얼마나 늘었는지 기록에 남겨요 (docs/handoff/PERF_ANALYSIS.md) */
   const memory = () => page.evaluate(() => {
@@ -86,7 +79,7 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
   const began = Date.now();
   let runBegan = began;
   let at = began;
-  // 막을 한 번 이상 넘긴 판이 끝나고(승리든 패배든, 0108) 모든 장면을 거친 뒤 메인 화면으로 돌아올 때까지 판을 거듭해요
+  // 막을 한 번 이상 넘긴 판이 끝나고(승리든 패배든) 모든 장면을 거친 뒤 메인 화면으로 돌아올 때까지 판을 거듭해요
   while (!(reached >= 2 && state.scene === "home" && MUST.every((k) => seen.has(k)))) {
     // 봇이 누른 것이 던진 오류에도 지나온 길을 붙여요
     state = await page.evaluate(() => (window as unknown as { __tick: () => Tick }).__tick()).catch((e: Error) => {
@@ -103,10 +96,10 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
       last = Date.now();
       waitingFor = state.wait;
     }
-    // 봇이 메인 화면에서 기다리고 있으면 정령을 키울 차례예요
-    if (!grown && state.runs >= GROW_AFTER && state.scene === "home" && !state.did) {
-      grown = true;
-      await grow();
+    // 봇이 메인 화면에서 기다리고 있으면 다시 켤 차례예요
+    if (!reloaded && state.runs >= RELOAD_AFTER && state.scene === "home" && !state.did) {
+      reloaded = true;
+      await reload();
       continue;
     }
     if (state.did) {

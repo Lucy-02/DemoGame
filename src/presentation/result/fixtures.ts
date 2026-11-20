@@ -4,12 +4,12 @@ import { Run } from "../../core/run";
 import { cardName } from "../../core/text";
 import type { RunEquip, RunSpirit, Stage } from "../../core/types";
 import { cardVM, lane, statOf } from "../run/fromCore";
-import { C, cardDef } from "../../core/data";
+import { C, GROWTH, cardDef } from "../../core/data";
 import { equipOffer } from "./fromReward";
 import type { ResultVM } from "./viewmodel";
 
 const LEVEL = 3;
-const spirit = (id: string, hp: number): RunSpirit => ({ id, hp, maxHpBonus: 0, stage: "baby", level: LEVEL, personality: "", equipment: [] });
+const spirit = (id: string, hp: number): RunSpirit => ({ id, hp, maxHpBonus: 0, stage: "baby", exp: GROWTH.levels[LEVEL - 1], level: LEVEL, deed: 0, personality: "", equipment: [] });
 
 const reward = (cardId: string, owner: string) => ({ card: cardVM(cardId, owner), owners: [owner], stat: statOf(cardDef(cardId)) });
 
@@ -18,7 +18,7 @@ const salamander = spirit("glass_salamander", 1);
 const cat = spirit("mist_cat", 17);
 
 /** 정예 장면 (Q2-A 프레임 f1 · f1b · f2): 런 하나를 세워 단계 · 갈래 · 지닌 장비를 맞춘 뒤 실제 규칙으로 미리보기를 만들어요 */
-const kept = (id: string, resonance = 1): RunEquip => ({ id, resonance, from: "kept" });
+const kept = (id: string, resonance = 1): RunEquip => ({ id, resonance });
 function elite(equipId: string, party: Record<string, { stage: Stage; branch?: string; hp: number; equipment?: RunEquip[] }>): ResultVM {
   const run = new Run({ seed: 7, frontId: fox.id, adult: false, unlockAll: true });
   for (const s of run.spirits) Object.assign(s, { equipment: [] }, party[s.id]);

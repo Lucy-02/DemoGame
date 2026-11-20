@@ -314,11 +314,15 @@ export interface RunSpirit {
   hp: number;
   maxHpBonus: number;
   stage: Stage;
+  /** 이 판에서 쌓은 경험 (0157). 레벨은 여기서 나와요 (growth.levelOf) */
+  exp: number;
   level: number;
+  /** 다음 진화의 자람 조건 누적값. 진화하면 0으로 */
+  deed: number;
   personality: string;
-  /** 성체에서 고른 갈래 (0027). 유체이거나 아직 갈래가 없으면 비어요 */
+  /** 성체에서 고른 갈래 (0027). 유체이거나 아직 갈래가 없으면 비어요. 고르면 그 판에서는 못 바꿔요 (0157) */
   branch?: string;
-  /** 이번 런에 지닌 장비 (0048 · 0049 · 0056). 길이 ≤ 단계별 칸 수 */
+  /** 이번 판에 지닌 장비 (0048 · 0049 · 0056 · 0159). 길이 ≤ 단계별 칸 수 */
   equipment: RunEquip[];
 }
 
@@ -381,12 +385,11 @@ export interface EquipDef {
   opensBranch?: { spirit: string; branch: string };
 }
 
+/** 지닌 장비 하나. 판이 끝나면 사라져요 (0159) */
 export interface RunEquip {
   id: string;
+  /** 공명. 1에서 시작하고, 같은 장비를 또 얻으면 1 올라요 (0056) */
   resonance: number;
-  from: "kept" | "run";
-  /** 이번 런에 같은 장비를 또 얻어 오른 공명. 런이 끝나면 사라져요 (0056) */
-  runBonus?: number;
 }
 
 /** 자람 조건: 전투 이벤트로 세는 행동 누적 (0021 2절) */
@@ -404,29 +407,21 @@ export interface EvolutionDef {
   deed?: DeedDef;
   /** 분기 진화의 갈래 id (0027). 같은 정령·같은 전 단계 줄이 둘 이상이면 갈래 고르기예요 */
   branch?: string;
-  /** 갈래가 열리는 조건. 없으면 늘 열려 있어요. cards = 한 탐험에서 이 갈래 표시 카드를 받은 수 */
+  /** 갈래가 열리는 조건. 없으면 늘 열려 있어요. cards = 그 판에서 이 갈래 표시 카드를 받은 수 (0058 · 0157) */
   opens?: { cards: number };
   /** 이 갈래의 주 성장 능력치 (0027: 갈래 차이는 능력치 배분). 없으면 정령의 adultMain */
   main?: StatKey[];
-}
-
-export interface EpisodeDef {
-  affinity: number;
-  stage?: Stage;
 }
 
 export interface GrowthDef {
   levels: number[];
   level_hp: number;
   exp: Record<"normal" | "elite" | "boss", number>;
-  material: Record<"normal" | "elite" | "boss", number>;
   stage_main_bonus: number;
   stage_hp_main_bonus: number;
-  /** 단계별(유체 · 성체 · 각성체) 장비 칸 수. 지니는 수와 런 끝에 남기는 수가 같아요 (0056) */
+  /** 단계별(유체 · 성체 · 각성체) 장비 칸 수 (0056) */
   equip_slots: number[];
   /** 단계별 공명 상한 */
   equip_resonance_cap: number[];
   evolutions: EvolutionDef[];
-  feed: { cost: number; affinity: number };
-  episodes: EpisodeDef[];
 }

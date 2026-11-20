@@ -155,7 +155,6 @@ function growthRow(r: GrowthRowVM, act: PanelActions): Node {
         children: [
           text(c.at, T.small, P.ink3Spirit),
           text(c.name, T.chipName, c.open ? P.ink : P.ink2),
-          ...(c.fresh ? [text(COPY.fresh, T.small, P.accHi)] : []),
         ],
       },
       text(c.detail, T.small, c.open ? P.ink2 : P.ink3Spirit, { wrap: width, keepAll: true }),

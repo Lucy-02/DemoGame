@@ -17,6 +17,8 @@ export interface RewardOffer {
 export type RewardCommand =
   | { kind: "take"; cardId: string; spirit: string }
   | { kind: "skip" }
+  /** 전투 보상 카드를 통째로 다시 뽑아요 (0157). 판의 다시 뽑기를 하나 써요 */
+  | { kind: "reroll" }
   /** 장비를 이 정령에게. 칸이 꽉 찼으면 replace(지닌 장비 id)를 내려놓아요 */
   | { kind: "equip"; spirit: string; replace?: string }
   | { kind: "skipEquip" };
@@ -25,14 +27,24 @@ export type RewardCommand =
 export type RewardPhase = "cards" | "equip" | "done";
 
 export class RewardSession {
-  readonly offers: RewardOffer[];
+  offers: RewardOffer[];
   private finished: boolean;
 
   constructor(readonly run: Run, readonly source: RewardSource) {
-    this.offers = source.kind === "battle"
+    this.offers = this.readOffers();
+    this.finished = source.kind === "battle" ? source.reward.cardsDone : false;
+  }
+
+  private readOffers(): RewardOffer[] {
+    const { run, source } = this;
+    return source.kind === "battle"
       ? source.reward.cards.map((c) => ({ cardId: c.cardId, learners: [c.owner] }))
       : source.cardIds.map((cardId) => ({ cardId, learners: run.learnersOf(cardId).map((s) => s.id) }));
-    this.finished = source.kind === "battle" ? source.reward.cardsDone : false;
+  }
+
+  /** 남은 다시 뽑기 (0157). 전투 보상의 카드를 고르기 전에만 써요 */
+  get rerolls(): number {
+    return this.source.kind === "battle" && !this.finished && this.run.canRerollReward(this.source.reward) ? this.run.rerolls : 0;
   }
 
   /** 이번에 받은 골드 (이미 런에 들어가 있어요) */
@@ -69,6 +81,13 @@ export class RewardSession {
   dispatch(cmd: RewardCommand): boolean {
     if (cmd.kind === "equip" || cmd.kind === "skipEquip") return this.dispatchEquip(cmd);
     if (this.finished) return false;
+    if (cmd.kind === "reroll") {
+      if (this.source.kind !== "battle" || !this.run.canRerollReward(this.source.reward)) return false;
+      this.run.rerollRewardCards(this.source.reward);
+      this.offers = this.readOffers();
+      this.finished = this.source.reward.cardsDone;
+      return true;
+    }
     if (cmd.kind === "take") {
       const offer = this.offers.find((o) => o.cardId === cmd.cardId);
       if (!offer || !offer.learners.includes(cmd.spirit)) return false;
