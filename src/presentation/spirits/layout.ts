@@ -146,7 +146,7 @@ export const BRANCH = {
   /** .bw-foot height 72 padding 0 28 gap 12 · 버튼 height 48 padding 0 22 radius 12 · 주 버튼 min 240 · kbd padding 0 6 radius 5 lh 18 */
   foot: { h: 72, padX: 28, gap: 12, btnH: 48, btnPadX: 22, radius: 12, goMinW: 240, btnGap: 8, btnIcon: 16, kbd: { padX: 6, radius: 5, h: 18 } },
   /** .brm height 22 padding 0 7 0 4 gap 3 radius 11 · .brs 13 테 1.2 radius 4 · .lg height 36 padding 0 13 0 8 gap 7 · .brs 20 */
-  mark: { h: 22, padL: 4, padR: 7, gap: 3, slot: 13, slotLine: 1.2, slotRadius: 4, lg: { h: 36, padL: 8, padR: 13, gap: 7, slot: 20, slotLine: 1.5, slotRadius: 5 } },
+  mark: { h: 22, padL: 4, padR: 7, gap: 3, slot: 13, lg: { h: 36, padL: 8, padR: 13, gap: 7, slot: 20 } },
   /** .cmark right -9 top -10, 바깥 테 3 (--floor) */
   cardMark: { dx: 9, dy: 10, ring: 3 },
   /** .bw-r.k gap 8 · .klk 15 · .kok 13 · .ksep 1×14 margin 0 2 · .kbar height 8 min 48 radius 4 · .chip3 height 24 padding 0 9 gap 5 svg 14 */

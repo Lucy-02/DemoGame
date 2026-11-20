@@ -30,7 +30,7 @@ import { ALLY, BAND, DRAG, END, ENEMY, FRAME, INTENT, LIFT_STYLES, SYS, TARGETIN
 import { playOrderMotion, snapshotOrder, type OrderSnapshot } from "./views/orderMotion";
 import { SYS_ICONS, drawSys } from "./views/topbar";
 import { hitSpan, playUnitMotion, type UnitActor } from "./views/unitMotion";
-import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, dropValueTextures, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
+import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, dropValueTextures, losesHp, placeEnemies, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 import { pointerAt } from "../style/resolution";
 
@@ -266,7 +266,7 @@ export class BattleScene extends Phaser.Scene {
       // 대상이 없으면 아군과 적 사이 필드 빈 곳
       const at = box
         ? { x: box.x + box.w / 2, y: box.y + box.h / 2 }
-        : { x: (ALLY.xs[ALLY.xs.length - 1] + ENEMY.xs[0]) / 2, y: BAND.top / 2 };
+        : { x: (ALLY.xs[ALLY.xs.length - 1] + ENEMY.field.left) / 2, y: BAND.top / 2 };
       const where = this.overAt(at.x, at.y);
       if (start.mode === "held") {
         this.held = start.card;
@@ -457,7 +457,8 @@ export class BattleScene extends Phaser.Scene {
     if (!ref || !unit) return;
     const { allies, enemies } = this.vm;
     if (!sameUnit) this.drawHoverFx(ref);
-    const cx = (ref.side === "ally" ? ALLY : ENEMY).xs[ref.i];
+    // 유닛 가운데 (적은 몸 크기만큼 자리가 달라서 그려진 범위에서 읽어요, 0158)
+    const cx = unit.bounds.x + unit.bounds.w / 2;
     const tip = mark === undefined ? undefined : unit.marks[mark]?.tip;
     // 필드 층 맨 위(손패 띠 아래)에 그려요
     this.hoverTip = gather(this, 0, 0, () => {
@@ -725,6 +726,7 @@ export class BattleScene extends Phaser.Scene {
           return v;
         });
       });
+      placeEnemies(this.vm.enemies);
       this.vm.enemies.forEach((e, i) => {
         const ref = { side: "enemy", i } as const;
         unit(ref, () => {

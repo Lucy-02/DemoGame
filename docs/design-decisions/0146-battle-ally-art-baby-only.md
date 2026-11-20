@@ -18,3 +18,4 @@
 - `src/presentation/battle/layout.ts`의 `ALLY.art.stages`(지금 `["baby"]`), `views/units.ts`. 0109의 맞춤 값(`over` · `shift`)은 남겨 뒀어요.
 - 보는 장면: `?screen=battle&scene=ally-a-adult` (자리표시), `ally-a-baby` (그림).
 - 유체의 바깥 테 통일은 0145의 "Lucy가 정할 것"에 있어요.
+- 2026-11-20 갱신: 유체는 그림을 유지하되 0158에서 칸의 0.7배(약 78px)로 줄였어요(Lucy 선택).

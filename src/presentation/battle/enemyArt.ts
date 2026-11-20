@@ -1,8 +1,9 @@
-// 적 그림 (0100, 임시 선택: Lucy가 후보 시트에서 고르기 전의 연결). 만들기: tools/art/import-enemies.py
-// 파일: assets/enemies/<적 id>.webp (왼쪽을 보는 누끼). 크기와 발 위치는 enemyFit.json (사람이 맞춘 값):
-//   face = 순서표 얼굴 자르기 [가운데 x, 가운데 y, 지름] (x는 그림 폭, y · 지름은 그림 높이에 대한 비율),
-//   h = 화면에서의 그림 높이, sink = 그림 아래 끝에서 발 선까지 (바닥에 퍼진 부분만큼), dx = 가운데에서 옆으로, of = 같은 그림을 쓰는 적
-// 그림이 없는 적은 undefined라서 화면이 자리표시(X 상자)를 그대로 그려요.
+// 적 그림 (0100 ~ 0117, 임시 선택: Lucy가 후보 시트에서 고르기 전의 연결). 만들기: tools/art/import-enemies.py
+// 파일: assets/enemies/<적 id>.webp (왼쪽을 보는 누끼). 크기와 발 위치는 enemyFit.json:
+//   size = 도감 크기 등급 (0158, 등급 상자는 layout.ts의 ENEMY.sizes) · h · w = 그 상자에 맞춘 화면 크기,
+//   sink = 그림 아래 끝에서 발 선까지 (바닥에 퍼진 부분만큼, 떠 있으면 음수) · dx = 가운데에서 옆으로 · float = 떠 있는 적 (그림자가 작고 옅어요),
+//   face = 순서표 얼굴 자르기 [가운데 x, 가운데 y, 지름] (x는 그림 폭, y · 지름은 그림 높이에 대한 비율) · of = 같은 그림을 쓰는 적
+// 자리 잡기는 enemyLayout.ts. 그림이 없는 적은 undefined라서 화면이 자리표시(X 상자)를 그대로 그려요.
 import type * as Phaser from "phaser";
 import fitJson from "./enemyFit.json";
 import { paintTileFace, type Crop } from "../spirits/artFit";

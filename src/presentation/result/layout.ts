@@ -13,7 +13,7 @@ export const REWARD = {
 /** .btn2.b3 넘기기: 166×48 radius 12 padding 0 16 gap 10 · TODO 기호 칸 18 (점선, radius 5) · 동전 16 gap 4 ml 2 */
 export const SKIP = {
   w: REWARD_W, h: GRID.buttonH, radius: 12, gap: 10,
-  todo: { size: 18, radius: 5, ring: 1, dash: 3 }, gold: { coin: 16, gap: 4, ml: 2 },
+  todo: { size: 18 }, gold: { coin: 16, gap: 4, ml: 2 },
 };
 
 /** 정예 장비 줄 (0051 자리 · 0064 Q2-A 모양): 카드 아래 31, 높이 96 radius 14, padding 0 26 0 12 gap 18. 폭은 왼쪽 열 폭

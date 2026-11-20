@@ -37,6 +37,8 @@ const badgeOf = (d: number) => {
   const off = (d / 2) * Math.cos((O.badge.deg * Math.PI) / 180);
   return { size, off, icon: Math.round(size * O.badge.icon) };
 };
+/** 해방 배지의 기호 (0137: 글자 ✦ 대신 정본 기호) */
+export const RELEASE_ICON = "i-spark";
 /** 되돌리기 배지의 임시 기호 (있는 기호를 빌려 써요, TODO_ICON) */
 const UNDO_ICON = "g-back";
 const ENEMY_BADGE = badgeOf(O.face);
@@ -48,9 +50,8 @@ interface RingStyle {
 }
 
 interface BadgeStyle {
-  /** 기호 id. glyph가 있으면 기호 대신 그 글자 */
+  /** 기호 id */
   icon: string;
-  glyph?: string;
   tint: string;
   fill: string;
   /** 배지 자체의 테: 차징 = 보라 실선, 끊김 예정 = 보라 점선 */
@@ -80,8 +81,7 @@ function drawBadge(scene: Phaser.Scene, cx: number, cy: number, b: ReturnType<ty
     });
     scene.add.image(x, y, key);
   }
-  if (s.glyph) scene.add.text(x, y, s.glyph, textStyle(`${Math.round(b.size * O.badge.glyph)}px`, s.tint)).setOrigin(0.5, 0.5);
-  else icon(scene, x - b.icon / 2, y - b.icon / 2, s.icon, b.icon, b.icon, s.tint);
+  icon(scene, x - b.icon / 2, y - b.icon / 2, s.icon, b.icon, b.icon, s.tint);
 }
 
 /** 적 칸의 배지: 끊김 > 차징 > 보통 (0074 10 · 11번) */
@@ -172,6 +172,7 @@ export function preloadOrder(scene: Phaser.Scene, vm: BattleVM["order"]) {
   for (const t of (vm.bundles ?? []).flat()) loadIcon(scene, t.icon, ALLY_BADGE.icon);
   loadIcon(scene, BAND_ICON, B.icon);
   loadIcon(scene, UNDO_ICON, ALLY_BADGE.icon);
+  loadIcon(scene, RELEASE_ICON, ALLY_BADGE.icon);
 }
 
 /** 든 카드 자리 토큰의 기호도 미리 불러 둬요 */
@@ -334,8 +335,8 @@ export function drawOrder(scene: Phaser.Scene, vm: BattleVM["order"]): { g: Phas
         const ring = allyRing(t);
         if (ring) drawRing(scene, fx, cy, d, ring);
         badge();
-        // 해방: 왼쪽 위 ✦ 배지 (0074 토큰 그리기 규칙)
-        if (t.mark === "release") drawBadge(scene, fx, cy, ALLY_BADGE, { icon: "", glyph: COPY.order.release, tint: P.accHi, fill: P.face }, [-1, -1]);
+        // 해방: 왼쪽 위 배지 (0074 토큰 그리기 규칙, 기호는 0137)
+        if (t.mark === "release") drawBadge(scene, fx, cy, ALLY_BADGE, { icon: RELEASE_ICON, tint: P.accHi, fill: P.face }, [-1, -1]);
         // 되돌리기: 오른쪽 위 배지 (0074 토큰 그리기 규칙). 기호는 임시예요 (TODO_ICON, Lucy 확인 대기)
         if (t.undo) drawBadge(scene, fx, cy, ALLY_BADGE, { icon: UNDO_ICON, tint: P.ink2, fill: P.face }, [1, -1]);
       }, t.mark === "held" ? O.fade.held : t.past ? O.fade.past : undefined, { key: t.key, kind: "ally", x: fx, y: cy, d, past: !!t.past, held: t.mark === "held" });
