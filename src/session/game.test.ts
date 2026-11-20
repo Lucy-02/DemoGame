@@ -106,6 +106,13 @@ describe("게임 세션", () => {
     expect(game.startRun().run.spirits[0]).toMatchObject({ stage: "baby", level: 1, exp: 0, equipment: [] });
   });
 
+  it("시험용 범위 grown은 정령을 각성체로 떠나보내고, 정원에는 남기지 않아요", async () => {
+    const game = await GameSession.load(new MemoryStore(), seeds, { grown: true });
+    expect(game.startRun().run.spirits[0].stage).toBe("awakened");
+    game.abandonRun();
+    expect(game.garden.state.spirits[0]).not.toHaveProperty("stage");
+  });
+
   it("완주하면 출전한 정령의 성격이 열리고, 다음 판부터 다시 뽑기를 받아요 (0157)", async () => {
     const game = await GameSession.load(new MemoryStore(), seeds, { acts: 1 });
     const id = game.garden.state.spirits[0].id;

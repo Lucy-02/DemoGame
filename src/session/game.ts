@@ -65,6 +65,8 @@ const RUN_LOG_MAX = 200;
 export interface GameScope {
   /** 몇 막까지 가는지. 없으면 constants.acts_enabled */
   acts?: number;
+  /** 시험용(개발 빌드의 ?grown): 정령이 각성체로 떠나요. 화면 봇이 지는 판을 거듭하지 않고 막을 넘길 때 써요 */
+  grown?: boolean;
 }
 
 /** 데모 범위 (0101): constants.demo.acts막까지. 게임이 여는 막(acts_enabled)을 넘지 않아요 */
@@ -180,7 +182,7 @@ export class GameSession {
       const frontId = front && p.party.includes(front) ? front : p.front;
       if (frontId !== this.garden.state.front) this.garden.dispatch({ kind: "setFront", id: frontId });
       // 정령이 하나뿐인 판(첫 판)은 출전 준비 없이 떠나고 센 기운도 판이 굴려요
-      opts = { seed: p.seed, garden: this.garden.state, frontId, adult: false, unlockAll: false, ...(plan ? { strongElement: p.strongElement } : {}), ...(this.scope.acts ? { acts: this.scope.acts } : {}) };
+      opts = { seed: p.seed, garden: this.garden.state, frontId, adult: !!this.scope.grown, ...(this.scope.grown ? { awakened: true } : {}), unlockAll: false, ...(plan ? { strongElement: p.strongElement } : {}), ...(this.scope.acts ? { acts: this.scope.acts } : {}) };
     }
     const run = RunSession.start(opts);
     this.attach(run);

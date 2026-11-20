@@ -2,7 +2,7 @@
 // 봇(tools/screenBot.ts)이 떠 있는 장면의 손잡이를 눌러요. 막을 넘긴 판이 끝날 때까지 판을 거듭하고, 장면 전환이 막히거나 콘솔 오류가 나면 실패해요.
 // 데모 범위(?demo, 0101: 2막까지)로 돌아요. 이긴 판은 판 결과 다음에 데모 끝 화면을 거쳐요.
 // 같은 시드로 두 번 돌아요: 한 번씩 누르기, 그리고 누른 버튼을 빠르게 다시 누르기. 두 판의 상태가 칸마다 같아야 해요(같은 명령이 두 번 나가지 않음).
-// 정령은 매 판 유체로 떠나 그 판 안에서 자라요(0157). 첫 판이 끝나면 한 번 다시 켜서, 저장을 읽어 이어 가는 길도 거쳐요. 턴 재생은 전투마다 첫 턴만 끝까지 보고 나머지는 건너뛰어요.
+// 길이가 밸런스에 덜 흔들리게: 첫 판은 그대로(유체로) 돌고, 그 뒤에는 정령이 각성체로 떠나게 다시 켜요(?grown, 둘째 판에 막을 넘겨요). 턴 재생은 전투마다 첫 턴만 끝까지 보고 나머지는 건너뛰어요.
 // 판마다 걸린 시간과 장면마다 머문 시간을 콘솔에 남겨요.
 import { expect, test, type Browser } from "@playwright/test";
 
@@ -13,8 +13,8 @@ const SEED = 7;
 /** 한 번은 거쳐야 하는 장면 */
 const MUST = ["home", "depart", "map", "battle", "result", "event", "rest", "shop", "runEnd", "join", "2막 전투"];
 const MAX_RUNS = 12;
-/** 이만큼 판을 끝낸 뒤 한 번 다시 켜요 */
-const RELOAD_AFTER = 1;
+/** 이만큼 판을 끝낸 뒤 정령을 키운 채로 다시 켜요 */
+const GROW_AFTER = 1;
 /** 이만큼 아무것도 못 누르면 막힌 것으로 봐요 */
 const STUCK_MS = 20_000;
 
@@ -44,14 +44,17 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
     }, { double, waitAtHome });
   };
   await page.goto(`/?demo&seed=${SEED}`);
-  await boot(RELOAD_AFTER);
-  /** 저장을 마치고 다시 켜요 (저장을 읽어 이어 가는 길) */
-  const reload = async () => {
+  await boot(GROW_AFTER);
+  /**
+   * 저장을 마치고 정령이 각성체로 떠나는 판으로 다시 켜요 (저장을 읽어 이어 가는 길도 거쳐요).
+   * 첫 판(혼자 떠나 판 가운데 깃들기까지)은 그대로 돌고, 그 뒤 판은 키운 정령으로 1막을 넘겨요.
+   */
+  const grow = async () => {
     await page.evaluate(() => (window as unknown as { session: { flush(): Promise<void> } }).session.flush());
-    await page.reload();
+    await page.goto(`/?demo&seed=${SEED}&grown`);
     await boot(Infinity);
   };
-  let reloaded = false;
+  let grown = false;
 
   /** 메모리 두 숫자: JS 힙(MB)과 텍스처 수. 판을 돈 뒤 얼마나 늘었는지 기록에 남겨요 (docs/handoff/PERF_ANALYSIS.md) */
   const memory = () => page.evaluate(() => {
@@ -96,10 +99,10 @@ async function play(browser: Browser, double: boolean, shot: (name: string) => s
       last = Date.now();
       waitingFor = state.wait;
     }
-    // 봇이 메인 화면에서 기다리고 있으면 다시 켤 차례예요
-    if (!reloaded && state.runs >= RELOAD_AFTER && state.scene === "home" && !state.did) {
-      reloaded = true;
-      await reload();
+    // 봇이 메인 화면에서 기다리고 있으면 정령을 키울 차례예요
+    if (!grown && state.runs >= GROW_AFTER && state.scene === "home" && !state.did) {
+      grown = true;
+      await grow();
       continue;
     }
     if (state.did) {

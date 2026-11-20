@@ -52,7 +52,7 @@ async function start() {
   const screen = params.get("screen");
   const get = (k: string) => params.get(k) ?? undefined;
   const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "demoEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" || screen === "menu" || screen === "settings" || screen === "glossary" ? screen : undefined;
-  const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform, DEV ? devSeeds(params) : undefined, demo ? demoScope() : {}, (text) => {
+  const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform, DEV ? devSeeds(params) : undefined, { ...(demo ? demoScope() : {}), ...(DEV && params.has("grown") ? { grown: true } : {}) }, (text) => {
     void platform.logError(`v${versionOf(demo)} save ${text}`).catch(() => {});
   });
   // 설정은 어느 화면이든 읽어요(소리 볼륨). 전체화면은 저장에 이어진 게임에서만 창에 입혀요: 설정이 정본이고, 창이 바뀌면(F11 · Esc) 설정이 따라가요 (0084 3 · 4번)
