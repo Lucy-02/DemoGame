@@ -58,17 +58,32 @@ export const ALLY = {
   body: { w: 94, h: 112 },
   /** 정령 그림 맞춤 (0109, 임시 값): 높이는 칸 그대로, 이펙트가 넓은 성체 · 각성체 그림은 폭이 칸의 over배까지 넘쳐도 돼요.
    *  가로는 얼굴(몸통) 가운데를 칸 가운데에 두되 칸 폭의 shift배까지만 옮겨요.
+   *  baby = 유체는 칸의 이만큼 (0158, Lucy 2026-11-20: 약 78px, "작음" 등급 적과 같은 키).
    *  stages = 전투에 정령 그림을 세우는 성장 단계 (0146). 성체 · 각성체는 전투용 그림(SD 등)이 따로 올 때까지 자리표시예요. 되돌리려면 여기에 "adult", "awakened"를 넣어요 */
-  art: { over: 1.35, shift: 0.15, stages: ["baby"] as readonly string[] },
+  art: { over: 1.35, shift: 0.15, baby: 0.7, stages: ["baby"] as readonly string[] },
 };
 
 /** 적 가운데 x 805·941·1077 (간격 72%, 가운데 941), 의도 알약 top 212, 발 y 344.
  *  그림 상자는 정본 .enemy .body 132×106 · .ensvg 120×96의 85%. mt = 의도 알약 아래 끝에서 그림 상자 위 끝까지 */
 export const ENEMY = {
-  xs: [805, 941, 1077], top: 212, feet: 344,
-  body: { w: 112, h: 90, mt: 14 }, art: { w: 102, h: 82 },
+  /** top = 의도 알약의 기본 줄 (작은 적), feet = 발 선 */
+  top: 212, feet: 344,
+  /** body.w = 피해 숫자가 뜨는 자리의 폭 상한 · body.mt = 알약 아래 여백 · art = 그림이 없는 적의 자리표시 크기 */
+  body: { w: 112, mt: 14 }, art: { w: 102, h: 82 },
   /** 땅속 (0096 시안 .sunk): 몸 윗부분만 이만큼 남아요 (시안 임시 값) */
   buried: 0.4,
+  /** 도감 크기대로 세우기 (0158): 적은 균일한 칸 대신 몸 폭만큼 자리를 차지해요.
+   *  field = 적들이 서는 가로 범위 (가운데 정렬, 넘치면 왼쪽으로 밀려요) · gap = 자리 사이 · slotPad = 체력 막대 양옆 여유 */
+  field: { left: 610, center: 941, right: 1262, gap: 14, slotPad: 8 },
+  /** 크기 등급 (enemyFit.json의 size): 그림을 h × w 상자 안에 비율대로 맞춘 값이 enemyFit의 h · w예요. bar = 체력 막대 폭 (네 단계) */
+  sizes: {
+    XS: { h: 58, w: 96, bar: 88 }, S: { h: 78, w: 100, bar: 88 }, M: { h: 104, w: 132, bar: 104 },
+    L: { h: 136, w: 176, bar: 136 }, XL: { h: 172, w: 236, bar: 136 }, B: { h: 212, w: 290, bar: 184 },
+  },
+  /** 의도 알약은 머리 위 이만큼 (작은 적은 ENEMY.top 줄에 그대로) */
+  intentGap: 12,
+  /** 그림자: 몸 폭의 ratio배 (떠 있는 적은 float배 · 옅게), 폭은 min 이상, 두께는 기본의 thick 범위 */
+  shadow: { ratio: 0.82, float: 0.5, floatAlpha: 0.6, min: 44, thick: [0.8, 2] as [number, number] },
 };
 
 /** .ground 104×14, 발 y에 가운데. radial-gradient(closest-side, shade, transparent) */

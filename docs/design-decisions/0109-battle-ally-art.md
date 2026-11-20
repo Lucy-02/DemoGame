@@ -19,3 +19,4 @@
 
 ## 결과와 후속 작업
 - `src/presentation/battle/allyArt.ts`, `AllyVM.stage`, 보는 장면 `?screen=battle&scene=ally-a-baby` (`a` · `b` × `baby` · `adult` · `awakened`, `&stage=1`로 배경).
+- 2026-11-20 갱신: 성체 · 각성체는 0146에서 자리표시로 되돌렸고, 유체 크기는 0158에서 칸의 0.7배로 정했어요.
