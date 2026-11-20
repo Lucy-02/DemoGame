@@ -2,7 +2,7 @@
 
 - 날짜: 2026-11-11
 - 단계: 진화 갈래 (0027 · 0047 S15)
-- 상태: 수락됨 (Lucy 2026-11-11 "갈래 카드 n장이랑 레벨 최소 조건", "G1이 나아보이는데", G2 모습 칸은 그림이 생기면). 2026-11-12 센 수를 탐험을 넘어 잇기로 고침(수정안 https://claude.ai/artifact/JFVLZDBGQMzR68Fd15STaB, Lucy "괜찮네")
+- 상태: 수락됨 (Lucy 2026-11-11 "갈래 카드 n장이랑 레벨 최소 조건", "G1이 나아보이는데", G2 모습 칸은 그림이 생기면). 2026-11-12 센 수를 탐험을 넘어 잇기로 고침(수정안 https://claude.ai/artifact/JFVLZDBGQMzR68Fd15STaB, Lucy "괜찮네") 대체됨: 0157 (갈래 카드 수를 탐험을 넘어 세기 · 열린 갈래가 남음)
 - 근거 자료: 라운드 G 브리프 `design/concepts/BRIEF.md` "# 갈래 고르기 라운드 G" · G1 https://claude.ai/artifact/LpmKWC5f9rsbPYWVCFqbpm · G2 https://claude.ai/artifact/LVbKAYB3dzgZDLfFsXbyMR · 프레임 `/mnt/project-files/design/round-g/`
 
 ## 규칙
