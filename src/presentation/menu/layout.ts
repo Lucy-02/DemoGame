@@ -37,7 +37,7 @@ export const SETTINGS = {
 export const GLOSSARY = {
   w: SETTINGS.w, pad: SETTINGS.pad, head: SETTINGS.head, close: SETTINGS.close,
   cols: 3, cell: { h: SETTINGS.row.h, radius: MENU.row.radius, padX: 12, gap: MENU.row.gap, icon: SETTINGS.head.icon },
-  rule: SETTINGS.rule, todo: MENU.todo,
+  rule: SETTINGS.rule,
   /** 허점 표지: 순서표 토큰의 노란 테와 같은 굵기 */
   ring: ORDER.ring.w,
   /** 쓰러짐 표지: 붉은 점선 테를 호 여섯 조각으로 */

@@ -2,12 +2,12 @@
 // 칸은 기호 + 이름뿐이고, 풀이는 칸에 올리면 창 오른쪽 말풍선으로 떠요 (0050). 풀이 문구는 용어 사전(glossary/terms)을 그대로 써요.
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
-import { COPY as BATTLE } from "../battle/copy";
+import { RELEASE_ICON } from "../battle/views/order";
 import { weakTexture } from "../battle/views/units";
 import { GROUPS, TERMS, termBody, type Term } from "../glossary/terms";
 import { drawWindow } from "../result/views/window";
 import { rgba } from "../style/color";
-import { box, circle } from "../style/draw";
+import { circle } from "../style/draw";
 import { render, size, type Node } from "../style/flex";
 import { loadIcon } from "../style/icons";
 import { P, rule, text } from "../spirits/views/parts";
@@ -15,6 +15,7 @@ import { drawTooltip } from "../tooltip/Tooltip";
 import { GLASS } from "../tooltip/skins";
 import { COPY } from "./copy";
 import { FRAME, GLOSSARY as G } from "./layout";
+import { strokePlaceholder } from "../style/placeholder";
 
 const T = tokens.provisional.text.result;
 const TI = tokens.provisional.text.home;
@@ -48,6 +49,7 @@ export class GlossaryScene extends Phaser.Scene {
     loadIcon(this, HEAD_ICON, G.head.icon);
     loadIcon(this, "g-close", G.close.icon);
     for (const t of TERMS) if (t.icon) loadIcon(this, t.icon, G.cell.icon);
+    loadIcon(this, RELEASE_ICON, G.cell.icon);
   }
 
   create() {
@@ -69,10 +71,10 @@ export class GlossaryScene extends Phaser.Scene {
     this.dirty = true;
   }
 
-  /** 기호가 없는 용어: 전투에서 쓰는 표지를 그대로, 그것도 없으면 점선 칸 (TODO_ICON) */
+  /** 기호가 없는 용어: 전투에서 쓰는 표지를 그대로, 그것도 없으면 그림 자리표시 X 상자 (TODO_ICON, 0137) */
   private mark(t: Term): Node {
     const d = G.cell.icon;
-    if (t.mark === "release") return text(BATTLE.order.release, TI.item, P.accHi, { w: d });
+    if (t.mark === "release") return { t: "icon", id: RELEASE_ICON, w: d, h: d, tint: P.accHi };
     return {
       t: "block", w: d, h: d,
       draw: (g, x, y, w, h) => {
@@ -84,7 +86,7 @@ export class GlossaryScene extends Phaser.Scene {
           g.lineStyle(G.ring, c.color, c.alpha);
           for (let i = 0; i < n; i++) g.beginPath().arc(x + w / 2, y + h / 2, (w - G.ring) / 2, i * step, (i + 0.5) * step).strokePath();
         }
-        else box(g, x, y, w, h, G.todo.radius, { ring: { width: G.todo.ring, color: P.ink2, dash: G.todo.dash } });
+        else strokePlaceholder(g, x, y, w, h, P.ink2);
       },
     };
   }
