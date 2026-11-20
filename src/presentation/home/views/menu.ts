@@ -2,13 +2,13 @@
 import type * as Phaser from "phaser";
 import { tokens } from "../../../design/tokens";
 import { faceTexture } from "../../spiritArt";
-import { box } from "../../style/draw";
 import { render, size, type BoxNode, type Node } from "../../style/flex";
 import { P, glass, plateStyle, text } from "../../spirits/views/parts";
 import { COPY } from "../copy";
 import { FRAME } from "../../run/layout";
 import { LOGO, MENU, PRIMARY, VERSION } from "../layout";
 import type { HomeBadge, HomeItemVM, HomePrimaryVM } from "../viewmodel";
+import { strokePlaceholder } from "../../style/placeholder";
 
 const T = tokens.provisional.text.home;
 
@@ -29,10 +29,10 @@ export function drawVersion(scene: Phaser.Scene, version: string) {
   render(scene, node, VERSION.x, FRAME.h - VERSION.bottom - size(node).h);
 }
 
-/** 기호가 아직 없는 자리 (TODO_ICON): 점선 둥근 네모 */
+/** 기호가 아직 없는 자리 (TODO_ICON): 그림 자리표시 X 상자 (0137) */
 const todoSlot = (d: number, color: string): Node => ({
   t: "block", w: d, h: d,
-  draw: (g, x, y, w, h) => box(g, x, y, w, h, MENU.todo.radius, { ring: { width: MENU.todo.ring, color, dash: MENU.todo.dash } }),
+  draw: (g, x, y, w, h) => strokePlaceholder(g, x, y, w, h, color),
 });
 
 function badgeNode(b: HomeBadge): Node {

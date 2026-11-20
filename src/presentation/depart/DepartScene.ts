@@ -26,6 +26,7 @@ import { COPY } from "./copy";
 import { DEFAULT_DEPART, DEPARTS } from "./fixtures";
 import { BTN, SEAT, STRONG, WIN } from "./layout";
 import type { DepartVM, SeatVM } from "./viewmodel";
+import { strokePlaceholder } from "../style/placeholder";
 
 export const DEPART_SCENE = "depart";
 
@@ -178,14 +179,14 @@ export class DepartScene extends Phaser.Scene {
 }
 
 
-/** 오늘 센 기운 칩: TODO_ICON 자리(점선) + 속성 기호. 이름은 호버 (0078 고칠 점 1) */
+/** 오늘 센 기운 칩: TODO_ICON 자리(X 상자, 0137) + 속성 기호. 이름은 호버 (0078 고칠 점 1) */
 function strongNode(vm: DepartVM, hot: boolean): BoxNode {
   const S = STRONG;
   return {
     t: "row", h: S.h, pad: S.pad, radius: S.radius, gap: S.gap, align: "center",
     style: { fill: hot ? P.veil["14"] : P.veil["06"], ring: { width: 1, color: hot ? P.ink2 : P.glassLine } },
     children: [
-      { t: "block", w: S.todo, h: S.todo, draw: (g, bx, by, bw, bh) => box(g, bx, by, bw, bh, S.todoRadius, { ring: { width: 1, color: P.warn, dash: S.dash } }) },
+      { t: "block", w: S.todo, h: S.todo, draw: (g, bx, by, bw, bh) => strokePlaceholder(g, bx, by, bw, bh, P.warn) },
       { t: "icon", id: vm.strong.icon, w: S.icon, h: S.icon, tint: P.ink },
     ],
   };

@@ -38,7 +38,7 @@ export const ORDER = {
   ring: { w: OT.ring.width, gap: OT.ring.gap, dash: [OT.ring.width * 2, OT.ring.width * 2] as [number, number] },
   /** 배지 (0074): 지름 = 얼굴 지름 × ratio, 가운데가 얼굴 원 둘레 deg 자리.
    *  시안 .disc>.bg: 판 색 바깥 테 box-shadow 0 0 0 1.5, 상태 테 border 1.5 (점선은 선 3 · 틈 2), 기호 68%, 글자(✦) 62% */
-  badge: { ratio: OT.badge.ratio, deg: OT.badge.deg, outline: 1.5, border: 1.5, dash: [3, 2] as [number, number], icon: 0.68, glyph: 0.62 },
+  badge: { ratio: OT.badge.ratio, deg: OT.badge.deg, outline: 1.5, border: 1.5, dash: [3, 2] as [number, number], icon: 0.68 },
   /** 아군 묶음 (.rt .bun): gap 10, padding 6, 테 1 */
   bundle: { gap: 10, pad: 6, ring: 1, max: OT.bundleMax, reserve: 2 },
   /** 방전 띠 (0096 시안 .band): 묶음 안의 어두운 홈. 머리 = 충격 기호 + 피해 수 (gap 2), 내용과 gap 6, 빈 띠는 토큰 한 자리 폭 */

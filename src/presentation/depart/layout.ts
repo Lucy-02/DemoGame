@@ -19,8 +19,8 @@ export const SEAT = {
   meta: { x: 22, y: 286, gap: 7, nameGap: 8, icon: 22, iconGap: 12, chipH: 30 },
 };
 
-/** .strong 높이 40 padding 0 10 0 8 radius 12 gap 10 · 바탕 veil .06 테 glass-line · TODO_ICON 자리 28 점선 · 속성 기호 26 */
-export const STRONG = { h: 40, pad: [0, 10, 0, 8] as [number, number, number, number], radius: 12, gap: 10, todo: 28, todoRadius: 6, dash: 3, icon: 26, tipGap: 8 };
+/** .strong 높이 40 padding 0 10 0 8 radius 12 gap 10 · 바탕 veil .06 테 glass-line · TODO_ICON 자리 28 X 상자 · 속성 기호 26 */
+export const STRONG = { h: 40, pad: [0, 10, 0, 8] as [number, number, number, number], radius: 12, gap: 10, todo: 28, icon: 26, tipGap: 8 };
 
 /** .btn 높이 50 padding 0 22 radius 12 gap 10 기호 18 · .go 최소 폭 150, 판은 정본 plateStyle(0054), 포커스 테 2 ink2 바깥 4
  *  .kbd padding 2 6 radius 5 테 glass-line */

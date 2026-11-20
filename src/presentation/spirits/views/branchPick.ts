@@ -6,7 +6,7 @@ import { createHandCard, preloadHandCard } from "../../card/HandCard";
 import { box, circle } from "../../style/draw";
 import { render, size, type BoxNode, type Node } from "../../style/flex";
 import { icon as drawIcon } from "../../style/icons";
-import { placeholderArt } from "../../style/placeholder";
+import { placeholderArt, strokePlaceholder } from "../../style/placeholder";
 import { faceTexture } from "../../spiritArt";
 import { cardDef } from "../../../core/data";
 import { cardVM } from "../../run/fromCore";
@@ -42,7 +42,7 @@ export function preloadBranchCards(scene: Phaser.Scene, vm: BranchPickVM) {
   for (const b of vm.branches) for (const c of b.cards) if (c.key) preloadHandCard(scene, cardVM(c.key, vm.spiritId), { showRarity: true, scale: CARD_SCALE });
 }
 
-/** 갈래 표지: 기호 자리(TODO_ICON, 점선 네모) + 번호. lg = 판 머리 */
+/** 갈래 표지: 기호 자리(TODO_ICON, X 상자) + 번호. lg = 판 머리 */
 function mark(n: number, lg = false, alpha = 1): BoxNode {
   const m = lg ? B.mark.lg : B.mark;
   const slot = m.slot;
@@ -50,26 +50,12 @@ function mark(n: number, lg = false, alpha = 1): BoxNode {
     t: "row", h: m.h, pad: [0, m.padR, 0, m.padL], gap: m.gap, align: "center", radius: m.h / 2,
     style: { fill: P.floor, ring: { width: 1, color: GROW } },
     children: [
-      { t: "block", w: slot, h: slot, draw: (g, x, y) => dashedSquare(g, x, y, slot, m.slotRadius, m.slotLine, GROW, alpha) },
+      { t: "block", w: slot, h: slot, draw: (g, x, y) => strokePlaceholder(g, x, y, slot, slot, GROW, alpha) },
       text(String(n), lg ? T.branchNum : T.mark, GROW),
     ],
   };
 }
 
-/** 기호가 아직 없는 자리 (TODO_ICON): 점선 둥근 네모 */
-function dashedSquare(g: Phaser.GameObjects.Graphics, x: number, y: number, d: number, r: number, w: number, color: string, alpha: number) {
-  g.lineStyle(w, Phaser_color(color), alpha);
-  const step = d / 4;
-  for (let i = 0; i < 4; i++) {
-    const a = r + i * step * ((d - 2 * r) / d), b = a + step * 0.5;
-    g.lineBetween(x + a, y, x + Math.min(b, d - r), y);
-    g.lineBetween(x + a, y + d, x + Math.min(b, d - r), y + d);
-    g.lineBetween(x, y + a, x, y + Math.min(b, d - r));
-    g.lineBetween(x + d, y + a, x + d, y + Math.min(b, d - r));
-  }
-}
-
-const Phaser_color = (css: string) => parseInt(css.replace("#", "").slice(0, 6), 16);
 
 /** 가로선 한 줄 높이의 칸 (.bw-r): 아래 1px 선 */
 function rowBox(h: number, children: Node[], extra: Partial<BoxNode> = {}): BoxNode {
@@ -113,12 +99,12 @@ export function drawBranchPick(scene: Phaser.Scene, vm: BranchPickVM, act: Branc
   box(dim, 0, 0, FRAME.w, FRAME.h, 0, { fill: P.scrim });
   scene.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive();
 
-  // 부른 곳 (.bw-tag): 정원 = 새싹, 런 결과는 기호 없음(TODO_ICON 점선)
+  // 부른 곳 (.bw-tag): 정원 = 새싹, 런 결과는 기호 없음(TODO_ICON X 상자)
   const tg = scene.add.graphics();
   circle(tg, B.tag.x + B.tag.d / 2, B.tag.y + B.tag.d / 2, B.tag.d, { fill: P.veil["10"], ring: { width: 1, color: P.glassLine } });
   const ti = B.tag.x + (B.tag.d - B.tag.icon) / 2, tj = B.tag.y + (B.tag.d - B.tag.icon) / 2;
   if (vm.from === "garden") drawIcon(scene, ti, tj, "i-sprout", B.tag.icon, B.tag.icon, P.ink);
-  else dashedSquare(tg, ti, tj, B.tag.icon, B.mark.slotRadius, B.mark.slotLine, P.ink2, 1);
+  else strokePlaceholder(tg, ti, tj, B.tag.icon, B.tag.icon, P.ink2);
 
   // 유리 틀
   const pn = B.panel;

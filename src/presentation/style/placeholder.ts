@@ -6,9 +6,15 @@ import { rgba } from "./color";
 export function placeholderArt(
   scene: Phaser.Scene, x: number, y: number, w: number, h: number, color: string,
 ): Phaser.GameObjects.Graphics {
+  const g = scene.add.graphics();
+  strokePlaceholder(g, x, y, w, h, color);
+  return g;
+}
+
+/** 같은 X 상자를 이미 있는 그래픽에 그려요. 아직 없는 기호 자리도 이 모양이에요 (0137: 점선 네모는 빈 칸에만) */
+export function strokePlaceholder(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, color: string, alpha = 1) {
   const c = rgba(color);
-  const g = scene.add.graphics().lineStyle(1, c.color, c.alpha);
+  g.lineStyle(1, c.color, c.alpha * alpha);
   g.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
   g.lineBetween(x, y, x + w, y + h).lineBetween(x + w, y, x, y + h);
-  return g;
 }

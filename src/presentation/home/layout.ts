@@ -9,8 +9,6 @@ export const LOGO = { x: 48, y: 150, padX: 18, padY: 6, radius: 10, ring: 1, das
 export const MENU = {
   x: 48, y: 273, w: 400, gap: 10,
   row: { h: 50, radius: 12, padX: 18, gap: 10, icon: 16 },
-  /** .todoi 기호가 없는 자리: 점선 둥근 네모 (줄 기호와 같은 크기) */
-  todo: { radius: 4, ring: 1, dash: 3 },
   /** .q-badge.cnt 20 */
   count: { d: BADGE.d },
 };
