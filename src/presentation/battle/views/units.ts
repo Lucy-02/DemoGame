@@ -795,7 +795,7 @@ const HALF = I.w / 2 + I.chips.over;
 // ── 적 자리 (0158) ──────────────────────────────────────
 // 적은 몸 크기만큼 자리를 차지해요. 그리기 전에 placeEnemies로 이번 적들의 자리를 잡아 두고, 아래 함수들이 번호로 꺼내 써요.
 let spots: EnemySpot[] = [];
-const NO_SPOT: EnemySpot = { x: ENEMY.xs[0], top: ENEMY.top, w: ENEMY.art.w, h: ENEMY.art.h, bar: I.w, slot: ENEMY.body.w, shadow: { w: GROUND.w, h: GROUND.h, alpha: 1 } };
+const NO_SPOT: EnemySpot = { x: ENEMY.field.center, top: ENEMY.top, w: ENEMY.art.w, h: ENEMY.art.h, bar: I.w, slot: ENEMY.body.w, shadow: { w: GROUND.w, h: GROUND.h, alpha: 1 } };
 /** 이번에 그릴 적들의 자리를 잡아요. 적 목록이 바뀔 때마다 그리기 전에 불러요 */
 export function placeEnemies(enemies: readonly Pick<EnemyVM, "art" | "buried">[]) {
   spots = enemySpots(enemies.map((e) => e.art), enemies.map((e) => !!e.buried));
