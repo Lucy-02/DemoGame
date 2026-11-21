@@ -369,7 +369,7 @@ export const EFFECTS: { [K in OpId]: EffectHandler<K> } = {
       const v = scale(ctx.main(op.value), ctx.b.stat(ctx.owner, "focus"));
       for (const s of ctx.allies) ctx.b.addStatus(s, "empower", v);
     },
-    describe: (op, t) => [t.ally("empower", `강화를 ${t.sc(t.main(op.value), "focus")}`)],
+    describe: (op, t) => [t.ally("empower", `기세를 ${t.sc(t.main(op.value), "focus")}`)],
   },
   taunt: {
     resolve: (ctx) => ctx.b.addStatus(ctx.owner, "taunt", 1),

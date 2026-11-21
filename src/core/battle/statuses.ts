@@ -94,7 +94,7 @@ export const STATUSES: Record<StatusId, StatusDef> = {
   /** 적의 단일 공격을 받아요 */
   taunt: { name: "도발", clearsAtTurnStart: true, gainText: () => "도발" },
   /** 이번 턴 타격의 기본값에 더해요 */
-  empower: { name: "강화", clearsAtTurnStart: true, gainText: (n) => `강화 +${n}` },
+  empower: { name: "기세", clearsAtTurnStart: true, gainText: (n) => `기세 +${n}` },
   /** 적의 공격 기본값에 더해요 */
   bonusDmg: { name: "피해", gainText: (n) => `피해 +${n}` },
   /** 다음 타격 n번에 세기만큼 더해요 */
