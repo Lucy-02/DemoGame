@@ -99,7 +99,7 @@ export class MapScene extends Phaser.Scene {
     loadIcon(this, CHARGE_ICON, PATH.badge.icon);
     for (const id of Object.values(EQUIP_STAT_ICON)) loadIcon(this, id, SHEET.stat.icon);
     loadIcon(this, "g-close", SLIM.close.icon);
-    for (const l of this.vm.party) for (const c of sheetVM(this.run, l.id)?.cards ?? []) preloadHandCard(this, c, { showRarity: true });
+    for (const l of this.vm.party) for (const c of sheetVM(this.run, l.id)?.cards ?? []) preloadHandCard(this, c);
     preloadSpiritArt(this, this.vm.party.map((l) => l.id));
   }
 
@@ -302,7 +302,7 @@ export class MapScene extends Phaser.Scene {
     for (const c of cards) {
       const card = cardWithFace(this, c, l);
       const at = cx;
-      createHandCard(this, card, at, cy, { showRarity: true });
+      createHandCard(this, card, at, cy, { showUpgraded: true });
       this.add.zone(at, cy, HAND_CARD.w, HAND_CARD.h).setOrigin(0, 0).setInteractive()
         .on("pointerover", () => {
           this.point(drawCardTip(this, card, at, cy, HAND_CARD.w));

@@ -121,23 +121,10 @@ export const tokens = {
       "chip": "#46423e",
       "face": "#3a3734",
       "paper": "#e9e6df",
-      "paper2": "#dcd8cf",
       "paperInk": "#2a2724",
       "pMute": "#6d6862",
-      "cardLine": "#c6c0b5",
-      "art": "#b7b1a6",
       "mana": "#34302c",
       "manaInk": "#f3efe8",
-      "material": {
-        "fire": "#e9e0d7",
-        "fireEdge": "#c4b2a4",
-        "water": "#dfe3e1",
-        "waterEdge": "#adbab7",
-        "wind": "#e6e5e1",
-        "windEdge": "#c2c3bf",
-        "wood": "#e2e3d9",
-        "woodEdge": "#b7bba6"
-      },
       "el": {
         "fire": "#c99a88",
         "water": "#8eaab0",
@@ -158,12 +145,10 @@ export const tokens = {
       "glassThin": "rgba(31,29,27,.5)",
       "debuffLine": "rgba(246,241,233,.32)",
       "groundShade": "rgba(0,0,0,.35)",
-      "up": "#3f6b38",
       "markBg": "#3a3633",
       "markInk": "#f3efe8",
       "whyBg": "#2f2c29",
       "whyInk": "#f3efe8",
-      "bandShine": "rgba(255,255,255,.5)",
       "groupFill": "rgba(246,241,233,.05)",
       "groupLine": "rgba(246,241,233,.07)",
       "groupFaceRing": "#2b2927",
@@ -171,12 +156,7 @@ export const tokens = {
       "endCalm": "rgba(246,241,233,.06)",
       "endCalmLine": "rgba(246,241,233,.28)",
       "tipShadow": "rgba(0,0,0,.4)",
-      "bubble": "#f2efe9",
-      "bubbleSub": "#4c4844",
-      "bubbleWhy": "#7a2f24",
-      "bubbleShadow": "rgba(0,0,0,.45)",
       "cardLiftShadow": "rgba(0,0,0,.5)",
-      "cardLiftShine": "rgba(255,255,255,.6)",
       "pvFill": "rgba(122,69,119,.26)",
       "aimGlow": "rgba(201,155,196,.45)",
       "scrimDeep": "rgba(22,20,19,.82)",
@@ -229,10 +209,8 @@ export const tokens = {
         "intentAmountDebuff": "15px",
         "intentMult": "12px",
         "cardCost": "14px",
-        "cardValue": "22px",
-        "cardValueTwo": "15px",
+        "cardValue": "16px",
         "cardMult": "12px",
-        "cardUp": "12px",
         "cardName": "12px",
         "cardMark": "12px",
         "mana": "32px",
@@ -243,14 +221,13 @@ export const tokens = {
         "tipTitle": "15px",
         "tipChip": "12px",
         "tipStrong": "14px",
-        "bubbleText": "13px",
-        "bubbleStrong": "14.5px",
-        "bubbleCalc": "12px",
-        "bubbleCalcStrong": "13px",
-        "bubbleWhy": "12.5px",
-        "bubbleOwner": "12px",
         "hit": "16px",
-        "tipResult": "20px"
+        "tipResult": "20px",
+        "cardBigName": "14px",
+        "cardBigValue": "15px",
+        "cardBigText": "12px",
+        "cardBigStrong": "13px",
+        "cardWhy": "12px"
       },
       "spirits": {
         "back": "13px",
@@ -302,8 +279,8 @@ export const tokens = {
         "was": "15px",
         "deck": "22px",
         "price": "17px",
-        "service": "24px",
-        "servicePrice": "22px",
+        "service": "18px",
+        "servicePrice": "16px",
         "equipName": "18px",
         "equipMeta": "12px",
         "statDelta": "16px",
@@ -353,170 +330,6 @@ export const tokens = {
       "depart": {
         "button": "17px",
         "kbd": "12px"
-      }
-    },
-    "pattern": {
-      "material": {
-        "fire": [
-          {
-            "kind": "dots",
-            "at": [
-              0.31,
-              0.62
-            ],
-            "color": "rgba(98,58,36,.42)",
-            "solid": 0.55,
-            "fade": 0.95,
-            "tile": [
-              9,
-              11
-            ]
-          },
-          {
-            "kind": "dots",
-            "at": [
-              0.7,
-              0.24
-            ],
-            "color": "rgba(98,58,36,.3)",
-            "solid": 0.5,
-            "fade": 0.9,
-            "tile": [
-              13,
-              17
-            ]
-          },
-          {
-            "kind": "dots",
-            "at": [
-              0.18,
-              0.4
-            ],
-            "color": "rgba(98,58,36,.5)",
-            "solid": 0.8,
-            "fade": 1.2,
-            "tile": [
-              29,
-              23
-            ]
-          },
-          {
-            "kind": "dots",
-            "at": [
-              0.6,
-              0.7
-            ],
-            "color": "rgba(255,248,236,.7)",
-            "solid": 0.6,
-            "fade": 1,
-            "tile": [
-              19,
-              13
-            ]
-          }
-        ],
-        "water": [
-          {
-            "kind": "linear",
-            "deg": 180,
-            "stops": [
-              [
-                "rgba(255,255,255,.45)",
-                0
-              ],
-              [
-                "rgba(255,255,255,.08)",
-                0.3
-              ],
-              [
-                "rgba(255,255,255,0)",
-                0.5
-              ]
-            ]
-          },
-          {
-            "kind": "linear",
-            "deg": 112,
-            "stops": [
-              [
-                "rgba(255,255,255,0)",
-                0.3
-              ],
-              [
-                "rgba(255,255,255,.25)",
-                0.41
-              ],
-              [
-                "rgba(255,255,255,0)",
-                0.52
-              ]
-            ]
-          },
-          {
-            "kind": "linear",
-            "deg": 180,
-            "stops": [
-              [
-                "rgba(60,104,108,0)",
-                0.55
-              ],
-              [
-                "rgba(60,104,108,.14)",
-                1
-              ]
-            ]
-          }
-        ],
-        "wind": [
-          {
-            "kind": "repeating",
-            "deg": 172,
-            "stops": [
-              [
-                "rgba(85,96,102,.07)",
-                {
-                  "px": 0
-                }
-              ],
-              [
-                "rgba(85,96,102,.07)",
-                {
-                  "px": 0.6
-                }
-              ],
-              [
-                "rgba(85,96,102,0)",
-                {
-                  "px": 0.6
-                }
-              ],
-              [
-                "rgba(85,96,102,0)",
-                {
-                  "px": 3
-                }
-              ]
-            ]
-          },
-          {
-            "kind": "linear",
-            "deg": 172,
-            "stops": [
-              [
-                "rgba(255,255,255,0)",
-                0.2
-              ],
-              [
-                "rgba(255,255,255,.35)",
-                0.4
-              ],
-              [
-                "rgba(255,255,255,0)",
-                0.6
-              ]
-            ]
-          }
-        ]
       }
     },
     "motion": {
@@ -672,6 +485,9 @@ export const tokens = {
       },
       "musicFade": {
         "duration": "600ms"
+      },
+      "cardNote": {
+        "delay": "500ms"
       }
     },
     "effect": {

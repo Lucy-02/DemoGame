@@ -61,7 +61,7 @@ async function start() {
   const game = await startGame("game", {
     screen: fixture, session, settings, trial: screen === "legacy", // 기다리는 저장을 다 쓴 뒤에 꺼요
     quit: () => void (session?.flush() ?? Promise.resolve()).then(() => platform.quit()), version: versionOf(demo), demo,
-    hover: get("hover"), scene: get("scene"), lift: get("lift"), stage: params.has("stage") ? Number(get("stage")) : undefined, select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
+    hover: get("hover"), scene: get("scene"), stage: params.has("stage") ? Number(get("stage")) : undefined, select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
     slow: Number(params.get("slow")) || undefined,
     res: Number(params.get("res")) || undefined,
   });

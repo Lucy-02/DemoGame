@@ -36,7 +36,7 @@
 | 프레임 | 내용 | 구현 |
 | --- | --- | --- |
 | rest | 쉬는 상태 전체 | ✅ (차이 3.75%, 대부분 플레이스홀더 그림) |
-| H1 | 손패 호버: 들기, 옆 카드 밀림, 흐림, 말풍선, 적 호버 숨김 | ✅ (`--hover claw` 3.85%) |
+| H1 | 손패 호버: 0161부터 가리킨 카드가 큰 얼굴로 펼쳐져요 (정본 H1의 들기 · 밀림 · 말풍선은 대체됨) | 0161 |
 | H2 | 카드 집기·끌어 대기·대상 강조와 결과 미리보기 (0013, 조준선 없음) | ✅ |
 | H3 | (정본 프레임 참고) | ❌ |
 | gimmick | 기믹·차징 상태 | ❌ |
@@ -71,7 +71,6 @@
 - **임시 구역** `provisional`: 정본에서 옮긴 값.
   - `palette`: 정본 CSS 변수 그대로. 별칭은 `{provisional.palette.x}`로 써요.
   - `text.battle`: 정본 글자 크기.
-  - `pattern.material`: 카드 재질 무늬(불=밝은 용암석 등).
   - `motion.hover`: `160ms`, `cubic-bezier(.2,.7,.2,1)`. 정본 스크립트에서도 TODO로 표시된 "시안 값"이에요.
 - Lucy가 값을 고르면 `provisional`에서 확정 구역으로 옮기고, 코드는 확정 토큰을 보게 바꿔요.
 
@@ -103,25 +102,27 @@ src/presentation/battle/
   guide.ts, views/guide.ts     첫 판 안내 (0088): 첫 판의 첫 전투에서 카드 놓기 → 차징 → 턴 종료를 테 하나로 한 번씩 짚어요. flow.ts가 phase.first일 때 guide를 넘겨요
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
-  HandCard.ts                  createHandCard → { root(원점=아래 가운데), setLifted(on), opacity }. 몸(drawBody)과 비용 동전·자물쇠 꼬리표(drawSignals, CardVM.need)를 나눠 그림
-  cardTip.ts                   카드 호버 말풍선 내용 → tooltip/
-  materials.ts                 bandTexture, windowTexture, paintPattern, MATERIAL_FILL, liftedBodyTexture
-  layout.ts                    HAND_CARD, WINDOW_PATH(정령별 창 윗선 SVG path), BUBBLE
-  viewmodel.ts                 CardVM(key, illustration?, off?, detail…), CardDetailVM {text, calc?, why?, owner}, RichText
+  HandCard.ts                  작은 얼굴 (0161). createHandCard → { root(원점=아래 가운데), setLifted(on), setHeld(on), opacity }. 몸(그림 + 띠 · 수치 · 이름)에만 회색 필터, 비용 동전 · 표지는 그 위에
+  BigCard.ts                   큰 얼굴. createBigCard(scene, vm, x, y, { scale, values, why, shadow }) → { root, setHeld(on), opacity }. 유리 판에 이름 줄 · 효과문 · 기호 줄
+  peek.ts                      cardPeek(큰 얼굴 띄우기 + 머물면 곁쪽지), cardNote(곁쪽지만)
+  artTexture.ts, parts.ts      카드 모양으로 구운 그림(키운 배율로 구움) · 두 얼굴이 같이 쓰는 조각(비용 동전, 수치 줄, 바깥 테)
+  cardTip.ts                   곁쪽지 내용 → tooltip/ (스킨 NOTE)
+  layout.ts                    HAND_CARD(90×126), BIG_CARD(172×248, peek)
+  viewmodel.ts                 CardVM(key, illustration?, off?, upgraded?, detail…), CardDetailVM {text, calc?, why?, owner, upgrade?}, RichText
   art.ts                       CARD_ART_IDS, CardArtId, cardArtKey, preloadCardArt (public/assets/cards/<id>.webp)
-src/presentation/tooltip/      말풍선 공용(Tooltip.ts 그리기·배치, skins.ts 카드 말풍선 스킨, content.ts 문단)
+src/presentation/tooltip/      툴팁 공용(Tooltip.ts 그리기·배치·paragraph, skins.ts GLASS · NOTE(카드 곁쪽지), content.ts 문단)
 src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/canon/spirit-r4v5, 탭 내용 0021)
   SpiritsScene.ts              정원 세션 상태 → spiritsVM → 통째로 다시 그리기 (입력 중엔 다음 update에서)
   fromGarden.ts                core/garden 상태 → SpiritsVM (규칙 판단은 core 함수만 씀)
   layout.ts, copy.ts           정본 수치(선택자 주석), 문구
   fixtures.ts                  고정 정원 GARDENS (mixed 기본, fresh)
   views/                       backdrop·topbar·idCard·strip·panel·rail(접힘 레일+요약 카드)·parts(유리·배지·막대·버튼)
-src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오른쪽 정령 세 줄, 0050 격자). 전투 결과·상점이 함께 씀
+src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오른쪽 정령 세 줄, 0050 격자). 전투 결과 · 휴식 · 이벤트가 함께 씀. 상점은 부품만 빌려 써요(0163)
   layout.ts                    FRAME GRID BG GOLD CARD_FOCUS LANE RING INFO SOCKET (E1·P1 시안에서 잰 임시 값)
   lanes.ts                     drawLane(scene, LaneVM, i, LaneState): 링·얼굴·이름·HP·능력치·카드 칸. 상태(hot·stat·card·open·deckTo·heal·on)는 화면이 줌
   gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경 (막을 주면 그 막의 전투 배경, "shop"을 주면 상점 그림 + scrim 덮개, 0119 · 0122)
-  cards.ts                     cardWithFace(초상 홈 얼굴 굽기), drawCardTip(카드 위 말풍선)
-  fromCore.ts                  cardVM(cardId, owner?), deckCardVM(DeckCard), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치판, 인쇄값보다 오르면 ▲)
+  cards.ts                     cardWithFace(큰 얼굴의 주인 얼굴 굽기), drawCardTip · drawCardTipBeside(작은 얼굴 위 · 옆에 큰 얼굴), drawCardNote(큰 얼굴 옆 곁쪽지)
+  fromCore.ts                  cardVM(cardId, owner?), deckCardVM(DeckCard), lane(RunSpirit), statOf(카드가 쓰는 능력치), valuesOf(수치, 인쇄값보다 오르면 up = 숫자 색)
   deckPick.ts                  drawDeckPick: 덱 보기 창 틀(얼굴 머리 + 카드 줄)에서 고르기 → 확인 (상점 빼기 · 휴식 강화 · 이벤트 빼기·강화·복제, 0082). drawQuietButton
   panel.ts                     drawStoryPanel: 이벤트 · 휴식 왼쪽 판(이름 줄 · 상황 글 · 선택지), 가운데 높이
   slimLane.ts                  얇은 정령 줄(지도 · 이벤트 · 휴식 · 상점), 미리보기 SlimState(HP a→b · 최대 HP · 밝은 테 · 점선 테 · 능력치 하나), drawSlimParty
@@ -130,7 +131,7 @@ src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오�
 src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 게임 흐름(flow.ts)이 전투 위에 띄움. 고정 장면 RESULTS
 src/presentation/home/         타이틀 겸 메인 화면 (0054). 기본 진입점, 정원·판 저장에 연결(fromGame.ts). 고정 장면 ?screen=home&scene=first|full|running
 src/presentation/map/          지도 (?screen=map&scene=start|mid|boss, &select=<정령 id>, Lucy 2026-11-17). 한 막 전체 지도 + 오른쪽 위 얇은 정령 줄(run/slimLane.ts), 줄을 누르면 정령 줄로 펼침
-src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=<카드 id>|heal|remove[:카드], 0050 · 0082). 진열 3×2 + 빼기 · 치료 칸 + 오른쪽 얇은 정령 줄(진열 가운데 높이, 집은 카드를 배울 줄은 점선 테 + 능력치 하나). 빼기 = 덱 고르기 창
+src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=<카드 id>|heal|remove[:카드], 0163 · 0082). 가운데 창 하나: 위 정령 칸(두 칸 폭씩, 집은 카드를 배울 칸은 점선 테 + 능력치 하나) · 큰 얼굴 카드 여섯 칸 · 아래 떠나기 · 빼기 · 치료. 선은 layout.ts의 colX · span 한 벌. 빼기 = 눌린 상점 창 위 덱 고르기 창
 src/presentation/rest/         휴식 (?screen=rest&scene=normal|full, &hover=rest|upgrade[:카드], 0046 · 0080). 쉬기 · 카드 강화 중 꼭 하나
 src/presentation/event/        이벤트 (?screen=event&scene=<이벤트 id>, &hover=<번호>|pick:<번호>). 이름 줄 + 상황 글 + 선택지, 올리면 대가 미리보기
 src/presentation/runEnd/       판 결과 (?screen=runEnd&scene=victory|first|defeat). RunRecord(정원 전·후)에서 VM, 라벨 없이 부품으로
@@ -178,10 +179,9 @@ scripts/                       build-tokens, check-literals, check-assets
 - `gather(scene, x, y, draw)`: draw 안에서 장면에 바로 올린 객체를 Container로 옮겨요. 기존 그리기 코드를 고치지 않고 통째로 움직이거나 키울 때 써요(카드, 묶음, 툴팁).
 - CSS `opacity`는 자식들을 한 장으로 합친 뒤 흐리게 해요. 컨테이너 `alpha`는 자식마다 따로 흐려서 겹친 부분이 탁해져요. → `root.enableFilters().filters.internal.addColorMatrix()`로 행렬 alpha를 써요(`HandCardView.opacity`).
 - CSS `filter: grayscale() contrast() brightness()` + `opacity`는 `style/opacity.ts`의 `adjustColor(container, {grayscale, contrast, brightness, opacity})` 하나로 걸어요(행렬은 `colorMatrix`, 덧셈 열은 0~255). 못 내는 카드는 몸 컨테이너에만 걸고, 흐리면 안 되는 것은 그 컨테이너 밖에 그려요.
-- 호버 H1 동작(정본 스크립트 "시안 값", `HOVER`)
-  - 든 카드: `translateY(-30) scale(1.2)`, 원점은 카드 아래 가운데. 든 몸통 텍스처(재질 전체 + 흰 광택선 + 1px 테)와 그림자 `0 10px 24px`로 바꿔요.
-  - 같은 묶음 옆 카드 ±12, 옆 묶음 ±10, 나머지 카드 opacity .62.
-  - 말풍선: 폭 240, 아래 끝 y=598, 가로는 `clamp(8, 1280-8-240, cx-120)`. 꼬리는 카드 가운데. 나타날 때 alpha 0 + translateY 6에서 올라와요.
+- 손패에서 카드를 가리킬 때 (0161, `HOVER` · `BIG_CARD.peek`)
+  - 가리킨 카드: 그 자리에서 큰 얼굴 1.2배, 아래 끝은 화면 아래에서 6, 가로는 화면 안으로 맞춤. 이름 줄 끝 최종 수치, 못 내는 사유 표지. 머물면 오른쪽(없으면 왼쪽)에 곁쪽지.
+  - 집은 카드: 작은 얼굴 그대로 30 떠오르고 그림자 + 바깥 테.
   - 카드 사이를 옮겨 다닐 때 깜빡이지 않게 pointerout은 1ms 늦게 처리해요.
   - 카드에 호버하는 동안 가리킨 유닛의 풀이·가리킴 효과를 숨겨요.
   - 트윈 길이와 곡선은 `tokens.provisional.motion.hover`.

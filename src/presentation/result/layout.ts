@@ -1,16 +1,16 @@
 // 전투 결과 화면만의 배치 수치 (창, 보상 카드, 넘기기). 공용 뼈대는 run/layout.ts. E1 시안(0051)과 라운드 X1에서 잰 임시 값이에요.
-import { HAND_CARD } from "../card/layout";
+import { BIG_CARD } from "../card/layout";
 import { CARD_FOCUS, FRAME, GOLD, GRID, LANE } from "../run/layout";
 
-const REWARD_W = 166;
-/** 보상 카드: 손패 카드를 폭 166으로 키워 가로로 (0051 E1). 왼→오 = 정령 줄 위→아래. 창 안에서는 카드 사이 12 (라운드 X1) */
+const REWARD_W = BIG_CARD.w;
+/** 보상 카드: 큰 얼굴을 가로로 (0161). 왼→오 = 정령 줄 위→아래. 창 안에서는 카드 사이 12 (라운드 X1) */
 export const REWARD = {
-  w: REWARD_W, h: (HAND_CARD.h * REWARD_W) / HAND_CARD.w, gap: 12, scale: REWARD_W / HAND_CARD.w,
+  w: REWARD_W, h: BIG_CARD.h, gap: 12,
   /** .acd.sunk (고르고 난 뒤 남은 카드) */
-  dim: CARD_FOCUS.dim, sunk: 0.12, tipGap: CARD_FOCUS.tipGap,
+  dim: CARD_FOCUS.dim, sunk: 0.12,
 };
 
-/** .btn2.b3 넘기기: 166×48 radius 12 padding 0 16 gap 10 · TODO 기호 칸 18 (점선, radius 5) · 동전 16 gap 4 ml 2 */
+/** .btn2.b3 넘기기: 카드 폭×48 radius 12 padding 0 16 gap 10 · TODO 기호 칸 18 (점선, radius 5) · 동전 16 gap 4 ml 2 */
 export const SKIP = {
   w: REWARD_W, h: GRID.buttonH, radius: 12, gap: 10,
   todo: { size: 18 }, gold: { coin: 16, gap: 4, ml: 2 },

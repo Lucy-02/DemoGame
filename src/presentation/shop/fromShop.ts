@@ -15,8 +15,8 @@ export function shopVM(s: ShopSession): ShopVM {
         price: o.price, affordable: s.canBuy(slot), learners, stat: statOf(o.card),
       };
     }),
-    remove: { price: s.removePrice, enabled: s.canRemove() },
-    heal: { price: s.healPrice, enabled: s.canHeal(), gain: s.healPreview() },
+    remove: { price: s.removePrice, enabled: s.canRemove(), short: run.gold < s.removePrice, used: s.removeUsed },
+    heal: { price: s.healPrice, enabled: s.canHeal(), short: run.gold < s.healPrice, used: s.healUsed, gain: s.healPreview() },
     deck: Object.fromEntries(run.spirits.map((rs) => [
       rs.id, run.deck.filter((c) => c.owner === rs.id).map((c) => ({ uid: c.uid, card: deckCardVM(c) })),
     ])),
