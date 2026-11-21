@@ -145,14 +145,14 @@ export function drawDeckPick(scene: Phaser.Scene, o: DeckPickOptions) {
             const as = size(a);
             render(scene, a, ax + (cx - ax - as.w) / 2, cy + (HAND_CARD.h - as.h) / 2);
           }
-          createHandCard(scene, card, cx, cy, { showRarity: true });
+          createHandCard(scene, card, cx, cy, { showUpgraded: true });
           tip();
         });
         return;
       }
       const off = !!o.off?.(s.c.uid);
       const draw = () => {
-        const view = createHandCard(scene, card, cx, cy, { showRarity: true });
+        const view = createHandCard(scene, card, cx, cy, { showUpgraded: true });
         view.setHeld(on);
         if (off) adjustColor(view.root, { grayscale: 1, opacity: CARD_FOCUS.dim });
         else if (focus !== undefined && !on) view.opacity = CARD_FOCUS.dim;

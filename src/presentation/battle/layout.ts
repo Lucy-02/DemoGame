@@ -188,12 +188,9 @@ export const PREVIEW = {
   intentCut: { ring: 1.5, strike: 2 },
 };
 
-/** 손패 호버 H1 (r5 스크립트 "시안 값"): 든 카드 translateY(-30) scale(1.2), 같은 묶음 옆 카드 ±12,
- *  옆 묶음 ±10, 나머지 카드 opacity .62. 말풍선 아래 끝 y 598, 화면 가장자리 여백 8 */
-export const HOVER = {
-  lift: 30, scale: 1.2, shiftIn: 12, shiftGroup: 10, dim: 0.62,
-  bubbleBottom: 598, edge: 8,
-};
+/** 손패에서 카드를 가리킬 때 (0161): 가리킨 카드는 큰 얼굴로 펼쳐지고(card/layout BIG_CARD.peek), 집은 카드는 작은 얼굴 그대로 30 떠올라요.
+ *  dim = 대상이 아닌 것을 흐리는 값, edge = 화면 가장자리 여백 */
+export const HOVER = { lift: 30, dim: 0.62, edge: 8 };
 
 /** 대상 고르기 (결정 0013, 정본 아님 · Lucy 확인 전 임시 값).
  *  dim: 대상이 아닌 캐릭터를 어둡게 (밝기 배수) = 손패 호버 흐림 .62를 그대로 써요.
@@ -202,28 +199,10 @@ export const HOVER = {
 export const TARGETING = { dim: HOVER.dim };
 export const DRAG = { threshold: 6, scale: 0.6, overTarget: HOVER.dim, depth: 1000 };
 
-/** 든 카드 크기·밀림. 말풍선은 들린 카드 위에서 정본과 같은 거리에 따라 올라가요. */
-export interface LiftStyle {
-  lift: number;
-  scale: number;
-  shiftIn: number;
-  shiftGroup: number;
-}
-
-/** 들기 크기. 정본 H1(1.2배, ±12, ±10)은 옆 카드와 6.8px 떨어져서, Lucy가 들린 카드가 옆 카드를 살짝 덮는 b를 골랐어요
- *  (2026-10-30, 정본 아님 · 비교 후보 a 1.3/±8, c 1.5/±12는 뺐어요).
- *  덮는 폭 = 카드 폭 92 × (scale - 1) / 2 - (카드 사이 4 + shiftIn): b 4.4px. 떠오름 30은 정본 그대로.
- *  ?lift=h1 은 정본 값이에요 (pnpm visual 이 정본 프레임과 비교할 때 써요). */
-export const LIFT_STYLES: Record<string, LiftStyle> = {
-  h1: { lift: HOVER.lift, scale: HOVER.scale, shiftIn: HOVER.shiftIn, shiftGroup: HOVER.shiftGroup },
-  b: { lift: 30, scale: 1.4, shiftIn: 10, shiftGroup: 10 },
-};
-export const LIFT: LiftStyle = LIFT_STYLES.b;
-
 /** 가운데 고르기 창 (0075, 낙하 · 품기 공용). 화면 한가운데에 제목 · 카드 · 버튼을 한 덩어리로 놓아요.
- *  Lucy 2026-11-16 "카드 크기 증가, 여백 증가, 더 어둡게, 가운데 정렬": 카드 = 보상 카드 크기(폭 166, result REWARD),
- *  카드 사이 28(전투 위 창 열 사이), 제목 · 카드 · 버튼 사이 48(런 화면 격자 여백), 버튼 = 턴 종료 버튼, 말풍선 거리 = 보상 카드 말풍선. 모두 임시 값이에요 */
+ *  Lucy 2026-11-16 "카드 크기 증가, 여백 증가, 더 어둡게, 가운데 정렬": 카드 = 큰 얼굴 (0161, card/layout BIG_CARD),
+ *  카드 사이 28(전투 위 창 열 사이), 제목 · 카드 · 버튼 사이 48(런 화면 격자 여백), 버튼 = 턴 종료 버튼. 모두 임시 값이에요 */
 export const PICK = {
-  cardW: 166, gap: 28, pad: 48, tipGap: 20,
+  gap: 28, pad: 48,
   cx: FRAME.w / 2, cy: FRAME.h / 2, button: { w: END.w, ...END.button }, depth: DRAG.depth - 1,
 };

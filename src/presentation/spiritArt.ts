@@ -44,7 +44,7 @@ export function preloadSpiritArt(scene: Phaser.Scene, ids: readonly string[]) {
   }
 }
 
-/** 본그림에서 얼굴을 지름 d 원으로 잘라 구운 텍스처 (띠 타일, 전투 결과 줄, 카드 초상 홈) */
+/** 본그림에서 얼굴을 지름 d 원으로 잘라 구운 텍스처 (띠 타일, 전투 결과 줄, 카드 큰 얼굴의 주인 얼굴) */
 export function faceTexture(scene: Phaser.Scene, face: { key: string; crop: Crop }, d: number): string {
   const src = scene.textures.get(face.key).getSourceImage() as HTMLImageElement;
   return canvasTexture(scene, `${face.key}@tile${d}:${face.crop.join(",")}`, d, d, (ctx) => paintTileFace(ctx, src, face.crop, d));

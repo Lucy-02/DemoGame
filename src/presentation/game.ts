@@ -63,7 +63,6 @@ export interface GameOptions {
   /** 고정 장면 이름 (전투: battle/fixtures FIXTURES, 정령 관리: spirits/fixtures GARDENS, 전투 결과: result/fixtures RESULTS, 상점: shop/fixtures SHOPS, 깃들기: join/fixtures JOINS, 출전 준비: depart/fixtures DEPARTS). 없으면 기본 */
   scene?: string;
   /** 들기 크기 바꿔 보기 (battle/layout LIFT_STYLES) */
-  lift?: string;
   /** 전투 고정 장면에 깔 배경의 막 (?stage=1) */
   stage?: number;
   /** 그리는 해상도 배수를 정해 보기 (?res=2). 없으면 모니터 크기로 골라요 */
@@ -211,7 +210,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           game.scene.add(REST_SCENE, RestScene, true, data);
           return;
         }
-        game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, lift: opts.lift, stage: opts.stage });
+        game.scene.add(BATTLE_SCENE, BattleScene, true, { hover: opts.hover, vm: opts.scene ? FIXTURES[opts.scene] : undefined, stage: opts.stage });
       },
     },
   });
