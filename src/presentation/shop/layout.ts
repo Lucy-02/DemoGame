@@ -1,33 +1,52 @@
-// 상점 화면만의 배치 수치. 공용 뼈대는 run/layout.ts.
-// 진열 카드는 큰 얼굴 (0161 L1 시안): 3×2, 카드 사이 5는 시안 값. 첫 행 y 80 · 행 사이(값 줄 포함) 44는 떠나기 버튼과 겹치지 않게 잡은 임시 값이에요.
+// 상점 화면만의 배치 수치 (0163, 상점 라운드 T의 T3 가운데 창 https://claude.ai/artifact/USLZwnziFzJC5JJSqodMYC). 값은 시안에서 옮긴 임시 값이에요.
+// 가운데 유리 창 하나에 선이 한 벌이에요: 큰 얼굴 카드 여섯 칸의 끝선을 정령 칸(두 칸씩) · 빼기 · 치료(두 칸씩) · 떠나기(한 칸)가 같이 써요.
 import { BIG_CARD } from "../card/layout";
-import { GRID, SLIM_LANE } from "../run/layout";
+import { FRAME, SLIM_LANE } from "../run/layout";
 
-const CARD_W = BIG_CARD.w;
-const CARD_H = BIG_CARD.h;
-/** TODO_TOKEN: 첫 행 y · 행 사이 */
-const ROW0 = 80, ROW_GAP = 44;
-/** 카드 격자 3×2 (0050). 값은 카드 아래 8, 높이 20 가운데 (동전 14 gap 5) */
+const CARD_W = BIG_CARD.w, CARD_H = BIG_CARD.h;
+/** TODO_TOKEN: 칸 사이 20 · 창 안쪽 여백 26 · 값 줄(카드 아래 10, 높이 20) · 버튼 줄 높이 60 */
+const COLS = 6, GAP = 20, PAD = 26;
+const LANE_H = SLIM_LANE.h, PRICE_DY = 10, PRICE_H = 20, BUTTON_H = 60;
+const INNER_W = COLS * CARD_W + (COLS - 1) * GAP;
+const WIN_W = INNER_W + PAD * 2;
+const WIN_H = PAD + LANE_H + GAP + CARD_H + PRICE_DY + PRICE_H + PAD + BUTTON_H + PAD;
+const WIN_X = Math.round((FRAME.w - WIN_W) / 2), WIN_Y = Math.round((FRAME.h - WIN_H) / 2);
+const INNER_X = WIN_X + PAD;
+const LANE_Y = WIN_Y + PAD, CARD_Y = LANE_Y + LANE_H + GAP, BUTTON_Y = CARD_Y + CARD_H + PRICE_DY + PRICE_H + PAD;
+
+/** n번째 칸의 왼쪽 끝 */
+export const colX = (n: number) => INNER_X + n * (CARD_W + GAP);
+/** 칸 n개 폭 */
+export const span = (n: number) => n * CARD_W + (n - 1) * GAP;
+
+/** 창 자리. 바탕 · 테 · 그림자 · 모서리는 전투 결과 창(PANEL)과 같아요 */
+export const WINDOW = { x: WIN_X, y: WIN_Y, w: WIN_W, h: WIN_H };
+
+/** 진열: 큰 얼굴 여섯 장 한 줄. 값은 카드 아래 가운데 (동전 14 gap 5). 팔린 칸은 옅은 테로 자리를 지켜요 */
 export const STOCK = {
-  x: GRID.gutter, rows: [ROW0, ROW0 + CARD_H + ROW_GAP], cols: 3, w: CARD_W, h: CARD_H, gap: 5,
-  price: { dy: CARD_H + 8, h: 20, coin: 14, gap: 5 },
+  y: CARD_Y, cols: COLS, w: CARD_W, h: CARD_H,
+  price: { dy: CARD_H + PRICE_DY, h: PRICE_H, coin: 14, gap: 5 },
+  sold: { radius: BIG_CARD.radius, lineAlpha: 0.1 },
 };
 
-/** .svt 빼기·치료 칸: 격자 오른쪽(카드 간격 하나 띄움), 폭 144 · 높이는 카드 + 값 줄, 행마다 하나 · 사방 1px 의미색 테 (.55)
- *  원 72 (안쪽 테 1.5) 기호 36 · 이름 · 값(동전 18 gap 5), 세로 gap 14 가운데 */
-export const SERVICE = {
-  x: STOCK.x + STOCK.cols * CARD_W + STOCK.cols * STOCK.gap, w: 144, h: CARD_H + 30, radius: 14, gap: 14, lineAlpha: 0.55, offAlpha: 0.4,
-  circle: 72, ring: 1.5, icon: 36, price: { coin: 18, gap: 5 },
-};
-
-/** 얇은 정령 줄 (지도와 같은 부품): 진열이 넓어진 만큼 줄을 좁혀 오른쪽 끝에 맞춰요. 진열 가운데 높이.
- *  TODO_TOKEN: x 758 · HP 막대 x 262 폭 100 · 능력치 x 222는 시험 값 (r8-big-shop) */
-const LANE_X = 758;
+/** 정령 칸: 지도와 같은 얇은 줄 부품을 두 칸 폭으로, 가로로 셋. 셋보다 적으면 가운데부터 채워요.
+ *  TODO_TOKEN: 이름 x 62 · 능력치 x 162 · HP 막대 x 206 폭 76 · 수 x 304는 화면에서 잰 임시 값 */
 export const SHOP_LANE = {
   ...SLIM_LANE,
-  x: LANE_X, w: SLIM_LANE.x + SLIM_LANE.w - LANE_X,
-  hp: { ...SLIM_LANE.hp, x: 262, w: 100, numX: 262 + 100 + (SLIM_LANE.hp.numX - SLIM_LANE.hp.x - SLIM_LANE.hp.w) },
-  statX: 222,
-  /** 진열 가운데 높이 (첫 행 위 ~ 둘째 행 값 줄 아래) */
-  mid: (STOCK.rows[0] + STOCK.rows[1] + STOCK.price.dy + STOCK.price.h) / 2,
+  y: LANE_Y, w: span(2), slots: 3, radius: 12,
+  ring: { ...SLIM_LANE.ring, x: 10 },
+  name: { ...SLIM_LANE.name, x: 62 },
+  hp: { ...SLIM_LANE.hp, x: 206, w: 76, numX: 304 },
+  statX: 162,
+  noLevel: true,
+  plain: true,
+};
+
+/** 버튼 줄: 떠나기(첫 칸) · 빼기(2~3번째 칸) · 치료(4~5번째 칸). 의미색은 기호와 가리킬 때의 얇은 테에만 */
+export const BUTTONS = {
+  y: BUTTON_Y, h: BUTTON_H, radius: 12,
+  leave: { x: colX(0), w: span(1), icon: 14, gap: 8 },
+  remove: { x: colX(1), w: span(2) },
+  heal: { x: colX(3), w: span(2) },
+  icon: 22, gap: 10, priceGap: 8, coin: 14, coinGap: 5, hoverRing: 1.5, offAlpha: 0.4,
 };

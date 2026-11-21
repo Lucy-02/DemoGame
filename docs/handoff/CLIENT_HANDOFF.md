@@ -117,7 +117,7 @@ src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/can
   layout.ts, copy.ts           정본 수치(선택자 주석), 문구
   fixtures.ts                  고정 정원 GARDENS (mixed 기본, fresh)
   views/                       backdrop·topbar·idCard·strip·panel·rail(접힘 레일+요약 카드)·parts(유리·배지·막대·버튼)
-src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오른쪽 정령 세 줄, 0050 격자). 전투 결과·상점이 함께 씀
+src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오른쪽 정령 세 줄, 0050 격자). 전투 결과 · 휴식 · 이벤트가 함께 씀. 상점은 부품만 빌려 써요(0163)
   layout.ts                    FRAME GRID BG GOLD CARD_FOCUS LANE RING INFO SOCKET (E1·P1 시안에서 잰 임시 값)
   lanes.ts                     drawLane(scene, LaneVM, i, LaneState): 링·얼굴·이름·HP·능력치·카드 칸. 상태(hot·stat·card·open·deckTo·heal·on)는 화면이 줌
   gold.ts, backdrop.ts         위 띠 골드(a→b, +n), 배경 (막을 주면 그 막의 전투 배경, "shop"을 주면 상점 그림 + scrim 덮개, 0119 · 0122)
@@ -131,7 +131,7 @@ src/presentation/run/          런 화면 공용 뼈대 (0046: 왼쪽 열 + 오�
 src/presentation/result/       전투 결과 (?screen=result, 0044·0051·0069). 전투 위에 뜨는 창, 게임 흐름(flow.ts)이 전투 위에 띄움. 고정 장면 RESULTS
 src/presentation/home/         타이틀 겸 메인 화면 (0054). 기본 진입점, 정원·판 저장에 연결(fromGame.ts). 고정 장면 ?screen=home&scene=first|full|running
 src/presentation/map/          지도 (?screen=map&scene=start|mid|boss, &select=<정령 id>, Lucy 2026-11-17). 한 막 전체 지도 + 오른쪽 위 얇은 정령 줄(run/slimLane.ts), 줄을 누르면 정령 줄로 펼침
-src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=<카드 id>|heal|remove[:카드], 0050 · 0082). 진열 3×2 + 빼기 · 치료 칸 + 오른쪽 얇은 정령 줄(진열 가운데 높이, 집은 카드를 배울 줄은 점선 테 + 능력치 하나). 빼기 = 덱 고르기 창
+src/presentation/shop/         상점 (?screen=shop&scene=normal|poor, &hover=<카드 id>|heal|remove[:카드], 0163 · 0082). 가운데 창 하나: 위 정령 칸(두 칸 폭씩, 집은 카드를 배울 칸은 점선 테 + 능력치 하나) · 큰 얼굴 카드 여섯 칸 · 아래 떠나기 · 빼기 · 치료. 선은 layout.ts의 colX · span 한 벌. 빼기 = 눌린 상점 창 위 덱 고르기 창
 src/presentation/rest/         휴식 (?screen=rest&scene=normal|full, &hover=rest|upgrade[:카드], 0046 · 0080). 쉬기 · 카드 강화 중 꼭 하나
 src/presentation/event/        이벤트 (?screen=event&scene=<이벤트 id>, &hover=<번호>|pick:<번호>). 이름 줄 + 상황 글 + 선택지, 올리면 대가 미리보기
 src/presentation/runEnd/       판 결과 (?screen=runEnd&scene=victory|first|defeat). RunRecord(정원 전·후)에서 VM, 라벨 없이 부품으로

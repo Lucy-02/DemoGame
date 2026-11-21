@@ -22,6 +22,10 @@ export interface SlimLook {
   hp: { x: number; w: number; h: number; numX: number; numGap: number };
   /** 능력치 칩 자리 (상점) */
   statX?: number;
+  /** 레벨을 숨겨요 (상점: 칸이 좁아요) */
+  noLevel?: boolean;
+  /** 창 안에 놓이는 칸: 유리 바탕 · 테 대신 옅은 채움만 (상점) */
+  plain?: boolean;
 }
 
 /** 미리보기 (이벤트 · 휴식 · 상점): 올린 선택지가 바꾸는 HP · 최대 HP와 밝은 테.
@@ -38,10 +42,10 @@ export function drawSlimLane(scene: Phaser.Scene, l: LaneVM, y: number, S: SlimL
   const g = scene.add.graphics();
   const H = SLIM_LANE.hot;
   if (st.hot) box(g, S.x - H.outer, y - H.outer, S.w + H.outer * 2, S.h + H.outer * 2, S.radius + H.outer, { fill: withAlpha(P.accHi, H.alpha) });
-  box(g, S.x, y, S.w, S.h, S.radius, {
-    fill: P.glass,
-    ring: st.open && !st.hot ? { width: 1, color: P.accHi, dash: SLIM_LANE.open.dash } : { width: 1, color: st.hot ? P.accHi : P.glassLine },
-  });
+  const line = st.open && !st.hot ? { width: 1, color: P.accHi, dash: SLIM_LANE.open.dash } : st.hot ? { width: 1, color: P.accHi } : undefined;
+  box(g, S.x, y, S.w, S.h, S.radius, S.plain
+    ? { fill: P.veil["05"], ring: line }
+    : { fill: P.glass, ring: line ?? { width: 1, color: P.glassLine } });
   const R = S.ring;
   const rx = S.x + R.x, ry = y + (S.h - R.d) / 2;
   const d = R.d - R.faceInset * 2;
@@ -51,7 +55,7 @@ export function drawSlimLane(scene: Phaser.Scene, l: LaneVM, y: number, S: SlimL
   scene.add.image(rx, ry, ringTexture(scene, `slim:ring:${R.d}`, { d: R.d, r: R.r, stroke: R.stroke, track: { color: P.wallLo }, arcs: [] })).setOrigin(0, 0);
 
   const mid = (n: Node, x: number) => render(scene, n, x, y + (S.h - size(n).h) / 2);
-  mid({ t: "row", gap: S.name.gap, align: "baseline", children: [text(l.name, T.name, P.ink), text(COPY.lv(l.level), T.level, P.ink3Spirit)] }, S.x + S.name.x);
+  mid({ t: "row", gap: S.name.gap, align: "baseline", children: [text(l.name, T.name, P.ink), ...(S.noLevel ? [] : [text(COPY.lv(l.level), T.level, P.ink3Spirit)])] }, S.x + S.name.x);
   if (st.stat && S.statX !== undefined) {
     const C = SLIM_LANE.stat, k = st.stat;
     mid({ t: "row", gap: C.gap, align: "center", children: [{ t: "icon", id: STAT_ICON[k], w: C.icon, h: C.icon, tint: P.stat[k] }, text(String(l.stats[k]), T.was, P.stat[k])] }, S.x + S.statX);

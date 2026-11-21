@@ -1,4 +1,4 @@
-// 상점 화면이 그리는 값 (0046 뼈대 + 0050 격자).
+// 상점 화면이 그리는 값 (0046 뼈대 + 0163 가운데 창).
 import type { CardVM } from "../card/viewmodel";
 import type { DeckCardVM, LaneVM, StatId } from "../run/viewmodel";
 
@@ -15,6 +15,10 @@ export interface ShopCardVM {
 export interface ServiceVM {
   price: number;
   enabled: boolean;
+  /** 골드가 모자라요 (값이 붉어요) */
+  short: boolean;
+  /** 이미 썼어요 (값을 감춰요) */
+  used?: boolean;
 }
 
 export interface ShopVM {

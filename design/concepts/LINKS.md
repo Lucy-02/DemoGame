@@ -244,3 +244,10 @@
   - L1 유리 두 얼굴: https://claude.ai/artifact/9UzXGeVYwJi6JkwwwsS55B
   - L2 유리 손패, 종이 읽기: https://claude.ai/artifact/KqrHuHAUHPj7EsBzdSQ1LF
   - L3 종이 두 얼굴, 큰 그림: https://claude.ai/artifact/7vAGyJYYBbV9NUyJH4Z4nR
+## 상점 라운드 T (2026-11-20, BRIEF "상점 라운드 T", Lucy 고르기 대기)
+- T1 가로 두 줄: https://claude.ai/artifact/CHHtcSUZ7GvAPHrzamyXAK
+- T2 두 덩어리: https://claude.ai/artifact/NZXqXHxUiGiLdRP6Jkx5fV
+- T3 가운데 창: https://claude.ai/artifact/USLZwnziFzJC5JJSqodMYC
+- T4 살펴보고 사기: https://claude.ai/artifact/7ugHGY3e5ozVcGT6jZ6dab
+- 프레임: /mnt/project-files/shop-round-t/t1~t4/ (0 뼈대 · 1 들어왔을 때 · 2 공용 카드 집음 · 3 전용 카드 가리킴 · 4 치료 가리킴 · 5 빼기 창 · 6 거의 다 산 뒤 · 7 정령 하나), 소스와 재료 /mnt/project-files/shop-round-t/src.tgz
+- 카드는 L1(카드 리디자인) 그대로. 배경은 임시 들판 좌판, 색 · 크기는 임시 값
