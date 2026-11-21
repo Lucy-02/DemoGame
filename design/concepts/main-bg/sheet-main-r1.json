@@ -1,0 +1,108 @@
+{
+ "name": "mainbg-r1",
+ "note": "메인(정원) 배경 후보 R1 (Lucy 2026-11-22: 메인은 반드시 움직이는 배경). 타이틀 겸 메인 화면에 깔리고 왼쪽 3분의 1에 세로 메뉴가 떠요(0054). 정원 = 들 한가운데 울타리를 두른 조율사의 집(05-world). 사람 · 화자 없음(0031). 나중에 레이어로 나눠 리깅하니, 움직일 것(나무 잎, 풀, 널린 천, 굴뚝 연기, 등불, 바람개비, 구름)이 서로 겹치지 않고 윤곽이 또렷해야 해요. 왼쪽 3분의 1은 조용하고 어둡게, 가운데 아래는 정령이 설 수 있는 평평한 빈 마당.",
+ "model": "nai-diffusion-4-5-full",
+ "settings": {
+  "width": 1216,
+  "height": 768,
+  "steps": 28,
+  "scale": 5,
+  "cfg_rescale": 0.1,
+  "sampler": "k_euler_ancestral",
+  "noise_schedule": "karras",
+  "quality_toggle": true,
+  "uc_preset": "Heavy"
+ },
+ "style_block": "1.4::artist:wanke ::, 0.3::artist:kidmo ::, 1.5::artist:ask (askzy) ::, 0.7::artist:freng ::, 0.7::artist:ratatatat74 ::, 0.8::artist:ningen mame::, artist: kim hyung tae , artist:kedama milk, artist:clioranko, year 2024, year 2025",
+ "common_prompt": "no humans, scenery, outdoors, wide shot, 1.2::slightly high eye level view::, 1.4::the left third of the image is calm, plain and darker, only open meadow and sky there::, 1.3::the main subject sits in the right half of the image::, 1.2::a flat open empty yard of short grass in the lower middle::, 1.2::separate clear shapes with clean silhouettes, few overlapping objects::, 1.2::painterly background art, soft brushwork, simplified shapes, muted colors, no lineart::, game cg, atmospheric perspective",
+ "tail": "location, very aesthetic, masterpiece, no text",
+ "negative": "lowres, artistic error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, dithering, halftone, screentone, multiple views, logo, too many watermarks, 1girl, 1boy, solo, person, people, human, character, face, hands, animal, creature, silhouette, text, english text, logo, watermark, signature, speech bubble, frame, border, letterboxed, multiple views, split screen, comic, ui, hud, 1.3::text, letters, inscription, writing, kanji::, 1.3::pixel art, pixelated, dithering, low resolution, halftone, screentone, scanlines, noise, film grain::, 1.2::lineart, thick outline, outline, cel shading, sticker::, 1.3::from above, high angle, isometric, floating island, diorama, cross-section, cliff edge::, 1.2::cluttered, crowded, busy foreground, object in the center of the ground::, 1.2::vignette::, depth of field, lens flare, photorealistic, 3d, nsfw, lowres, artistic error, worst quality, bad quality, jpeg artifacts, blurry, very displeasing",
+ "uc_preset_note": "Heavy 프리셋에서 'negative space, blank page'를 뺌",
+ "types": [
+  {
+   "id": "M1-cottage-day",
+   "label": "울타리 두른 집, 맑은 낮",
+   "why": "세계 문서의 정원 그대로예요. 가장 기본.",
+   "prompt": "1.2::a small cozy cottage with a low wooden fence in the middle of a wide meadow on a clear day::, one big old tree beside the cottage, a thin line of smoke from the chimney, a clothesline with a few plain cloths, a small wooden pinwheel on the fence, drifting clouds, soft daylight, fresh green, warm straw, pale sky blue, weathered wood color palette",
+   "seeds": [
+    10401,
+    10402,
+    10403,
+    10404,
+    10405,
+    10406
+   ]
+  },
+  {
+   "id": "M2-cottage-dusk",
+   "label": "울타리 두른 집, 해 질 녘 등불",
+   "why": "돌아오는 곳의 느낌. 등불 깜빡임과 창 불빛이 움직임이 돼요.",
+   "prompt": "1.2::a small cozy cottage with a low wooden fence in the middle of a wide meadow at dusk::, warm light in the window, paper lanterns hanging on the fence and under the eaves, one big old tree beside the cottage, a thin line of smoke from the chimney, first stars, afterglow on the horizon, deep teal, warm amber, dusty rose, dark wood color palette",
+   "seeds": [
+    10501,
+    10502,
+    10503,
+    10504,
+    10505,
+    10506
+   ]
+  },
+  {
+   "id": "M3-great-tree",
+   "label": "큰 나무 아래 쉼터",
+   "why": "집보다 나무가 주인공. 잎과 매단 천이 크게 흔들려요.",
+   "prompt": "1.2::a huge old tree on a low rise in a wide meadow, a tiny hut and a low wooden fence under it::, long plain cloth strips and small charms hanging from the branches, a hammock, tall grass at the edges, drifting clouds, soft late afternoon light, moss green, warm straw, faded indigo cloth, pale gold color palette",
+   "seeds": [
+    10601,
+    10602,
+    10603,
+    10604,
+    10605,
+    10606
+   ]
+  },
+  {
+   "id": "M4-hill-vista",
+   "label": "언덕 위 정원, 멀리 들이 겹겹",
+   "why": "들이 정원에서 멀어질수록 다른 땅으로 이어지는 세계가 보여요. 먼 풍경 시차가 커요.",
+   "prompt": "1.2::a small fenced cottage garden on a gentle hill overlooking layered distant fields and far hills::, a winding path leading away, one tree and a small wooden windmill beside the cottage, a thin line of chimney smoke, big slow clouds, morning light, soft sage green, pale gold, misty blue distance color palette",
+   "seeds": [
+    10701,
+    10702,
+    10703,
+    10704,
+    10705,
+    10706
+   ]
+  },
+  {
+   "id": "M5-night-fireflies",
+   "label": "밤의 정원, 별과 반딧불",
+   "why": "메뉴 글자가 가장 잘 읽히는 어두운 판. 반딧불과 별이 움직임이 돼요.",
+   "prompt": "1.2::a small cozy cottage with a low wooden fence in a wide meadow at night under a starry sky::, warm light in the window, one lantern by the gate, one big old tree beside the cottage, fireflies over the grass, a thin line of chimney smoke, deep night blue, warm amber window light, dark green color palette",
+   "seeds": [
+    10801,
+    10802,
+    10803,
+    10804,
+    10805,
+    10806
+   ]
+  },
+  {
+   "id": "M6-courtyard-close",
+   "label": "가까이 본 안뜰",
+   "why": "집 전체가 아니라 마당 안. 정령이 설 자리가 넓어 출전 준비 · 깃들기와 같이 쓰기 좋아요.",
+   "prompt": "1.2::inside a small fenced cottage yard, the corner of a wooden cottage with a porch at the right edge, a wooden gate and low fence in the back::, a clothesline with a few plain cloths, a stone well, potted herbs, a small pinwheel, a big tree branch reaching in from the top right, open meadow beyond the fence, soft afternoon light, warm straw, fresh green, weathered wood, pale sky color palette",
+   "seeds": [
+    10901,
+    10902,
+    10903,
+    10904,
+    10905,
+    10906
+   ]
+  }
+ ],
+ "how": "프롬프트 = style_block + ', ' + common_prompt + ', ' + type.prompt + ', ' + tail. 타입마다 씨앗 6개, 모두 36장. 원본 PNG는 stage-bg/main-bg/r1/<타입 앞 두 글자>-s<씨앗>-raw.png."
+}
