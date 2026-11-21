@@ -20,14 +20,16 @@ export const HAND_CARD = {
   nameLetterSpacing: -0.02,
 };
 
-/** 큰 얼굴 (가리킬 때 · 보상 · 상점): 그림이 카드 전체, 아래 유리 판에 이름 줄 · 효과문 · 기호 줄 */
+/** 큰 얼굴 (가리킬 때 · 보상 · 상점): 위는 그림, 아래로 갈수록 어두워져 판 없이 이름 줄 · 효과문 · 기호 줄이 얹혀요 (0161 후속 C2) */
 export const BIG_CARD = {
   w: 172, h: 248, radius: 10, border: 1,
-  /** 그림: 정사각 원본을 이 크기로, 가로 가운데 */
-  art: { size: 232, top: -22, placeholder: 48 },
+  /** 그림: 정사각 원본을 이 크기로, 가로 가운데. 주제가 글 위에 보이게 위로 올려요 */
+  art: { size: 232, top: -40, placeholder: 48 },
+  /** 어두워지는 띠: 글 자리 위 64에서 시작해 글 자리에 닿기 전에 꽉 찬 어둠이 돼요. [자리 0~1, 불투명도] */
+  fade: { above: 64, stops: [[0, 0], [0.16, 0.4], [0.33, 0.9], [0.42, 1], [1, 1]] as const },
   cost: HAND_CARD.cost,
-  /** 유리 판: 카드 안쪽 4, 높이 고정 (효과문 네 줄 자리. 넘치면 위로 자라요) */
-  plate: { inset: 4, radius: 5, ring: 1, pad: [6, 8, 6, 8] as [number, number, number, number], headH: 20, headGap: 3, lines: 4, lineH: 16, footGap: 5, footH: 18 },
+  /** 글 자리 (판은 그리지 않아요): 카드 안쪽 4, 높이 고정 (효과문 네 줄 자리. 넘치면 위로 자라요) */
+  plate: { inset: 4, pad: [6, 8, 6, 8] as [number, number, number, number], headH: 20, headGap: 3, lines: 4, lineH: 16, footGap: 5, footH: 18 },
   /** 이름 줄 끝 수치 (전투에서만) */
   value: { icon: 12, gap: 2, between: 5 },
   /** 기호 줄: 주인 얼굴 · 속성 · 희귀도 · 강화 */
@@ -41,5 +43,5 @@ export const BIG_CARD = {
 };
 
 const P = BIG_CARD.plate;
-/** 유리 판 높이 */
+/** 글 자리 높이 */
 export const BIG_PLATE_H = P.pad[0] + P.headH + P.headGap + P.lines * P.lineH + P.footGap + P.footH + P.pad[2];

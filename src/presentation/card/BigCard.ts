@@ -1,8 +1,8 @@
-// 큰 얼굴 (가리킬 때 · 보상 · 상점, 172×248). 0161 카드 라운드 K2 L1: 그림이 카드 전체, 아래 유리 판에 이름 줄 · 효과문 · 기호 줄.
-// 못 내는(못 사는) 카드는 그림만 회색으로, 유리 판의 글은 그대로 읽혀요.
+// 큰 얼굴 (가리킬 때 · 보상 · 상점, 172×248). 0161 카드 라운드 K2 L1: 위는 그림, 아래에 이름 줄 · 효과문 · 기호 줄.
+// 못 내는(못 사는) 카드는 그림만 회색으로, 글은 그대로 읽혀요. 그림은 아래로 갈수록 어두워지고 판 없이 글이 얹혀요 (Lucy 2026-11-21 C2).
 import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
-import { box, circle } from "../style/draw";
+import { circle } from "../style/draw";
 import { place, render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
 import { icon } from "../style/icons";
@@ -26,6 +26,9 @@ const UP_ICON = "g-up";
 const LOCK_ICON = "g-lock";
 const MANA_ICON = "fx-mana";
 const TEXT: RoleStyle = { size: T.cardBigText, strongSize: T.cardBigStrong, color: P.ink, strongColor: P.ink, lh: B.plate.lineH / px(T.cardBigText) };
+
+const FADE_H = BIG_PLATE_H + B.plate.inset + B.fade.above;
+const FACE = { ...B, band: { h: FADE_H, fade: 0, stops: B.fade.stops } };
 
 export interface BigCardOptions {
   /** 이 배율로 키워 놓아요 (그 크기로 다시 그려요). preload에도 같은 값을 주세요 */
@@ -71,13 +74,14 @@ export function createBigCard(scene: Phaser.Scene, c: CardVM, x: number, y: numb
       scene.add.image(ox - sh.margin, oy - sh.margin, sh.key).setOrigin(0, 0);
     }
     const art = gather(scene, 0, 0, () => {
-      scene.add.image(ox, oy, cardFaceTexture(scene, B, c.illustration, scale)).setOrigin(0, 0).setDisplaySize(B.w, B.h);
+      scene.add.image(ox, oy, cardFaceTexture(scene, FACE, c.illustration, scale)).setOrigin(0, 0).setDisplaySize(B.w, B.h);
       if (!c.illustration) {
         const a = B.art.placeholder;
         placeholderArt(scene, ox + (B.w - a) / 2, oy + (B.h - BIG_PLATE_H - a) / 2, a, a, P.ink3);
       }
     });
-    if (c.off) adjustColor(art, UNPLAYABLE);
+    // 글 자리의 어둠도 이 그림에 구워져 있어서, 아래 화면이 비치지 않게 불투명도는 그대로 둬요
+    if (c.off) adjustColor(art, { ...UNPLAYABLE, opacity: 1 });
     drawPlate(scene, c, ox, oy, !!opts.values);
     drawCost(scene, c, ox, oy, B.cost);
     if (opts.why) drawWhy(scene, c, ox, oy);
@@ -98,7 +102,7 @@ export function createBigCard(scene: Phaser.Scene, c: CardVM, x: number, y: numb
   };
 }
 
-/** 유리 판: 이름 줄(+ 수치) · 효과문 · 기호 줄. 효과문이 네 줄을 넘으면 판이 위로 자라요 */
+/** 글 자리: 이름 줄(+ 수치) · 효과문 · 기호 줄. 효과문이 네 줄을 넘으면 위로 자라요 */
 function drawPlate(scene: Phaser.Scene, c: CardVM, x: number, y: number, values: boolean) {
   const L = B.plate;
   const [pt, pr, pb, pl] = L.pad;
@@ -107,7 +111,6 @@ function drawPlate(scene: Phaser.Scene, c: CardVM, x: number, y: number, values:
   const textH = Math.max(L.lines * L.lineH, body.h);
   const h = BIG_PLATE_H - L.lines * L.lineH + textH;
   const left = x + L.inset, top = y + B.h - L.inset - h;
-  box(scene.add.graphics(), left, top, w, h, L.radius, { fill: P.glassD, ring: { width: L.ring, color: P.veil["20"] } });
 
   const head: Node = {
     t: "row", w: inner, h: L.headH, align: "center", justify: "between",
