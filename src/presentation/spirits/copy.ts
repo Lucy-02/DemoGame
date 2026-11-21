@@ -6,6 +6,8 @@ import type { TabId } from "./viewmodel";
 
 export const COPY = {
   garden: "정원",
+  /** 판 안에서 열었을 때 돌아갈 곳 (0157, 작업 가정) */
+  map: "지도",
   sep: "/",
   here: "정령",
   owned: "보유 정령",
@@ -33,11 +35,8 @@ export const COPY = {
   percent: "%",
   personalityOn: "성격 효과 시작",
   personalityLater: "성체가 되면 효과가 나요",
-  newCard: "새 카드 보기",
   maxLevel: "최대 레벨",
   now: "지금",
-  fresh: "새",
-  freshCount: (n: number) => `새 카드 ${n}`,
   /** 목업: 정하지 않은 숫자와 설명 */
   unknown: "?",
   undecided: "아직 정하지 않았어요",

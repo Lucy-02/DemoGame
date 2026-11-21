@@ -1,52 +1,26 @@
-// 정원: 판 밖에 남는 정령 상태와 그 규칙 (결정 0021). 순수 함수만 있고, 상태는 바꾸지 않고 새로 만들어 돌려줘요.
-// 화면·저장·전투 결과 받기는 session 층이 이 함수들을 불러서 해요.
-import { C, CARDS, GROWTH, PERSONALITIES, SPIRITS } from "./data";
+// 정원: 판 밖에 남는 것과 그 규칙 (0157). 성장(레벨 · 단계 · 갈래 · 장비)은 판 안에서 끝나고 정원에는 남지 않아요 (core/growth.ts · 0159).
+// 정원에 남는 것: 떠날 수 있는 줄(깃든 정령), 완주로 연 성격, 보상 다시 뽑기. 순수 함수만 있고, 상태는 바꾸지 않고 새로 만들어 돌려줘요.
+import { C, PERSONALITIES } from "./data";
+import { freshSpirit, type BattleTier } from "./growth";
 import { Rng } from "./rng";
-import { equipSlots, isGrown, resonanceCap, stageRank } from "./stats";
-import type { CardDef, DeedDef, EpisodeDef, EvolutionDef, RunSpirit, Stage } from "./types";
+import type { RunSpirit } from "./types";
 
-export const GARDEN_VERSION = 1;
+export const GARDEN_VERSION = 2;
 
-export type BattleTier = "normal" | "elite" | "boss";
-
-/** 정령 한 마리가 판 밖에 남기는 것 */
+/** 정령 한 줄이 판 밖에 남기는 것 */
 export interface GardenSpirit {
   id: string;
-  exp: number;
-  stage: Stage;
-  /** 성체에서 고른 갈래 (0027). 고르면 못 바꿔요 (0052) */
-  branch?: string;
-  /** 열린 갈래. 한 번 열리면 판을 넘어 남아요 (0047 Lucy 2026-11-10) */
-  openBranches?: string[];
-  /** 아직 안 열린 갈래마다 지금까지 받은 그 갈래 카드 수. 탐험이 끝나도 이어져요 (0058) */
-  branchCards?: Record<string, number>;
-  /** 부화 때 한 번 정하고 유지해요. 유체부터 보여요 (0033) */
+  /** 다음 판에 지니고 떠날 성격. 판이 끝날 때마다 새로 정해져요 (0157). 유체부터 보여요 (0033) */
   personality: string;
-  /** 다음 진화의 자람 조건 누적값. 진화하면 0으로 */
-  deed: number;
-  affinity: number;
-  /** 본 유대 에피소드 수 */
-  episodes: number;
-  /** 플레이어가 이미 본 해금 키 (할 일 배지를 지우는 데 써요) */
-  seen: string[];
-  /** 남긴 장비 (0048 · 0056). 길이 ≤ equipSlots(stage), 공명 ≤ resonanceCap(stage) */
-  equipment?: GardenEquip[];
-  /** 분해로 얻은 그 정령의 공명 권 (이름 TODO_NAME) */
-  resonanceTokens?: number;
-}
-
-export interface GardenEquip {
-  id: string;
-  resonance: number;
+  /** 이 정령으로 완주해서 연 성격 (0157). 떠나기 전에 이 가운데서 고를 수 있어요 */
+  cleared?: string[];
 }
 
 export interface Garden {
   version: number;
   spirits: GardenSpirit[];
-  /** 정원 재료 (이름 TODO_NAME) */
-  material: number;
   act1Boss: boolean;
-  /** 깃들기 후보를 뽑는 씨앗 (0053). 같은 정원이면 다시 켜도 같은 후보예요 */
+  /** 깃들기 후보와 판마다의 성격을 뽑는 씨앗 (0053). 같은 정원이면 다시 켜도 같아요 */
   seed?: number;
   /** 끝낸 판 수 (져도 세요) */
   runs?: number;
@@ -67,12 +41,9 @@ export function newGarden(seed: number, ids: readonly string[] = C.default_party
   const rng = new Rng(seed);
   return {
     version: GARDEN_VERSION,
-    material: 0,
     act1Boss: false,
     seed, runs: 0, joins: 0,
-    spirits: ids.map((id) => ({
-      id, exp: 0, stage: "baby", personality: rng.pick(PERSONALITIES).id, deed: 0, affinity: 0, episodes: 0, seen: [],
-    })),
+    spirits: ids.map((id) => ({ id, personality: rng.pick(PERSONALITIES).id })),
   };
 }
 
@@ -112,7 +83,7 @@ export function join(g: Garden, id: string): Garden {
   if (!pick) return g;
   return {
     ...g, joins: (g.joins ?? 0) - 1,
-    spirits: [...g.spirits, { id, exp: 0, stage: "baby", personality: pick.personality, deed: 0, affinity: 0, episodes: 0, seen: [] }],
+    spirits: [...g.spirits, { id, personality: pick.personality }],
   };
 }
 
@@ -138,11 +109,46 @@ export function grantMidJoin(g: Garden): Garden {
   return !(g.runs ?? 0) && g.spirits.length === 1 && !g.joins && !g.midJoined ? { ...grantJoin(g), midJoined: true } : g;
 }
 
-/** 판이 끝났어요(져도). 첫 판을 끝내면 둘째 정령이 깃들어요 (0053). 판 가운데서 이미 깃들었으면 더 주지 않아요 (0156) */
-export function endRun(g: Garden): Garden {
-  const runs = (g.runs ?? 0) + 1;
-  return runs === 1 && !g.midJoined ? grantJoin({ ...g, runs }) : { ...g, runs };
+/** 끝난 판 하나: 출전한 정령과 그 판의 성격, 완주했는지 */
+export interface RunOutcome {
+  party: readonly { id: string; personality: string }[];
+  victory: boolean;
 }
+
+const PERSONALITY_SALT = 6151;
+
+/**
+ * 판이 끝났어요(져도). 첫 판을 끝내면 둘째 정령이 깃들어요 (0053). 판 가운데서 이미 깃들었으면 더 주지 않아요 (0156).
+ * 완주했으면 출전한 정령마다 그 판의 성격이 열려요 (0157). 출전한 정령의 다음 판 성격은 여기서 새로 정해져요.
+ */
+export function endRun(g: Garden, done?: RunOutcome): Garden {
+  const runs = (g.runs ?? 0) + 1;
+  let out: Garden = runs === 1 && !g.midJoined ? grantJoin({ ...g, runs }) : { ...g, runs };
+  if (!done) return out;
+  const rng = new Rng((g.seed ?? 0) + runs * PERSONALITY_SALT);
+  for (const p of done.party) {
+    if (!out.spirits.some((s) => s.id === p.id)) continue;
+    const next = rng.pick(PERSONALITIES).id;
+    out = withSpirit(out, p.id, (s) => {
+      const cleared = done.victory && !s.cleared?.includes(p.personality) ? [...(s.cleared ?? []), p.personality] : s.cleared;
+      return { ...s, personality: next, ...(cleared ? { cleared } : {}) };
+    });
+  }
+  return out;
+}
+
+/** 완주로 연 성격 가운데 하나를 다음 판의 성격으로 골라요 (0157). 열지 않은 성격이면 그대로예요 */
+export function choosePersonality(g: Garden, id: string, personality: string): Garden {
+  const s = g.spirits.find((x) => x.id === id);
+  if (!s || s.personality === personality || !s.cleared?.includes(personality)) return g;
+  return withSpirit(g, id, (x) => ({ ...x, personality }));
+}
+
+/** 완주한 줄 수 */
+export const clearedLines = (g: Garden) => g.spirits.filter((s) => s.cleared?.length).length;
+
+/** 판마다 받는 보상 다시 뽑기 수 (0157): 완주한 줄마다 하나, 상한까지. 어떤 정령으로 떠나든 같아요 */
+export const rerollsOf = (g: Garden) => Math.min(C.reward.reroll_max, clearedLines(g));
 
 export function gardenSpirit(g: Garden, id: string): GardenSpirit {
   const s = g.spirits.find((x) => x.id === id);
@@ -154,175 +160,13 @@ const withSpirit = (g: Garden, id: string, f: (s: GardenSpirit) => GardenSpirit)
   ...g, spirits: g.spirits.map((s) => (s.id === id ? f(s) : s)),
 });
 
-// ───────────────────────── 레벨 ─────────────────────────
+// ───────────────────────── 판에서 받는 것 · 판으로 ─────────────────────────
 
-export function levelOf(exp: number): number {
-  let lv = 1;
-  GROWTH.levels.forEach((need, i) => {
-    if (exp >= need) lv = i + 1;
-  });
-  return lv;
+/** 이긴 전투 하나. 첫 보스를 가라앉히면 정령이 하나 더 깃들어요 (0053). 경험은 판 안에서 받아요 (Run.grantBattle) */
+export function grantBattle(g: Garden, tier: BattleTier): Garden {
+  if (tier !== "boss" || g.act1Boss) return g;
+  return { ...grantJoin(g), act1Boss: true };
 }
-
-/** 지금 레벨 안에서의 진척. 최대 레벨이면 next가 없어요. */
-export function levelProgress(exp: number): { level: number; from: number; next?: number } {
-  const level = levelOf(exp);
-  return { level, from: GROWTH.levels[level - 1], next: GROWTH.levels[level] };
-}
-
-// ───────────────────────── 진화 ─────────────────────────
-
-/** 이 정령이 지금 단계에서 갈 수 있는 진화들. 둘 이상이면 분기예요. */
-export function evolutionsFrom(s: Pick<GardenSpirit, "id" | "stage">): EvolutionDef[] {
-  return GROWTH.evolutions.filter((e) => e.spirit === s.id && e.from === s.stage);
-}
-
-export interface EvolveCheck {
-  evo: EvolutionDef;
-  /** 레벨이 됐나 */
-  level: boolean;
-  /** 자람 조건이 됐나 (조건 없으면 true) */
-  deed: boolean;
-  /** 갈래가 열렸나 (갈래가 아니거나 조건이 없으면 true) */
-  open: boolean;
-  ok: boolean;
-}
-
-const isOpen = (s: GardenSpirit, evo: EvolutionDef) =>
-  !evo.branch || !evo.opens || (s.openBranches ?? []).includes(evo.branch);
-
-function check(s: GardenSpirit, evo: EvolutionDef): EvolveCheck {
-  const level = levelOf(s.exp) >= evo.level;
-  const deed = !evo.deed || s.deed >= evo.deed.n;
-  const open = isOpen(s, evo);
-  return { evo, level, deed, open, ok: level && deed && open };
-}
-
-/** 지금 단계에서 갈 수 있는 갈래마다의 검사. 갈래 고르기 창이 이것만 읽어요. 분기가 아니면 한 줄이에요. */
-export function evolveChoices(s: GardenSpirit): EvolveCheck[] {
-  return evolutionsFrom(s).map((e) => check(s, e));
-}
-
-/** 배지·링·버튼이 모두 이 결과만 읽어요. 규칙과 표시가 어긋나지 않게요.
- *  갈래를 안 주면 갈 수 있는 갈래가 하나라도 있는지 봐요(없으면 첫 줄). */
-export function canEvolve(s: GardenSpirit, to?: Stage, branch?: string): EvolveCheck | null {
-  const all = evolveChoices(s).filter((c) => (!to || c.evo.to === to) && (!branch || c.evo.branch === branch));
-  return all.find((c) => c.ok) ?? all[0] ?? null;
-}
-
-/** 이 진화가 갈래 고르기인가 (같은 전 단계 줄이 둘 이상) */
-export const isBranching = (s: Pick<GardenSpirit, "id" | "stage">) => evolutionsFrom(s).length > 1;
-
-/** 키우기. 조건이 안 되면 그대로 돌려줘요. 갈래 고르기면 branch가 있어야 해요.
- *  적용 시점(전투 중이면 다음 턴부터)은 부르는 쪽이 정해요. */
-export function evolve(g: Garden, id: string, to?: Stage, branch?: string): Garden {
-  const s = gardenSpirit(g, id);
-  if (isBranching(s) && !branch) return g;
-  const c = canEvolve(s, to, branch);
-  if (!c?.ok) return g;
-  return withSpirit(g, id, (x) => ({ ...x, stage: c.evo.to, deed: 0, ...(c.evo.branch ? { branch: c.evo.branch } : {}) }));
-}
-
-const branchCount = (branch: string, ids: readonly string[]) =>
-  ids.filter((id) => CARDS.find((c) => c.id === id)?.branch === branch).length;
-
-/** 탐험에서 받은 카드를 갈래마다 더하고, 모인 수가 조건에 닿으면 갈래를 열어요 (0058).
- *  received = 정령 id → 이번 탐험에서 받은 카드 id들. 센 수와 열린 갈래는 판을 넘어 남아요. */
-export function openBranches(g: Garden, received: Readonly<Record<string, readonly string[]>>): Garden {
-  return {
-    ...g,
-    spirits: g.spirits.map((s) => {
-      const got = received[s.id] ?? [];
-      const opened = new Set(s.openBranches ?? []);
-      const counts = { ...(s.branchCards ?? {}) };
-      let changed = false;
-      for (const evo of GROWTH.evolutions) {
-        if (evo.spirit !== s.id || !evo.branch || !evo.opens || opened.has(evo.branch)) continue;
-        const n = branchCount(evo.branch, got);
-        if (!n) continue;
-        changed = true;
-        const total = (counts[evo.branch] ?? 0) + n;
-        if (total >= evo.opens.cards) {
-          opened.add(evo.branch);
-          delete counts[evo.branch];
-        } else counts[evo.branch] = total;
-      }
-      if (!changed) return s;
-      const { branchCards: _, ...rest } = s;
-      return { ...rest, openBranches: [...opened], ...(Object.keys(counts).length ? { branchCards: counts } : {}) };
-    }),
-  };
-}
-
-/** 갈래 조건 진척: 지금까지 모은 수 + 이번 탐험에서 받은 수 (잠긴 갈래 판의 막대) */
-export function branchProgress(s: Pick<GardenSpirit, "branchCards">, evo: EvolutionDef, received: readonly string[] = []): { have: number; need: number } | null {
-  if (!evo.branch || !evo.opens) return null;
-  const have = (s.branchCards?.[evo.branch] ?? 0) + branchCount(evo.branch, received);
-  return { have: Math.min(have, evo.opens.cards), need: evo.opens.cards };
-}
-
-export const isFinalStage = (s: Pick<GardenSpirit, "id" | "stage">) => evolutionsFrom(s).length === 0;
-
-/** 다음 진화의 자람 조건 (없으면 undefined) */
-export const nextDeed = (s: GardenSpirit): DeedDef | undefined => evolutionsFrom(s)[0]?.deed;
-
-// ───────────────────────── 판에서 받는 것 ─────────────────────────
-
-/** 이긴 전투 하나: 출전한 정령이 똑같이 경험을 받고(쓰러져도), 재료가 쌓여요. 판이 실패해도 이긴 만큼은 남아요.
- *  출전하지 않은 정령은 받지 않아요. 첫 보스를 가라앉히면 정령이 하나 더 깃들어요 (0053). */
-export function grantBattle(g: Garden, party: readonly string[], tier: BattleTier): Garden {
-  const exp = GROWTH.exp[tier];
-  if (tier === "boss" && !g.act1Boss) g = grantJoin(g);
-  return {
-    ...g,
-    material: g.material + GROWTH.material[tier],
-    act1Boss: g.act1Boss || tier === "boss",
-    spirits: g.spirits.map((s) => (party.includes(s.id) ? { ...s, exp: s.exp + exp } : s)),
-  };
-}
-
-/** 전투 이벤트에서 센 자람 조건을 더해요. 지금 진화 조건과 종류가 같을 때만 쌓여요. */
-export function addDeed(g: Garden, id: string, kind: DeedDef["kind"], n: number): Garden {
-  const deed = nextDeed(gardenSpirit(g, id));
-  if (!deed || deed.kind !== kind) return g;
-  return withSpirit(g, id, (s) => ({ ...s, deed: s.deed + n }));
-}
-
-// ───────────────────────── 해금 ─────────────────────────
-
-/** 정원 상태로 열린 해금 키 (카드 데이터의 unlock 값) */
-export function unlockKeys(g: Garden): Set<string> {
-  const keys = new Set<string>(["start"]);
-  for (const s of g.spirits) for (const k of spiritUnlocks(s)) keys.add(k);
-  if (g.spirits.some((s) => levelOf(s.exp) >= 3)) keys.add("any_lv3");
-  if (g.spirits.some((s) => isGrown(s))) keys.add("any_adult");
-  if (g.act1Boss) keys.add("act1_boss");
-  return keys;
-}
-
-/** 이 정령의 전용 해금 키 중 열린 것 */
-export function spiritUnlocks(s: GardenSpirit): string[] {
-  const lv = levelOf(s.exp);
-  return [
-    ...(lv >= 2 ? [`${s.id}_lv2`] : []),
-    ...(lv >= 3 ? [`${s.id}_lv3`] : []),
-    ...(isGrown(s) ? [`${s.id}_adult`] : []),
-  ];
-}
-
-/** 이 정령의 전용 해금 키 전체 (열린 순서대로) */
-export const SPIRIT_UNLOCK_STEPS = ["lv2", "lv3", "adult"] as const;
-
-const hasCard = (key: string) => CARDS.some((c) => c.unlock === key);
-
-/** 해금됐나. 갈래 카드의 성체 해금은 고른 갈래의 카드만 열려요 (0027 갈래 고유 카드) */
-export function isCardUnlocked(g: Garden, card: CardDef): boolean {
-  if (!unlockKeys(g).has(card.unlock)) return false;
-  return !isBranchAdultCard(card) || g.spirits.find((s) => s.id === card.spirit)?.branch === card.branch;
-}
-
-/** 갈래 표시가 있는 성체 해금 카드 (갈래마다 하나) */
-export const isBranchAdultCard = (card: CardDef) => !!card.branch && !!card.spirit && card.unlock === `${card.spirit}_adult`;
 
 /** 이 안내를 이미 짚었는지 (0095) */
 export const hasGuide = (g: Garden, id: string) => !!g.guides?.includes(id);
@@ -330,97 +174,7 @@ export const hasGuide = (g: Garden, id: string) => !!g.guides?.includes(id);
 /** 안내를 짚었다고 적어요. 다시 나오지 않아요 */
 export const markGuide = (g: Garden, id: string): Garden => (hasGuide(g, id) ? g : { ...g, guides: [...(g.guides ?? []), id] });
 
-/** 해금을 봤다고 표시해요 (보면 배지가 사라져요, "받기" 버튼 없음) */
-export function markSeen(g: Garden, id: string, keys: readonly string[]): Garden {
-  return withSpirit(g, id, (s) => ({ ...s, seen: [...new Set([...s.seen, ...keys])] }));
-}
-
-// ───────────────────────── 유대 · 먹이기 · 성격 ─────────────────────────
-
-const meetsStage = (s: GardenSpirit, need?: Stage) => !need || stageRank(s.stage) >= stageRank(need);
-
-/** 이 정령이 지금 볼 수 있는 에피소드 수 (본 것 포함) */
-export function episodesOpen(s: GardenSpirit): number {
-  let n = 0;
-  for (const ep of GROWTH.episodes) {
-    if (s.affinity < ep.affinity || !meetsStage(s, ep.stage)) break;
-    n++;
-  }
-  return n;
-}
-
-export function seeEpisode(g: Garden, id: string): Garden {
-  const s = gardenSpirit(g, id);
-  if (s.episodes >= episodesOpen(s)) return g;
-  return withSpirit(g, id, (x) => ({ ...x, episodes: x.episodes + 1 }));
-}
-
-/** 먹이기 한 번에 오르는 호감도 */
-export const feedGain = (_s: GardenSpirit) => GROWTH.feed.affinity;
-
-export const canFeed = (g: Garden) => g.material >= GROWTH.feed.cost;
-
-export function feed(g: Garden, id: string): Garden {
-  if (!canFeed(g)) return g;
-  const gain = feedGain(gardenSpirit(g, id));
-  return withSpirit({ ...g, material: g.material - GROWTH.feed.cost }, id, (s) => ({ ...s, affinity: s.affinity + gain }));
-}
-
-// ───────────────────────── 판으로 ─────────────────────────
-
-/** 정원의 정령을 판의 정령으로. HP는 최대 HP로 채워요 (부르는 쪽에서 maxHpOf로) */
+/** 정원의 정령이 판을 떠날 때의 모습: 유체 Lv1, 정원에 적힌 성격, 꽉 찬 HP (0157) */
 export function toRunSpirit(s: GardenSpirit): RunSpirit {
-  return {
-    id: s.id, hp: 0, maxHpBonus: 0, stage: s.stage, level: levelOf(s.exp), personality: s.personality, branch: s.branch,
-    equipment: (s.equipment ?? []).map((e) => ({ ...e, from: "kept" })),
-  };
-}
-
-/**
- * 판이 끝나고 장비를 남겨요 (0056). keep은 정령 id → 남길 장비 id 목록이에요.
- * 판에 나간 정령의 장비는 고른 것만 남고 나머지는 사라져요. 정원에 있던 장비를 다시 남기면 공명이 1 올라요(단계 상한까지).
- */
-export function keepEquipment(g: Garden, party: readonly RunSpirit[], keep: Readonly<Record<string, readonly string[]>>): Garden {
-  let out = g;
-  for (const rs of party) {
-    const ids = keep[rs.id] ?? [];
-    const missing = ids.find((id) => !rs.equipment.some((e) => e.id === id));
-    if (missing) throw new Error(`${rs.id}가 지니지 않은 장비: ${missing}`);
-    const stage = gardenSpirit(g, rs.id).stage;
-    if (ids.length > equipSlots(stage)) throw new Error(`${rs.id}의 장비 칸보다 많이 남길 수 없어요`);
-    const cap = resonanceCap(stage);
-    const equipment = rs.equipment
-      .filter((e) => ids.includes(e.id))
-      .map((e): GardenEquip => ({ id: e.id, resonance: Math.min(cap, e.from === "kept" ? e.resonance + 1 : 1) }));
-    out = withSpirit(out, rs.id, (s) => ({ ...s, equipment }));
-  }
-  return out;
-}
-
-// ───────────────────────── 할 일 ─────────────────────────
-
-export type Todo =
-  | { kind: "evolve"; to: Stage }
-  | { kind: "unlock"; key: string }
-  | { kind: "episode" };
-
-/** 행동이 남은 것만 (0021 5절). 먹이기는 늘 할 수 있어서 넣지 않아요. */
-export function todos(s: GardenSpirit): Todo[] {
-  const out: Todo[] = [];
-  const evo = canEvolve(s);
-  if (evo?.ok) out.push({ kind: "evolve", to: evo.evo.to });
-  // 카드가 아직 없는 해금 키(예: 유리 도롱뇽 성체 카드 빈칸, 0020)는 볼 것이 없으니 할 일이 아니에요
-  for (const key of spiritUnlocks(s)) if (!s.seen.includes(key) && hasCard(key)) out.push({ kind: "unlock", key });
-  if (episodesOpen(s) > s.episodes) out.push({ kind: "episode" });
-  return out;
-}
-
-/** 뒤 막에서 출발할 수 있나 (0108): 그 막이 켜져 있고, 출전 정령이 모두 기준 단계(성체) 이상일 때 */
-export function deepStartOpen(g: Garden, party: string[]): boolean {
-  const d = C.deep_start;
-  if (C.acts_enabled < d.act || !party.length) return false;
-  return party.every((id) => {
-    const s = g.spirits.find((x) => x.id === id);
-    return !!s && stageRank(s.stage) >= stageRank(d.stage as Stage);
-  });
+  return freshSpirit(s.id, s.personality);
 }

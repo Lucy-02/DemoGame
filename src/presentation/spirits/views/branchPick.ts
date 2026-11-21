@@ -99,7 +99,7 @@ export function drawBranchPick(scene: Phaser.Scene, vm: BranchPickVM, act: Branc
   box(dim, 0, 0, FRAME.w, FRAME.h, 0, { fill: P.scrim });
   scene.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive();
 
-  // 부른 곳 (.bw-tag): 정원 = 새싹, 런 결과는 기호 없음(TODO_ICON X 상자)
+  // 부른 곳 (.bw-tag): 정원 = 새싹, 판 안은 기호 없음(TODO_ICON X 상자)
   const tg = scene.add.graphics();
   circle(tg, B.tag.x + B.tag.d / 2, B.tag.y + B.tag.d / 2, B.tag.d, { fill: P.veil["10"], ring: { width: 1, color: P.glassLine } });
   const ti = B.tag.x + (B.tag.d - B.tag.icon) / 2, tj = B.tag.y + (B.tag.d - B.tag.icon) / 2;

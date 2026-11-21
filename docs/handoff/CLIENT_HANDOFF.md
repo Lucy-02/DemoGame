@@ -112,7 +112,8 @@ src/presentation/card/
 src/presentation/tooltip/      말풍선 공용(Tooltip.ts 그리기·배치, skins.ts 카드 말풍선 스킨, content.ts 문단)
 src/presentation/spirits/      정령 관리 (?screen=spirits, 정본 design/canon/spirit-r4v5, 탭 내용 0021)
   SpiritsScene.ts              정원 세션 상태 → spiritsVM → 통째로 다시 그리기 (입력 중엔 다음 update에서)
-  fromGarden.ts                core/garden 상태 → SpiritsVM (규칙 판단은 core 함수만 씀)
+  roster.ts                    정령 화면이 읽는 정령들: 정원(유체, 보기만) · 판(키우기) · 고정 장면
+  fromGarden.ts                Roster → SpiritsVM (규칙 판단은 core/growth 함수만 씀)
   layout.ts, copy.ts           정본 수치(선택자 주석), 문구
   fixtures.ts                  고정 정원 GARDENS (mixed 기본, fresh)
   views/                       backdrop·topbar·idCard·strip·panel·rail(접힘 레일+요약 카드)·parts(유리·배지·막대·버튼)
@@ -140,7 +141,8 @@ src/session/garden.ts          정원 세션: 명령 → core/garden → onChang
 src/session/run.ts             판 세션: 판의 자리(phase) + enter·leave·finishBattle·finishReward. 칸 사이 저장 save/restore
 src/session/game.ts            게임 세션: 정원 + 판 + platform 저장. 판 떠나기·경험(grantBattle)·판 닫기(endRun)
 src/presentation/flow.ts       게임 흐름: phase를 보고 그 칸을 맡은 화면을 열어요. 새 화면이 없는 칸은 임시 장면
-src/core/garden.ts             판 밖 정령 상태와 성장 규칙 (0021), 수치는 src/data/growth.json
+src/core/garden.ts             정원에 남는 것: 줄 · 성격 · 완주로 연 성격 · 다시 뽑기 (0157)
+src/core/growth.ts             판 안 성장 규칙 (0157), 수치는 src/data/growth.json
 src/presentation/menu/         판 안 메뉴 · 포기 확인(MenuScene) · 설정 창(SettingsScene), 0090. hooks.ts: 톱니 · Esc로 메뉴 열기(openRunMenu · bindMenuKey), settingsOf(scene), playbackScale. 고정 장면 ?screen=menu|settings
 src/session/settings.ts        설정 값(볼륨 셋 · 전체화면 · 속도 · 흔들림)과 저장(키 settings). SettingsSession: state · set(patch) · onChange
 src/presentation/style/        CSS 재현 도우미 (6절). flex 노드에 onClick(클릭 영역)·wrap(줄바꿈 글자)

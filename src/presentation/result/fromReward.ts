@@ -1,9 +1,10 @@
 // 보상 세션 → 화면 값.
-import { cardDef, equipDef } from "../../core/data";
-import type { Run } from "../../core/run";
+import { CARDS, cardDef, equipDef } from "../../core/data";
+import { levelOf } from "../../core/growth";
+import type { Run, SpiritGrowth } from "../../core/run";
 import type { RunEquip, RunSpirit } from "../../core/types";
 import type { RewardSession } from "../../session/reward";
-import { cardVM, equipSheet, lane, laneWith, statOf } from "../run/fromCore";
+import { cardVM, equipSheet, lane, laneWith, levelFill, statOf, type LaneExtras } from "../run/fromCore";
 import type { LaneVM } from "../run/viewmodel";
 import type { EquipOfferVM, EquipOptionVM, ResultVM } from "./viewmodel";
 
@@ -23,7 +24,7 @@ function option(run: Run, equipId: string, before: RunSpirit, laneBefore: LaneVM
 /** 정예 장비 하나를 파티가 받는 방법들 */
 export function equipOffer(run: Run, equipId: string, lanes: LaneVM[]): EquipOfferVM {
   const def = equipDef(equipId);
-  const fresh: RunEquip = { id: equipId, resonance: 1, from: "run" };
+  const fresh: RunEquip = { id: equipId, resonance: 1 };
   const takers: EquipOfferVM["takers"] = {};
   for (const s of run.equipTakers(equipId)) {
     const l = lanes.find((x) => x.id === s.id);
@@ -41,9 +42,21 @@ export function equipOffer(run: Run, equipId: string, lanes: LaneVM[]): EquipOff
   };
 }
 
+/** 이 전투로 자란 몫 (0157): 링은 지금 레벨 안의 경험, 레벨이 올랐으면 처음부터 채운 만큼이 새로 더해진 몫이에요 */
+function grown(rs: RunSpirit, g?: SpiritGrowth): LaneExtras {
+  const after = levelFill(rs.exp);
+  if (!g) return { exp: { before: after, after } };
+  const levelUp = levelOf(g.expAfter) > levelOf(g.expBefore);
+  const unlocked = CARDS.filter((c) => g.unlocked.includes(c.unlock) && c.spirit === rs.id).map((c) => c.name);
+  return {
+    exp: { before: levelUp ? 0 : levelFill(g.expBefore), after }, levelUp,
+    badges: [...(levelUp ? ["g-up" as const] : []), ...(unlocked.length ? ["g-cardnew" as const] : [])], unlocked,
+  };
+}
+
 export function resultVM(s: RewardSession): ResultVM {
-  // 경험 정산이 아직 런에 연결되지 않아서 링은 비어 있고 문턱 표식도 없어요 (0044 열린 질문)
-  const lanes = s.run.spirits.map((rs) => lane(rs));
+  const growth = s.source.kind === "battle" ? s.source.reward.growth : undefined;
+  const lanes = s.run.spirits.map((rs) => lane(rs, grown(rs, growth?.[rs.id])));
   return {
     gold: { total: s.run.gold, gained: s.gained },
     cards: s.offers.map((o) => ({
