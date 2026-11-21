@@ -103,7 +103,7 @@ src/presentation/battle/
   views/hand.ts                손패: 묶음·카드·얼굴, 호버 상호작용. createHand(scene, hand, onHover?) → { setHover(key|null, instant?) }
 src/presentation/card/
   HandCard.ts                  작은 얼굴 (0161). createHandCard → { root(원점=아래 가운데), setLifted(on), setHeld(on), opacity }. 몸(그림 + 띠 · 수치 · 이름)에만 회색 필터, 비용 동전 · 표지는 그 위에
-  BigCard.ts                   큰 얼굴. createBigCard(scene, vm, x, y, { scale, values, why, shadow }) → { root, setHeld(on), opacity }. 유리 판에 이름 줄 · 효과문 · 기호 줄
+  BigCard.ts                   큰 얼굴. createBigCard(scene, vm, x, y, { scale, values, why, shadow }) → { root, setHeld(on), opacity }. 그림이 아래로 어두워지는 띠(artTexture band.stops) 위에 이름 줄 · 효과문 · 기호 줄
   peek.ts                      cardPeek(큰 얼굴 띄우기 + 머물면 곁쪽지), cardNote(곁쪽지만)
   artTexture.ts, parts.ts      카드 모양으로 구운 그림(키운 배율로 구움) · 두 얼굴이 같이 쓰는 조각(비용 동전, 수치 줄, 바깥 테)
   cardTip.ts                   곁쪽지 내용 → tooltip/ (스킨 NOTE)
