@@ -32,7 +32,7 @@ export const TERMS: readonly Term[] = [
   { id: "weak", name: "약화", group: "status", icon: "kw-weak", inText: true, what: `주는 피해가 ${pct(C.weak_mult)}% 줄어듭니다.`, when: EACH_TURN },
   { id: "thorns", name: "반격", group: "status", icon: "kw-thorns", inText: true, what: "적의 공격에 맞을 때마다 반격 수치만큼 피해를 되돌립니다.", when: START_TURN },
   { id: "taunt", name: "도발", group: "status", icon: "kw-taunt", inText: true, what: "적이 하나만 노리는 공격을 대신 받습니다.", when: START_TURN },
-  { id: "empower", name: "강화", group: "status", icon: "kw-strength", what: "이번 턴에 입히는 타격 피해가 수치만큼 늘어납니다.", when: START_TURN },
+  { id: "empower", name: "기세", group: "status", icon: "kw-strength", what: "이번 턴에 입히는 타격 피해가 수치만큼 늘어납니다.", when: START_TURN },
 
   { id: "block", name: "방어도", group: "card", icon: "fx-block", what: "받는 피해를 방어도만큼 막습니다.", when: START_TURN },
   { id: "wall", name: "벽", group: "card", what: "벽으로 얻은 방어도는 다른 아군이 받는 피해도 대신 막습니다." },

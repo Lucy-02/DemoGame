@@ -12,7 +12,7 @@ describe("용어 사전", () => {
 
   it("기호는 정본 세트에 있고, 기호로 용어를 찾아요", () => {
     for (const t of TERMS) if (t.icon) expect(ICONS.has(t.icon), t.icon).toBe(true);
-    expect(termOfIcon("kw-strength")?.name).toBe("강화");
+    expect(termOfIcon("kw-strength")?.name).toBe("기세");
     expect(termOfIcon("el-fire")).toBeUndefined();
   });
 

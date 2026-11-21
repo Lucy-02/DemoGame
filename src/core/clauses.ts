@@ -57,7 +57,7 @@ export interface TextContext {
   ally: (op: "block" | "empower" | "thorns", what: string) => Clause;
   /** 시전 정령 능력치로 보정한 수치 */
   sc: (v: number, k: "power" | "guard" | "focus") => number;
-  /** 타격 수치 (강화 · 피해 배율 포함) */
+  /** 타격 수치 (기세 · 피해 배율 포함) */
   dmg: (v: number) => number;
   /** 포커스로 보정한 화상 · 냉기 · 회복 수치 (그 효과의 배율 포함) */
   amt: (v: number, kind: "burn" | "chill" | "heal") => number;

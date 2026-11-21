@@ -65,7 +65,7 @@ export interface HitCalc {
   opening: boolean;
 }
 
-/** 기본값 → 강화 → 타격 보너스 → 지속 효과 보너스 → 파워 → 상성 → 치명 → 취약 → 약화 → 해방 → 허점타(창 또는 휘청) → 반올림 */
+/** 기본값 → 기세 → 타격 보너스 → 지속 효과 보너스 → 파워 → 상성 → 치명 → 취약 → 약화 → 해방 → 허점타(창 또는 휘청) → 반올림 */
 export const ALLY_HIT_STAGES: Stage<HitCalc>[] = [
   { id: "empower", order: 10, apply: (c) => (c.amount = c.base + statusN(c.attacker, "empower")) },
   {
