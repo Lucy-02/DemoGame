@@ -1,30 +1,32 @@
-// 상점 화면 (0050 격자: 카드 3×2, 오른쪽에 빼기·치료 칸 + 0082: 오른쪽에 지도와 같은 얇은 정령 줄, 위 띠는 지도와 같은 자리).
-// 카드에 올리면 배울 수 있는 줄이 점선 테로 밝아지고 그 카드가 쓰는 능력치 하나가 줄에 나와요. 배울 정령이 하나면 누르는 즉시 사고,
-// 여럿이면 카드를 집은 다음 줄을 눌러 정해요(집은 카드를 다시 누르거나 빈 곳을 누르면 내려놓아요). 치료에 올리면 줄마다 HP a→b.
-// 빼기 칸을 누르면 덱 고르기 창(0082)이 열려요: 카드를 고른 뒤 확인해야 빠져요(두 단계, 0046).
+// 상점 화면 (0163 가운데 창: 창 하나 안에 정령 칸(위) · 큰 얼굴 카드 여섯 칸 · 버튼 줄(떠나기 · 빼기 · 치료)이 같은 세로선을 써요).
+// 카드에 올리면 배울 수 있는 정령 칸이 점선 테로 밝아지고 그 카드가 쓰는 능력치 하나가 칸에 나와요. 배울 정령이 하나면 누르는 즉시 사고,
+// 여럿이면 카드를 집은 다음 정령 칸을 눌러 정해요(집은 카드를 다시 누르거나 빈 곳을 누르면 내려놓아요). 치료에 올리면 칸마다 HP a→b.
+// 빼기를 누르면 눌린 상점 창 위에 덱 고르기 창(0082)이 열려요: 카드를 고른 뒤 확인해야 빠져요(두 단계, 0046).
 // 세션을 받으면 런에 연결되고(레거시 지도에서 열어요), 없으면 씨앗을 정한 런 위의 고정 장면이에요.
 import type { CardVM } from "../card/viewmodel";
 import { crossPaint, fadeAway } from "../style/motion";
 import * as Phaser from "phaser";
 import { ShopSession } from "../../session/shop";
-import { createHandCard, preloadHandCard } from "../card/HandCard";
-import { HAND_CARD } from "../card/layout";
+import { createBigCard, preloadBigCard } from "../card/BigCard";
+import { preloadHandCard } from "../card/HandCard";
 import { drawBackdrop } from "../run/backdrop";
-import { cardWithFace, drawCardTip, drawCardTipBeside } from "../run/cards";
-import { DECK_PICK_ICONS, drawDeckPick, drawQuietButton } from "../run/deckPick";
+import { cardWithFace, drawCardNote } from "../run/cards";
+import { DECK_PICK_ICONS, drawDeckPick } from "../run/deckPick";
 import { RUN_TOP_ICONS, drawRunTop } from "../run/topbar";
 import { CARD_FOCUS, FRAME } from "../run/layout";
 import { STAT_ICON } from "../run/copy";
 import { drawSlimLane, type SlimState } from "../run/slimLane";
 import { preloadSpiritArt } from "../spiritArt";
 import { preloadPlace } from "../stage";
+import { P } from "../spirits/views/parts";
+import { box } from "../style/draw";
 import { loadIcon } from "../style/icons";
 import { audioOf } from "../audio";
 import { shopSession } from "./fixtures";
 import { shopVM } from "./fromShop";
-import { SHOP_LANE, STOCK } from "./layout";
+import { SHOP_LANE, STOCK, colX } from "./layout";
 import { COPY } from "./copy";
-import { SERVICE_ICONS, drawPrice, drawService } from "./views/services";
+import { SERVICE_ICONS, drawLeave, drawPrice, drawService, drawSoldSlot, drawWindow } from "./views/services";
 import type { ShopVM } from "./viewmodel";
 
 export const SHOP_SCENE = "shop";
@@ -79,8 +81,8 @@ export class ShopScene extends Phaser.Scene {
     for (const [id, w] of [...RUN_TOP_ICONS, ...SERVICE_ICONS, ...DECK_PICK_ICONS]) loadIcon(this, id, w);
     for (const id of Object.values(STAT_ICON)) loadIcon(this, id, SHOP_LANE.stat.icon);
     const vm = shopVM(this.session);
-    for (const c of vm.cards) if (c) preloadHandCard(this, c.card, { showRarity: true, scale: STOCK.scale });
-    for (const row of Object.values(vm.deck)) for (const c of row) preloadHandCard(this, c.card, { showRarity: true });
+    for (const c of vm.cards) if (c) preloadBigCard(this, c.card);
+    for (const row of Object.values(vm.deck)) for (const c of row) preloadHandCard(this, c.card);
     preloadSpiritArt(this, vm.lanes.map((l) => l.id));
   }
 
@@ -134,28 +136,37 @@ export class ShopScene extends Phaser.Scene {
     for (const o of [...this.children.list]) o.destroy();
     const vm = shopVM(this.session);
     if (this.removing) return this.paintRemove(vm);
-    const { hover } = this;
+    this.paintShop(vm, true);
+  }
+
+  /** 창 하나: 정령 칸(위) · 진열 여섯 칸 · 버튼 줄. live가 아니면 그림만 (덱에서 고르기 창 뒤) */
+  private paintShop(vm: ShopVM, live: boolean) {
+    const hover = live ? this.hover : undefined;
     if (this.held !== undefined && !vm.cards[this.held]?.affordable) this.held = undefined;
-    const held = this.held;
+    const held = live ? this.held : undefined;
     const focusSlot = held ?? (hover?.kind === "card" ? hover.slot : undefined);
     const focus = focusSlot === undefined ? undefined : vm.cards[focusSlot];
     const healing = hover?.kind === "heal" && vm.heal.enabled;
 
     drawBackdrop(this, "shop");
     // 빈 곳을 누르면 집은 카드를 내려놓아요 (맨 아래에 깔아서 다른 입력이 먼저 받아요)
-    this.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive().on("pointerup", () => {
-      if (this.held === undefined) return;
-      this.held = undefined;
-      this.redraw();
-    });
+    if (live) {
+      this.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive().on("pointerup", () => {
+        if (this.held === undefined) return;
+        this.held = undefined;
+        this.redraw();
+      });
+    }
 
-    const spend = focus?.affordable ? focus.price : healing ? vm.heal.price : undefined;
-    drawRunTop(this, vm.gold - (spend ?? 0), spend === undefined ? {} : { was: vm.gold }, this.onDeck);
+    if (live) {
+      const spend = focus?.affordable ? focus.price : healing ? vm.heal.price : undefined;
+      drawRunTop(this, vm.gold - (spend ?? 0), spend === undefined ? {} : { was: vm.gold }, this.onDeck);
+    }
+    drawWindow(this);
 
-    // 얇은 정령 줄: 진열 가운데 높이
+    // 정령 칸: 두 칸 폭씩 가로로. 셋보다 적으면 가운데부터 채워요
     const L = SHOP_LANE;
-    let ly = Math.round(L.mid - (vm.lanes.length * (L.h + L.gap) - L.gap) / 2);
-    for (const l of vm.lanes) {
+    vm.lanes.forEach((l, i) => {
       const st: SlimState = {};
       let click: (() => void) | undefined;
       let id: string | undefined;
@@ -172,37 +183,36 @@ export class ShopScene extends Phaser.Scene {
         st.hpTo = Math.min(l.maxHp, l.hp + (vm.heal.gain[l.id] ?? 0));
         st.hot = st.hpTo !== l.hp;
       }
-      const zone = drawSlimLane(this, l, ly, L, click, st);
+      const zone = drawSlimLane(this, l, L.y, { ...L, x: colX(L.slots - vm.lanes.length + i * 2) }, click, st);
       if (zone && id) {
         const lane = id;
         zone.on("pointerover", () => this.setHover({ kind: "lane", id: lane })).on("pointerout", () => this.leaveHover({ kind: "lane", id: lane }));
       }
-      ly += L.h + L.gap;
-    }
+    });
 
-    // 진열 카드 3×2 (말풍선은 다른 카드 위에 오도록 마지막에)
+    // 진열 여섯 칸 (곁쪽지는 다른 카드 위에 오도록 마지막에)
     let tip: (() => void) | undefined;
     const leaving = this.leaving;
     this.leaving = undefined;
+    const y = STOCK.y;
     vm.cards.forEach((c, slot) => {
-      const x = STOCK.x + (slot % STOCK.cols) * (STOCK.w + STOCK.gap);
-      const y = STOCK.rows[Math.floor(slot / STOCK.cols)];
+      const x = colX(slot);
       if (!c) {
-        if (leaving?.slot === slot) {
-          fadeAway(this, createHandCard(this, cardWithFace(this, leaving.card, undefined, STOCK.scale), x + (STOCK.w - HAND_CARD.w) / 2, y + STOCK.h - HAND_CARD.h, { showRarity: true, scale: STOCK.scale }));
-        }
+        drawSoldSlot(this, x);
+        // 산 카드는 진열에서 흐려져 빠져요 (0089)
+        if (leaving?.slot === slot) fadeAway(this, createBigCard(this, cardWithFace(this, leaving.card, undefined), x, y));
         return;
       }
       const owner = c.learners.length === 1 ? vm.lanes.find((l) => l.id === c.learners[0]) : undefined;
-      // 골드가 모자란 카드는 손패의 못 내는 카드와 같은 모양: 카드째 회색, 값은 붉게 (0050 · 0105)
-      const card = cardWithFace(this, c.affordable ? c.card : { ...c.card, off: true }, owner, STOCK.scale);
-      const view = createHandCard(this, card, x + (STOCK.w - HAND_CARD.w) / 2, y + STOCK.h - HAND_CARD.h, { showRarity: true, scale: STOCK.scale });
+      // 골드가 모자란 카드는 손패의 못 내는 카드와 같은 말: 그림이 회색, 값은 붉게 (0050 · 0105 · 0161)
+      const card = cardWithFace(this, c.affordable ? c.card : { ...c.card, off: true }, owner);
+      const view = createBigCard(this, card, x, y);
       const on = focusSlot === slot;
       const dim = focusSlot !== undefined && !on;
       view.setHeld(on);
-      view.setLifted(on);
       if (dim) view.opacity = CARD_FOCUS.dim;
-      drawPrice(this, c.price, c.affordable, x, y, dim && c.affordable ? CARD_FOCUS.dim : 1);
+      drawPrice(this, c.price, c.affordable, x, dim && c.affordable ? CARD_FOCUS.dim : 1);
+      if (!live) return;
       this.add.zone(x, y, STOCK.w, STOCK.h).setOrigin(0, 0).setInteractive({ useHandCursor: c.affordable })
         .on("pointerover", () => this.setHover({ kind: "card", slot }))
         .on("pointerout", () => this.leaveHover({ kind: "card", slot }))
@@ -216,11 +226,12 @@ export class ShopScene extends Phaser.Scene {
           this.held = this.held === slot ? undefined : slot;
           this.redraw();
         });
-      // 윗줄은 위 띠(골드)를 가리지 않게 옆에, 아랫줄은 위에
-      if (on) tip = () => (slot < STOCK.cols ? drawCardTipBeside : drawCardTip)(this, card, x, y, STOCK.w);
+      // 큰 얼굴이 효과문을 보여 주니, 머물면 곁쪽지만 떠요 (0161)
+      if (on) tip = () => drawCardNote(this, card, x, y, STOCK.w);
     });
 
-    drawService(this, "remove", vm.remove, hover?.kind === "remove", {
+    drawLeave(this, live ? () => this.onLeave?.(this) : undefined);
+    drawService(this, "remove", vm.remove, hover?.kind === "remove", live ? {
       over: () => this.setHover({ kind: "remove" }),
       out: () => this.leaveHover({ kind: "remove" }),
       click: () => {
@@ -229,16 +240,15 @@ export class ShopScene extends Phaser.Scene {
         this.hover = undefined;
         this.redraw();
       },
-    });
-    drawService(this, "heal", vm.heal, healing, {
+    } : undefined);
+    drawService(this, "heal", vm.heal, healing, live ? {
       over: () => this.setHover({ kind: "heal" }),
       out: () => this.leaveHover({ kind: "heal" }),
       click: () => {
         this.hover = undefined;
         this.session.dispatch({ kind: "heal" });
       },
-    });
-    drawQuietButton(this, "g-back", COPY.leave, () => this.onLeave?.(this));
+    } : undefined);
     tip?.();
   }
 
@@ -249,10 +259,12 @@ export class ShopScene extends Phaser.Scene {
     this.redraw();
   }
 
-  /** 빼기: 왼쪽에 덱. 올리면 주인 줄에 덱 장수 a→b, 고르면 그 줄 아래에 취소 · 빼기 */
+  /** 빼기: 눌린 상점 창 위에 덱에서 고르기 창. 올리면 주인 줄에 덱 장수 a→b, 고르면 취소 · 빼기 */
   private paintRemove(vm: ShopVM) {
     const { hover, pick } = this;
-    drawBackdrop(this, "shop");
+    // 상점 창은 그대로 두고 막으로 눌러요
+    this.paintShop(vm, false);
+    box(this.add.graphics(), 0, 0, FRAME.w, FRAME.h, 0, { fill: P.scrim });
     drawRunTop(this, vm.gold - (pick === undefined ? 0 : vm.remove.price), pick === undefined ? {} : { was: vm.gold });
     drawDeckPick(this, {
       lanes: vm.lanes, rows: vm.deck, mode: "remove", pick,

@@ -6,7 +6,7 @@ export type RichText = { text: string; strong?: boolean; term?: boolean }[];
 
 /** 문단 역할. 스킨이 역할마다 글자 크기·색·줄 높이를 정해요. */
 /** term = 효과문 밑줄 용어의 풀이 (이름 강조 + 풀이, 0105) */
-export type TipRole = "body" | "calc" | "why" | "term" | "meta";
+export type TipRole = "body" | "calc" | "term" | "meta";
 
 export type TipBlock =
   /** 머리: 이름 + 옆 꼬리표 (정예 등) */

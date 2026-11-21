@@ -97,7 +97,7 @@
     "remove_price_step": 25,
     "heal_price": 40,
     "heal_pct": 0.3,
-    "card_count": 5
+    "card_count": 6
   },
   "rest_heal_pct": 0.3,
   "card_upgrade": { "pct": 0.3, "min": 1 },

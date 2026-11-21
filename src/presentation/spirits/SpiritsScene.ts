@@ -103,7 +103,7 @@ export class SpiritsScene extends Phaser.Scene {
       if (vm) preloadBranchCards(this, vm);
       // 전용 무기 말풍선의 기술 카드
       for (const slot of spiritsVM(this.roster, s.id).detail.equip) {
-        if (slot?.tip.sheet.card) preloadHandCard(this, slot.tip.sheet.card.vm, { showRarity: true });
+        if (slot?.tip.sheet.card) preloadHandCard(this, slot.tip.sheet.card.vm);
       }
     }
     preloadSpiritArt(this, this.rosterIds());

@@ -230,7 +230,7 @@ function drawSocket(scene: Phaser.Scene, x: number, y: number, card?: LaneState[
     scene.add.image(x - sh.margin, y - sh.margin, sh.key).setOrigin(0, 0);
     box(scene.add.graphics(), x - o, y - o, K.w + o * 2, K.h + o * 2, K.radius + o, { ring: { width: o, color: P.accHi } });
   }
-  createHandCard(scene, card.vm, x + K.card.x, y + K.card.y, { showRarity: true });
+  createHandCard(scene, card.vm, x + K.card.x, y + K.card.y);
 }
 
 export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneState = {}) {

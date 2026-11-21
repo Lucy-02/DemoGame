@@ -61,7 +61,7 @@ export class RunEndScene extends Phaser.Scene {
 
   preload() {
     for (const [id, w] of [...LANE_ICONS, ["i-coin", R.only.icon]] as const) loadIcon(this, id, w);
-    for (const c of this.vm.cards) preloadHandCard(this, c.card, { showRarity: true, scale: THUMB_SCALE });
+    for (const c of this.vm.cards) preloadHandCard(this, c.card, { scale: THUMB_SCALE });
     preloadSpiritArt(this, this.vm.lanes.map((l) => l.id));
     preloadStage(this, this.act);
   }
@@ -121,7 +121,7 @@ export class RunEndScene extends Phaser.Scene {
     const rowY = top + O.pad[0] + O.rowH + O.gap;
     vm.cards.forEach((c, i) => {
       const x = left + i * step;
-      createHandCard(this, cardWithFace(this, c.card, vm.lanes.find((l) => l.id === c.owner), THUMB_SCALE), x + (R.thumb.w - HAND_CARD.w) / 2, rowY + thumbH - HAND_CARD.h, { showRarity: true, scale: THUMB_SCALE });
+      createHandCard(this, cardWithFace(this, c.card, vm.lanes.find((l) => l.id === c.owner), THUMB_SCALE), x + (R.thumb.w - HAND_CARD.w) / 2, rowY + thumbH - HAND_CARD.h, { scale: THUMB_SCALE });
     });
   }
 }
