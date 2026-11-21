@@ -54,6 +54,15 @@ export class ShopSession {
     return !this.removed && this.run.gold >= this.removePrice && this.run.deck.length > 0;
   }
 
+  /** 이 상점에서 치료 · 빼기를 이미 썼는지 (화면이 값을 감춰요) */
+  get healUsed(): boolean {
+    return this.healed;
+  }
+
+  get removeUsed(): boolean {
+    return this.removed;
+  }
+
   get healPrice(): number {
     return C.shop.heal_price;
   }
