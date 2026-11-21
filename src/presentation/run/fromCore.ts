@@ -1,23 +1,20 @@
 // 규칙 데이터(정령·카드) → 런 화면 값 (카드, 정령 줄). 고정 장면과, 런에 연결할 때 함께 써요.
-import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, baseCardId, cardDef, equipDef, equipName, isUpgradedId, spiritDef, upgradedId } from "../../core/data";
+import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, RARITY_NAME, baseCardId, canUpgradeCard, cardDef, equipDef, equipName, isUpgradedId, spiritDef, upgradedId } from "../../core/data";
 import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round, scale } from "../../core/stats";
 import { signatureSwapOf } from "../../core/run";
 import { castAmount, castDamage, describeCard, describeEquipTier, describeSignatureSwap, type CastMult } from "../../core/text";
 import type { CardDef, CardOp, DeckCard, EquipTier, RunEquip, RunSpirit, Stage } from "../../core/types";
 import { cardArtOf } from "../card/art";
-import type { CardRarity, CardVM, CardValueVM, Material, RichText } from "../card/viewmodel";
+import type { CardRarity, CardVM, CardValueVM, RichText } from "../card/viewmodel";
 import { ELEMENT_ICON, ROLE_ICON, type FaceId } from "../faces";
 import { TEXT_TERMS } from "../glossary/terms";
 import { spiritArt } from "../spiritArt";
-import { COPY, MATERIAL_NAME } from "./copy";
+import { COPY } from "./copy";
 import { STAT_IDS, type EquipChipVM, type EquipSheetVM, type EquipStatId, type EquipVM, type LaneVM, type StatId } from "./viewmodel";
 
-/** 카드 그림 창 윗선은 정본 세 정령 모양뿐이에요. 다른 정령은 속성이 같은 모양을 임시로 빌려요 (0044 열린 질문) */
+/** 정본 얼굴 그림은 세 정령뿐이에요. 다른 정령은 속성이 같은 얼굴을 임시로 빌려요 (화면이 face를 주면 그 얼굴을 써요) */
 const WINDOW_OF: Record<string, FaceId> = { fire: "fire", water: "jelly" };
 const windowOf = (spiritId: string): FaceId => WINDOW_OF[spiritDef(spiritId).element] ?? "star";
-
-const MATERIALS: readonly string[] = ["fire", "water", "wind"];
-const materialOf = (element: string): Material => (MATERIALS.includes(element) ? (element as Material) : "none");
 
 /** 효과문에서 숫자는 강조, 용어는 밑줄로 (TEXT_RULES). 용어 목록은 용어 사전에서 읽어요 (0102) */
 const TERMS = TEXT_TERMS;
@@ -52,7 +49,7 @@ const opBase = (op: CardOp): number | undefined => ("value" in op && typeof op.v
   : "turns" in op && typeof op.turns === "number" ? op.turns : undefined);
 
 /** 수치판: 앞에서부터 기호가 있는 효과 두 개까지. st가 없으면 원래 숫자, 있으면 그 정령의 능력치로 계산한 숫자.
- *  카드에 찍힌 숫자(강화 전 카드)보다 오르면 ▲: 능력치로 오른 값과 강화로 오른 값이 같은 표식이에요 (0080) */
+ *  카드에 찍힌 숫자(강화 전 카드)보다 오르면 up: 능력치로 오른 값과 강화로 오른 값이 같은 표시예요 (0080) */
 export function valuesOf(def: CardDef, st?: CardStats): CardValueVM[] {
   const printed = isUpgradedId(def.id) ? cardDef(baseCardId(def.id)).effects : def.effects;
   return def.effects.flatMap((op, i): CardValueVM[] => {
@@ -77,28 +74,33 @@ export function statOf(def: CardDef): StatId | undefined {
  *  ownerId가 없으면 주인이 정해지지 않은 카드 */
 export function cardVM(cardId: string, ownerId?: string, st?: CardStats): CardVM {
   const def = cardDef(cardId);
-  const material = materialOf(def.element);
+  const upgraded = isUpgradedId(cardId);
   const who = ownerId ? spiritDef(ownerId).name : COPY.shared;
   return {
-    key: cardId, name: def.name, cost: def.cost, owner: ownerId ? windowOf(ownerId) : "star", material,
+    key: cardId, name: def.name, cost: def.cost, owner: ownerId ? windowOf(ownerId) : "star",
     ...(ownerId ? { role: ROLE_ICON[spiritDef(ownerId).role] } : {}),
-    element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, art: "i-spark",
+    element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none,
     illustration: cardArtOf(baseCardId(cardId)),
     rarity: def.rarity === "basic" ? undefined : (def.rarity as CardRarity),
     values: valuesOf(def, st),
-    detail: { text: richText(describeCard(def, st ?? null)), owner: [who, ELEMENT_NAME[def.element], MATERIAL_NAME[material], isUpgradedId(cardId) ? COPY.upgraded : undefined].filter(Boolean).join(COPY.sep) },
+    ...(upgraded ? { upgraded } : {}),
+    detail: {
+      text: richText(describeCard(def, st ?? null)),
+      owner: [who, ELEMENT_NAME[def.element], RARITY_NAME[def.rarity], upgraded ? COPY.upgraded : undefined].filter(Boolean).join(COPY.sep),
+      ...(canUpgradeCard(def) ? { upgrade: { label: COPY.upgrade, text: richText(describeCard(cardDef(upgradedId(cardId)), st ?? null)) } } : {}),
+    },
   };
 }
 
-/** 덱 카드 한 장. 강화한 카드는 강화한 숫자로(▲) 보여요 (0080) */
+/** 덱 카드 한 장. 강화한 카드는 강화한 숫자로 보여요 (0080) */
 export const deckCardVM = (c: DeckCard): CardVM => cardVM(c.upgraded ? upgradedId(c.cardId) : c.cardId, c.owner);
 
 /** 해방 카드 (0075 · 0076 3번): 각성체 손패 묶음 끝에 붙는 한 장. 비용 동전 = 쓰는 칸. 이름 띠는 "해방" (정령별 해방 이름은 아직 TODO_NAME) */
 export function releaseVM(spiritId: string, slots: number): CardVM {
   const def = spiritDef(spiritId);
   return {
-    key: spiritId, name: COPY.release, cost: slots, owner: windowOf(spiritId), material: materialOf(def.element), role: ROLE_ICON[def.role],
-    element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, art: "i-spark", values: [],
+    key: spiritId, name: COPY.release, cost: slots, owner: windowOf(spiritId), role: ROLE_ICON[def.role],
+    element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, values: [],
     detail: { text: richText(def.release.desc), owner: [def.name, COPY.release].join(COPY.sep) },
   };
 }

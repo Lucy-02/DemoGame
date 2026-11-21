@@ -233,6 +233,17 @@
 - 브리프 · 무대 · 방향 파일 소스: 공유 폴더의 design 아래 card-vfx-r1. 체계: `docs/design/systems/card-fx.md`, 카드별 표: `design/card/fx/CARDS.md`. 조사: 공유 폴더 `research/vfx/card-play-references.md`
 - 한 턴(카드 다섯 + 적 둘) 길이: A 3.15초 · B 3.65초 · C 3.9초 · D 3.5초 · E 3.3초
 
+## 카드 라운드 K (2026-11-20): 정보 위계를 나누고 카드를 다시 그리기
+브리프는 `BRIEF.md` "카드 라운드 K". 안마다 같은 일곱 프레임(해부 · 전투 손패 · 가리킴 · 자세히 보기 · 보상 · 상점 · 덱 보기). Lucy 확인 대기.
+- K1 그림 한 장: https://claude.ai/artifact/8TLAqCMwSSB3XUKHzthVaw
+- K2 이름 띠의 주인: https://claude.ai/artifact/GBLPKvMKrB2au2Sr93ZFLT
+- K3 숫자 단: https://claude.ai/artifact/Ts79xnQCaNLzpnsy8FzcRZ
+- K4 두 얼굴: https://claude.ai/artifact/HxoJb5qKsCrkc5r7zN5vw6
+- 소스: 공유 폴더 `card-round-k/src.tgz` (공용 재료 `kit/` + 안별 폴더, `python3 kit/build.py <폴더>`)
+- Lucy 11/20: K1 · K4를 살림(섞어도 됨), K1은 이름 위 숫자를 조금 작게 → 라운드 K2 (`BRIEF.md` "카드 라운드 K2"). Lucy 확인 대기.
+  - L1 유리 두 얼굴: https://claude.ai/artifact/9UzXGeVYwJi6JkwwwsS55B
+  - L2 유리 손패, 종이 읽기: https://claude.ai/artifact/KqrHuHAUHPj7EsBzdSQ1LF
+  - L3 종이 두 얼굴, 큰 그림: https://claude.ai/artifact/7vAGyJYYBbV9NUyJH4Z4nR
 ## 상점 라운드 T (2026-11-20, BRIEF "상점 라운드 T", Lucy 고르기 대기)
 - T1 가로 두 줄: https://claude.ai/artifact/CHHtcSUZ7GvAPHrzamyXAK
 - T2 두 덩어리: https://claude.ai/artifact/NZXqXHxUiGiLdRP6Jkx5fV

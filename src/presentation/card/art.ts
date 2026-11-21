@@ -1,5 +1,5 @@
 // 카드 일러스트 (public/assets/cards/<카드 id>.webp). 그림이 있는 카드 id 목록은 artIds.json이고, tools/art/import_card_art.py가 만들어요.
-// 그림은 정사각 원본을 그림 창에 덮어(cover) 가운데 맞춤으로 그려요. 물체·상징 그림은 import 단계에서 크기를 맞춰 둬요(0042).
+// 그림은 정사각 원본을 카드 얼굴에 가로 가운데로 그려요 (card/artTexture.ts). 물체·상징 그림은 import 단계에서 크기를 맞춰 둬요(0042).
 import type * as Phaser from "phaser";
 import artIds from "./artIds.json";
 

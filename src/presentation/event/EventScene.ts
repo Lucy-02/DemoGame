@@ -68,8 +68,8 @@ export class EventScene extends Phaser.Scene {
   preload() {
     for (const [id, w] of [...RUN_TOP_ICONS, ...DECK_PICK_ICONS, ...CHOICE_ICONS]) loadIcon(this, id, w);
     for (const c of this.session.run.deck) {
-      preloadHandCard(this, deckCardVM(c), { showRarity: true });
-      if (this.session.run.canUpgrade(c.uid)) preloadHandCard(this, cardVM(upgradedId(c.cardId), c.owner), { showRarity: true });
+      preloadHandCard(this, deckCardVM(c));
+      if (this.session.run.canUpgrade(c.uid)) preloadHandCard(this, cardVM(upgradedId(c.cardId), c.owner));
     }
     preloadSpiritArt(this, this.session.run.spirits.map((s) => s.id));
     preloadStage(this, this.session.run.act);

@@ -51,7 +51,7 @@ export class DeckScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const r of this.vm.rows) r.cards.forEach((c) => preloadHandCard(this, c, { showRarity: true }));
+    for (const r of this.vm.rows) r.cards.forEach((c) => preloadHandCard(this, c));
     loadIcon(this, "i-deck", D.head.icon);
     loadIcon(this, "g-close", D.close.icon);
     preloadSpiritArt(this, this.ids);
@@ -111,12 +111,12 @@ export class DeckScene extends Phaser.Scene {
       r.cards.forEach((c, j) => {
         const cx = x0 + (j % D.per) * step, cy = top + Math.floor(j / D.per) * (D.card.h + D.cardGap);
         const card = cardWithFace(this, c, r);
-        const view = createHandCard(this, card, cx, cy, { showRarity: true });
+        const view = createHandCard(this, card, cx, cy, { showUpgraded: true });
         this.add.zone(cx, cy, D.card.w, D.card.h).setOrigin(0, 0).setInteractive()
           .on("pointerover", () => {
             hideTip();
             view.setLifted(true);
-            // 말풍선은 창에 잘리거나 카드에 가려지지 않게 맨 위 카메라에만 그려요
+            // 큰 얼굴은 창에 잘리거나 카드에 가려지지 않게 맨 위 카메라에만 그려요
             const before = new Set(this.children.list);
             tip = drawCardTip(this, card, cx, cy - scroll, D.card.w);
             const made = this.children.list.filter((o) => !before.has(o));
