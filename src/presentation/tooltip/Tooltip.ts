@@ -1,10 +1,7 @@
-// 툴팁 그리기와 띄우기. 판(바탕·테·그림자) + 블록(머리, 문단) + 선택 꼬리.
-// 카드 말풍선, 적 설명판이 이걸 써요. 상태이상·해결 순서표 칸처럼 호버로 뜨는 정보도 TooltipHost.attach로 붙여요.
+// 툴팁 그리기와 띄우기. 판(바탕·테·그림자) + 블록(머리, 문단).
+// 카드 곁쪽지, 적 설명판이 이걸 써요. 상태이상·해결 순서표 칸처럼 호버로 뜨는 정보도 TooltipHost.attach로 붙여요.
 import * as Phaser from "phaser";
-import { tokens } from "../../design/tokens";
-import { rgba } from "../style/color";
 import { box } from "../style/draw";
-import { cubicBezier, ms } from "../style/ease";
 import { render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
 import { shadowTexture } from "../style/shadow";
@@ -12,8 +9,8 @@ import { inlineLine, lineBox, wrapSpans, type Span } from "../style/text";
 import type { RichText, TipBlock, TipContent } from "./content";
 import type { RoleStyle, TipSkin } from "./skins";
 
-/** 판을 놓을 자리. top 또는 bottom 중 하나. tailX = 꼬리 가운데 (판 왼쪽 기준) */
-export type TipPlace = { left: number; top: number; tailX?: number } | { left: number; bottom: number; tailX?: number };
+/** 판을 놓을 자리. top 또는 bottom 중 하나 */
+export type TipPlace = { left: number; top: number } | { left: number; bottom: number };
 
 export interface TooltipSpec {
   skin: TipSkin;
@@ -78,11 +75,16 @@ function layoutBlock(skin: TipSkin, b: TipBlock, inner: number): { h: number; dr
   }
   const s = skin.roles[b.role];
   if (!s) throw new Error(`이 스킨에는 "${b.role}" 문단 모양이 없어요`);
-  const lines = wrapSpans(spans(b.text, s, skin.termOffset), inner);
+  return paragraph(b.text, s, inner, skin.termOffset);
+}
+
+/** 문단 하나를 폭에 맞춰 줄바꿈해서 재고, 그리는 함수를 돌려줘요 (카드 큰 얼굴의 효과문도 이걸 써요). keepAll = 낱말 안에서 끊지 않기 */
+export function paragraph(text: RichText, s: RoleStyle, w: number, termOffset?: number, keepAll = false): { h: number; lines: number; draw: (scene: Phaser.Scene, x: number, y: number) => void } {
+  const lines = wrapSpans(spans(text, s, termOffset), w, keepAll);
   const pad = s.padTop ?? 0;
   const h = pad + lines.reduce((a, l) => { const lb = lineBox(s.size, l, s.lh); return a + lb.above + lb.below; }, 0);
   return {
-    h,
+    h, lines: lines.length,
     draw: (scene, x, y) => {
       let cy = y + pad;
       for (const l of lines) cy += inlineLine(scene, x, cy, s.size, l, s.lh).height;
@@ -109,7 +111,6 @@ export function drawTooltip(scene: Phaser.Scene, spec: TooltipSpec): Phaser.Game
     scene.add.image(-sh.margin, -sh.margin, sh.key).setOrigin(0, 0);
     const g = scene.add.graphics();
     box(g, 0, 0, w, h, skin.radius, { fill: skin.fill, ring: skin.ring });
-    if (skin.tail && at.tailX !== undefined) drawTail(g, skin, at.tailX, h);
     let y = pt;
     blocks.forEach((b, i) => {
       if (i > 0) y += skin.gap;
@@ -119,27 +120,10 @@ export function drawTooltip(scene: Phaser.Scene, spec: TooltipSpec): Phaser.Game
   });
 }
 
-/** 꼬리: 45° 돌린 정사각형의 아래 절반 + 아래 두 변의 선 (box-shadow 1px 1px) */
-function drawTail(g: Phaser.GameObjects.Graphics, skin: TipSkin, x: number, h: number) {
-  const t = skin.tail!;
-  const half = (t.size * Math.SQRT2) / 2;
-  const line = rgba(t.lineColor);
-  g.lineStyle(t.line, line.color, line.alpha)
-    .lineBetween(x - half, h + t.line * Math.SQRT1_2, x, h + half + t.line * Math.SQRT2)
-    .lineBetween(x, h + half + t.line * Math.SQRT2, x + half, h + t.line * Math.SQRT1_2);
-  const fill = rgba(skin.fill);
-  g.fillStyle(fill.color, fill.alpha)
-    .fillTriangle(x - half, h, x, h - half, x + half, h)
-    .fillTriangle(x - half, h, x, h + half, x + half, h);
-}
-
 /** 판이 화면 밖으로 나가지 않게 왼쪽 끝을 맞춰요 */
 export function clampLeft(left: number, w: number, screenW: number, edge: number) {
   return Math.max(edge, Math.min(screenW - edge - w, left));
 }
-
-const ease = cubicBezier(tokens.provisional.motion.hover.easing);
-const duration = ms(tokens.provisional.motion.hover.duration);
 
 /**
  * 호버 툴팁을 한 번에 하나만 띄우는 자리. 새로 띄우면 앞의 것은 닫혀요.
@@ -152,17 +136,11 @@ export class TooltipHost {
   constructor(private scene: Phaser.Scene) {}
 
   /** owner: 누가 띄웠는지 (같은 owner의 hide만 닫아요) */
-  show(spec: TooltipSpec, opts: { instant?: boolean; owner?: unknown } = {}) {
+  show(spec: TooltipSpec, opts: { owner?: unknown } = {}) {
     this.hide();
     const tip = drawTooltip(this.scene, spec);
     this.current = tip;
     this.owner = opts.owner ?? null;
-    const enter = spec.skin.enterY;
-    if (!opts.instant && enter) {
-      const y = tip.y;
-      tip.setAlpha(0).setY(y + enter);
-      this.scene.tweens.add({ targets: tip, alpha: 1, y, duration, ease });
-    }
     return tip;
   }
 

@@ -1,4 +1,4 @@
-// 정령 얼굴 그림 (assets/ui/faces/<face>-face.webp). 전투 정보판·의도·카드 초상 홈이 함께 써요.
+// 정령 얼굴 그림 (assets/ui/faces/<face>-face.webp). 전투 정보판·의도·카드 큰 얼굴이 함께 써요.
 import type * as Phaser from "phaser";
 
 /** 그림 기호 이름 (public/assets/ui/icons/<id>.svg) */

@@ -97,7 +97,7 @@ function sheetPieces(scene: Phaser.Scene, sheet: EquipSheetVM, inner: number, dr
     out.push({
       mt: TIP.card.mt, h: Math.max(HAND_CARD.h, size(body).h),
       draw: (x, y) => {
-        createHandCard(scene, cardWithFace(scene, vm, owner), x, y, { showRarity: true });
+        createHandCard(scene, cardWithFace(scene, vm, owner), x, y);
         render(scene, body, x + HAND_CARD.w + TIP.card.gap, y);
       },
     });
