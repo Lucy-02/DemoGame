@@ -103,7 +103,8 @@ test("창 크기를 바꾸면 비율을 지키며 늘고, 설정의 전체화면
     for (const [w, h] of [[1600, 1000], [960, 600], [1000, 760]]) {
       await win((x, [cw, ch]) => x.setContentSize(cw, ch), [w, h]);
       await expect.poll(async () => (await canvasBox(page)).vw).toBe(w);
-      await page.waitForTimeout(300);
+      // 고정 대기 대신 캔버스가 창을 따라잡아 잠잠해질 때까지 기다려요 (움직이는 메인 배경 뒤로 소프트웨어 렌더러 CI의 프레임이 300ms를 넘어요)
+      await settle(page);
       const c = await canvasBox(page);
       expect(c.w / c.h).toBeCloseTo(BASE.w / BASE.h, 2);
       expect(Math.max(c.w / c.vw, c.h / c.vh)).toBeCloseTo(1, 2);
