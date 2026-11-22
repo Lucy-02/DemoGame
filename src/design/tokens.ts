@@ -333,6 +333,64 @@ export const tokens = {
       }
     },
     "motion": {
+      "garden": {
+        "sky": {
+          "drift": 14,
+          "period": 126
+        },
+        "cloud": {
+          "speed": 5,
+          "farSpeed": 3.2,
+          "alpha": 0.7,
+          "farAlpha": 0.45,
+          "y": 120,
+          "farY": 238,
+          "farScale": 0.7
+        },
+        "wind": {
+          "slow": 7.85,
+          "slowWeight": 0.6,
+          "slower": 17,
+          "slowerWeight": 0.4,
+          "gustEvery": 9,
+          "gustLength": 2.25,
+          "gust": 1.2
+        },
+        "tree": {
+          "sway": 5,
+          "curve": 1.5,
+          "lag": 0.5
+        },
+        "star": {
+          "alpha": 0.35,
+          "size": 5.2,
+          "fastest": 2.6,
+          "slowest": 10.5
+        },
+        "light": {
+          "alpha": 0.1,
+          "flicker": 0.05,
+          "jitter": 0.03
+        },
+        "firefly": {
+          "count": 22,
+          "periodMin": 3.5,
+          "periodMax": 9.5,
+          "onMin": 0.25,
+          "onMax": 0.65,
+          "roam": 64,
+          "halo": 16,
+          "core": 2.4
+        },
+        "smoke": {
+          "rise": 95,
+          "drift": 70,
+          "period": 14.3,
+          "count": 9,
+          "alpha": 0.22,
+          "size": 25
+        }
+      },
       "spiritSwap": {
         "duration": "240ms",
         "easing": [
