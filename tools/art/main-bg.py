@@ -7,10 +7,15 @@
 - 그림에서 반딧불과 굴뚝 연기를 지워요(화면이 다시 그림). 별은 그림에 두고 자리만 적어요.
 - 하늘: 줄마다 위쪽 하늘 색과 견줘 가르고, 나무 · 집 뒤는 왼쪽 하늘을 비춰 채워요.
 - 나무 윗부분은 고정선(pin) 위만 떼요. 땅 층은 지붕 · 줄기처럼 맞닿은 곳에서만 나무 쪽으로 겹쳐요(나무 둘레에 테가 남지 않게).
+- 잎 덩어리(leaves.webp)는 나무 그림에서 둥글게 뜬 조각이에요. 자리는 CLUMPS.
 - 2배는 색만으로 가르면 가장자리가 흔들려서 1배에서 만든 마스크를 키워 써요.
 - 자리 값(나무 상자 · 고정선 · 굴뚝 · 창)은 M5-s30801 그림에 맞춘 것이에요. 다른 그림이면 다시 재야 해요.
 """
 import cv2, numpy as np, sys, json
+# 잎 덩어리 자리 (1배 그림 좌표: 가운데 x, y, 반지름). 눈으로 잎 뭉치마다 하나씩 잡은 것
+CLUMPS=[(925,237,48),(980,172,52),(1060,137,52),(1140,167,52),(1185,247,44),(1040,212,56),(990,262,38),(1115,272,42)]
+EDGE=20  # 나무를 오른쪽 그림 밖으로 늘이는 폭 (1배 px). 바람이 가장 셀 때 밀리는 폭보다 커야 해요
+CLUMP_CORE=0.45  # 반지름의 이만큼까지는 또렷하고, 그 밖은 가장자리로 갈수록 흐려져요
 TOL=int(sys.argv[4]) if len(sys.argv)>4 else 40
 src=sys.argv[1]; out=sys.argv[2]; S=int(sys.argv[3]) if len(sys.argv)>3 else 1
 im=cv2.imread(src); H,W=im.shape[:2]
@@ -116,10 +121,24 @@ if len(sys.argv)>6:
     q=[cv2.IMWRITE_WEBP_QUALITY,92]
     cv2.imwrite(exp+'/sky.webp',skyL,q)
     cv2.imwrite(exp+'/ground.webp',rgba(clean,ground_mask),q)
-    cv2.imwrite(exp+'/tree.webp',rgba(clean,canopy_draw)[y0:pin+3*S,x0:x1],q)
+    # 나무가 그림 오른쪽 끝에 닿아 있어서, 바람에 왼쪽으로 밀릴 때 틈이 안 보이게 끝 줄을 EDGE만큼 늘여 둬요
+    wide=cv2.copyMakeBorder(rgba(clean,canopy_draw),0,0,0,EDGE*S,cv2.BORDER_REPLICATE); x1+=EDGE*S
+    cv2.imwrite(exp+'/tree.webp',wide[y0:pin+3*S,x0:x1],q)
+    # 잎 덩어리: 나무 그림에서 둥글게 떠서 가장자리를 흐리게 한 조각. 화면이 나무 위에 얹어 덩어리마다 따로 흔들어요
+    tr=wide.astype(np.float32); side=2*max(c[2] for c in CLUMPS)*S
+    strip=np.zeros((side,0,4),np.float32); clumps=[]
+    for cx,cy,cr in CLUMPS:
+        n=2*cr*S; tile=np.zeros((side,n,4),np.float32)
+        ax,ay=cx*S-cr*S,cy*S-cr*S
+        sx0,sy0,sx1,sy1=max(0,ax),max(0,ay),min(W+EDGE*S,ax+n),min(H,ay+n)
+        tile[sy0-ay:sy1-ay,sx0-ax:sx1-ax]=tr[sy0:sy1,sx0:sx1]
+        yy,xx=np.mgrid[0:side,0:n]; d=np.hypot(xx-n/2+.5,yy-n/2+.5)/(n/2)
+        f=np.clip((1-d)/(1-CLUMP_CORE),0,1); tile[...,3]*=f*f*(3-2*f)
+        clumps.append({'x':cx,'y':cy,'r':cr,'u':strip.shape[1]//S}); strip=np.hstack([strip,tile])
+    cv2.imwrite(exp+'/leaves.webp',strip.astype(np.uint8),q)
     one=json.load(open(MD+'/layers.json')) if MD else None
     json.dump({'source':{'w':W//S,'h':H//S},'scale':S,
-      'tree':{'x':x0/S,'y':y0/S,'w':(x1-x0)/S,'h':(pin+3*S-y0)/S,'pin':(pin-y0)/S},
+      'tree':{'x':x0/S,'y':y0/S,'w':(x1-x0)/S,'h':(pin+3*S-y0)/S,'pin':(pin-y0)/S,'clumps':clumps},
       'stars':(one or {'stars':stars})['stars'],
       'chimney':{'x':846,'y':314},
       'lights':[{'x':893,'y':431,'r':46},{'x':949,'y':437,'r':50},{'x':861,'y':447,'r':34}],

@@ -1,5 +1,5 @@
 // 메인(정원)의 움직이는 배경 (0164 · 0165 · 0166). 그림: public/assets/stages/main, 만들기: tools/art/main-bg.py
-// 층: 하늘(느리게 좌우) → 별 반짝임 → 밤 구름 → 나무 윗부분(바람) → 땅 · 집 → 창 · 등불 빛 → 반딧불 → 굴뚝 연기.
+// 층: 하늘(느리게 좌우) → 별 반짝임 → 밤 구름 → 나무 윗부분(바람) → 잎 덩어리(따로 흔들림) → 땅 · 집 → 창 · 등불 빛 → 반딧불 → 굴뚝 연기.
 // 반딧불 · 연기 · 반짝임 · 빛은 그림에 없고 여기서 그려요. 좌표는 원본 그림(1216×768) 기준이고, 뿌리 컨테이너가 화면 너비에 맞춰 키워요.
 // 움직임 값은 모두 tokens.provisional.motion.garden. 모션 줄이기에서는 멈춘 한 장면이에요.
 import * as Phaser from "phaser";
@@ -10,7 +10,7 @@ import { reducedMotion } from "../style/motion";
 
 const G = tokens.provisional.motion.garden;
 const DIR = "assets/stages/main";
-const KEY = { sky: "garden:sky", ground: "garden:ground", tree: "garden:tree", cloud: "garden:cloud", layers: "garden:layers", dot: "garden:dot" } as const;
+const KEY = { sky: "garden:sky", ground: "garden:ground", tree: "garden:tree", cloud: "garden:cloud", leaves: "garden:leaves", layers: "garden:layers", dot: "garden:dot" } as const;
 const TAU = Math.PI * 2;
 /** 나무를 가로로 자르는 마디 수 (마디마다 옆으로 밀어요) */
 const SEGMENTS = 24;
@@ -20,7 +20,8 @@ const DOT = 32;
 interface Layers {
   source: { w: number; h: number };
   scale: number;
-  tree: { x: number; y: number; w: number; h: number; pin: number };
+  /** clumps: 잎 덩어리 (x · y · r: 그림 좌표의 가운데와 반지름, u: leaves 그림에서의 가로 자리) */
+  tree: { x: number; y: number; w: number; h: number; pin: number; clumps?: { x: number; y: number; r: number; u: number }[] };
   stars: [number, number][];
   chimney: { x: number; y: number };
   lights: { x: number; y: number; r: number }[];
@@ -29,7 +30,7 @@ interface Layers {
 }
 
 export function preloadGarden(scene: Phaser.Scene) {
-  for (const k of ["sky", "ground", "tree", "cloud"] as const) {
+  for (const k of ["sky", "ground", "tree", "cloud", "leaves"] as const) {
     if (!scene.textures.exists(KEY[k])) scene.load.image(KEY[k], `${DIR}/${k}.webp`);
   }
   if (!scene.cache.json.exists(KEY.layers)) scene.load.json(KEY.layers, `${DIR}/layers.json`);
@@ -93,6 +94,14 @@ export function createGarden(scene: Phaser.Scene): Garden | undefined {
   const points = Array.from({ length: SEGMENTS + 1 }, (_, i) => new Phaser.Math.Vector2(0, (i / SEGMENTS) * T.h * L.scale));
   const tree = scene.add.rope(T.x + T.w / 2, T.y, KEY.tree, undefined, points, false).setScale(art);
 
+  // 잎 덩어리: 나무 그림에서 둥글게 뜬 조각을 나무 위에 얹어요. 나무를 따라가면서 저마다 조금 늦게, 조금 더 흔들려요
+  const leaves = scene.textures.exists(KEY.leaves) ? scene.textures.get(KEY.leaves) : undefined;
+  const clumps = (leaves ? (T.clumps ?? []) : []).map((c, i) => {
+    const side = c.r * 2 * L.scale;
+    leaves!.add(i, 0, c.u * L.scale, 0, side, side);
+    return { ...c, i, up: Math.max(0, 1 - (c.y - T.y) / T.pin), img: scene.add.image(c.x, c.y, KEY.leaves, i).setScale(art) };
+  });
+
   const ground = scene.add.image(0, 0, KEY.ground).setOrigin(0, 0).setScale(art);
   const lights = L.lights.map((l) => glow(L.colors.light).setPosition(l.x, l.y).setDisplaySize(l.r * 2, l.r * 2));
 
@@ -106,7 +115,7 @@ export function createGarden(scene: Phaser.Scene): Garden | undefined {
       x: rnd(i) * L.source.w,
       y: lerp(L.meadow.top, L.meadow.bottom, depth),
       phase: rnd(i + 7) * TAU,
-      size: lerp(0.55, 1.45, rnd(i + 61)) * lerp(0.45, 1.35, depth),
+      size: lerp(F.sizeMin, F.sizeMax, rnd(i + 61)) * lerp(F.farScale, F.nearScale, depth),
       halo: glow(Phaser.Display.Color.GetColor(color.r, color.g, color.b)),
       core: scene.add.image(0, 0, dot).setTint(L.colors.fireflyCore).setBlendMode(Phaser.BlendModes.ADD),
     };
@@ -115,7 +124,7 @@ export function createGarden(scene: Phaser.Scene): Garden | undefined {
   const S = G.smoke;
   const puffs = Array.from({ length: S.count }, (_, i) => ({ offset: i / S.count, img: scene.add.image(0, 0, dot).setTint(L.colors.smoke) }));
 
-  root.add([sky, starBox, ...clouds, tree, ground, ...lights, ...flies.flatMap((f) => [f.halo, f.core]), ...puffs.map((p) => p.img)]);
+  root.add([sky, starBox, ...clouds, tree, ...clumps.map((c) => c.img), ground, ...lights, ...flies.flatMap((f) => [f.halo, f.core]), ...puffs.map((p) => p.img)]);
 
   const still = reducedMotion();
   const update = (time: number) => {
@@ -136,7 +145,19 @@ export function createGarden(scene: Phaser.Scene): Garden | undefined {
       p.x = windAt(t - u * G.tree.lag) * G.tree.sway * Math.pow(u, G.tree.curve) * L.scale;
     });
     tree.setDirty();
-    lights.forEach((l, i) => l.setAlpha(G.light.alpha + G.light.flicker * Math.sin(t * (2.1 + i * 0.7) + i) + G.light.jitter * Math.sin(t * 7.3 + i * 2)));
+    for (const c of clumps) {
+      const { i } = c;
+      const own = windAt(t - c.up * G.tree.lag - lerp(0.3, 1, rnd(i + 17)) * G.tree.clumpLag);
+      const flutter = Math.sin((t * TAU) / lerp(G.tree.flutterPeriod * 0.6, G.tree.flutterPeriod, rnd(i + 27)) + rnd(i + 37) * TAU) * G.tree.flutter * Math.min(1, Math.abs(own));
+      const amount = lerp(0.6, 1.4, rnd(i + 47));
+      c.img
+        .setPosition(
+          c.x + windAt(t - c.up * G.tree.lag) * G.tree.sway * Math.pow(c.up, G.tree.curve) + own * G.tree.clumpSway * amount + flutter,
+          c.y + Math.sin((t * TAU) / G.wind.slow + rnd(i + 57) * TAU) * G.tree.clumpLift * amount,
+        )
+        .setRotation(Phaser.Math.DegToRad(own * G.tree.clumpTurn * amount));
+    }
+    lights.forEach((l, i) => l.setAlpha(G.light.alpha + G.light.flicker * Math.sin(t * G.light.flickerSpeed * (1 + i / 3) + i) + G.light.jitter * Math.sin(t * G.light.jitterSpeed + i * 2)));
     for (const f of flies) {
       const { i } = f;
       const w1 = lerp(0.11, 0.33, rnd(i + 71));
@@ -153,7 +174,7 @@ export function createGarden(scene: Phaser.Scene): Garden | undefined {
         b = k < 0.6 ? Math.sin((k / 0.6) * Math.PI * 0.5) : Math.cos(((k - 0.6) / 0.4) * Math.PI * 0.5);
         b *= b;
       }
-      b *= lerp(0.45, 1, rnd(i + 31)) * (0.85 + 0.15 * Math.sin(t * 9 + i));
+      b *= lerp(F.dimmest, 1, rnd(i + 31)) * (0.85 + 0.15 * Math.sin(t * 9 + i));
       const halo = lerp(F.halo * 0.44, F.halo, rnd(i + 111)) * f.size;
       const core = (F.core * 0.7) * f.size + 0.7;
       f.halo.setPosition(x, y).setDisplaySize(halo * 2, halo * 2).setAlpha(b * 0.55);
@@ -161,10 +182,11 @@ export function createGarden(scene: Phaser.Scene): Garden | undefined {
     }
     for (const p of puffs) {
       const k = still ? p.offset : (t / S.period + p.offset) % 1;
-      const push = 0.6 + 0.4 * windAt(t - k * 2) * 0.5 + 0.4;
-      const r = lerp(5, S.size, k);
+      // 위로 갈수록 옆으로 밀리고, 바람이 불면 조금 더 밀려요
+      const push = 1 + windAt(t - k * S.lag) * S.wind;
+      const r = lerp(S.start, S.size, k);
       p.img
-        .setPosition(L.chimney.x + k * k * S.drift * push + Math.sin(k * 9 + p.offset * S.count) * 4, L.chimney.y - k * S.rise)
+        .setPosition(L.chimney.x + k * k * S.drift * push + Math.sin(k * 9 + p.offset * S.count) * S.wobble, L.chimney.y - k * S.rise)
         .setDisplaySize(r * 2, r * 2)
         .setAlpha(S.alpha * Math.sin(Math.min(1, k * 6) * Math.PI * 0.5) * (1 - k));
     }
