@@ -359,7 +359,13 @@ export const tokens = {
         "tree": {
           "sway": 5,
           "curve": 1.5,
-          "lag": 0.5
+          "lag": 0.5,
+          "clumpSway": 1.8,
+          "clumpLift": 0.6,
+          "clumpLag": 1.1,
+          "clumpTurn": 0.8,
+          "flutter": 0.5,
+          "flutterPeriod": 1.7
         },
         "star": {
           "alpha": 0.35,
@@ -370,7 +376,9 @@ export const tokens = {
         "light": {
           "alpha": 0.1,
           "flicker": 0.05,
-          "jitter": 0.03
+          "jitter": 0.03,
+          "flickerSpeed": 2.1,
+          "jitterSpeed": 7.3
         },
         "firefly": {
           "count": 22,
@@ -380,7 +388,12 @@ export const tokens = {
           "onMax": 0.65,
           "roam": 64,
           "halo": 16,
-          "core": 2.4
+          "core": 2.4,
+          "sizeMin": 0.55,
+          "sizeMax": 1.45,
+          "farScale": 0.45,
+          "nearScale": 1.35,
+          "dimmest": 0.45
         },
         "smoke": {
           "rise": 95,
@@ -388,7 +401,11 @@ export const tokens = {
           "period": 14.3,
           "count": 9,
           "alpha": 0.22,
-          "size": 25
+          "size": 25,
+          "wind": 0.2,
+          "lag": 2,
+          "start": 5,
+          "wobble": 4
         }
       },
       "spiritSwap": {
