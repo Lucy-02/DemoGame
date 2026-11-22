@@ -75,6 +75,7 @@
       45
     ],
     "skip_gold": 10,
+    "reroll_max": 3,
     "rarity_normal": {
       "common": 0.6,
       "advanced": 0.35,
@@ -124,6 +125,5 @@
   ],
   "acts_enabled": 5,
   "demo": { "acts": 2 },
-  "deep_start": { "act": 3, "stage": "adult", "bundle": { "battle": 8, "elite": 2, "gold": 120 } },
   "act_heal_pct": 1
 }

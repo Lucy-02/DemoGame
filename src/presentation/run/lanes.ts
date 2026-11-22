@@ -42,9 +42,7 @@ export interface LaneState {
   deckTo?: number;
   /** HP가 이만큼 찰 예정 (치료 미리보기): 막대에 연두 구간 */
   heal?: number;
-  /** 최대 HP가 이 값이 될 예정 (판 결과) */
-  maxHpTo?: number;
-  /** 지금 HP 대신 최대 HP만 보여요 (판 결과: 다음 판은 가득 찬 채로 떠나요). 바뀌면 a→b */
+  /** 지금 HP 대신 최대 HP만 보여요 (판 결과) */
   maxOnly?: boolean;
   /** 장비를 받는 미리보기 (0064) */
   equip?: LaneEquipState;
@@ -254,7 +252,7 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
   const body = gather(scene, 0, 0, () => {
     drawFace(scene, l, x + RING.x, y + RING.y);
     const hpTo = st.heal ? Math.min(l.maxHp, l.hp + st.heal) : l.hp;
-    const node = info(l, st.stat, hpTo, st.equip, st.equip?.maxHpTo ?? st.maxHpTo, st.maxOnly, st.noStats);
+    const node = info(l, st.stat, hpTo, st.equip, st.equip?.maxHpTo, st.maxOnly, st.noStats);
     render(scene, node, x + INFO.x, y + (h - size(node).h) / 2);
     l.slots.forEach((item, k) => {
       const at = slotAt(i, l.slots.length, k, y);

@@ -1,18 +1,19 @@
-// 정령 관리 화면 (정본: 정령 관리 R4 v5, 탭 내용은 결정 0021). 정원 세션 상태 → 화면 데이터 → 그리기.
+// 정령 관리 화면 (정본: 정령 관리 R4 v5, 탭 내용은 결정 0021). 보여 줄 정령들(roster.ts) → 화면 데이터 → 그리기.
+// 판 밖에서는 떠날 때의 모습을 보기만 하고, 판 안에서는 그 판에서 자란 정령을 키워요 (0157).
 // 상태가 바뀌거나 탭·정령을 고르면 화면을 통째로 다시 그려요(정지 화면이라 충분히 가벼워요).
 import * as Phaser from "phaser";
 import { audioOf } from "../audio";
-import { STAGE_LABEL } from "./copy";
+import { COPY, STAGE_LABEL } from "./copy";
 import { EVOLUTION_SCENE, hasEvolutionCutscene, type EvolutionSceneData } from "../evolution/EvolutionScene";
-import { gardenSpirit, isBranching, type Garden } from "../../core/garden";
-import { GardenSession } from "../../session/garden";
+import { isBranching } from "../../core/growth";
 import { createPuppet, ensurePuppet } from "../puppet/loadPuppet";
 import type { PuppetCore } from "../puppet/puppetCore";
 import { preloadSpiritArt } from "../spiritArt";
 import { preloadHandCard } from "../card/HandCard";
 import { loadIcon } from "../style/icons";
 import type { Stage } from "../../core/types";
-import { DEFAULT_GARDEN, GARDENS } from "./fixtures";
+import { DEFAULT_ROSTER, ROSTERS } from "./fixtures";
+import { fixedSource, type SpiritsSource } from "./roster";
 import { branchPickVM, mockList, spiritsVM, type MockView } from "./fromGarden";
 import { MOCKUPS, MOCK_FIRST_STAGE } from "./mockups";
 import type { SpiritDetailVM, SpiritsVM, StatRowVM, TabId } from "./viewmodel";
@@ -34,21 +35,24 @@ import { RES, pointerAt } from "../style/resolution";
 export const SPIRITS_SCENE = "spirits";
 
 export interface SpiritsSceneData {
-  /** 고정 정원 이름 (fixtures GARDENS). 세션을 주면 무시해요 */
+  /** 고정 정령들 이름 (fixtures ROSTERS). source를 주면 무시해요 */
   scene?: string;
-  session?: GardenSession;
+  /** 보여 줄 정령들 (정원 · 진행 중인 판) */
+  source?: SpiritsSource;
   /** 처음 고를 정령, 열 탭, 패널 접힘 (시각 검증용) */
   select?: string;
   tab?: TabId;
   closed?: boolean;
   /** 고른 정령의 갈래 고르기 창을 연 채로 시작 (시각 검증용) */
   pick?: boolean;
-  /** 위 띠의 돌아가기 (메인 화면에서 들어왔을 때) */
+  /** 위 띠의 돌아가기 (메인 화면 · 지도에서 들어왔을 때) */
   onBack?: () => void;
+  /** 갈래 창의 나중에 고르기 (판 안: 이번 지도 차례에는 다시 묻지 않아요) */
+  onLater?: (id: string) => void;
 }
 
 export class SpiritsScene extends Phaser.Scene {
-  private session!: GardenSession;
+  private source!: SpiritsSource;
   private selected = "";
   private tab: TabId = "overview";
   private open = true;
@@ -61,6 +65,7 @@ export class SpiritsScene extends Phaser.Scene {
   /** 입력 처리 중에 지우면 안 돼서, 다시 그리기는 다음 update에서 해요 */
   private dirty = false;
   private onBack?: () => void;
+  private onLater?: (id: string) => void;
   /** 퍼핏 움직임 상태 (정령별). 화면을 다시 그려도 움직임이 처음부터 시작하지 않게 남겨 둬요 */
   private puppetCores = new Map<string, PuppetCore>();
   /** 마지막으로 그린 정령 (다른 정령을 고르면 여기서 전환해요, 0035) */
@@ -76,24 +81,28 @@ export class SpiritsScene extends Phaser.Scene {
   }
 
   init(data: SpiritsSceneData) {
-    const garden: Garden = GARDENS[data.scene ?? DEFAULT_GARDEN] ?? GARDENS[DEFAULT_GARDEN];
-    this.session = data.session ?? new GardenSession(garden);
-    this.mocks = data.session ? undefined : { list: MOCKUPS, stage: (id) => this.mockStage.get(id) ?? MOCK_FIRST_STAGE };
-    this.selected = data.select ?? this.session.state.spirits[0].id;
+    this.source = data.source ?? fixedSource(ROSTERS[data.scene ?? DEFAULT_ROSTER] ?? ROSTERS[DEFAULT_ROSTER]);
+    this.mocks = data.source ? undefined : { list: MOCKUPS, stage: (id) => this.mockStage.get(id) ?? MOCK_FIRST_STAGE };
+    this.selected = data.select ?? this.roster.spirits[0].id;
     this.tab = data.tab ?? "overview";
     this.open = !data.closed;
     this.onBack = data.onBack;
-    if (data.pick) this.picking = { id: this.selected };
+    this.onLater = data.onLater;
+    this.picking = data.pick ? { id: this.selected } : undefined;
+  }
+
+  private get roster() {
+    return this.source.roster();
   }
 
   preload() {
     for (const [id, w] of [...TOP_ICONS, ...ID_ICONS, ...STRIP_ICONS, ...PANEL_ICONS, ...RAIL_ICONS, ...BRANCH_ICONS, ...EQUIP_TIP_ICONS]) loadIcon(this, id, w);
     preloadEquipArt(this, EQUIPMENT.map((e) => e.id));
-    for (const s of this.session.state.spirits) {
-      const vm = branchPickVM(this.session.state, s.id, "garden");
+    for (const s of this.roster.spirits) {
+      const vm = branchPickVM(this.roster, s.id, this.from);
       if (vm) preloadBranchCards(this, vm);
       // 전용 무기 말풍선의 기술 카드
-      for (const slot of spiritsVM(this.session.state, s.id).detail.equip) {
+      for (const slot of spiritsVM(this.roster, s.id).detail.equip) {
         if (slot?.tip.sheet.card) preloadHandCard(this, slot.tip.sheet.card.vm);
       }
     }
@@ -101,7 +110,7 @@ export class SpiritsScene extends Phaser.Scene {
   }
 
   create() {
-    const off = this.session.onChange(() => this.redraw());
+    const off = this.source.onChange(() => this.redraw());
     // 다시 그리면 입력 대상이 새로 생겨요. 마우스를 움직이지 않아도 그 위의 커서를 유지해요
     this.input.setPollAlways();
     this.reveal(this.selected);
@@ -113,10 +122,7 @@ export class SpiritsScene extends Phaser.Scene {
       this.stripFrom += step;
       this.redraw();
     });
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.leaveGrowth();
-      off();
-    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, off);
     this.paint();
     Object.assign(window, { __screenReady: SPIRITS_SCENE });
   }
@@ -135,7 +141,7 @@ export class SpiritsScene extends Phaser.Scene {
     this.tweens.killAll();
     // children.removeAll(true)는 안 돼요: true가 "콜백 건너뛰기"라서 파괴되지 않고, 퍼핏은 계속 돌고 버튼은 계속 눌려요
     for (const o of [...this.children.list]) o.destroy();
-    const vm = spiritsVM(this.session.state, this.selected, this.mocks);
+    const vm = spiritsVM(this.roster, this.selected, this.mocks);
     const d = vm.detail;
     const before = this.swapPending && this.shown?.id !== vm.selected ? this.shown : undefined;
     this.swapPending = false;
@@ -151,7 +157,7 @@ export class SpiritsScene extends Phaser.Scene {
       this.artMotion = { alpha: 1, dx: 0 };
     }
     drawScrim(this);
-    drawTopbar(this, this.onBack);
+    drawTopbar(this, this.onBack, this.from === "run" ? COPY.map : COPY.garden);
     this.equipTip = [];
     drawIdCard(this, d, {
       over: (i, r) => this.showEquipTip(vm, i, r),
@@ -197,20 +203,33 @@ export class SpiritsScene extends Phaser.Scene {
     this.equipTip = [];
   }
 
-  /** 키우기: 갈래 고르기면 창을 열고, 아니면 바로 키워요 */
+  /** 갈래 창의 꼬리표: 고정 화면은 정원, 판 안은 판 */
+  private get from(): "garden" | "run" {
+    return this.onLater ? "run" : "garden";
+  }
+
+  private spirit(id: string) {
+    return this.roster.spirits.find((s) => s.id === id);
+  }
+
+  /** 키우기: 갈래 고르기면 창을 열고, 아니면 바로 키워요. 판 밖에서는 키우지 않아요 */
   private grow(id: string) {
-    if (!isBranching(gardenSpirit(this.session.state, id))) return this.evolve(id);
+    const s = this.spirit(id);
+    if (!s || !this.source.evolve) return;
+    if (!isBranching(s)) return this.evolve(id);
     this.picking = { id };
     this.redraw();
   }
 
   /** 키우고, 유체 → 성체면 진화 컷신(0037)을 틀어요. 컷신이 끝나면 이 화면으로 돌아와요 */
   private evolve(id: string, branch?: string) {
-    const before = gardenSpirit(this.session.state, id);
-    this.session.dispatch({ kind: "evolve", id, branch });
+    const before = this.spirit(id);
+    if (!before || !this.source.evolve) return;
+    this.source.evolve(id, branch);
+    const after = this.spirit(id);
+    if (!after || after.stage === before.stage) return;
     audioOf(this)?.play("evolve");
-    const after = gardenSpirit(this.session.state, id);
-    if (after.stage === before.stage || !hasEvolutionCutscene(id, before.stage, after.stage)) return;
+    if (!hasEvolutionCutscene(id, before.stage, after.stage)) return;
     if (!this.scene.manager.getScene(EVOLUTION_SCENE)) return;
     this.scene.launch(EVOLUTION_SCENE, {
       id, from: before.stage, to: after.stage, personality: after.personality, stageName: STAGE_LABEL[after.stage],
@@ -235,7 +254,7 @@ export class SpiritsScene extends Phaser.Scene {
     const p = this.picking;
     if (!p) return;
     const under = [...this.children.list];
-    const vm = branchPickVM(this.session.state, p.id, "garden", [], p.branch);
+    const vm = branchPickVM(this.roster, p.id, this.from, p.branch);
     if (!vm) {
       this.picking = undefined;
       return;
@@ -245,18 +264,8 @@ export class SpiritsScene extends Phaser.Scene {
         this.picking = { id: p.id, branch: vm.branches[i].id };
         this.redraw();
       },
-      confirm: () => {
-        const b = vm.selected !== undefined ? vm.branches[vm.selected] : undefined;
-        if (!b) return;
-        this.picking = undefined;
-        // 갈래 선택 → 진화 컷신(0037) → 이 화면
-        this.redraw();
-        this.evolve(p.id, b.id);
-      },
-      later: () => {
-        this.picking = undefined;
-        this.redraw();
-      },
+      confirm: () => this.confirmPick(),
+      later: () => this.laterPick(),
     });
     // 아래 화면은 흐린 본 카메라, 창은 위 카메라 (.bw-bg blur)
     const over = this.children.list.filter((o) => !under.includes(o));
@@ -264,6 +273,26 @@ export class SpiritsScene extends Phaser.Scene {
     main.filters.internal.addBlur(BRANCH.blur.quality, BRANCH.blur.x * RES(), BRANCH.blur.y * RES(), BRANCH.blur.strength);
     this.pickCam = this.cameras.add(0, 0, FRAME.w, FRAME.h);
     this.pickCam.ignore(under);
+  }
+
+  /** 갈래 창의 키우기: 고른 갈래(없으면 열린 첫 갈래)로 키워요. 갈래 선택 → 진화 컷신(0037) → 이 화면 */
+  private confirmPick() {
+    const p = this.picking;
+    const vm = p && branchPickVM(this.roster, p.id, this.from, p.branch);
+    const b = vm?.selected !== undefined ? vm.branches[vm.selected] : undefined;
+    if (!p || !b) return;
+    this.picking = undefined;
+    this.redraw();
+    this.evolve(p.id, b.id);
+  }
+
+  /** 갈래 창의 나중에 고르기 */
+  private laterPick() {
+    const p = this.picking;
+    if (!p) return;
+    this.picking = undefined;
+    this.onLater?.(p.id);
+    this.redraw();
   }
 
   /** 각성체 퍼핏(라투디). 처음 볼 때 불러오고, 다 올라올 때까지는 일러스트를 그려요 */
@@ -283,10 +312,8 @@ export class SpiritsScene extends Phaser.Scene {
     };
   }
 
-  /** 정령·탭·패널 상태를 바꿔요. 성장 길에서 나가면 그 정령의 새 해금을 본 것으로 (배지가 사라져요, "받기" 없음) */
+  /** 정령·탭·패널 상태를 바꿔요 */
   private show(id: string, tab: TabId, open: boolean) {
-    const leaving = this.open && this.tab === "growth" && (id !== this.selected || tab !== "growth" || !open);
-    if (leaving) this.leaveGrowth();
     if (id !== this.selected) this.swapPending = true;
     this.selected = id;
     this.tab = tab;
@@ -304,14 +331,9 @@ export class SpiritsScene extends Phaser.Scene {
     else if (i >= this.stripFrom + fit) this.stripFrom = i - fit + 1;
   }
 
-  /** 아래 띠 순서: 정원 정령, 그 뒤에 목업 */
+  /** 아래 띠 순서: 가진 정령, 그 뒤에 목업 */
   private rosterIds(): string[] {
-    const g = this.session.state;
-    return [...g.spirits.map((s) => s.id), ...mockList(g, this.mocks).map((m) => m.id)];
-  }
-
-  private leaveGrowth() {
-    const garden = this.session.state.spirits.some((s) => s.id === this.selected);
-    if (garden && this.open && this.tab === "growth") this.session.dispatch({ kind: "seeUnlocks", id: this.selected });
+    const r = this.roster;
+    return [...r.spirits.map((s) => s.id), ...mockList(r, this.mocks).map((m) => m.id)];
   }
 }

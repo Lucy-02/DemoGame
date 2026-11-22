@@ -60,9 +60,9 @@ export class RunEndScene extends Phaser.Scene {
   }
 
   preload() {
-    for (const [id, w] of [...LANE_ICONS, ["i-coin", R.only.icon], ["g-up", R.keepIcon]] as const) loadIcon(this, id, w);
+    for (const [id, w] of [...LANE_ICONS, ["i-coin", R.only.icon]] as const) loadIcon(this, id, w);
     for (const c of this.vm.cards) preloadHandCard(this, c.card, { scale: THUMB_SCALE });
-    preloadSpiritArt(this, this.vm.lanes.map((l) => l.lane.id));
+    preloadSpiritArt(this, this.vm.lanes.map((l) => l.id));
     preloadStage(this, this.act);
   }
 
@@ -72,20 +72,12 @@ export class RunEndScene extends Phaser.Scene {
     // 덩어리마다 모아 두고, 다 그린 뒤 차례로 나타나요 (0086): 기록 → 남는 것 → 이번 판에서만 → 정령 줄 → 버튼
     const parts: Phaser.GameObjects.Container[] = [];
     const part = (draw: () => void) => parts.push(gather(this, 0, 0, draw));
-    const lanes = vm.lanes.map((l, i) => gather(this, 0, 0, () => { drawLane(this, l.lane, i, { noSocket: true, maxOnly: true, maxHpTo: l.maxHpTo }); }));
+    const lanes = vm.lanes.map((l, i) => gather(this, 0, 0, () => { drawLane(this, l, i, { noSocket: true, maxOnly: true }); }));
 
     let y = R.top;
     const record = text(vm.record, T.record, P.ink3Spirit, { lh: R.recordLh });
     part(() => { render(this, record, R.x, y); });
     y += size(record).h + R.gap;
-    if (vm.keep) {
-      const keep: Node = {
-        t: "row", gap: R.keepGap, align: "center",
-        children: [{ t: "icon", id: "g-up", w: R.keepIcon, h: R.keepIcon, tint: P.accHi }, text(vm.keep, T.keep, P.ink2)],
-      };
-      part(() => { render(this, keep, R.x, y); });
-      y += size(keep).h + R.gap;
-    }
     part(() => this.drawOnly(y));
     parts.push(...lanes);
 
@@ -129,7 +121,7 @@ export class RunEndScene extends Phaser.Scene {
     const rowY = top + O.pad[0] + O.rowH + O.gap;
     vm.cards.forEach((c, i) => {
       const x = left + i * step;
-      createHandCard(this, cardWithFace(this, c.card, vm.lanes.find((l) => l.lane.id === c.owner)?.lane, THUMB_SCALE), x + (R.thumb.w - HAND_CARD.w) / 2, rowY + thumbH - HAND_CARD.h, { scale: THUMB_SCALE });
+      createHandCard(this, cardWithFace(this, c.card, vm.lanes.find((l) => l.id === c.owner), THUMB_SCALE), x + (R.thumb.w - HAND_CARD.w) / 2, rowY + thumbH - HAND_CARD.h, { scale: THUMB_SCALE });
     });
   }
 }

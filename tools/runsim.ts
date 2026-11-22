@@ -2,34 +2,32 @@
 // 인카운터 하나만 보는 sim.ts와 달리 덱이 자라고 HP가 깎인 채 보스를 만나요.
 // 사용: pnpm runsim [반복 수] [파티 a,b,c] [--adult] [--all] [--bot basic|smart|search|ladder] [--branch 정령:갈래,…] [--strong fire|forest|wind] [--acts 5] [--awakened]
 //   판 단위 버릇만 바꿔 재기 (전투 봇은 그대로):
-//     --reward default|any|skip|only:카드id   보상 카드: 가려 받기(기본) · 아무거나 · 전부 넘기기 · 이 카드만
+//     --reward default|any|skip|branch|only:카드id   보상 카드: 가려 받기(기본) · 아무거나 · 전부 넘기기 · 갈래부터 열기(0157) · 이 카드만
 //     --path default|fight|avoid|elite|noelite 길: 기본 · 전투 먼저 · 전투 아닌 칸 먼저 · 정예 먼저 · 정예 피하기
-//   표: --policies (보상 × 길 승률) · --cards (카드별 받은 판 승률 · 이 카드만 받기) · --floors (끝난 층) · --elites (정예 값)
+//   표: --policies (보상 × 길 승률) · --cards (카드별 받은 판 승률 · 이 카드만 받기) · --floors (끝난 층) · --elites (정예 값) · --growth (판 안 성장: 막마다의 레벨 · 단계, 0157)
 //   규칙을 바꾸지 않고 미리 재 보기: --whatif swap,noskipgold,earlyfights,upgraded,offer:3,start:3,winheal:10 (아래 WhatIf)
 // 봇은 실력이 다른 셋이에요. 숫자는 절댓값이 아니라 봇 사이 · 바꾸기 전후 비교로 읽어요 (`design/canon/BALANCE_BASELINE.md` 7절).
 //   basic  공격 카드부터 내고 보상은 아무거나 (골든 테스트와 같은 봇)
 //   smart  한 장씩 값을 매겨 놓고, 보상 · 이벤트 · 빼기를 가려 골라요 (기본)
 //   search 턴 안의 모든 순서를 돌려 보고 끝까지 굴려 고르는 탐색 봇 (느려요)
 import { Battle } from "../src/core/battle";
-import { C, CARDS, GROWTH, cardDef, spiritDef } from "../src/core/data";
-import { newGarden } from "../src/core/garden";
+import { C, CARDS, cardDef, spiritDef } from "../src/core/data";
+import { freshSpirit } from "../src/core/growth";
 import { Rng } from "../src/core/rng";
 import { Run, type MapNode, type RewardCard } from "../src/core/run";
 import { maxHpOf, returnHp } from "../src/core/stats";
-import type { Element, EncounterDef, EventDef } from "../src/core/types";
+import type { Element, EncounterDef, EventDef, Stage } from "../src/core/types";
+import { tallyDeeds, type DeedTally } from "../src/session/deeds";
 import { autoPlayTurn } from "./autoplay";
 import { smartPlayTurn } from "./bot";
 import { makeSearchBot, type Bot } from "./search";
 
 const MAX_TURNS = 40;
-/** 성체 문 레벨(Lv4)과 각성체 문 레벨(Lv6)에 닿는 경험 (growth.json levels) */
-const ADULT_EXP = GROWTH.levels[3];
-const AWAKENED_EXP = GROWTH.levels[5];
 
 export type BotKind = "basic" | "smart" | "search";
 
 /** 보상 카드 버릇. default는 봇의 버릇(smart = 피해 · 화상만 받기) */
-export type RewardMode = "default" | "any" | "skip" | `only:${string}`;
+export type RewardMode = "default" | "any" | "skip" | "branch" | `only:${string}`;
 /** 길 버릇. default는 HP가 낮을 때만 쉬는 곳을 찾고 아니면 아무 칸 */
 export type PathMode = "default" | "fight" | "avoid" | "elite" | "noelite";
 export const REWARD_MODES: RewardMode[] = ["default", "any", "skip"];
@@ -112,8 +110,11 @@ export interface RunSimResult {
   offered: string[];
   taken: string[];
   skips: number;
-  /** 보상 카드를 고른 막과 받았는지 (막별 받기 비율, 0132). 출발 묶음은 빼요 */
+  /** 보상 카드를 고른 막과 받았는지 (막별 받기 비율, 0132) */
   picks: { act: number; took: boolean }[];
+  /** 판 안 성장 (0157): 키운 때(막 · 층 · 정령 · 단계)와 막 보스를 만났을 때의 레벨 · 단계 */
+  grew: { act: number; floor: number; id: string; to: Stage }[];
+  atBoss: { act: number; level: number; exp: number; stages: Stage[] }[];
   /** 끝난 칸의 종류 (클리어면 boss) */
   endedType: string;
   /** 들어간 칸 수 (종류별) */
@@ -122,20 +123,21 @@ export interface RunSimResult {
 
 const hpPct = (run: Run) => run.spirits.reduce((a, s) => a + s.hp, 0) / run.spirits.reduce((a, s) => a + maxHpOf(s), 0);
 
-/** 전투 하나. 이기면 true. HP를 런에 되돌려요 (쓰러진 정령은 복귀 HP). */
-function fight(run: Run, enc: EncounterDef, rng: Rng, bot: Bot, foe = 1): { won: boolean; turns: number } {
+/** 전투 하나. 이기면 true. HP를 런에 되돌려요 (쓰러진 정령은 복귀 HP). deeds = 이 전투에서 센 자람 조건 */
+function fight(run: Run, enc: EncounterDef, rng: Rng, bot: Bot, foe = 1): { won: boolean; turns: number; deeds: DeedTally } {
   const base = run.enemyScale();
   const scale = foe !== 1 && run.current?.type !== "boss" ? { hp: base?.hp ?? 1, dmg: (base?.dmg ?? 1) * foe } : base;
   const b = new Battle(run.spirits, run.battleDeck(), enc.enemies, run.frontId, rng, scale, run.battleTraits());
   b.firstGapBonus = run.battleGapBonus();
+  const deeds: DeedTally = {};
   while (b.result === "ongoing" && b.turn < MAX_TURNS) {
     bot(b, rng);
-    b.drain();
+    tallyDeeds(deeds, b.drain());
     if (b.result === "ongoing") b.endTurn();
-    b.drain();
+    tallyDeeds(deeds, b.drain());
   }
   for (const s of b.spirits) run.spirit(s.id).hp = s.downed ? returnHp(run.spirit(s.id)) : s.hp;
-  return { won: b.result === "victory", turns: b.turn };
+  return { won: b.result === "victory", turns: b.turn, deeds };
 }
 
 const isFight = (n: MapNode) => n.type === "battle" || n.type === "elite";
@@ -166,7 +168,7 @@ function removeOne(run: Run, policy: Policy) {
 const MATE_STAND_IN = "pearl_oyster";
 const MATE = { element: "none", stats: { hp: 20, power: 10, guard: 10, focus: 10, speed: 10 } };
 
-export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false, branches: Record<string, string> = {}, strong?: Element, acts?: number, awakened = false, startAct?: number, sim: SimOptions = {}): RunSimResult {
+export function simulateRun(seed: number, kind: BotKind = "smart", party?: string[], adult = false, branches: Record<string, string> = {}, strong?: Element, acts?: number, awakened = false, sim: SimOptions = {}): RunSimResult {
   const undo: (() => void)[] = [];
   if (sim.whatif?.mate !== undefined && !party?.includes(MATE_STAND_IN)) {
     const def = spiritDef(MATE_STAND_IN), kept = { element: def.element, stats: def.stats };
@@ -178,21 +180,28 @@ export function simulateRun(seed: number, kind: BotKind = "smart", party?: strin
     if (c.start || c.startEach || c.rarity === "basic" || (c.obtain ?? "reward") !== "reward") continue;
     for (const e of c.effects as { value?: number }[]) if (typeof e.value === "number") { const v = e.value; e.value = Math.ceil(v * m); undo.push(() => { e.value = v; }); }
   }
-  try { return simulate(seed, kind, party, adult, branches, strong, acts, awakened, startAct, sim); } finally { for (const f of undo) f(); }
+  try { return simulate(seed, kind, party, adult, branches, strong, acts, awakened, sim); } finally { for (const f of undo) f(); }
 }
 
-function simulate(seed: number, kind: BotKind, party: string[] | undefined, adult: boolean, branches: Record<string, string>, strong: Element | undefined, acts: number | undefined, awakened: boolean, startAct: number | undefined, sim: SimOptions): RunSimResult {
+function simulate(seed: number, kind: BotKind, party: string[] | undefined, adult: boolean, branches: Record<string, string>, strong: Element | undefined, acts: number | undefined, awakened: boolean, sim: SimOptions): RunSimResult {
   const wi = sim.whatif ?? {};
   const ids = party ?? (C.default_party as string[]);
   // 앞열은 가장 튼튼한 정령(HP + 방어)에게 맡겨요. 앞열을 잘못 세우면 같은 파티도 보스를 못 넘어요.
   const sturdy = (id: string) => { const st = spiritDef(id).stats; return st.hp + st.guard * 2; };
   const frontId = [...ids].sort((a, z) => sturdy(z) - sturdy(a))[0];
-  // 성체는 정원을 만들어 넘겨요. Lv2 · Lv3 해금 카드도 보상에 나와야 실제 성체 판과 같아요.
-  const base = newGarden(seed, ids);
-  const grown = awakened ? { exp: AWAKENED_EXP, stage: "awakened" as const } : { exp: ADULT_EXP, stage: "adult" as const };
-  const garden = adult || awakened ? { ...base, spirits: base.spirits.map((s) => ({ ...s, ...grown })) } : undefined;
-  const run = new Run({ seed: 5000 + seed, frontId, party, garden, adult: adult || awakened, unlockAll: false, strongElement: strong, acts, startAct });
-  for (const s of run.spirits) s.branch ??= branches[s.id];
+  // 기본은 유체 Lv1로 떠나 판 안에서 자라요 (0157). --adult · --awakened는 그 단계의 문 레벨에서 시작해 뒤 막만 따로 재요
+  const run = new Run({ seed: 5000 + seed, frontId, party, adult, awakened, unlockAll: false, strongElement: strong, acts });
+  if (adult || awakened) for (const s of run.spirits) s.branch ??= branches[s.id];
+  const grew: RunSimResult["grew"] = [];
+  const atBoss: RunSimResult["atBoss"] = [];
+  // 키울 수 있으면 바로 키워요. 갈래는 --branch로 정한 것이 열렸으면 그것, 아니면 열린 것 가운데 첫째
+  const growAll = () => {
+    for (const id of run.evolvable()) {
+      const open = run.evolveChoices(id).filter((c) => c.ok);
+      const pick = open.find((c) => c.evo.branch === branches[id]) ?? open[0];
+      if (run.evolve(id, pick.evo.branch)) grew.push({ act: run.act, floor: run.current?.floor ?? 0, id, to: pick.evo.to });
+    }
+  };
   // 전투와 판 단위 판단의 난수를 나눠요. 봇이 달라도 같은 시드면 같은 지도 · 같은 길 고르기 난수를 써요.
   const battleRng = new Rng(seed * 13 + 5);
   const rng = new Rng(seed * 31 + 7);
@@ -204,12 +213,24 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
   const nodes: Record<string, number> = {};
   let skips = 0;
   const picks: RunSimResult["picks"] = [];
-  let inBundle = true;
   const mode = sim.reward ?? "default";
   const choose = (cards: RewardCard[]): string | null => {
     if (mode === "skip") return null;
     if (mode === "any") return rng.pick(cards).cardId;
     if (mode.startsWith("only:")) return cards.find((c) => c.cardId === mode.slice(5))?.cardId ?? null;
+    if (mode === "branch") {
+      // 갈래가 아직 하나도 안 열린 유체의 갈래 카드를 먼저 받아요 (갈래 조건에 가장 가까운 것부터). 없으면 봇의 버릇대로
+      const need = cards.flatMap((c) => {
+        const branch = cardDef(c.cardId).branch;
+        const s = run.spirit(c.owner);
+        if (!branch || s.stage !== "baby") return [];
+        const choices = run.evolveChoices(c.owner);
+        if (choices.some((x) => x.open)) return [];
+        const have = run.receivedBy(c.owner).filter((id) => cardDef(id).branch === branch).length;
+        return [{ id: c.cardId, have }];
+      }).sort((a, z) => z.have - a.have);
+      if (need.length) return need[0].id;
+    }
     return policy.reward(cards, rng);
   };
   // 막마다 2 · 3층을 전투 칸으로 (whatif earlyfights)
@@ -221,7 +242,7 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
       for (let i = 1; i < (wi.offer ?? 1); i++) for (const c of run.rollSpiritCards(C.reward[reward.kind === "elite" ? "rarity_elite" : "rarity_normal"])) if (!reward.cards.some((o) => o.cardId === c.cardId)) reward.cards.push(c);
       offered.push(...reward.cards.map((c) => c.cardId));
       const id = choose(reward.cards);
-      if (!inBundle) picks.push({ act: run.act, took: !!id });
+      picks.push({ act: run.act, took: !!id });
       if (id) {
         const owner = reward.cards.find((c) => c.cardId === id)!.owner;
         run.takeRewardCard(reward, id);
@@ -246,25 +267,22 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
       run.giveRewardEquipment(reward, taker.id, run.needsReplace(equipId, taker.id) ? taker.equipment[0].id : undefined);
     }
   };
-  // 뒤 막에서 출발한 판은 출발 묶음부터 받아요 (0108)
-  for (let r = run.rollBundleReward(); r; r = run.rollBundleReward()) takeReward(r);
   for (let i = 0; i < (wi.start ?? 0); i++) { const r = run.rollBattleReward("battle"); run.gold -= r.gold; takeReward(r); }
   // 둘째 정령 합류 (0156): 혼자 떠난 유체 판은 정한 층을 마치면 시작 풀의 다른 정령 하나가 유체 · 시작 덱으로 합류해요 (Run.addSpirit)
-  const soloBaby = run.spirits.length === 1 && !adult && !awakened && !startAct;
+  const soloBaby = run.spirits.length === 1 && !adult && !awakened;
   const joinAt = wi.mate ?? wi.join ?? (soloBaby && !wi.nojoin ? (C.run_pool.join_floor as number) : undefined);
   let joined = joinAt === undefined || run.spirits.length !== 1;
   const join = () => {
     joined = true;
     const def = wi.mate !== undefined ? spiritDef(MATE_STAND_IN) : spiritDef(new Rng(seed * 7 + 3).pick((C.start_pool as string[]).filter((id) => id !== run.spirits[0].id)));
     const first = run.spirits[0];
-    const mate = { id: def.id, hp: 0, maxHpBonus: 0, stage: first.stage, level: first.level, personality: first.personality, equipment: [] };
+    const mate = { ...freshSpirit(def.id, first.personality), stage: first.stage, exp: first.exp, level: first.level };
     if (wi.mate === undefined) return run.addSpirit(mate);
     mate.hp = maxHpOf(mate);
     run.spirits.push(mate);
     for (const id of ["basic_claw", "basic_claw", "basic_block", "basic_block"]) run.addCard(id, def.id);
   };
   if (!joined && joinAt === 0) join();
-  inBundle = false;
   for (let guard = 0; guard < 30 * run.lastAct; guard++) {
     if (!joined && run.act === 1 && (run.current?.floor ?? 0) >= joinAt!) join();
     const node = pickNode(run, rng, sim.path);
@@ -273,15 +291,19 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
     if (node.type === "battle" || node.type === "elite" || node.type === "boss") {
       const enc = run.pickEncounter(node.type);
       const before = { bossDeck: run.deck.length, bossHpPct: hpPct(run) };
-      const { won, turns } = fight(run, enc, battleRng, bot, wi.foe);
+      if (node.type === "boss") atBoss.push({ act: run.act, level: Math.max(...run.spirits.map((s) => s.level)), exp: Math.max(...run.spirits.map((s) => s.exp)), stages: run.spirits.map((s) => s.stage) });
+      const { won, turns, deeds } = fight(run, enc, battleRng, bot, wi.foe);
       battles++;
       if (node.type === "battle") mobTurns.push(turns);
       else if (node.type === "elite") eliteTurns.push(turns);
       if (node.type === "boss") bosses.push({ act: run.act, hpPct: before.bossHpPct, turns, won });
-      const tail = { battles, mobTurns, eliteTurns, act: run.act, actsCleared: run.act - (won && node.type === "boss" ? 0 : 1), bosses, offered, taken, skips, picks, nodes, endedType: node.type };
+      const tail = { battles, mobTurns, eliteTurns, act: run.act, actsCleared: run.act - (won && node.type === "boss" ? 0 : 1), bosses, offered, taken, skips, picks, nodes, endedType: node.type, grew, atBoss };
       if (node.type === "boss" && !(won && run.hasNextAct())) return { won, endedAt: won ? "clear" : enc.id, floor: node.floor, reachedBoss: true, ...before, bossTurns: turns, ...tail };
       if (!won) return { won: false, endedAt: enc.id, floor: node.floor, reachedBoss: bosses.length > 0, ...tail };
+      // 이긴 전투의 경험 · 자람 조건을 받고(0157), 보상을 고른 뒤 키울 수 있으면 키워요 (화면의 순서와 같아요)
+      run.grantBattle(node.type === "battle" ? "normal" : node.type, deeds);
       takeReward(run.rollBattleReward(node.type === "boss" ? "elite" : node.type));
+      growAll();
       if (wi.winheal) run.healAllPct(wi.winheal / 100);
       if (node.type === "boss") { run.nextAct(); shapeMap(); }
     } else if (node.type === "rest") {
@@ -330,7 +352,7 @@ export function wilson(k: number, n: number): [number, number] {
 /** 한 번 재는 조건. 표들이 같은 조건에서 버릇만 바꿔 다시 돌려요 */
 interface Setup { n: number; kind: BotKind; party?: string[]; adult: boolean; branches: Record<string, string>; strong?: Element; acts?: number; awakened: boolean; sim: SimOptions }
 
-const runAll = (s: Setup, sim: SimOptions = s.sim) => Array.from({ length: s.n }, (_, i) => simulateRun(i, s.kind, s.party, s.adult, s.branches, s.strong, s.acts, s.awakened, undefined, { ...s.sim, ...sim }));
+const runAll = (s: Setup, sim: SimOptions = s.sim) => Array.from({ length: s.n }, (_, i) => simulateRun(i, s.kind, s.party, s.adult, s.branches, s.strong, s.acts, s.awakened, { ...s.sim, ...sim }));
 const pct = (x: number) => `${(x * 100).toFixed(1).padStart(5)}%`;
 /** 승률과 구간: " 53.8% [49.8–57.8]" */
 const rate = (k: number, n: number) => { const [lo, hi] = wilson(k, n); return `${pct(n ? k / n : 0)} [${(lo * 100).toFixed(1)}–${(hi * 100).toFixed(1)}]`; };
@@ -395,6 +417,31 @@ function eliteTable(s: Setup) {
   for (const path of ["elite", "default", "noelite"] as PathMode[]) {
     const rs = runAll(s, { path });
     console.log(`  ${PATH_LABEL[path].padEnd(10)} 클리어 ${winRate(rs)}  판마다 정예 ${mean(rs.map((r) => r.nodes.elite ?? 0)).toFixed(1)}번 · 정예에서 끝남 ${pct(rs.filter((r) => !r.won && r.endedType === "elite").length / s.n)}`);
+  }
+}
+
+/**
+ * 판 안 성장 표 (0157): 막 보스를 만났을 때의 레벨과 단계, 키운 때. 기준은 1 · 2막 유체, 3 · 4막 성체, 5막 각성체(0085)예요.
+ * 문턱(growth.json levels)을 고칠 때 이 표로 봐요.
+ */
+function growthTable(s: Setup) {
+  const rs = runAll(s);
+  console.log(`\n판 안 성장 (n=${s.n}, 클리어 ${winRate(rs)})`);
+  for (let act = 1; act <= (s.acts ?? 1); act++) {
+    const met = rs.flatMap((r) => r.atBoss.filter((x) => x.act === act));
+    if (!met.length) continue;
+    const share = (stage: Stage) => pct(mean(met.map((x) => x.stages.filter((y) => y === stage).length / x.stages.length)));
+    const levels = new Map<number, number>();
+    for (const x of met) levels.set(x.level, (levels.get(x.level) ?? 0) + 1);
+    const exps = met.map((x) => x.exp).sort((a, z) => a - z);
+    const q = (p: number) => exps[Math.min(exps.length - 1, Math.floor(p * exps.length))];
+    console.log(`  ${act}막 보스 (${met.length}판)  경험 ${q(0.1)} · ${q(0.5)} · ${q(0.9)} (10 · 50 · 90%)  레벨 ${[...levels].sort((a, z) => a[0] - z[0]).map(([lv, k]) => `Lv${lv} ${((k / met.length) * 100).toFixed(0)}%`).join(" · ")}  유체 ${share("baby")} · 성체 ${share("adult")} · 각성체 ${share("awakened")}`);
+  }
+  for (const to of ["adult", "awakened"] as Stage[]) {
+    const all = rs.flatMap((r) => r.grew.filter((x) => x.to === to));
+    const by = new Map<string, number>();
+    for (const x of all) by.set(`${x.act}막 ${x.floor}층`, (by.get(`${x.act}막 ${x.floor}층`) ?? 0) + 1);
+    console.log(`  ${to === "adult" ? "성체" : "각성체"}로 키운 때 (정령 ${all.length})  ${[...by].sort().map(([k, v]) => `${k} ${((v / Math.max(1, all.length)) * 100).toFixed(0)}%`).join(" · ")}`);
   }
 }
 
@@ -467,6 +514,7 @@ if (process.argv[1]?.endsWith("runsim.ts")) {
       if (flags.has("--cards")) cardTable(setup);
       if (flags.has("--floors")) floorTable(setup);
       if (flags.has("--elites")) eliteTable(setup);
+      if (flags.has("--growth")) growthTable(setup);
     }
   }
 }

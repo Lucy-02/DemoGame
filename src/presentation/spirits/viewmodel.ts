@@ -1,4 +1,4 @@
-// 정령 관리 화면이 그리는 데이터. 화면은 이것만 보고 그려요 (정원 상태 → fromGarden.ts → 이 모양).
+// 정령 관리 화면이 그리는 데이터. 화면은 이것만 보고 그려요 (보여 줄 정령들 → fromGarden.ts → 이 모양).
 import type { Stage } from "../../core/types";
 import type { IconId } from "../faces";
 import type { EquipTipVM, EquipVM } from "../run/viewmodel";
@@ -46,7 +46,7 @@ export interface TabVM {
 
 export type FactVM =
   | { kind: "next"; label: string; percent?: number; final?: string; ready?: boolean }
-  | { kind: "cells"; label: string; have: number; total: number; fresh: number }
+  | { kind: "cells"; label: string; have: number; total: number }
   /** 할 일이 있을 때만 (장부 §3-2 C). 버튼은 그 탭을 열어요 (타일 → 탭 → 행동) */
   | { kind: "todo"; label: string; action: string; tab: TabId; badge: IconId };
 
@@ -56,7 +56,7 @@ export interface StatRowVM {
   base: number;
   stage: number;
   personality: number;
-  /** 남긴 장비가 더하거나 깎는 몫 (0066: 어디서 온 값인지는 여기서만 쪼개요) */
+  /** 지닌 장비가 더하거나 깎는 몫 (0066: 어디서 온 값인지는 여기서만 쪼개요) */
   equip: number;
   total: number;
 }
@@ -66,8 +66,6 @@ export interface UnlockChipVM {
   /** 이 정령 손 기준 숫자 요약 ("피해 10") */
   detail: string;
   open: boolean;
-  /** 열렸는데 아직 안 봄 (할 일) */
-  fresh: boolean;
 }
 
 export interface GrowthRowVM {
@@ -104,7 +102,7 @@ export interface SpiritDetailVM {
   /** 정해지지 않은 목업이면 undefined (???) */
   personality?: string;
   stats: StatVM[];
-  /** 남긴 장비 칸 (0056 · 0066). 빈 칸은 null. 목업은 칸이 없어요 */
+  /** 지닌 장비 칸 (0056 · 0066). 판 밖에서는 늘 빈 칸이에요 (0159). 빈 칸은 null. 목업은 칸이 없어요 */
   equip: ({ item: EquipVM; tip: EquipTipVM } | null)[];
   tabs: TabVM[];
   facts: FactVM[];
@@ -140,8 +138,8 @@ export interface BranchPickVM {
   role: IconId;
   personality: string;
   face?: { key: string; crop: Crop };
-  /** 부른 곳 (정원 / 런 결과) */
-  from: "garden" | "runResult";
+  /** 부른 곳 (판 밖의 고정 화면 / 판 안). 판 안의 기호는 아직 없어요 (TODO_ICON) */
+  from: "garden" | "run";
   /** 왼쪽 "지금" 열 능력치 */
   now: { icon: IconId; color: string; value: number }[];
   branches: BranchColVM[];

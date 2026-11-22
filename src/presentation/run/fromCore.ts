@@ -1,5 +1,6 @@
 // 규칙 데이터(정령·카드) → 런 화면 값 (카드, 정령 줄). 고정 장면과, 런에 연결할 때 함께 써요.
 import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, RARITY_NAME, baseCardId, canUpgradeCard, cardDef, equipDef, equipName, isUpgradedId, spiritDef, upgradedId } from "../../core/data";
+import { levelProgress } from "../../core/growth";
 import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round, scale } from "../../core/stats";
 import { signatureSwapOf } from "../../core/run";
 import { castAmount, castDamage, describeCard, describeEquipTier, describeSignatureSwap, type CastMult } from "../../core/text";
@@ -123,6 +124,12 @@ function equipPart(rs: RunSpirit): Pick<LaneVM, "hp" | "maxHp" | "stats" | "slot
 
 /** 같은 줄을 정령의 새 상태(장비를 받은 뒤)로 다시 그릴 값 */
 export const laneWith = (l: LaneVM, rs: RunSpirit): LaneVM => ({ ...l, ...equipPart(rs) });
+
+/** 지금 레벨 안에서 채운 몫 (0~1, 정령 줄의 링). 최대 레벨이면 가득 */
+export function levelFill(exp: number): number {
+  const p = levelProgress(exp);
+  return p.next === undefined ? 1 : (exp - p.from) / (p.next - p.from);
+}
 
 export interface LaneExtras {
   exp: LaneVM["exp"];

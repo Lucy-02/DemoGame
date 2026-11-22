@@ -20,8 +20,8 @@ const FIXTURE: EquipDef = {
 };
 
 const fox = (resonance: number, over: Partial<RunSpirit> = {}): RunSpirit => ({
-  id: "fire_fox", hp: 0, maxHpBonus: 0, stage: "adult", level: 3, personality: "brave",
-  equipment: [{ id: "test_charm", resonance, from: "run" }], ...over,
+  id: "fire_fox", hp: 0, maxHpBonus: 0, stage: "adult", exp: 0, level: 3, deed: 0, personality: "brave",
+  equipment: [{ id: "test_charm", resonance }], ...over,
 });
 
 describe("능력치 층", () => {
@@ -41,8 +41,8 @@ describe("능력치 층", () => {
 
   it("공명 단계가 층을 고르고, 대가는 늘 붙어요", () => {
     EQUIPMENT.push(FIXTURE);
-    expect(activeTiers({ id: "test_charm", resonance: 1, from: "run" })).toEqual([FIXTURE.tiers[0], FIXTURE.downside]);
-    expect(activeTiers({ id: "test_charm", resonance: 9, from: "run" })).toEqual([FIXTURE.tiers[2], FIXTURE.downside]);
+    expect(activeTiers({ id: "test_charm", resonance: 1 })).toEqual([FIXTURE.tiers[0], FIXTURE.downside]);
+    expect(activeTiers({ id: "test_charm", resonance: 9 })).toEqual([FIXTURE.tiers[2], FIXTURE.downside]);
     const power = resolveStat(fox(1), "power");
     expect(power.parts).toEqual([{ source: "base", delta: 13 }, { source: "stage", delta: 2 }, { source: "equipment:test_charm", delta: 2 }]);
     expect(resolveStat(fox(1), "guard").value).toBe(7 - 1);
@@ -61,7 +61,7 @@ describe("능력치 층", () => {
   it("조건부 보정과 치명 보정은 전투에서만 붙어요", () => {
     EQUIPMENT.push(FIXTURE);
     const run = new Run({ seed: 1, frontId: "fire_fox", adult: true, unlockAll: false });
-    run.spirit("fire_fox").equipment = [{ id: "test_charm", resonance: 3, from: "run" }];
+    run.spirit("fire_fox").equipment = [{ id: "test_charm", resonance: 3 }];
     const b = new Battle(run.spirits, [], ["moss_slime"], "fire_fox", new Rng(1));
     const s = b.spirit("fire_fox");
     const calm = b.stat(s, "power");
@@ -75,7 +75,7 @@ describe("능력치 층", () => {
     EQUIPMENT.push(FIXTURE);
     EQUIP_PASSIVES.test_passive = { stat: (_s, k, v, value) => (k === "focus" ? v + value : v) };
     const run = new Run({ seed: 1, frontId: "fire_fox", adult: true, unlockAll: false });
-    run.spirit("fire_fox").equipment = [{ id: "test_charm", resonance: 2, from: "run" }];
+    run.spirit("fire_fox").equipment = [{ id: "test_charm", resonance: 2 }];
     const b = new Battle(run.spirits, [], ["moss_slime"], "fire_fox", new Rng(1));
     const s = b.spirit("fire_fox");
     expect(b.stat(s, "focus")).toBe(resolveStat(s.run, "focus").value + 1);
