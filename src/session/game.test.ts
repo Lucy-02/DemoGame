@@ -1,7 +1,7 @@
 // 게임 세션: 정원 ↔ 판 연결과 칸 사이 저장 (아키텍처 0001 PR 2)
 import { describe, expect, it } from "vitest";
-import { C, GROWTH } from "../core/data";
-import { deepStartOpen, joinOffer, newGarden } from "../core/garden";
+import { C, CARDS, GROWTH } from "../core/data";
+import { joinOffer, newGarden } from "../core/garden";
 import { GameSession, SAVE_KEYS, demoScope, type SaveStore } from "./game";
 import type { RunSession } from "./run";
 
@@ -50,7 +50,7 @@ describe("게임 세션", () => {
     expect(game.joinMidRun()).toBe(true);
     expect(run.party).toEqual([first, offer[0]]);
     expect(run.run.deck.length).toBeGreaterThan(deck);
-    expect(run.run.receivedBySpirit()[offer[0]]).toBeUndefined();
+    expect(run.run.receivedBy(offer[0])).toEqual([]);
     expect(game.midJoinDue).toBe(false);
     expect(game.joinMidRun()).toBe(false);
     // 판이 끝나도 더 깃들지 않아요
@@ -59,7 +59,7 @@ describe("게임 세션", () => {
     expect(game.joinPending).toBe(false);
   });
 
-  it("판은 정원의 정령으로 떠나고, 이긴 전투는 정원에 경험·재료를 남겨요", async () => {
+  it("판은 정원의 정령으로 떠나고, 이긴 전투의 경험은 판 안에만 쌓여요 (0157)", async () => {
     const store = new MemoryStore();
     const game = await GameSession.load(store, seeds);
     const run = game.startRun();
@@ -69,10 +69,11 @@ describe("게임 세션", () => {
     expect(run.phase.kind).toBe("battle");
     game.finishBattle(outcome(run, true));
     expect(run.phase.kind).toBe("reward");
-    expect(game.garden.state.spirits[0].exp).toBe(GROWTH.exp.normal);
-    expect(game.garden.state.material).toBe(GROWTH.material.normal);
+    expect(run.run.spirits[0].exp).toBe(GROWTH.exp.normal);
+    // 보상 창의 정령 줄이 읽는 자란 몫
+    expect(run.phase.kind === "reward" && run.phase.reward.growth?.[id]).toMatchObject({ expBefore: 0, expAfter: GROWTH.exp.normal });
     await game.flush();
-    expect(JSON.parse(store.data.get(SAVE_KEYS.garden)!).material).toBe(GROWTH.material.normal);
+    expect(Object.keys(JSON.parse(store.data.get(SAVE_KEYS.garden)!).spirits[0]).sort()).toEqual(["id", "personality"]);
   });
 
   it("지면 판이 닫혀요: 판 수가 오르고 판 저장이 지워져요", async () => {
@@ -92,20 +93,70 @@ describe("게임 세션", () => {
     expect(() => game.startRun()).not.toThrow();
   });
 
-  it("판이 끝나면 지닌 장비가 정원에 남고 다음 판에도 지녀요 (0056)", async () => {
+  it("판이 끝나면 레벨 · 단계 · 장비는 남지 않고, 다음 판은 다시 유체 Lv 1이에요 (0157 · 0159)", async () => {
     const game = await GameSession.load(new MemoryStore(), seeds);
     const id = game.garden.state.spirits[0].id;
-    const lose = () => {
-      const run = game.startRun();
-      const had = run.run.spirits[0].equipment.length;
-      if (!had) run.run.giveEquipment("bone_sword", id);
-      run.enter(run.run.reachable()[0].id);
-      game.finishBattle(outcome(run, false));
-    };
-    lose();
-    expect(game.garden.state.spirits[0].equipment).toEqual([{ id: "bone_sword", resonance: 1 }]);
-    lose();
-    expect(game.garden.state.spirits[0].equipment?.[0].id).toBe("bone_sword");
+    const run = game.startRun();
+    run.run.giveEquipment("bone_sword", id);
+    run.enter(run.run.reachable()[0].id);
+    game.finishBattle(outcome(run, true));
+    run.finishReward();
+    game.abandonRun();
+    expect(game.lastRun?.run.spirits[0]).toMatchObject({ exp: GROWTH.exp.normal, equipment: [{ id: "bone_sword", resonance: 1 }] });
+    expect(game.startRun().run.spirits[0]).toMatchObject({ stage: "baby", level: 1, exp: 0, equipment: [] });
+  });
+
+  it("시험용 범위 grown은 정령을 각성체로 떠나보내고, 정원에는 남기지 않아요", async () => {
+    const game = await GameSession.load(new MemoryStore(), seeds, { grown: true });
+    expect(game.startRun().run.spirits[0].stage).toBe("awakened");
+    game.abandonRun();
+    expect(game.garden.state.spirits[0]).not.toHaveProperty("stage");
+  });
+
+  it("완주하면 출전한 정령의 성격이 열리고, 다음 판부터 다시 뽑기를 받아요 (0157)", async () => {
+    const game = await GameSession.load(new MemoryStore(), seeds, { acts: 1 });
+    const id = game.garden.state.spirits[0].id;
+    const run = game.startRun();
+    expect(run.run.rerolls).toBe(0);
+    const personality = run.run.spirits[0].personality;
+    // 보스까지 가요
+    for (let guard = 0; guard < 20 && run.phase.kind !== "over"; guard++) {
+      if (run.phase.kind === "map") run.enter(run.run.reachable()[0].id);
+      else if (run.phase.kind === "battle") game.finishBattle(outcome(run, true));
+      else if (run.phase.kind === "reward") run.finishReward();
+      else run.leave();
+    }
+    expect(game.lastRun?.victory).toBe(true);
+    expect(game.garden.state.spirits.find((x) => x.id === id)?.cleared).toEqual([personality]);
+    expect(game.startRun().run.rerolls).toBe(1);
+  });
+
+  it("지도 차례에 키울 수 있는 정령을 알려 주고, 미루면 다음 지도 차례에 다시 알려요 (0157)", async () => {
+    const game = await GameSession.load(new MemoryStore(), seeds);
+    const run = game.startRun();
+    const id = run.party[0];
+    expect(run.growDue()).toEqual([]);
+    // 성체 문 레벨까지 올리고 갈래 카드를 받아요
+    while (run.run.spirit(id).level < 4) run.run.grantBattle("boss");
+    const evo = run.run.evolveChoices(id)[0].evo;
+    const cards = CARDS.filter((c) => c.spirit === id && c.branch === evo.branch).slice(0, evo.opens?.cards ?? 0);
+    for (const c of cards) run.run.addCard(c.id, id);
+    expect(run.growDue()).toEqual([id]);
+    run.deferGrow(id);
+    expect(run.growDue()).toEqual([]);
+    run.enter(run.run.reachable()[0].id);
+    expect(run.growDue()).toEqual([]);
+    expect(() => run.evolve(id, evo.branch)).toThrow();
+    game.finishBattle(outcome(run, true));
+    run.finishReward();
+    expect(run.growDue()).toEqual([id]);
+    expect(run.evolve(id, evo.branch)).toBe(true);
+    expect(run.run.spirit(id)).toMatchObject({ stage: "adult", branch: evo.branch });
+    expect(run.growDue()).toEqual([]);
+    // 키운 것은 바로 저장돼요
+    await game.flush();
+    const again = await GameSession.load((game as unknown as { store: MemoryStore }).store, seeds);
+    expect(again.run?.run.spirit(id).stage).toBe("adult");
   });
 
   it("다시 켜면 같은 자리, 같은 드로우로 이어요 (0047 · 0052)", async () => {
@@ -140,7 +191,7 @@ describe("게임 세션", () => {
     await a.flush();
     const b = await GameSession.load(store, seeds);
     expect(b.run!.phase.kind).toBe("reward");
-    expect(b.garden.state.spirits[0].exp).toBe(GROWTH.exp.normal);
+    expect(b.run!.run.spirits[0].exp).toBe(GROWTH.exp.normal);
   });
 
   it("시험 판은 저장도 정원도 건드리지 않아요", () => {
@@ -148,8 +199,10 @@ describe("게임 세션", () => {
     const run = game.startRun();
     expect(run.party).toEqual(["fire_fox", "mist_cat"]);
     run.enter(run.run.reachable()[0].id);
+    const before = game.garden.state;
     game.finishBattle(outcome(run, true));
-    expect(game.garden.state.material).toBe(0);
+    game.abandonRun();
+    expect(game.garden.state).toBe(before);
   });
 
   it("출전 준비: 센 기운과 앞열을 정하고 떠나면 앞열이 다음 판 기본값으로 남아요 (0076 14)", async () => {
@@ -193,7 +246,7 @@ describe("게임 세션", () => {
     expect(JSON.parse(store.data.get(SAVE_KEYS.runLog)!)).toHaveLength(1);
   });
 
-  it("탐험 포기는 패배와 같아요: 판이 닫히고 이긴 전투의 경험은 남아요 (0084)", async () => {
+  it("탐험 포기는 패배와 같아요: 판이 닫혀요 (0084)", async () => {
     const store = new MemoryStore();
     const game = await GameSession.load(store, seeds);
     const run = game.startRun();
@@ -205,7 +258,6 @@ describe("게임 세션", () => {
     expect(game.run).toBeUndefined();
     expect(game.lastRun?.victory).toBe(false);
     expect(game.garden.state.runs).toBe(1);
-    expect(game.garden.state.spirits[0].exp).toBe(GROWTH.exp.normal);
     await game.flush();
     expect(store.data.has(SAVE_KEYS.run)).toBe(false);
   });
@@ -239,16 +291,6 @@ describe("데모 범위 (0101)", () => {
   it("범위를 안 주면 게임이 여는 막까지 가요", async () => {
     const game = await GameSession.load(new MemoryStore(), seeds);
     expect(game.startRun().run.lastAct).toBe(C.acts_enabled);
-  });
-
-  it("데모에서는 성체 정원도 뒤 막에서 출발하지 않아요", async () => {
-    const grown = { ...newGarden(1), spirits: newGarden(1).spirits.map((sp) => ({ ...sp, stage: "adult" as const })) };
-    const party = grown.spirits.map((sp) => sp.id);
-    expect(deepStartOpen(grown, party)).toBe(true);
-    const store = new MemoryStore();
-    await store.write(SAVE_KEYS.garden, JSON.stringify(grown));
-    expect((await GameSession.load(store, seeds)).planRun(true).startAct).toBe(C.deep_start.act);
-    expect((await GameSession.load(store, seeds, demoScope())).planRun(true).startAct).toBeUndefined();
   });
 
   it("데모의 정령은 시작 풀 넷이고, 깃들기는 두 번이에요", () => {

@@ -24,3 +24,4 @@ src/presentation/menu/
 src/presentation/audio/
 src/presentation/demoEnd/
 src/presentation/glossary/
+src/presentation/garden/

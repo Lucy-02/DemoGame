@@ -1,11 +1,8 @@
-// 자람 조건 세기: 전투 이벤트 → 정령별 수 → 정원 (0021 · 0045)
+// 자람 조건 세기: 전투 이벤트 → 정령별 수 → 판 (0021 · 0045 · 0157)
 import { describe, expect, it } from "vitest";
-import { GROWTH } from "../core/data";
-import { newGarden } from "../core/garden";
 import { Run } from "../core/run";
 import { BattleSession } from "./battle";
 import { tallyDeeds } from "./deeds";
-import { GardenSession } from "./garden";
 
 describe("자람 조건 세기", () => {
   it("재생 중인 카드의 주인에게 준 피해와 빙결을, 맞은 정령과 벽을 세운 정령에게 막은 피해를 세요", () => {
@@ -40,15 +37,13 @@ describe("자람 조건 세기", () => {
     expect(dealt).toBeLessThan(s.battle.enemies.reduce((a, e) => a + e.maxHp, 0) * 2);
   });
 
-  it("정원은 지금 진화 조건과 종류가 같은 것만 쌓아요", () => {
-    const g = newGarden(1, ["fire_fox", "glass_salamander"]);
-    const adult = { ...g, spirits: g.spirits.map((s) => ({ ...s, stage: "adult" as const, exp: GROWTH.levels[5] })) };
-    const session = new GardenSession(adult);
-    session.dispatch({ kind: "deeds", tally: { fire_fox: { dealt: 40, blocked: 9 }, glass_salamander: { dealt: 12, blocked: 30 }, mist_cat: { freeze: 2 } } });
-    expect(session.state.spirits.map((s) => s.deed)).toEqual([40, 30]);
+  it("판은 지금 진화 조건과 종류가 같은 것만 쌓아요 (0157: 자람 조건도 판 안에서)", () => {
+    const run = new Run({ seed: 1, frontId: "fire_fox", party: ["fire_fox", "glass_salamander"], adult: true, unlockAll: false });
+    run.grantBattle("normal", { fire_fox: { dealt: 40, blocked: 9 }, glass_salamander: { dealt: 12, blocked: 30 }, mist_cat: { freeze: 2 } });
+    expect(run.spirits.map((s) => s.deed)).toEqual([40, 30]);
     // 유체는 자람 조건이 없어서 쌓이지 않아요
-    const baby = new GardenSession(g);
-    baby.dispatch({ kind: "deeds", tally: { fire_fox: { dealt: 40 } } });
-    expect(baby.state.spirits[0].deed).toBe(0);
+    const baby = new Run({ seed: 1, frontId: "fire_fox", party: ["fire_fox"], adult: false, unlockAll: false });
+    baby.grantBattle("normal", { fire_fox: { dealt: 40 } });
+    expect(baby.spirits[0].deed).toBe(0);
   });
 });

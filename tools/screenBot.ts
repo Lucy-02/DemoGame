@@ -2,8 +2,6 @@
 // 지금 떠 있는 장면을 보고 그 장면의 손잡이(버튼이 부르는 것과 같은 함수)를 한 번 눌러요. 전투의 판단은 tools/bot.ts의 smart가 해요.
 // 화면 흐름(GameFlow)과 장면 전환을 실제로 거치고, 규칙은 세션을 통해서만 바뀌어요.
 import type * as Phaser from "phaser";
-import { GROWTH } from "../src/core/data";
-import type { Garden } from "../src/core/garden";
 import { maxHpOf } from "../src/core/stats";
 import { Rng } from "../src/core/rng";
 import type { GameSession } from "../src/session/game";
@@ -63,15 +61,6 @@ let again: { scene: Loose; press: Press; left: number[]; from: number } | undefi
 /** 빠르게 두 번 누르기를 켜요 */
 export function setDouble(on: boolean) {
   double = on;
-}
-
-/**
- * 정원 저장에서 정령을 모두 각성체로 키워요 (runsim --awakened와 같은 값).
- * 첫 판 뒤에 써요: 정령이 모일 때까지 지는 판을 거듭하지 않고 다음 판에 1막을 넘겨요. 밸런스가 바뀌어도 판 수가 덜 흔들려요.
- */
-export function grownSave(gardenText: string): string {
-  const g = JSON.parse(gardenText) as Garden;
-  return JSON.stringify({ ...g, spirits: g.spirits.map((x) => ({ ...x, stage: "awakened", exp: GROWTH.levels[GROWTH.levels.length - 1] })) } satisfies Garden);
 }
 
 /** 끝낸 판이 이만큼이면 메인 화면에서 떠나지 않고 기다려요 (테스트가 정령을 키우고 다시 켤 틈) */
@@ -144,9 +133,9 @@ export function fingerprint(): string {
   const w = window as unknown as { session: GameSession };
   const run = w.session.run?.run;
   const g = w.session.garden.state;
-  const garden = `${g.runs ?? 0}/${g.spirits.map((x) => `${x.id}:${x.exp}:${(x.equipment ?? []).map((e) => `${e.id}${e.resonance}`).join("+")}`).join(",")}`;
+  const garden = `${g.runs ?? 0}/${g.spirits.map((x) => `${x.id}:${x.personality}:${(x.cleared ?? []).join("+")}`).join(",")}`;
   if (!run) return garden;
-  const spirits = run.spirits.map((x) => `${x.id}:${x.hp}:${x.equipment.map((e) => e.id).join("+")}`).join(",");
+  const spirits = run.spirits.map((x) => `${x.id}:${x.hp}:${x.stage}${x.exp}:${x.equipment.map((e) => `${e.id}${e.resonance}`).join("+")}`).join(",");
   return `${garden} | ${run.current?.id ?? "출발"} 골드 ${run.gold} | ${spirits} | ${run.deck.map((c) => c.cardId).sort().join(",")}`;
 }
 
@@ -220,6 +209,14 @@ function act(s: Loose, game: GameSession): Press | undefined {
       return { did: "판 결과 넘기기", press: () => s.data_.onGarden(s), again: true };
     }
     case "demoEnd": return { did: "데모 끝 넘기기", press: () => s.next(), again: true };
+    case "spirits": {
+      // 판 안 키우기 (0157): 갈래 창이 떠 있으면 열린 갈래로 키우고, 키울 정령이 남았으면 키우고, 없으면 지도로
+      if (s.picking) return { did: "갈래 고르기", press: () => s.confirmPick(), again: true };
+      const due: string[] = game.run?.growDue() ?? [];
+      if (due.length) return { did: "키우기", press: () => s.grow(due[0]), again: true };
+      return { did: "정령 화면 닫기", press: () => s.onBack(), again: true };
+    }
+    case "evolution": return { did: "진화 넘기기", press: () => s.press(), again: true };
     case "join": {
       if (s.picked === undefined) return { did: "깃들기 고르기", press: () => { s.select(0); s.confirm(); }, again: true };
       return { did: "깃들기 계속", press: () => s.onDone(s), again: true };

@@ -1,119 +1,71 @@
 import { describe, expect, it } from "vitest";
-import { C, CARDS, GROWTH, SPIRITS, enemyDef, partyScale, scaleEnemy } from "./data";
+import { C, PERSONALITIES, enemyDef, partyScale, scaleEnemy } from "./data";
 import {
-  addDeed, canEvolve, endRun, isCardUnlocked, episodesOpen, evolve, evolveChoices, feed, openBranches, branchProgress, toRunSpirit, gardenSpirit, grantBattle, grantMidJoin, isFinalStage, joinCandidates, defaultFront, setFront, join, joinOffer, keepEquipment, levelOf, newGarden,
-  seeEpisode, startGarden, todos, unlockKeys, type Garden,
+  choosePersonality, clearedLines, endRun, toRunSpirit, gardenSpirit, grantBattle, grantMidJoin, joinCandidates, defaultFront, setFront, join, joinOffer, newGarden, rerollsOf,
+  startGarden, type Garden, type RunOutcome,
 } from "./garden";
 import { Run } from "./run";
-import { baseStat, maxHpOf } from "./stats";
+import { maxHpOf } from "./stats";
 
-const PARTY = ["fire_fox", "glass_salamander", "mist_cat"];
-const fox = (g: Garden) => gardenSpirit(g, "fire_fox");
-/** 경험을 n까지 채워요 */
-const withExp = (g: Garden, exp: number): Garden => ({ ...g, spirits: g.spirits.map((s) => ({ ...s, exp })) });
-/** 갈래를 모두 열고 키워요. 갈래 고르기면 branch(없으면 첫 갈래)로 */
-/** 이 정령의 갈래를 모두 열어 둔 정원 */
-const opened = (g: Garden, id: string): Garden => {
-  const all = GROWTH.evolutions.filter((e) => e.spirit === id && e.branch).map((e) => e.branch!);
-  return { ...g, spirits: g.spirits.map((s) => (s.id === id ? { ...s, openBranches: all } : s)) };
-};
-const grow = (g: Garden, id: string, branch?: string): Garden => {
-  const all = GROWTH.evolutions.filter((e) => e.spirit === id && e.branch).map((e) => e.branch!);
-  const open = opened(g, id);
-  const pick = evolveChoices(gardenSpirit(open, id)).length > 1 ? branch ?? all[0] : undefined;
-  return evolve(open, id, undefined, pick);
-};
+/** 이 정원의 정령이 모두 나간 판 하나 */
+const outcome = (g: Garden, victory: boolean, ids = g.spirits.map((s) => s.id)): RunOutcome => ({
+  party: g.spirits.filter((s) => ids.includes(s.id)).map((s) => ({ id: s.id, personality: s.personality })), victory,
+});
 
-describe("정원 (0021)", () => {
-  it("레벨은 누적 경험 문턱으로 정해요", () => {
-    expect(GROWTH.levels.map(levelOf)).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(levelOf(GROWTH.levels[1] - 1)).toBe(1);
+describe("정원에 남는 것 (0157)", () => {
+  it("정원의 정령은 줄과 성격만 남기고, 판으로는 늘 유체 Lv 1로 떠나요", () => {
+    const g = newGarden(1);
+    expect(Object.keys(g.spirits[0]).sort()).toEqual(["id", "personality"]);
+    const rs = toRunSpirit(g.spirits[0]);
+    expect(rs).toMatchObject({ id: g.spirits[0].id, stage: "baby", level: 1, exp: 0, personality: g.spirits[0].personality, equipment: [] });
+    expect(rs.hp).toBe(maxHpOf(rs));
   });
 
-  it("이긴 전투는 출전한 셋 모두에게 경험과 재료를 줘요", () => {
-    const g = grantBattle(newGarden(1), PARTY, "elite");
-    expect(g.spirits.map((s) => s.exp)).toEqual([GROWTH.exp.elite, GROWTH.exp.elite, GROWTH.exp.elite]);
-    expect(g.material).toBe(GROWTH.material.elite);
-    expect(grantBattle(g, PARTY, "boss").act1Boss).toBe(true);
+  it("완주하면 출전한 정령마다 그 판의 성격이 열리고, 지면 열리지 않아요", () => {
+    const g = newGarden(1);
+    const lost = endRun(g, outcome(g, false));
+    expect(lost.spirits.every((s) => s.cleared === undefined)).toBe(true);
+    expect(clearedLines(lost)).toBe(0);
+    const won = endRun(g, outcome(g, true, ["fire_fox", "mist_cat"]));
+    expect(gardenSpirit(won, "fire_fox").cleared).toEqual([gardenSpirit(g, "fire_fox").personality]);
+    expect(gardenSpirit(won, "glass_salamander").cleared).toBeUndefined();
+    expect(clearedLines(won)).toBe(2);
+    // 같은 성격으로 또 완주해도 한 번만 적혀요
+    const again = endRun(won, { party: [{ id: "fire_fox", personality: gardenSpirit(g, "fire_fox").personality }], victory: true });
+    expect(gardenSpirit(again, "fire_fox").cleared).toHaveLength(1);
   });
 
-  it("성체는 레벨과 열린 갈래, 각성체는 레벨과 자람 조건이 모두 돼야 키울 수 있어요", () => {
-    let g = newGarden(1);
-    expect(canEvolve(fox(g))?.ok).toBe(false);
-    g = withExp(g, GROWTH.levels[3]);
-    expect(canEvolve(fox(g))).toMatchObject({ level: true, open: false, ok: false });
-    g = opened(g, "fire_fox");
-    expect(canEvolve(fox(g))).toMatchObject({ ok: true, evo: { to: "adult" } });
-    g = evolve(g, "fire_fox", undefined, "burst");
-    expect(fox(g).stage).toBe("adult");
-
-    g = withExp(g, GROWTH.levels[5]);
-    expect(canEvolve(fox(g))).toMatchObject({ level: true, deed: false, ok: false });
-    expect(evolve(g, "fire_fox")).toBe(g);
-    g = addDeed(g, "fire_fox", "freeze", 99);
-    expect(fox(g).deed).toBe(0);
-    g = addDeed(g, "fire_fox", "dealt", 150);
-    g = evolve(g, "fire_fox");
-    expect(fox(g)).toMatchObject({ stage: "awakened", deed: 0 });
-    expect(isFinalStage(fox(g))).toBe(true);
+  it("성격은 판마다 새로 정해지고(출전한 정령만), 같은 정원이면 같은 성격이에요", () => {
+    const ids = PERSONALITIES.map((p) => p.id);
+    let g = newGarden(3);
+    const seen = new Set<string>();
+    for (let i = 0; i < 30; i++) {
+      const before = g;
+      g = endRun(g, outcome(g, false, ["fire_fox"]));
+      expect(endRun(before, outcome(before, false, ["fire_fox"]))).toEqual(g);
+      expect(ids).toContain(gardenSpirit(g, "fire_fox").personality);
+      expect(gardenSpirit(g, "mist_cat").personality).toBe(gardenSpirit(before, "mist_cat").personality);
+      seen.add(gardenSpirit(g, "fire_fox").personality);
+    }
+    expect(seen.size).toBeGreaterThan(3);
   });
 
-  it("해금 키: 레벨·단계·첫 성체·보스", () => {
-    let g = withExp(newGarden(1), GROWTH.levels[2]);
-    const keys = unlockKeys(g);
-    expect(keys.has("fire_fox_lv3")).toBe(true);
-    expect(keys.has("any_lv3")).toBe(true);
-    expect(keys.has("any_adult")).toBe(false);
-    g = grow(withExp(g, GROWTH.levels[3]), "mist_cat");
-    expect([...unlockKeys(g)].filter((k) => k.endsWith("adult"))).toEqual(["mist_cat_adult", "any_adult"]);
-    // 데이터의 해금 키는 모두 정원이 만들 수 있는 키예요
-    let full = withExp(newGarden(1, SPIRITS.map((s) => s.id)), GROWTH.levels[3]);
-    for (const s of SPIRITS) full = grow(full, s.id);
-    const all = unlockKeys(grantBattle(full, PARTY, "boss"));
-    expect(CARDS.filter((c) => !all.has(c.unlock)).map((c) => c.id)).toEqual([]);
-    // 갈래 성체 카드는 고른 갈래 것만 열려요
-    const adults = CARDS.filter((c) => c.spirit === "glass_salamander" && c.unlock === "glass_salamander_adult");
-    expect(adults.filter((c) => isCardUnlocked(full, c)).map((c) => c.branch)).toEqual(["hold"]);
+  it("완주로 연 성격만 다음 판의 성격으로 고를 수 있어요", () => {
+    const g = newGarden(1);
+    const first = gardenSpirit(g, "fire_fox").personality;
+    const won = endRun(g, outcome(g, true));
+    const other = PERSONALITIES.map((p) => p.id).find((p) => p !== first && p !== gardenSpirit(won, "fire_fox").personality)!;
+    expect(choosePersonality(won, "fire_fox", other)).toBe(won);
+    const picked = choosePersonality({ ...won, spirits: won.spirits.map((s) => (s.id === "fire_fox" ? { ...s, personality: other } : s)) }, "fire_fox", first);
+    expect(gardenSpirit(picked, "fire_fox").personality).toBe(first);
+    expect(new Run({ seed: 1, frontId: "fire_fox", garden: picked, adult: false, unlockAll: false }).spirit("fire_fox").personality).toBe(first);
   });
 
-  it("할 일: 키우기 · 안 본 해금 · 열린 에피소드", () => {
-    let g = opened(withExp(newGarden(1), GROWTH.levels[3]), "fire_fox");
-    expect(todos(fox(g)).map((t) => t.kind)).toEqual(["evolve", "unlock", "unlock"]);
-    g = { ...g, spirits: g.spirits.map((s) => ({ ...s, seen: ["fire_fox_lv2", "fire_fox_lv3"], affinity: GROWTH.episodes[0].affinity })) };
-    expect(todos(fox(g))).toEqual([{ kind: "evolve", to: "adult" }, { kind: "episode" }]);
-    g = seeEpisode(g, "fire_fox");
-    expect(todos(fox(g))).toEqual([{ kind: "evolve", to: "adult" }]);
-    // 유리 도롱뇽 성체 카드(유리 성채)도 안 본 해금이면 할 일이에요
-    const sal = { ...gardenSpirit(g, "glass_salamander"), stage: "adult" as const, seen: ["glass_salamander_lv2", "glass_salamander_lv3"] };
-    expect(todos(sal).filter((t) => t.kind === "unlock")).toEqual([{ kind: "unlock", key: "glass_salamander_adult" }]);
-  });
-
-  it("먹이기는 재료를 쓰고 호감도를 올려요. 에피소드는 단계도 필요해요", () => {
-    let g = { ...newGarden(1), material: 10 };
-    g = feed(g, "mist_cat");
-    const cat = gardenSpirit(g, "mist_cat");
-    expect(g.material).toBe(10 - GROWTH.feed.cost);
-    expect(cat.affinity).toBe(GROWTH.feed.affinity);
-    expect(feed({ ...g, material: 0 }, "mist_cat").material).toBe(0);
-    const high = { ...cat, affinity: 999 };
-    expect(episodesOpen(high)).toBe(1); // 2화는 성체부터
-    expect(episodesOpen({ ...high, stage: "adult" })).toBe(2);
-  });
-
-  it("판으로: 단계·레벨·성격을 정원에서 읽어요", () => {
-    let g = grow(withExp(newGarden(1), GROWTH.levels[5]), "glass_salamander");
-    g = { ...g, spirits: g.spirits.map((s) => ({ ...s, episodes: 2 })) };
-    const run = new Run({ seed: 1, frontId: "glass_salamander", garden: g, adult: false, unlockAll: false });
-    const sal = run.spirit("glass_salamander");
-    expect(sal).toMatchObject({ stage: "adult", level: 6, branch: "hold", personality: gardenSpirit(g, "glass_salamander").personality });
-    // 수호: HP 32 + 레벨 HP 10 + 단계 HP 6, 가드 13 + 2 (성격 보정 전)
-    expect(sal.hp).toBe(maxHpOf(sal));
-    expect(baseStat({ ...sal, personality: "brave" }, "guard")).toBe(15);
-    expect(run.isUnlocked(CARDS.find((c) => c.unlock === "glass_salamander_lv3")!)).toBe(true);
-    expect(run.isUnlocked(CARDS.find((c) => c.unlock === "fire_fox_adult")!)).toBe(false);
-    // 갈래 2 되돌리기는 주 성장이 가드·파워 (작업 가정)
-    const ret = run.spirit("glass_salamander");
-    expect(baseStat({ ...ret, branch: "return", personality: "brave" }, "guard")).toBe(15);
+  it("보상 다시 뽑기는 완주한 줄마다 하나, 상한까지예요", () => {
+    const g = newGarden(1, C.start_pool as string[]);
+    expect(rerollsOf(g)).toBe(0);
+    const clear = (n: number): Garden => ({ ...g, spirits: g.spirits.map((s, i) => (i < n ? { ...s, cleared: [s.personality] } : s)) });
+    expect([1, 2, 3, 4].map((n) => rerollsOf(clear(n)))).toEqual([1, 2, 3, Math.min(4, C.reward.reroll_max)]);
   });
 });
 
@@ -159,12 +111,11 @@ describe("처음 세 마리 (0053)", () => {
   it("첫 보스를 가라앉히면 셋째가 깃들고, 다시 가라앉혀도 더 주지 않아요", () => {
     let g = endRun(startGarden(7));
     g = join(g, joinOffer(g)[0]);
-    const party = g.spirits.map((s) => s.id);
-    g = grantBattle(g, party, "boss");
+    g = grantBattle(g, "boss");
     expect(joinOffer(g)).toHaveLength(2);
     g = join(g, joinOffer(g)[1]);
     expect(g.spirits).toHaveLength(3);
-    expect(joinOffer(grantBattle(g, party, "boss"))).toEqual([]);
+    expect(joinOffer(grantBattle(g, "boss"))).toEqual([]);
   });
 
   it("깃들기 후보마다 성격이 따로 있고, 고르면 그 성격으로 깃들어요 (0076 12)", () => {
@@ -180,7 +131,7 @@ describe("처음 세 마리 (0053)", () => {
 
   it("한 판에 깃들기가 둘이면 연달아 골라요: 첫째를 고른 뒤 남은 정령에서 다시 둘 (0076 10)", () => {
     const g0 = startGarden(7);
-    const g = endRun(grantBattle(g0, [g0.spirits[0].id], "boss"));
+    const g = endRun(grantBattle(g0, "boss"));
     expect(g.joins).toBe(2);
     const first = joinOffer(g);
     const g1 = join(g, first[0]);
@@ -200,11 +151,6 @@ describe("처음 세 마리 (0053)", () => {
     expect(setFront(g2, "nobody")).toBe(g2);
   });
 
-  it("출전하지 않은 정령은 경험을 받지 않아요", () => {
-    const g = grantBattle(newGarden(1), ["fire_fox"], "normal");
-    expect(g.spirits.map((s) => s.exp)).toEqual([GROWTH.exp.normal, 0, 0]);
-  });
-
   it("정원의 정령만큼 떠나고, 인원이 적으면 적이 약해져요", () => {
     const solo = new Run({ seed: 1, frontId: startGarden(7).spirits[0].id, garden: startGarden(7), adult: false, unlockAll: false });
     expect(solo.spirits).toHaveLength(1);
@@ -212,9 +158,11 @@ describe("처음 세 마리 (0053)", () => {
     const path = (C.path_scale as { dmg: number }).dmg;
     expect(solo.enemyScale()).toEqual({ hp: partyScale(1)!.hp, dmg: partyScale(1)!.dmg * path });
     expect(new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: false, unlockAll: false }).enemyScale()).toEqual({ hp: 1, dmg: path });
-    // 막별 세기 (0155): 3막에서 출발하면 그 막의 배율이 곱해져요
+    // 막별 세기 (0155): 3막에 들어서면 그 막의 배율이 곱해져요
     const act3 = (C.acts[2] as { scale?: { hp: number; dmg: number } }).scale!;
-    const deep = new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: true, unlockAll: false, startAct: 3 });
+    const deep = new Run({ seed: 1, frontId: "fire_fox", garden: newGarden(1), adult: false, unlockAll: false });
+    deep.nextAct();
+    deep.nextAct();
     expect(deep.enemyScale()).toEqual({ hp: act3.hp, dmg: path * act3.dmg });
     const boss = enemyDef("grimbark");
     const weak = scaleEnemy(boss, { hp: 0.5, dmg: 0.5 });
@@ -223,85 +171,6 @@ describe("처음 세 마리 (0053)", () => {
     expect(weak.pattern[0].actions[0]).toMatchObject({ type: "attack", dmg: hit.type === "attack" ? hit.dmg / 2 : 0 });
     expect(weak.phase2?.turnStartBlock).toBe(boss.phase2!.turnStartBlock / 2);
     expect(enemyDef("grimbark")).toBe(boss);
-  });
-});
-
-describe("갈래 고르기 (0027)", () => {
-  it("갈래 고르기는 갈래 없이 키울 수 없고, 고른 갈래가 남아요", () => {
-    const g = opened(withExp(newGarden(1), GROWTH.levels[3]), "fire_fox");
-    expect(evolve(g, "fire_fox")).toBe(g);
-    const after = fox(evolve(g, "fire_fox", undefined, "burst"));
-    expect(after).toMatchObject({ stage: "adult", branch: "burst" });
-    expect(toRunSpirit(after).branch).toBe("burst");
-  });
-
-  it("잠긴 갈래는 그 갈래 카드를 모아야 열리고, 모은 수와 열린 갈래는 판을 넘어 남아요", () => {
-    let g = withExp(newGarden(1), GROWTH.levels[3]);
-    expect(canEvolve(fox(g), undefined, "spread")).toMatchObject({ level: true, open: false, ok: false });
-    expect(evolve(g, "fire_fox", undefined, "spread")).toBe(g);
-    g = openBranches(g, { fire_fox: ["sparks", "kindling", "ignite"] });
-    expect(fox(g).openBranches ?? []).toEqual([]);
-    expect(fox(g).branchCards).toEqual({ burst: 1, spread: 1 });
-    const spreadEvo = evolveChoices(fox(g))[1].evo;
-    expect(branchProgress(fox(g), spreadEvo, ["flame_pass"])).toEqual({ have: 2, need: 3 });
-    g = openBranches(g, { mist_cat: ["creep"] });
-    expect(fox(g).branchCards).toEqual({ burst: 1, spread: 1 });
-    g = openBranches(g, { fire_fox: ["flame_pass", "fire_storm"] });
-    expect(fox(g).openBranches).toEqual(["spread"]);
-    expect(fox(g).branchCards).toEqual({ burst: 1 });
-    expect(gardenSpirit(g, "mist_cat").branchCards).toEqual({ freeze: 1 });
-    expect(evolveChoices(fox(g)).map((c) => c.ok)).toEqual([false, true]);
-    expect(fox(evolve(g, "fire_fox", undefined, "spread")).branch).toBe("spread");
-  });
-
-  it("런은 시작 덱을 빼고 받은 카드를 정령별로 세요", () => {
-    const run = new Run({ seed: 1, frontId: "fire_fox", party: PARTY, adult: false, unlockAll: false });
-    expect(run.received).toEqual([]);
-    run.addCard("backfire", "fire_fox");
-    run.removeCard(run.received[0].uid);
-    expect(run.receivedBySpirit()).toEqual({ fire_fox: ["backfire"] });
-  });
-});
-
-describe("장비 남기기 (0056)", () => {
-  const withStage = (stage: "baby" | "adult" | "awakened") => {
-    const g = newGarden(1);
-    return { ...g, spirits: g.spirits.map((s) => (s.id === "fire_fox" ? { ...s, stage } : s)) };
-  };
-  const foxRun = (g: ReturnType<typeof newGarden>) => toRunSpirit(gardenSpirit(g, "fire_fox"));
-
-  it("고른 장비만 남고, 처음 남긴 장비는 공명 1이에요", () => {
-    const g = withStage("awakened");
-    const fox = foxRun(g);
-    fox.equipment = [{ id: "fox_spear", resonance: 1, from: "run" }, { id: "bone_sword", resonance: 1, from: "run", runBonus: 1 }];
-    const kept = keepEquipment(g, [fox], { fire_fox: ["bone_sword"] });
-    expect(gardenSpirit(kept, "fire_fox").equipment).toEqual([{ id: "bone_sword", resonance: 1 }]);
-    expect(gardenSpirit(g, "fire_fox").equipment).toBeUndefined();
-  });
-
-  it("남겼던 장비를 다시 남기면 공명이 오르고, 단계 상한에서 멈춰요", () => {
-    let g = withStage("adult");
-    for (const expected of [1, 2, 2]) {
-      const fox = foxRun(g);
-      if (!fox.equipment.length) fox.equipment = [{ id: "fox_spear", resonance: 1, from: "run" }];
-      g = keepEquipment(g, [fox], { fire_fox: ["fox_spear"] });
-      expect(gardenSpirit(g, "fire_fox").equipment).toEqual([{ id: "fox_spear", resonance: expected }]);
-    }
-  });
-
-  it("남기지 않으면 사라지고, 판에 나가지 않은 정령의 장비는 그대로예요", () => {
-    let g = withStage("adult");
-    g = { ...g, spirits: g.spirits.map((s) => (s.id === "mist_cat" ? { ...s, equipment: [{ id: "cat_fan", resonance: 1 }] } : s)) };
-    const fox = foxRun(g);
-    fox.equipment = [{ id: "fox_spear", resonance: 1, from: "run" }];
-    const after = keepEquipment(g, [fox], {});
-    expect(gardenSpirit(after, "fire_fox").equipment).toEqual([]);
-    expect(gardenSpirit(after, "mist_cat").equipment).toEqual([{ id: "cat_fan", resonance: 1 }]);
-  });
-
-  it("지니지 않은 장비는 남길 수 없어요", () => {
-    const g = withStage("adult");
-    expect(() => keepEquipment(g, [foxRun(g)], { fire_fox: ["fox_spear"] })).toThrow();
   });
 });
 

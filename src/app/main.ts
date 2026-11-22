@@ -52,7 +52,7 @@ async function start() {
   const screen = params.get("screen");
   const get = (k: string) => params.get(k) ?? undefined;
   const fixture = screen === "battle" || screen === "spirits" || screen === "result" || screen === "shop" || screen === "home" || screen === "rest" || screen === "event" || screen === "runEnd" || screen === "demoEnd" || screen === "deck" || screen === "map" || screen === "join" || screen === "depart" || screen === "menu" || screen === "settings" || screen === "glossary" ? screen : undefined;
-  const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform, DEV ? devSeeds(params) : undefined, demo ? demoScope() : {}, (text) => {
+  const session = fixture ? undefined : screen === "legacy" ? trialSession(params) : await GameSession.load(platform, DEV ? devSeeds(params) : undefined, { ...(demo ? demoScope() : {}), ...(DEV && params.has("grown") ? { grown: true } : {}) }, (text) => {
     void platform.logError(`v${versionOf(demo)} save ${text}`).catch(() => {});
   });
   // 설정은 어느 화면이든 읽어요(소리 볼륨). 전체화면은 저장에 이어진 게임에서만 창에 입혀요: 설정이 정본이고, 창이 바뀌면(F11 · Esc) 설정이 따라가요 (0084 3 · 4번)
@@ -61,7 +61,7 @@ async function start() {
   const game = await startGame("game", {
     screen: fixture, session, settings, trial: screen === "legacy", // 기다리는 저장을 다 쓴 뒤에 꺼요
     quit: () => void (session?.flush() ?? Promise.resolve()).then(() => platform.quit()), version: versionOf(demo), demo,
-    hover: get("hover"), scene: get("scene"), lift: get("lift"), stage: params.has("stage") ? Number(get("stage")) : undefined, select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
+    hover: get("hover"), scene: get("scene"), stage: params.has("stage") ? Number(get("stage")) : undefined, select: get("select"), tab: get("tab"), closed: params.has("closed"), pick: params.has("pick"), taken: get("taken"),
     slow: Number(params.get("slow")) || undefined,
     res: Number(params.get("res")) || undefined,
   });
@@ -69,13 +69,13 @@ async function start() {
   if (DEV) Object.assign(window, { session, settings, game });
 }
 
-/** 시험 판: ?party=a,b,c 로 출전 정령(없으면 constants.default_party), ?adult 성체로, ?unlockAll 모든 카드, ?seed= 시드, ?acts=2 2막까지, ?start=3 3막에서 출발 */
+/** 시험 판: ?party=a,b,c 로 출전 정령(없으면 constants.default_party), ?adult 성체로, ?unlockAll 모든 카드, ?seed= 시드, ?acts=2 2막까지 */
 function trialSession(params: URLSearchParams): GameSession {
   const ids = (params.get("party") ?? "").split(",").filter((id) => SPIRITS.some((s) => s.id === id));
   const party = ids.length ? ids : (C.default_party as string[]);
   const seed = Number(params.get("seed"));
   return GameSession.trial(
-    { party, frontId: party.includes("glass_salamander") ? "glass_salamander" : party[0], adult: params.has("adult"), unlockAll: params.has("unlockAll"), ...(params.has("acts") ? { acts: Number(params.get("acts")) } : {}), ...(params.has("start") ? { startAct: Number(params.get("start")) } : {}) },
+    { party, frontId: party.includes("glass_salamander") ? "glass_salamander" : party[0], adult: params.has("adult"), unlockAll: params.has("unlockAll"), ...(params.has("acts") ? { acts: Number(params.get("acts")) } : {}) },
     Number.isFinite(seed) && params.has("seed") ? () => seed : undefined,
   );
 }

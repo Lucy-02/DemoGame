@@ -7,13 +7,13 @@ import type { AllyVM, BattleVM } from "../viewmodel";
 import { canonRest } from "./canonRest";
 
 const holder = (id: string, stage: RunSpirit["stage"], branch: string | undefined, equipment: RunEquip[]): RunSpirit => {
-  const rs: RunSpirit = { id, hp: 0, maxHpBonus: 0, stage, level: 1, personality: "sturdy", branch, equipment };
+  const rs: RunSpirit = { id, hp: 0, maxHpBonus: 0, stage, exp: 0, level: 1, deed: 0, personality: "sturdy", branch, equipment };
   return { ...rs, hp: maxHpOf(rs) };
 };
 
 const slots = (rs: RunSpirit): AllyVM["equip"] => rs.equipment.map((e) => equipVM(e, rs.stage));
 
-const kept = (id: string, resonance = 1): RunEquip => ({ id, resonance, from: "kept" });
+const kept = (id: string, resonance = 1): RunEquip => ({ id, resonance });
 
 const EQUIP: AllyVM["equip"][] = [
   slots(holder("fire_fox", "baby", undefined, [kept("bone_sword")])),

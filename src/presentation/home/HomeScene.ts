@@ -2,6 +2,7 @@
 // 왼쪽 세로 메뉴뿐이에요. 맨 위가 강조 줄(탐험 떠나기 / 이어하기), 아래로 정령 관리 진입점 · 도감 · 설정 · 종료. 배경은 미정이에요.
 // 지금은 고정 장면이에요. 저장·정원·런에 연결하면 on*으로 나가요.
 import * as Phaser from "phaser";
+import { createGarden, preloadGarden, type Garden } from "../garden/backdrop";
 import { drawBackdrop } from "../run/backdrop";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
@@ -33,6 +34,8 @@ export class HomeScene extends Phaser.Scene {
   private onPrimary?: () => void;
   private onItem?: (id: HomeItemId) => void;
   private dirty = false;
+  /** 움직이는 배경. 다시 그릴 때도 그대로 둬요 */
+  private garden?: Garden;
 
   constructor() {
     super(HOME_SCENE);
@@ -46,17 +49,20 @@ export class HomeScene extends Phaser.Scene {
   }
 
   preload() {
+    preloadGarden(this);
     for (const [id, w] of MENU_ICONS) loadIcon(this, id, w);
     if (this.vm.primary.kind === "continue") preloadSpiritArt(this, this.vm.primary.ids);
   }
 
   create() {
     this.input.setPollAlways();
+    this.garden = createGarden(this);
     this.paint();
     Object.assign(window, { __screenReady: HOME_SCENE });
   }
 
-  update() {
+  update(time: number) {
+    this.garden?.update(time);
     if (!this.dirty) return;
     this.dirty = false;
     // 호버로 다시 그릴 때 앞 모습이 흐려지며 바뀌어요 (0092)
@@ -70,8 +76,8 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private paint() {
-    for (const o of [...this.children.list]) o.destroy();
-    drawBackdrop(this);
+    for (const o of [...this.children.list]) if (o !== this.garden?.root) o.destroy();
+    if (!this.garden) drawBackdrop(this);
     drawLogo(this, this.vm.title);
     this.vm.items.forEach((item, i) => drawItem(this, item, i, this.hover === item.id, {
       click: () => this.onItem?.(item.id),

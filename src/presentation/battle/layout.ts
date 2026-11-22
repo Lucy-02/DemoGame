@@ -16,21 +16,25 @@ export const FLOOR = { top: 330, stops: [[0, 0], [0.3, 0.55], [1, 0.9]] as const
 
 /** .sys right:16px top:10px gap:6px; .ib 34px; .ic 16px */
 export const SYS = { right: 16, top: 10, gap: 6, button: 34, icon: 16 };
+/** 오른쪽 위 버튼 셋(덱 · 기록 · 설정)이 차지하는 폭 */
+const SYS_W = 3 * SYS.button + 2 * SYS.gap;
 
 /** 순서표: 0074 시안(https://claude.ai/artifact/2Dn6Yso4LzqHk57eLj6xyg) 값 그대로 (Lucy 2026-11-16 "시안대로"). 화면 가운데 위 한 줄 판 (0038).
- *  .rt height 64 padding 0 16 radius 22 */
-const ORDER_FACE = 40;
+ *  얼굴 크기 · 판 높이 · 모서리는 0160에서 줄였어요 (Lucy 2026-11-21 "얼굴 34"): 시안 값은 얼굴 40 · 높이 64 · 모서리 22 */
+const ORDER_FACE = 34;
 export const ORDER = {
-  cx: FRAME.w / 2, top: 10, h: 64, padX: 16, radius: 22,
+  cx: FRAME.w / 2, top: 10, h: 58, padX: 16, radius: 18,
+  /** 판은 가운데에서 자라다 오른쪽 위 버튼 앞에서 멈춰요 (0160). 버튼과의 틈 = 버튼의 화면 여백 */
+  maxW: FRAME.w - 2 * (SYS.right + SYS_W + SYS.right),
   /** .rt .head padding-right 14, margin-right 4, border-right 1 (height 38) · .tn gap 6 · .dot 6 */
   head: { padR: 14, mr: 4, h: 38, line: 1, gap: 6, dot: 6, playRing: 1.5 },
   /** 재생 위치 선 (.ph): width 2 height 44 margin 0 3 radius 1. 재생 중 점 (.dot.play): 테 1.5 */
   cursor: { w: 2, h: 44, mx: 3, radius: 1 },
   /** .rt .ln width 18 height 1 */
-  line: { w: 18, h: 1 },
+  line: { w: 18, h: 1, min: 4 },
   /** .tok.en gap 4, padding 0 4 · .num width 10 */
   enemy: { gap: 4, padX: 4, numW: 10 },
-  /** 적 얼굴 EN = 40 · 자리 그림 .fc svg 62% */
+  /** 적 얼굴 34 (0160) · 자리 그림 .fc svg 62% */
   face: ORDER_FACE, art: ORDER_FACE * 0.62,
   /** 아군 토큰 얼굴 = 적 얼굴 × allyScale (0074) */
   allyFace: ORDER_FACE * OT.allyScale,
@@ -58,17 +62,32 @@ export const ALLY = {
   body: { w: 94, h: 112 },
   /** 정령 그림 맞춤 (0109, 임시 값): 높이는 칸 그대로, 이펙트가 넓은 성체 · 각성체 그림은 폭이 칸의 over배까지 넘쳐도 돼요.
    *  가로는 얼굴(몸통) 가운데를 칸 가운데에 두되 칸 폭의 shift배까지만 옮겨요.
+   *  baby = 유체는 칸의 이만큼 (0158, Lucy 2026-11-20: 약 78px, "작음" 등급 적과 같은 키).
    *  stages = 전투에 정령 그림을 세우는 성장 단계 (0146). 성체 · 각성체는 전투용 그림(SD 등)이 따로 올 때까지 자리표시예요. 되돌리려면 여기에 "adult", "awakened"를 넣어요 */
-  art: { over: 1.35, shift: 0.15, stages: ["baby"] as readonly string[] },
+  art: { over: 1.35, shift: 0.15, baby: 0.7, stages: ["baby"] as readonly string[] },
 };
 
 /** 적 가운데 x 805·941·1077 (간격 72%, 가운데 941), 의도 알약 top 212, 발 y 344.
  *  그림 상자는 정본 .enemy .body 132×106 · .ensvg 120×96의 85%. mt = 의도 알약 아래 끝에서 그림 상자 위 끝까지 */
 export const ENEMY = {
-  xs: [805, 941, 1077], top: 212, feet: 344,
-  body: { w: 112, h: 90, mt: 14 }, art: { w: 102, h: 82 },
+  /** top = 의도 알약의 기본 줄 (작은 적), feet = 발 선 */
+  top: 212, feet: 344,
+  /** body.w = 피해 숫자가 뜨는 자리의 폭 상한 · body.mt = 알약 아래 여백 · art = 그림이 없는 적의 자리표시 크기 */
+  body: { w: 112, mt: 14 }, art: { w: 102, h: 82 },
   /** 땅속 (0096 시안 .sunk): 몸 윗부분만 이만큼 남아요 (시안 임시 값) */
   buried: 0.4,
+  /** 도감 크기대로 세우기 (0158): 적은 균일한 칸 대신 몸 폭만큼 자리를 차지해요.
+   *  field = 적들이 서는 가로 범위 (가운데 정렬, 넘치면 왼쪽으로 밀려요) · gap = 자리 사이 · slotPad = 체력 막대 양옆 여유 */
+  field: { left: 610, center: 941, right: 1262, gap: 14, slotPad: 8 },
+  /** 크기 등급 (enemyFit.json의 size): 그림을 h × w 상자 안에 비율대로 맞춘 값이 enemyFit의 h · w예요. bar = 체력 막대 폭 (네 단계) */
+  sizes: {
+    XS: { h: 58, w: 96, bar: 88 }, S: { h: 78, w: 100, bar: 88 }, M: { h: 104, w: 132, bar: 104 },
+    L: { h: 136, w: 176, bar: 136 }, XL: { h: 172, w: 236, bar: 136 }, B: { h: 212, w: 290, bar: 184 },
+  },
+  /** 의도 알약은 머리 위 이만큼 (작은 적은 ENEMY.top 줄에 그대로) */
+  intentGap: 12,
+  /** 그림자: 몸 폭의 ratio배 (떠 있는 적은 float배 · 옅게), 폭은 min 이상, 두께는 기본의 thick 범위 */
+  shadow: { ratio: 0.82, float: 0.5, floatAlpha: 0.6, min: 44, thick: [0.8, 2] as [number, number] },
 };
 
 /** .ground 104×14, 발 y에 가운데. radial-gradient(closest-side, shade, transparent) */
@@ -169,12 +188,9 @@ export const PREVIEW = {
   intentCut: { ring: 1.5, strike: 2 },
 };
 
-/** 손패 호버 H1 (r5 스크립트 "시안 값"): 든 카드 translateY(-30) scale(1.2), 같은 묶음 옆 카드 ±12,
- *  옆 묶음 ±10, 나머지 카드 opacity .62. 말풍선 아래 끝 y 598, 화면 가장자리 여백 8 */
-export const HOVER = {
-  lift: 30, scale: 1.2, shiftIn: 12, shiftGroup: 10, dim: 0.62,
-  bubbleBottom: 598, edge: 8,
-};
+/** 손패에서 카드를 가리킬 때 (0161): 가리킨 카드는 큰 얼굴로 펼쳐지고(card/layout BIG_CARD.peek), 집은 카드는 작은 얼굴 그대로 30 떠올라요.
+ *  dim = 대상이 아닌 것을 흐리는 값, edge = 화면 가장자리 여백 */
+export const HOVER = { lift: 30, dim: 0.62, edge: 8 };
 
 /** 대상 고르기 (결정 0013, 정본 아님 · Lucy 확인 전 임시 값).
  *  dim: 대상이 아닌 캐릭터를 어둡게 (밝기 배수) = 손패 호버 흐림 .62를 그대로 써요.
@@ -183,28 +199,10 @@ export const HOVER = {
 export const TARGETING = { dim: HOVER.dim };
 export const DRAG = { threshold: 6, scale: 0.6, overTarget: HOVER.dim, depth: 1000 };
 
-/** 든 카드 크기·밀림. 말풍선은 들린 카드 위에서 정본과 같은 거리에 따라 올라가요. */
-export interface LiftStyle {
-  lift: number;
-  scale: number;
-  shiftIn: number;
-  shiftGroup: number;
-}
-
-/** 들기 크기. 정본 H1(1.2배, ±12, ±10)은 옆 카드와 6.8px 떨어져서, Lucy가 들린 카드가 옆 카드를 살짝 덮는 b를 골랐어요
- *  (2026-10-30, 정본 아님 · 비교 후보 a 1.3/±8, c 1.5/±12는 뺐어요).
- *  덮는 폭 = 카드 폭 92 × (scale - 1) / 2 - (카드 사이 4 + shiftIn): b 4.4px. 떠오름 30은 정본 그대로.
- *  ?lift=h1 은 정본 값이에요 (pnpm visual 이 정본 프레임과 비교할 때 써요). */
-export const LIFT_STYLES: Record<string, LiftStyle> = {
-  h1: { lift: HOVER.lift, scale: HOVER.scale, shiftIn: HOVER.shiftIn, shiftGroup: HOVER.shiftGroup },
-  b: { lift: 30, scale: 1.4, shiftIn: 10, shiftGroup: 10 },
-};
-export const LIFT: LiftStyle = LIFT_STYLES.b;
-
 /** 가운데 고르기 창 (0075, 낙하 · 품기 공용). 화면 한가운데에 제목 · 카드 · 버튼을 한 덩어리로 놓아요.
- *  Lucy 2026-11-16 "카드 크기 증가, 여백 증가, 더 어둡게, 가운데 정렬": 카드 = 보상 카드 크기(폭 166, result REWARD),
- *  카드 사이 28(전투 위 창 열 사이), 제목 · 카드 · 버튼 사이 48(런 화면 격자 여백), 버튼 = 턴 종료 버튼, 말풍선 거리 = 보상 카드 말풍선. 모두 임시 값이에요 */
+ *  Lucy 2026-11-16 "카드 크기 증가, 여백 증가, 더 어둡게, 가운데 정렬": 카드 = 큰 얼굴 (0161, card/layout BIG_CARD),
+ *  카드 사이 28(전투 위 창 열 사이), 제목 · 카드 · 버튼 사이 48(런 화면 격자 여백), 버튼 = 턴 종료 버튼. 모두 임시 값이에요 */
 export const PICK = {
-  cardW: 166, gap: 28, pad: 48, tipGap: 20,
+  gap: 28, pad: 48,
   cx: FRAME.w / 2, cy: FRAME.h / 2, button: { w: END.w, ...END.button }, depth: DRAG.depth - 1,
 };

@@ -3,12 +3,33 @@
 // 전투 중간에 끄면 그 전투 처음부터 이어요 (0047). 같은 저장이면 같은 드로우예요 (0052).
 import { returnHp } from "../core/stats";
 import { RUN_SAVE_VERSION, Run, type BattleReward, type MapNode, type RunOptions, type RunSave } from "../core/run";
-import type { BattleTier } from "../core/garden";
+import { GROWTH } from "../core/data";
+import type { BattleTier } from "../core/growth";
 import type { DeedTally } from "./deeds";
+import { upgradeGarden } from "./garden";
 import { upgradeSave, type SaveStep } from "./migrate";
 
-/** 옛 판 저장을 올리는 함수 (버전 n → n + 1). 지금은 버전 1뿐이라 비어 있어요 */
-const RUN_STEPS: Readonly<Record<number, SaveStep>> = {};
+/** 옛 판 저장을 올리는 함수 (버전 n → n + 1) */
+const RUN_STEPS: Readonly<Record<number, SaveStep>> = {
+  /**
+   * 1 → 2 (0157 · 0159): 성장이 판 안으로 들어왔어요. 정령은 그때의 단계 · 레벨 그대로 잇고, 경험은 그 레벨의 문턱에서 시작해요.
+   * 뒤 막 출발(출발 묶음)과 남긴 장비 표시는 없어졌어요. 지닌 장비는 지금 공명 그대로 이 판에서만 써요.
+   */
+  1: (old) => {
+    const file = structuredClone(old) as { version: number; run: Record<string, unknown>; phase: unknown };
+    const run = file.run;
+    const spirits = (run.spirits as Record<string, unknown>[]).map((s) => ({
+      ...s,
+      exp: GROWTH.levels[Math.min(GROWTH.levels.length, Math.max(1, Number(s.level) || 1)) - 1],
+      deed: 0,
+      equipment: ((s.equipment ?? []) as { id: string; resonance: number; runBonus?: number }[]).map((e) => ({ id: e.id, resonance: e.resonance + (e.runBonus ?? 0) })),
+    }));
+    const { bundleLeft: _b, ...rest } = run;
+    const { startAct: _s, garden, ...opts } = run.opts as Record<string, unknown>;
+    // 떠날 때의 정원도 같이 올려요
+    return { ...file, version: 2, run: { ...rest, version: 2, opts: { ...opts, ...(garden ? { garden: upgradeGarden(garden) } : {}) }, spirits, rerolls: 0 } };
+  },
+};
 
 /** 판 안에서 지금 있는 자리 */
 export type RunPhase =
@@ -20,7 +41,7 @@ export type RunPhase =
   | { kind: "event"; eventId?: string }
   | { kind: "shop" }
   | { kind: "rest" }
-  /** 이긴 전투의 보상을 고르는 중. 골드와 정원 경험은 이미 들어갔어요 */
+  /** 이긴 전투의 보상을 고르는 중. 골드와 경험은 이미 들어갔어요 */
   | { kind: "reward"; reward: BattleReward }
   /** 판이 끝났어요 (보스를 이기거나 모두 쓰러짐) */
   | { kind: "over"; victory: boolean };
@@ -29,7 +50,7 @@ export type RunPhase =
 export interface BattleOutcome {
   won: boolean;
   spirits: { id: string; hp: number; downed: boolean }[];
-  /** 이 전투에서 센 자람 조건 (0021 · 0045). 이긴 전투만 정원에 남아요 */
+  /** 이 전투에서 센 자람 조건 (0021 · 0045). 이긴 전투만 쌓여요 */
   deeds?: DeedTally;
 }
 
@@ -39,23 +60,22 @@ export interface RunSaveFile {
   phase: RunPhase;
 }
 
-/** 이긴 전투가 정원에 남기는 것 (GameSession이 정원에 넘겨요) */
+/** 이긴 전투 하나 (GameSession이 정원에 알려요: 첫 보스의 깃들기) */
 export interface BattleWin {
   party: string[];
   tier: BattleTier;
-  deeds?: DeedTally;
 }
 
 export class RunSession {
   private listeners = new Set<() => void>();
 
+  /** 이번 지도 차례에 키우기를 미룬 정령 (0157). 칸에 들어가면 지워져서 다음 지도 차례에 다시 물어요. 저장하지 않아요 */
+  private deferred = new Set<string>();
+
   private constructor(readonly run: Run, private _phase: RunPhase) {}
 
   static start(opts: RunOptions): RunSession {
-    const run = new Run(opts);
-    // 뒤 막에서 출발한 판은 출발 묶음의 첫 보상부터 골라요 (0108)
-    const reward = run.rollBundleReward();
-    return new RunSession(run, reward ? { kind: "reward", reward } : { kind: "map" });
+    return new RunSession(new Run(opts), { kind: "map" });
   }
 
   get phase(): RunPhase {
@@ -89,8 +109,27 @@ export class RunSession {
     const node = this.run.reachable().find((n) => n.id === nodeId);
     if (!node) throw new Error(`갈 수 없는 칸: ${nodeId}`);
     this.run.enter(node);
+    this.deferred.clear();
     this.set(phaseOf(this.run, node));
     return this._phase;
+  }
+
+  /** 지도 차례에 지금 키울 수 있는 정령 (0157). 이번 차례에 미룬 정령은 빠져요 */
+  growDue(): string[] {
+    return this._phase.kind === "map" ? this.run.evolvable().filter((id) => !this.deferred.has(id)) : [];
+  }
+
+  /** 키우기 (지도 차례에만). 갈래 고르기면 고른 갈래를 줘요. 키웠으면 저장하고 true */
+  evolve(spiritId: string, branch?: string): boolean {
+    this.expect("map");
+    if (!this.run.evolve(spiritId, branch)) return false;
+    this.set(this._phase);
+    return true;
+  }
+
+  /** 이 정령의 키우기를 다음 지도 차례로 미뤄요 */
+  deferGrow(spiritId: string) {
+    this.deferred.add(spiritId);
   }
 
   /** 상점·이벤트·휴식을 마치고 지도로 */
@@ -101,7 +140,7 @@ export class RunSession {
 
   /**
    * 전투가 끝났어요. 쓰러진 정령은 돌아오는 HP로 일어나요.
-   * 이기면 BattleWin을 돌려줘요(정원에 경험·재료). 보스를 이기거나 지면 판이 끝나요.
+   * 이기면 출전한 정령이 경험과 자람 조건을 받고(0157) BattleWin을 돌려줘요. 보스를 이기거나 지면 판이 끝나요.
    */
   finishBattle(outcome: BattleOutcome): BattleWin | undefined {
     const { tier } = this.expect("battle");
@@ -113,17 +152,19 @@ export class RunSession {
       this.set({ kind: "over", victory: false });
       return undefined;
     }
-    const win: BattleWin = { party: this.party, tier, ...(outcome.deeds ? { deeds: outcome.deeds } : {}) };
+    const win: BattleWin = { party: this.party, tier };
+    // 보상을 굴리기 전에 자라요: 이 전투로 열린 카드가 바로 보상에 나올 수 있어요
+    const growth = this.run.grantBattle(tier, outcome.deeds);
     if (tier === "boss" && this.run.hasNextAct()) {
       // 막 사이: 정예와 같은 보상을 받고 다음 막 지도로 가요
       const reward = this.run.rollBattleReward("elite");
       this.run.nextAct();
-      this.set({ kind: "reward", reward });
+      this.set({ kind: "reward", reward: { ...reward, growth } });
     } else if (tier === "boss") {
       this.run.bossDefeated = true;
       this.set({ kind: "over", victory: true });
     } else {
-      this.set({ kind: "reward", reward: this.run.rollBattleReward(tier === "elite" ? "elite" : "battle") });
+      this.set({ kind: "reward", reward: { ...this.run.rollBattleReward(tier === "elite" ? "elite" : "battle"), growth } });
     }
     return win;
   }
@@ -137,9 +178,7 @@ export class RunSession {
   /** 보상을 다 고르고 지도로 */
   finishReward() {
     this.expect("reward");
-    // 출발 묶음이 남았으면 다음 보상으로 이어져요 (0108)
-    const reward = this.run.rollBundleReward();
-    this.set(reward ? { kind: "reward", reward } : { kind: "map" });
+    this.set({ kind: "map" });
   }
 
   save(): RunSaveFile {

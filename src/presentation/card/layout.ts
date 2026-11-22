@@ -1,43 +1,47 @@
-// 손패 카드(.cd.h 92×129) 배치. 정본 design/canon/battle-r5/frame-old.css "카드" 절과 r5.css.
-// 좌표는 카드 바깥 상자 왼쪽 위 기준 (테 1 + 안쪽 여백 4).
-import type { FaceId } from "../faces";
+// 카드 두 얼굴의 배치 (0161, 카드 라운드 K2 L1 시안 https://claude.ai/artifact/9UzXGeVYwJi6JkwwwsS55B). 값은 시안에서 옮긴 임시 값이에요.
+// 좌표는 카드 바깥 상자 왼쪽 위 기준.
 
+/** 작은 얼굴 (손패 · 덱 보기): 그림이 카드 전체, 아래 어두운 띠에 수치 + 이름. 5:7 */
 export const HAND_CARD = {
-  w: 92, h: 129, radius: 8, border: 1,
-  /** .win 84×90 그림 창 (content 82 폭에 84 SVG가 왼쪽 맞춤) */
-  win: { x: 5, y: 5, w: 84, h: 90, contentW: 82 },
-  /** .h .ai 34, margin-bottom 10 → 창 안 가운데에서 5 위 */
-  art: { size: 34, mb: 10 },
-  /** .h .bnd margin 4 -4 -4, radius 0 0 7 7, padding-top 2 */
-  band: { x: 1, y: 99, w: 90, h: 29, radius: 7, padTop: 2 },
-  /** .h .cost left 2 top 2 22×22, 바깥 테 2 (.short 2.5) */
-  cost: { x: 3, y: 3, d: 22, ring: 2, shortRing: 2.5 },
-  /** 희귀도 보석 (0050 G3): 비용 동전 아래 칸 하나. 테(-edge) 위에 몸을 겹쳐요. 자리·크기는 E1 시안 임시 값 */
-  rarity: { x: 7.5, y: 28.5, size: 13 },
-  /** .h .eg right 7 top 15 11×11, opacity .85 */
-  element: { right: 7, y: 16, size: 11, alpha: 0.85 },
-  /** .h .notch left 1 top 63 32×32, img inset 3 */
-  notch: { x: 2, y: 64, d: 32, inset: 3 },
-  /** .h .plate right 3 top 66 (.two 58), radius 6, padding 3 5 2 4, gap 1 */
-  plate: { right: 3, y: 67, yTwo: 59, radius: 6, pad: [3, 5, 2, 4] as [number, number, number, number], gap: 1 },
-  /** .h .gl 11 (.two 10), margin-right 1 · .up margin-left 1 margin-top 1 */
-  glyph: { size: 11, sizeTwo: 10, mr: 1 }, up: { ml: 1, mt: 1 },
-  /** .mk right 3 top 44 height 16 padding 0 4 radius 8 gap 2, .ic 10 */
-  mark: { right: 3, y: 45, h: 16, padX: 4, radius: 8, icon: 10 },
-  /** 조건 미달 자물쇠 꼬리표 (전투 정보판 C안 .lock, 임시 값): 윗선 가운데 top -9, height 18 padding 0 6 radius 9 gap 3, .ic 11, 바깥 테 1.5 */
-  lock: { y: -9, h: 18, padX: 6, radius: 9, gap: 3, icon: 11, ring: 1.5 },
-  /** .cd.act box-shadow 0 10px 24px */
+  w: 90, h: 126, radius: 7, border: 1,
+  /** 그림: 정사각 원본을 이 크기로, 가로 가운데 · 아래 맞춤 */
+  art: { size: 144, top: -18, placeholder: 30 },
+  /** 아래 띠: 위쪽 fade 만큼은 투명에서 짙어져요. 수치가 없으면 이름 한 줄 높이 */
+  band: { h: 52, hName: 33, fade: 12, padBottom: 5, gap: 3, nameLh: 1.15 },
+  /** 비용 동전 (왼쪽 위). 마력 부족이면 붉은 테 */
+  cost: { x: 4, y: 4, d: 24, ring: 1, shortRing: 1.5 },
+  /** 수치 줄: 기호 12 + 숫자, 값 사이 7. 강화 화살 10 */
+  value: { icon: 12, gap: 2, between: 7, up: 10 },
+  /** 표지 (조건 미달 자물쇠 · 무작위 등): 오른쪽 위에서 아래로 */
+  mark: { right: 4, y: 4, h: 18, padX: 3, lockPadX: 5, gap: 2, between: 3, icon: 12, ring: 1 },
   liftShadow: { y: 10, blur: 24 },
-  /** .cd.act.held outline 2 offset 2 (outline은 border-radius를 따라 둥글어요) */
+  /** 집은 카드 바깥 테 */
   held: { width: 2, offset: 2 },
-  /** .nm letter-spacing -.02em */
   nameLetterSpacing: -0.02,
 };
 
-/** 정령별 그림 창 윗선 (정본 SVG path 그대로, viewBox 0 0 84 90) */
-export const WINDOW_PATH: Record<FaceId, string> = {
-  star: "M0 11 L14.9 11 L21.0 0 L27.1 11 L36.0 11 L42.0 0 L48.0 11 L57.0 11 L63.0 0 L69.0 11 L84 11 L84 85 Q84 90 79 90 L5 90 Q0 90 0 85 Z",
-  fire: "M0 11 Q2.5 11 7.6 4.4 Q11.8 6.1 16.8 11 Q19.3 11 24.4 0.6 Q28.6 6.1 33.6 11 Q36.1 11 41.2 4.4 Q45.4 6.1 50.4 11 Q52.9 11 58.0 0.6 Q62.2 6.1 67.2 11 Q69.7 11 74.8 4.4 Q79.0 6.1 84.0 11 L84 85 Q84 90 79 90 L5 90 Q0 90 0 85 Z",
-  jelly: "M0 11 Q10.5 -2.8 21.0 11 Q31.5 -2.8 42.0 11 Q52.5 -2.8 63.0 11 Q73.5 -2.8 84.0 11 L84 85 Q84 90 79 90 L5 90 Q0 90 0 85 Z",
+/** 큰 얼굴 (가리킬 때 · 보상 · 상점): 위는 그림, 아래로 갈수록 어두워져 판 없이 이름 줄 · 효과문 · 기호 줄이 얹혀요 (0161 후속 C2) */
+export const BIG_CARD = {
+  w: 172, h: 248, radius: 10, border: 1,
+  /** 그림: 정사각 원본을 이 크기로, 가로 가운데. 주제가 글 위에 보이게 위로 올려요 */
+  art: { size: 232, top: -40, placeholder: 48 },
+  /** 어두워지는 띠: 글 자리 위 64에서 시작해 글 자리에 닿기 전에 꽉 찬 어둠이 돼요. [자리 0~1, 불투명도] */
+  fade: { above: 64, stops: [[0, 0], [0.16, 0.4], [0.33, 0.9], [0.42, 1], [1, 1]] as const },
+  cost: HAND_CARD.cost,
+  /** 글 자리 (판은 그리지 않아요): 카드 안쪽 4, 높이 고정 (효과문 네 줄 자리. 넘치면 위로 자라요) */
+  plate: { inset: 4, pad: [6, 8, 6, 8] as [number, number, number, number], headH: 20, headGap: 3, lines: 4, lineH: 16, footGap: 5, footH: 18 },
+  /** 이름 줄 끝 수치 (전투에서만) */
+  value: { icon: 12, gap: 2, between: 5 },
+  /** 기호 줄: 주인 얼굴 · 속성 · 희귀도 · 강화 */
+  foot: { size: 18, gap: 8, role: 12 },
+  termOffset: 3,
+  /** 못 내는 사유 표지: 윗선 가운데에 걸쳐요 */
+  why: { h: 22, padX: 9, radius: 11, gap: 4, icon: 13, ring: 1 },
+  shadow: { y: 14, blur: 34 },
+  /** 손패에서 가리킬 때 펼치는 배율 · 화면 아래 끝에서 띄우는 만큼 */
+  peek: { scale: 1.2, bottom: 6, noteGap: 10, enterY: 6 },
 };
 
+const P = BIG_CARD.plate;
+/** 글 자리 높이 */
+export const BIG_PLATE_H = P.pad[0] + P.headH + P.headGap + P.lines * P.lineH + P.footGap + P.footH + P.pad[2];

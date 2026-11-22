@@ -39,14 +39,15 @@
 - ★ 가정(확인 필요): 아래 2-2 · 2-3의 ★ 항목 그대로 구현했고, 추가로: 불여우 시작 = 잉걸 흩뿌리기 2, 고양이 시작 = 입김 2 · 기본 카드 id `basic_claw` · `basic_block` · 스타폴 낙하는 서로 다른 둘 · 혜성 2타는 방어도 무시 아님(일반 피해) · 벽 깨짐 = 벽이 다 떨어지고 피해가 남을 때 · 숨음은 적의 공격 행동 하나가 끝난 뒤 받아낸 것으로 쳐요 · 빛 · 땅은 상성 고리에 안 넣었어요 · 정원 기본 정령은 `default_party` 셋.
 
 ### 장비 기반 (장비 핸드오프 `docs/handoff/EQUIPMENT_HANDOFF.md`)
-- 들어간 것: `EquipDef` 스키마 · `src/data/equipment/`(비어 있음) · `validate.ts`의 `equipProblems` · 능력치 층 리졸버 `resolveStat`(출처 태그) · 전투 조건부 층 · `critStat` · `EQUIP_PASSIVES` · `RunSpirit.equipment` · `GardenSpirit.equipment` · `growth.json` 칸 수 · 공명 상한. 테스트 `src/core/stats.test.ts`.
-- 규칙(0055 · 0056): 희귀도 `rarity`(범용 · 전용 무기 · 보스 장비), 칸 수 `equip_slots` 1 · 1 · 2, 꽉 차면 바꿔 끼기(`Run.giveEquipment(…, replaceId)`), 같은 장비를 또 얻으면 이번 런 공명 +1(`RunEquip.runBonus`), 전용 무기의 대표 카드 변형(`EquipDef.signature`, `Run.battleDeck()`). 갈래는 `RunSpirit.branch`를 읽어요. 갈래 고르기가 아직 없어서 실제 판에서는 기술이 켜지지 않아요.
+- 들어간 것: `EquipDef` 스키마 · `src/data/equipment/`(비어 있음) · `validate.ts`의 `equipProblems` · 능력치 층 리졸버 `resolveStat`(출처 태그) · 전투 조건부 층 · `critStat` · `EQUIP_PASSIVES` · `RunSpirit.equipment` · `growth.json` 칸 수 · 공명 상한. 테스트 `src/core/stats.test.ts`.
+- 규칙(0055 · 0056): 희귀도 `rarity`(범용 · 전용 무기 · 보스 장비), 칸 수 `equip_slots` 1 · 1 · 2, 꽉 차면 바꿔 끼기(`Run.giveEquipment(…, replaceId)`), 같은 장비를 또 얻으면 공명 +1(`RunEquip.resonance`), 전용 무기의 대표 카드 변형(`EquipDef.signature`, `Run.battleDeck()`). 갈래는 `RunSpirit.branch`를 읽어요. 갈래 고르기가 아직 없어서 실제 판에서는 기술이 켜지지 않아요.
 - 전용 무기 3개(`src/data/equipment/exclusive.json`)와 기술 카드 18장(`src/data/cards/techniques.json`, 정령 3 × 갈래 2 × 공명 3)이 들어 있어요. 숫자는 시험 값이에요. 기술용 효과: `damage`의 `burnedBonus` · `perBurn`, `burnHold`, `burnSpread`, `burnCarry`, `chill`의 `freezeKeep` · `freezeDelayMs` · `freezeWeak`, `blockLowest`, `wallEcho`, `wallBurst`. 테스트 `src/core/battle.techniques.test.ts`. 시뮬은 `pnpm runsim --branch 정령:갈래,…`로 갈래를 줘요.
 - 장비 데이터가 있어서 정예 보상이 런 난수를 한 번 더 쓰고, 시뮬의 정령이 무기를 받아요. 장비 없는 기준선과 숫자가 조금 달라요.
 - 범용 6개(`generic.json`)와 보스 3개(`boss.json`)도 들어 있어요. 효과는 `EQUIP_PASSIVES`: `start_block`, `start_block_return`, `first_hit`, `longest_card_hit`, `linger_once`, `linger_turn`, `first_card_time`, `first_card_time_opening`, `crit_vs_full`, `crit_vs_healthy`, `first_card_cost`, `time_cut`, `carry_block`. 방패는 조건부 능력치(`hpBelow`, `hurt`)만 써요. 테스트 `src/core/battle.equipment.test.ts`.
 - 활의 "덜 줄어듦"은 누가 건 상태인지 가리지 않고 적의 화상 · 약화 · 취약에 적용돼요. 쓰러졌다 돌아올 때의 HP는 `stats.ts`의 `returnHp()`가 정해요.
-- 보상 흐름: 정예는 `rollBattleReward("elite")` → `giveRewardEquipment`(꼭 받아요. 받을 정령이 모두 칸이 꽉 찼을 때만 `skipRewardEquipment`), 보스는 `rollBossEquipment()` → `giveEquipment`, 런 끝은 `garden.ts`의 `keepEquipment(g, party, keep)`. 남겼던 장비를 다시 남기면 공명이 1 오르고 단계 상한에서 멈춰요. 남기지 않은 장비는 사라져요.
-- 남은 것: 장비와 기술 카드의 이름 · 그림(Lucy), 문구(`locales/<lang>/equipment.json`), 보상 · 남기기 화면과 session 연결.
+- 보상 흐름: 정예는 `rollBattleReward("elite")` → `giveRewardEquipment`(꼭 받아요. 받을 정령이 모두 칸이 꽉 찼을 때만 `skipRewardEquipment`), 보스는 `rollBossEquipment()` → `giveEquipment`. 판이 끝나면 장비는 사라져요(0159).
+- 0159: 장비는 판 안에서만 써요. 정예 보상의 공명 올리기는 제안이고 아직 없어요.
+- 남은 것: 장비와 기술 카드의 이름 · 그림(Lucy), 문구(`locales/<lang>/equipment.json`), 보상 화면과 session 연결.
 
 ### 2단계 시도본 (참고만)
 - 리팩터링 전 방식의 시도본은 2단계가 머지된 뒤 지웠어요 (2026-11-11).

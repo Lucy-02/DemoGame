@@ -1,4 +1,5 @@
-// 글자 대비 재기: 고정 장면을 1280×800으로 찍고, 화면의 글자마다 글자색과 둘레 바탕색의 WCAG 대비를 재요.
+// 글자 대비 재기: 고정 장면을 3배로 촘촘히 찍고, 화면의 글자마다 글자색과 둘레 바탕색의 WCAG 대비를 재요.
+// 1배로 찍으면 가는 획이 제 색까지 못 올라가 낮게 재져서 3배로 찍어요 (0138).
 // 색 값은 Lucy가 고르니 통과 · 실패를 가르지 않고 기준 아래 글자만 알려 줘요 (평가 P7-04 · P7-15).
 // 사용: pnpm check:contrast [--min 4.5] [--screen shop]
 //   결과: test-results/contrast/report.md (+ 화면 캡처)
@@ -9,6 +10,8 @@ import { chromium, type Page } from "@playwright/test";
 import { createServer } from "vite";
 
 const W = 1280, H = 800;
+/** 찍는 배수: 1배에서는 가는 획이 제 색까지 못 올라가 대비가 낮게 재져요 (13px 글자가 5.0:1인데 2.9:1로) */
+const K = 3;
 const args = process.argv.slice(2);
 const opt = (name: string) => {
   const i = args.indexOf(`--${name}`);
@@ -32,7 +35,7 @@ const SCREENS: [string, string][] = [
 interface Row { text: string; size: number; ratio: number; x: number; y: number }
 
 async function measure(page: Page, shot: Buffer): Promise<Row[]> {
-  return page.evaluate(async ({ src, W, H }) => {
+  return page.evaluate(async ({ src, W, H, K }) => {
     type Obj = { type: string; scrollFactorX: number; scrollFactorY: number; visible: boolean; alpha: number; list?: Obj[]; text?: string; style?: { fontSize: string }; getBounds(): { x: number; y: number; width: number; height: number }; parentContainer?: Obj };
     const game = (window as unknown as { game: { scene: { getScenes(active: boolean): { children: { list: Obj[] }; cameras: { main: { scrollX: number; scrollY: number } } }[] } } }).game;
     const texts: Obj[] = [];
@@ -50,6 +53,9 @@ async function measure(page: Page, shot: Buffer): Promise<Row[]> {
 
     const img = await new Promise<HTMLImageElement>((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
     const c = document.createElement("canvas");
+    // 아래부터 W · H는 찍은 픽셀 크기예요
+    W *= K;
+    H *= K;
     c.width = W;
     c.height = H;
     const ctx = c.getContext("2d", { willReadFrequently: true })!;
@@ -65,7 +71,7 @@ async function measure(page: Page, shot: Buffer): Promise<Row[]> {
       let root = t;
       while (root.parentContainer) root = root.parentContainer;
       const sx = cam.scrollX * root.scrollFactorX, sy = cam.scrollY * root.scrollFactorY;
-      const x0 = Math.floor(b.x - sx), y0 = Math.floor(b.y - sy), x1 = Math.ceil(b.x - sx + b.width), y1 = Math.ceil(b.y - sy + b.height);
+      const x0 = Math.floor((b.x - sx) * K), y0 = Math.floor((b.y - sy) * K), x1 = Math.ceil((b.x - sx + b.width) * K), y1 = Math.ceil((b.y - sy + b.height) * K);
       if (x0 < 1 || y0 < 1 || x1 >= W - 1 || y1 >= H - 1 || x1 - x0 < 2) continue;
       const ring: number[] = [];
       for (let x = x0 - 1; x <= x1; x++) ring.push(lum(((y0 - 1) * W + x) * 4), lum((y1 * W + x) * 4));
@@ -79,10 +85,10 @@ async function measure(page: Page, shot: Buffer): Promise<Row[]> {
       const r = Math.max(inside[Math.floor(inside.length * 0.05)], inside[0] * 0.9);
       // 글자가 그 자리에 안 보여요 (따로 스크롤하는 카메라 안이거나 다른 것에 가려짐): 재지 않아요
       if (r < 1.1) continue;
-      rows.push({ text: t.text!.replace(/\s+/g, " ").slice(0, 24), size: parseFloat(t.style?.fontSize ?? "0"), ratio: Math.round(r * 100) / 100, x: x0, y: y0 });
+      rows.push({ text: t.text!.replace(/\s+/g, " ").slice(0, 24), size: parseFloat(t.style?.fontSize ?? "0"), ratio: Math.round(r * 100) / 100, x: Math.round(x0 / K), y: Math.round(y0 / K) });
     }
     return rows;
-  }, { src: `data:image/png;base64,${shot.toString("base64")}`, W, H });
+  }, { src: `data:image/png;base64,${shot.toString("base64")}`, W, H, K });
 }
 
 async function main() {
@@ -93,15 +99,15 @@ async function main() {
     args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader"],
     ...(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {}),
   });
-  const page = await (await browser.newContext({ viewport: { width: W + 120, height: H + 150 }, deviceScaleFactor: 1 })).newPage();
+  const page = await (await browser.newContext({ viewport: { width: W + 120, height: H + 150 }, deviceScaleFactor: K })).newPage();
   // tsx가 함수 이름을 지키려고 끼워 넣는 도우미가 페이지 안에는 없어요
   await page.addInitScript("globalThis.__name = (f) => f");
   const lines = [`# 글자 대비 (기준 ${MIN}:1 아래만)`, "", "| 화면 | 글자 | 크기 | 대비 | 자리 |", "|---|---|---|---|---|"];
   let low = 0, all = 0;
   for (const [name, query] of SCREENS) {
     if (only && !name.startsWith(only)) continue;
-    // 배수 1로 고정: 재는 좌표와 캡처 픽셀이 같아야 해요
-    await page.goto(`${base}?${query}${query ? "&" : ""}res=1`);
+    // 배수를 고정: 재는 좌표 × 배수가 캡처 픽셀이에요
+    await page.goto(`${base}?${query}${query ? "&" : ""}res=${K}`);
     await page.waitForFunction(() => (window as { game?: { scene: { getScenes(a: boolean): unknown[] } } }).game?.scene.getScenes(true).length, undefined, { timeout: 30_000 });
     await page.waitForTimeout(1500);
     const canvas = await page.$("#game canvas");

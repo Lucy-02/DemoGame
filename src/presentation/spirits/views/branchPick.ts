@@ -39,7 +39,7 @@ export const BRANCH_ICONS = [
 const CARD_SCALE = B.card.w / HAND_CARD.w;
 
 export function preloadBranchCards(scene: Phaser.Scene, vm: BranchPickVM) {
-  for (const b of vm.branches) for (const c of b.cards) if (c.key) preloadHandCard(scene, cardVM(c.key, vm.spiritId), { showRarity: true, scale: CARD_SCALE });
+  for (const b of vm.branches) for (const c of b.cards) if (c.key) preloadHandCard(scene, cardVM(c.key, vm.spiritId), { scale: CARD_SCALE });
 }
 
 /** 갈래 표지: 기호 자리(TODO_ICON, X 상자) + 번호. lg = 판 머리 */
@@ -99,7 +99,7 @@ export function drawBranchPick(scene: Phaser.Scene, vm: BranchPickVM, act: Branc
   box(dim, 0, 0, FRAME.w, FRAME.h, 0, { fill: P.scrim });
   scene.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive();
 
-  // 부른 곳 (.bw-tag): 정원 = 새싹, 런 결과는 기호 없음(TODO_ICON X 상자)
+  // 부른 곳 (.bw-tag): 정원 = 새싹, 판 안은 기호 없음(TODO_ICON X 상자)
   const tg = scene.add.graphics();
   circle(tg, B.tag.x + B.tag.d / 2, B.tag.y + B.tag.d / 2, B.tag.d, { fill: P.veil["10"], ring: { width: 1, color: P.glassLine } });
   const ti = B.tag.x + (B.tag.d - B.tag.icon) / 2, tj = B.tag.y + (B.tag.d - B.tag.icon) / 2;
@@ -238,7 +238,7 @@ function drawBranchCol(scene: Phaser.Scene, vm: BranchPickVM, b: BranchColVM, se
   for (const c of cards) {
     if (c.key && cardDef(c.key)) {
       const view = createHandCard(scene, cardVM(c.key, vm.spiritId),
-        cx + B.card.w / 2 - HAND_CARD.w / 2, ctop + B.card.h - HAND_CARD.h, { showRarity: true, scale: CARD_SCALE });
+        cx + B.card.w / 2 - HAND_CARD.w / 2, ctop + B.card.h - HAND_CARD.h, { scale: CARD_SCALE });
       faded.push(view.root);
     } else {
       faded.push(placeholderArt(scene, cx, ctop, B.card.w, B.card.h, P.glassLine));

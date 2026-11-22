@@ -1,7 +1,7 @@
 // 고정 장면 고르기 (?scene=…). session 층이 생기면 실제 전투 상태가 이 자리를 대신해요.
 import type { BattleVM } from "../viewmodel";
 import { canonAim, exampleDrag, exampleDragAlly, exampleDragField, exampleDragRandom, exampleWeak } from "./canonAim";
-import { exampleCardArt } from "./cardArt";
+import { exampleCardArt, examplePick } from "./cardArt";
 import { canonRest } from "./canonRest";
 import { exampleCrowded } from "./crowded";
 import { exampleEquip } from "./equip";
@@ -25,6 +25,8 @@ export const FIXTURES: Record<string, BattleVM> = {
   "drag-random": exampleDragRandom,
   /** 예시: 손패에 카드 일러스트 (물방울 휘갈기기·물결 장막은 그림 없음) */
   art: exampleCardArt,
+  /** 예시: 가운데 고르기 창 (큰 얼굴 세 장) */
+  pick: examplePick,
   /** 예시: 장비를 지닌 아군 (0066). ?hover=unit:ally:1 로 설명판의 장비 칸 */
   equip: exampleEquip,
   /** 예시: 든 카드의 속성이 약점인 적 (약점 배지 켜짐) */

@@ -1,0 +1,612 @@
+[
+ {
+  "id": "moss_slime",
+  "name": "이끼 슬라임",
+  "act": 1,
+  "tier": "normal",
+  "size": "S",
+  "body": "지름 0.7 m",
+  "weight": "40 kg",
+  "identity": "이끼를 뒤집어쓴 젤리 덩어리. 숲 바닥을 기어다니며 닿는 것을 끈적이게 해요"
+ },
+ {
+  "id": "bramble_rat",
+  "name": "가시쥐",
+  "act": 1,
+  "tier": "normal",
+  "size": "S",
+  "body": "몸길이 0.9 m",
+  "weight": "25 kg",
+  "identity": "등에 가시덤불이 자란 큰 쥐. 떼로 몰려다녀요"
+ },
+ {
+  "id": "wisp",
+  "name": "깜부기",
+  "act": 1,
+  "tier": "normal",
+  "size": "XS",
+  "body": "지름 0.3 m",
+  "weight": "2 kg",
+  "identity": "타다 남은 숯덩이가 떠다니는 것. 작지만 여럿이면 번져요"
+ },
+ {
+  "id": "rubble_shell",
+  "name": "돌집게",
+  "act": 1,
+  "tier": "normal",
+  "size": "M",
+  "body": "등딱지 폭 1.3 m",
+  "weight": "160 kg",
+  "identity": "돌무더기를 집 삼아 지고 다니는 집게. 느리고 단단해요"
+ },
+ {
+  "id": "tempest_crow",
+  "name": "바람새",
+  "act": 1,
+  "tier": "normal",
+  "size": "S",
+  "body": "날개폭 1.8 m",
+  "weight": "8 kg",
+  "identity": "바람을 휘감고 나는 까마귀. 가볍고 빨라요"
+ },
+ {
+  "id": "whirl",
+  "name": "돌개바람",
+  "act": 1,
+  "tier": "normal",
+  "size": "M",
+  "body": "높이 2 m",
+  "weight": "무게 없음",
+  "identity": "제자리에서 도는 작은 회오리. 몸이 없어요"
+ },
+ {
+  "id": "rust_golem",
+  "name": "녹슨 골렘",
+  "act": 1,
+  "tier": "normal",
+  "size": "L",
+  "body": "키 2.4 m",
+  "weight": "900 kg",
+  "identity": "녹슨 철판을 이어 붙인 골렘. 힘을 모았다가 크게 쳐요"
+ },
+ {
+  "id": "bog_witch",
+  "name": "늪 두꺼비",
+  "act": 1,
+  "tier": "elite",
+  "size": "L",
+  "body": "앉은 키 1.6 m",
+  "weight": "300 kg",
+  "identity": "늪에 사는 큰 두꺼비. 한자리에 앉아 독을 뱉어요"
+ },
+ {
+  "id": "frostfang",
+  "name": "칼바람 늑대",
+  "act": 1,
+  "tier": "elite",
+  "size": "L",
+  "body": "어깨높이 1.3 m, 몸길이 2.4 m",
+  "weight": "180 kg",
+  "identity": "칼바람을 두른 흰 늑대. 무리의 우두머리예요"
+ },
+ {
+  "id": "frost_pup",
+  "name": "칼바람 늑대 새끼",
+  "act": 1,
+  "tier": "minion",
+  "size": "XS",
+  "body": "몸길이 0.7 m",
+  "weight": "20 kg",
+  "identity": "우두머리를 따르는 어린 늑대"
+ },
+ {
+  "id": "cinder_imp",
+  "name": "그을음 도깨비",
+  "act": 1,
+  "tier": "elite",
+  "size": "M",
+  "body": "키 1.4 m (웅크림)",
+  "weight": "35 kg",
+  "identity": "그을음으로 된 도깨비. 재빠르고 약 올려요"
+ },
+ {
+  "id": "grimbark",
+  "name": "시듦",
+  "act": 1,
+  "tier": "boss",
+  "size": "B",
+  "body": "키 4.5 m",
+  "weight": "2 t",
+  "identity": "말라 죽어가는 고목이 일어선 것. 1막 숲의 주인"
+ },
+ {
+  "id": "wildfire",
+  "name": "들불",
+  "act": 1,
+  "tier": "boss",
+  "size": "B",
+  "body": "어깨높이 2.2 m",
+  "weight": "600 kg",
+  "identity": "불타는 뿔의 검은 사슴. 지나간 자리가 타요"
+ },
+ {
+  "id": "gale",
+  "name": "높새",
+  "act": 1,
+  "tier": "boss",
+  "size": "B",
+  "body": "날개폭 6 m",
+  "weight": "120 kg",
+  "identity": "높은 바람을 타는 큰 맹금"
+ },
+ {
+  "id": "rock_pile",
+  "name": "돌무더기",
+  "act": 2,
+  "tier": "normal",
+  "size": "M",
+  "body": "키 1.5 m",
+  "weight": "800 kg",
+  "identity": "돌이 뭉쳐 일어난 덩어리. 굴러와서 부딪쳐요"
+ },
+ {
+  "id": "mole",
+  "name": "두더지",
+  "act": 2,
+  "tier": "normal",
+  "size": "S",
+  "body": "몸길이 0.8 m",
+  "weight": "30 kg",
+  "identity": "땅속에 숨었다 나오는 두더지"
+ },
+ {
+  "id": "spark_bug",
+  "name": "찌릿벌레",
+  "act": 2,
+  "tier": "normal",
+  "size": "S",
+  "body": "몸길이 0.6 m",
+  "weight": "6 kg",
+  "identity": "뿔에서 불꽃이 튀는 딱정벌레"
+ },
+ {
+  "id": "lightning_rod",
+  "name": "피뢰침",
+  "act": 2,
+  "tier": "normal",
+  "size": "M",
+  "body": "키 2.2 m (가늘어요)",
+  "weight": "60 kg",
+  "identity": "번개를 끌어모으는 쇠꼬챙이 다리의 것"
+ },
+ {
+  "id": "firefly_swarm",
+  "name": "반딧불 떼",
+  "act": 2,
+  "tier": "normal",
+  "size": "S",
+  "body": "무리 지름 0.8 m",
+  "weight": "무게 거의 없음",
+  "identity": "한 덩어리로 움직이는 반딧불 무리"
+ },
+ {
+  "id": "mirror_shard",
+  "name": "거울 조각",
+  "act": 2,
+  "tier": "normal",
+  "size": "S",
+  "body": "지름 0.9 m",
+  "weight": "15 kg",
+  "identity": "빛을 되쏘는 깨진 거울 덩어리"
+ },
+ {
+  "id": "wandering_armor",
+  "name": "떠돌이 갑옷",
+  "act": 2,
+  "tier": "normal",
+  "size": "L",
+  "body": "키 2.1 m",
+  "weight": "120 kg",
+  "identity": "주인 없이 걸어 다니는 낡은 갑옷"
+ },
+ {
+  "id": "quake_turtle",
+  "name": "지진 거북",
+  "act": 2,
+  "tier": "elite",
+  "size": "XL",
+  "body": "등딱지 길이 3 m",
+  "weight": "2.5 t",
+  "identity": "걸으면 땅이 울리는 거북. 등에 수정이 자라요"
+ },
+ {
+  "id": "thunder_bird",
+  "name": "번개 새",
+  "act": 2,
+  "tier": "elite",
+  "size": "L",
+  "body": "날개폭 4 m",
+  "weight": "40 kg",
+  "identity": "볏에서 번개가 이는 큰 새"
+ },
+ {
+  "id": "lantern_keeper",
+  "name": "등불지기",
+  "act": 2,
+  "tier": "elite",
+  "size": "L",
+  "body": "키 2.8 m (구부정)",
+  "weight": "70 kg",
+  "identity": "등불을 머리 삼은 길쭉한 것. 반딧불을 불러요"
+ },
+ {
+  "id": "landslide",
+  "name": "산사태",
+  "act": 2,
+  "tier": "boss",
+  "size": "B",
+  "body": "어깨높이 2.5 m",
+  "weight": "4 t",
+  "identity": "바위 가죽의 멧돼지. 달리면 비탈이 무너져요"
+ },
+ {
+  "id": "thunderstorm",
+  "name": "뇌우",
+  "act": 2,
+  "tier": "boss",
+  "size": "B",
+  "body": "몸길이 12 m",
+  "weight": "무게 없음 (구름)",
+  "identity": "먹구름으로 된 뱀. 번개를 감고 있어요"
+ },
+ {
+  "id": "high_noon",
+  "name": "한낮",
+  "act": 2,
+  "tier": "boss",
+  "size": "B",
+  "body": "어깨높이 1.8 m, 몸길이 3.5 m",
+  "weight": "450 kg",
+  "identity": "햇살 갈기의 흰 사자. 머리 뒤에 해가 떠 있어요"
+ },
+ {
+  "id": "snowball",
+  "name": "눈덩이",
+  "act": 3,
+  "tier": "normal",
+  "size": "S",
+  "body": "지름 0.9 m",
+  "weight": "80 kg",
+  "identity": "굴러다니는 눈덩이. 얼굴이 있어요"
+ },
+ {
+  "id": "ice_rock",
+  "name": "얼음 바위",
+  "act": 3,
+  "tier": "normal",
+  "size": "M",
+  "body": "키 1.6 m",
+  "weight": "1.2 t",
+  "identity": "얼음이 엉겨 붙은 바위 짐승"
+ },
+ {
+  "id": "droplet",
+  "name": "물방울",
+  "act": 3,
+  "tier": "normal",
+  "size": "XS",
+  "body": "키 0.4 m",
+  "weight": "5 kg",
+  "identity": "물 한 방울. 여럿이 모여 다녀요"
+ },
+ {
+  "id": "rapids",
+  "name": "급류",
+  "act": 3,
+  "tier": "normal",
+  "size": "M",
+  "body": "몸길이 2 m",
+  "weight": "200 kg",
+  "identity": "급류가 짐승 꼴을 한 것"
+ },
+ {
+  "id": "shade",
+  "name": "그림자",
+  "act": 3,
+  "tier": "normal",
+  "size": "M",
+  "body": "웅크린 키 1.4 m",
+  "weight": "무게 거의 없음",
+  "identity": "빛이 닿지 않는 곳에서 일어난 그림자"
+ },
+ {
+  "id": "dusk",
+  "name": "어스름",
+  "act": 3,
+  "tier": "normal",
+  "size": "M",
+  "body": "키 1.9 m",
+  "weight": "무게 거의 없음",
+  "identity": "해 질 녘에 길어진 그림자"
+ },
+ {
+  "id": "hollow_armor",
+  "name": "빈 갑주",
+  "act": 3,
+  "tier": "normal",
+  "size": "L",
+  "body": "키 2.2 m",
+  "weight": "150 kg",
+  "identity": "속이 빈 검은 갑주"
+ },
+ {
+  "id": "ice_warden",
+  "name": "빙벽지기",
+  "act": 3,
+  "tier": "elite",
+  "size": "XL",
+  "body": "어깨높이 1.8 m, 몸길이 3.2 m",
+  "weight": "900 kg",
+  "identity": "등에 얼음 기둥이 솟은 흰 곰. 길목을 지켜요"
+ },
+ {
+  "id": "tidal_serpent",
+  "name": "해일뱀",
+  "act": 3,
+  "tier": "elite",
+  "size": "XL",
+  "body": "몸길이 8 m",
+  "weight": "700 kg",
+  "identity": "파도를 일으키며 솟는 물뱀"
+ },
+ {
+  "id": "twin_shade",
+  "name": "쌍둥이 그림자",
+  "act": 3,
+  "tier": "elite",
+  "size": "L",
+  "body": "어깨높이 1.2 m",
+  "weight": "무게 거의 없음",
+  "identity": "둘로 갈라지는 그림자 짐승"
+ },
+ {
+  "id": "small_shade",
+  "name": "작은 그림자",
+  "act": 3,
+  "tier": "minion",
+  "size": "XS",
+  "body": "키 0.5 m",
+  "weight": "무게 거의 없음",
+  "identity": "큰 그림자에서 떨어져 나온 조각"
+ },
+ {
+  "id": "cold_snap",
+  "name": "한파",
+  "act": 3,
+  "tier": "boss",
+  "size": "B",
+  "body": "어깨높이 4 m",
+  "weight": "8 t",
+  "identity": "한파를 몰고 오는 흰 매머드"
+ },
+ {
+  "id": "flood_tide",
+  "name": "밀물",
+  "act": 3,
+  "tier": "boss",
+  "size": "B",
+  "body": "몸길이 9 m",
+  "weight": "12 t",
+  "identity": "밀물과 함께 뭍으로 올라온 고래"
+ },
+ {
+  "id": "eclipse",
+  "name": "월식",
+  "act": 3,
+  "tier": "boss",
+  "size": "B",
+  "body": "어깨높이 2.2 m",
+  "weight": "500 kg",
+  "identity": "달을 삼킨 검은 늑대. 머리 위에 고리가 떠 있어요"
+ },
+ {
+  "id": "sand_gust",
+  "name": "모래바람",
+  "act": 4,
+  "tier": "normal",
+  "size": "M",
+  "body": "높이 2 m",
+  "weight": "무게 거의 없음",
+  "identity": "모래가 짐승 꼴로 일어난 바람"
+ },
+ {
+  "id": "pinwheel",
+  "name": "바람개비",
+  "act": 4,
+  "tier": "normal",
+  "size": "S",
+  "body": "지름 1 m",
+  "weight": "3 kg",
+  "identity": "바람 날개가 도는 것"
+ },
+ {
+  "id": "glass_mole",
+  "name": "유리 두더지",
+  "act": 4,
+  "tier": "normal",
+  "size": "M",
+  "body": "몸길이 1.4 m",
+  "weight": "250 kg",
+  "identity": "유리 비늘의 두더지"
+ },
+ {
+  "id": "halo",
+  "name": "빛무리",
+  "act": 4,
+  "tier": "normal",
+  "size": "S",
+  "body": "지름 0.9 m",
+  "weight": "무게 없음",
+  "identity": "떠다니는 빛의 고리"
+ },
+ {
+  "id": "shade_claw",
+  "name": "그늘 발톱",
+  "act": 4,
+  "tier": "normal",
+  "size": "M",
+  "body": "어깨높이 0.9 m, 몸길이 1.8 m",
+  "weight": "무게 거의 없음",
+  "identity": "발톱만 또렷한 그림자 맹수"
+ },
+ {
+  "id": "gloam",
+  "name": "땅거미",
+  "act": 4,
+  "tier": "normal",
+  "size": "M",
+  "body": "다리 폭 2 m",
+  "weight": "40 kg",
+  "identity": "땅거미 질 때 나오는 큰 거미"
+ },
+ {
+  "id": "old_statue",
+  "name": "낡은 석상",
+  "act": 4,
+  "tier": "normal",
+  "size": "L",
+  "body": "앉은 키 1.8 m",
+  "weight": "1.5 t",
+  "identity": "이끼 낀 석상이 깨어난 것"
+ },
+ {
+  "id": "storm_hawk",
+  "name": "폭풍 매",
+  "act": 4,
+  "tier": "elite",
+  "size": "L",
+  "body": "날개폭 4.5 m",
+  "weight": "35 kg",
+  "identity": "폭풍 구름을 끌고 다니는 매"
+ },
+ {
+  "id": "mirror_knight",
+  "name": "거울 기사",
+  "act": 4,
+  "tier": "elite",
+  "size": "L",
+  "body": "키 2.3 m",
+  "weight": "200 kg",
+  "identity": "거울 방패를 든 은빛 기사"
+ },
+ {
+  "id": "gloom_twin",
+  "name": "쌍둥이 그늘",
+  "act": 4,
+  "tier": "elite",
+  "size": "M",
+  "body": "어깨높이 0.9 m",
+  "weight": "40 kg",
+  "identity": "둘이 함께 다니는 검은 여우"
+ },
+ {
+  "id": "typhoon",
+  "name": "태풍",
+  "act": 4,
+  "tier": "boss",
+  "size": "B",
+  "body": "몸길이 15 m",
+  "weight": "무게 없음 (구름)",
+  "identity": "비구름으로 된 용"
+ },
+ {
+  "id": "white_night",
+  "name": "백야",
+  "act": 4,
+  "tier": "boss",
+  "size": "B",
+  "body": "어깨높이 2.4 m",
+  "weight": "700 kg",
+  "identity": "밤이 오지 않는 땅의 흰 순록"
+ },
+ {
+  "id": "dark_moon",
+  "name": "그믐",
+  "act": 4,
+  "tier": "boss",
+  "size": "B",
+  "body": "날개폭 7 m",
+  "weight": "150 kg",
+  "identity": "그믐밤의 검은 부엉이"
+ },
+ {
+  "id": "ember_shard",
+  "name": "불 조각",
+  "act": 5,
+  "tier": "normal",
+  "size": "M",
+  "body": "높이 1.6 m",
+  "weight": "60 kg",
+  "identity": "근원에서 떨어져 나온 불의 결정"
+ },
+ {
+  "id": "tide_shard",
+  "name": "물 조각",
+  "act": 5,
+  "tier": "normal",
+  "size": "M",
+  "body": "높이 1.6 m",
+  "weight": "90 kg",
+  "identity": "근원에서 떨어져 나온 물의 결정"
+ },
+ {
+  "id": "stone_shard",
+  "name": "땅 조각",
+  "act": 5,
+  "tier": "normal",
+  "size": "M",
+  "body": "높이 1.6 m",
+  "weight": "700 kg",
+  "identity": "근원에서 떨어져 나온 땅의 결정"
+ },
+ {
+  "id": "spark_shard",
+  "name": "전기 조각",
+  "act": 5,
+  "tier": "normal",
+  "size": "M",
+  "body": "높이 1.6 m",
+  "weight": "20 kg",
+  "identity": "근원에서 떨어져 나온 전기의 결정"
+ },
+ {
+  "id": "gate_keeper",
+  "name": "문지기",
+  "act": 5,
+  "tier": "elite",
+  "size": "XL",
+  "body": "키 3.2 m",
+  "weight": "5 t",
+  "identity": "문을 몸에 지닌 돌 거인. 마지막 길목"
+ },
+ {
+  "id": "echo",
+  "name": "메아리",
+  "act": 5,
+  "tier": "elite",
+  "size": "L",
+  "body": "지름 2 m",
+  "weight": "무게 없음",
+  "identity": "소리가 되돌아오는 소용돌이"
+ },
+ {
+  "id": "origin",
+  "name": "근원",
+  "act": 5,
+  "tier": "boss",
+  "size": "B",
+  "body": "어깨높이 2.8 m, 몸길이 6 m",
+  "weight": "1.2 t",
+  "identity": "모든 속성이 나온 뿌리 뿔의 흰 짐승"
+ }
+]

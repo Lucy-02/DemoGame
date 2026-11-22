@@ -21,7 +21,7 @@ export interface CasterStats {
 /** 효과 종류별 배율: 전투의 damageMult · burnMult · chillMult · healMult */
 export type CastMult = Partial<Record<"damage" | "burn" | "chill" | "heal", number>>;
 
-/** 타격 수치: 실제 타격처럼 (기본값 + 강화) × 파워 × 피해 배율을 마지막에 한 번만 반올림해요 */
+/** 타격 수치: 실제 타격처럼 (기본값 + 기세) × 파워 × 피해 배율을 마지막에 한 번만 반올림해요 */
 export const castDamage = (v: number, st: CasterStats) => round((((v + (st.empower ?? 0)) * st.power) / C.stat_base) * (st.mult?.damage ?? 1));
 /** 화상 · 냉기 · 회복 수치: 포커스로 보정한 값 × 그 효과의 배율 */
 export const castAmount = (v: number, st: CasterStats, kind: "burn" | "chill" | "heal") => round(scale(v, st.focus) * (st.mult?.[kind] ?? 1));
@@ -105,7 +105,7 @@ const TEXT_STATS: readonly EquipStat[] = ["speed", "crit_chance", "crit_mult"];
 const RATIO_STATS: readonly EquipStat[] = ["crit_chance", "crit_mult"];
 
 const WHEN: Record<StatCondition["k"], (w: StatCondition) => string> = {
-  hpBelow: (w) => (w.k === "hpBelow" && w.ratio !== 0.5 ? `HP가 ${pct(w.ratio)}% 아래이면 ` : "HP가 절반 아래이면 "),
+  hpBelow: (w) => (w.k === "hpBelow" && w.ratio !== 0.5 ? `HP가 ${pct(w.ratio)}% 이하이면 ` : "HP가 절반 이하이면 "),
   released: () => "해방 중이면 ",
   hurt: () => "HP가 가득이 아니면 ",
 };

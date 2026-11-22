@@ -12,7 +12,7 @@ const PARTY = ["fire_fox", "glass_salamander", "mist_cat"];
 /** 불여우가 장비(공명 n)를 지닌 전투 */
 function battleWith(equip: [id: string, resonance: number] | null, hand: string[], enemies = ["grimbark"]): Battle {
   const run = new Run({ seed: 1, frontId: "fire_fox", adult: false, unlockAll: true, party: PARTY });
-  if (equip) run.spirit("fire_fox").equipment = [{ id: equip[0], resonance: equip[1], from: "run" }];
+  if (equip) run.spirit("fire_fox").equipment = [{ id: equip[0], resonance: equip[1] }];
   const b = new Battle(run.spirits, [], enemies, run.frontId, new Rng(1));
   b.hand = hand.map((cardId, i): BCard =>
     ({ uid: 100 + i, cardId, owner: "fire_fox", tempCostDelta: 0, locked: false, isCopy: false, grow: 0, held: false, heldFast: false }));
@@ -49,7 +49,7 @@ describe("범용 장비", () => {
     expect(long[0]).toBeLessThan(first[0]);
   });
 
-  it("원형 방패: HP가 절반 아래일 때 가드가 더 올라요. 공명 3은 HP가 가득이 아니면 올라요", () => {
+  it("원형 방패: HP가 절반 이하일 때 가드가 더 올라요. 공명 3은 HP가 가득이 아니면 올라요", () => {
     const guard = (res: number, hp: number) => {
       const b = battleWith(["round_shield", res], []);
       const fox = b.spirit("fire_fox");
@@ -95,7 +95,7 @@ describe("범용 장비", () => {
       let n = 0;
       for (let seed = 1; seed <= 300; seed++) {
         const run = new Run({ seed, frontId: "fire_fox", adult: false, unlockAll: true, party: PARTY });
-        if (equip) run.spirit("fire_fox").equipment = [{ id: equip[0], resonance: equip[1], from: "run" }];
+        if (equip) run.spirit("fire_fox").equipment = [{ id: equip[0], resonance: equip[1] }];
         const b = new Battle(run.spirits, [], ["grimbark"], run.frontId, new Rng(seed));
         if (hurtFirst) b.enemy(1).hp -= 1;
         b.drain();

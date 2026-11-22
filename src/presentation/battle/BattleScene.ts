@@ -26,11 +26,11 @@ import { createPick, preloadPick, type PickView } from "./views/pick";
 import { drawOrder, drawOrderRing, preloadOrder, preloadOrderIcon, type OrderHit } from "./views/order";
 import { drawTooltip } from "../tooltip/Tooltip";
 import { GLASS } from "../tooltip/skins";
-import { ALLY, BAND, DRAG, END, ENEMY, FRAME, INTENT, LIFT_STYLES, SYS, TARGETING } from "./layout";
+import { ALLY, BAND, DRAG, END, ENEMY, FRAME, INTENT, SYS, TARGETING } from "./layout";
 import { playOrderMotion, snapshotOrder, type OrderSnapshot } from "./views/orderMotion";
 import { SYS_ICONS, drawSys } from "./views/topbar";
 import { hitSpan, playUnitMotion, type UnitActor } from "./views/unitMotion";
-import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, dropValueTextures, losesHp, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
+import { aimsAt, drawAlly, drawAllyPulse, drawEnemy, drawIntent, drawMarkTip, drawUnitTip, dropValueTextures, losesHp, placeEnemies, preloadUnits, type UnitBounds, type UnitView } from "./views/units";
 import type { BattleVM, UnitRef } from "./viewmodel";
 import { pointerAt } from "../style/resolution";
 
@@ -50,7 +50,6 @@ export interface BattleSceneData {
   /** 고정 장면에 깔 배경의 막 (?stage=1, 시각 검증용). 실제 전투는 session의 막을 써요 */
   stage?: number;
   hover?: string;
-  lift?: string;
   /** 첫 판 안내 (0088): 주면 이 전투에서 개념을 한 번씩 짚어요. 이미 짚은 것을 여기에 적어 장면을 다시 그려도 남겨요 */
   guide?: GuideSeen;
   /** 턴 재생: 남은 장면들. 첫 장면을 그리고, 한 행동 시간 뒤 다음 장면으로 넘어가요 */
@@ -69,8 +68,6 @@ export class BattleScene extends Phaser.Scene {
   /** 시각 검증용: 처음부터 이 카드에 호버한 상태로 */
   private hover?: string;
 
-  /** 들기 크기 바꿔 보기 (?lift=h1 정본) */
-  private lift?: string;
 
   private session?: BattleSession;
   private playback?: BattleVM[];
@@ -117,7 +114,6 @@ export class BattleScene extends Phaser.Scene {
     this.orderFx = null;
     this.pick = null;
     this.hover = data.hover;
-    this.lift = data.lift;
     this.stage = data.session?.act ?? data.stage;
   }
 
@@ -227,7 +223,6 @@ export class BattleScene extends Phaser.Scene {
     const turn = this.vm.order.head?.turn;
     this.hand = createHand(this, this.vm.hand, {
       prev: handPrev?.snap, deal: !!this.session && (!handPrev || handPrev.turn !== turn),
-      lift: this.lift ? LIFT_STYLES[this.lift] : undefined,
       onPress: (key, p) => {
         if (p.rightButtonDown() || this.pick) return;
         if (!this.vm.plays[key]) return void audioOf(this)?.play("card.deny");
@@ -266,7 +261,7 @@ export class BattleScene extends Phaser.Scene {
       // 대상이 없으면 아군과 적 사이 필드 빈 곳
       const at = box
         ? { x: box.x + box.w / 2, y: box.y + box.h / 2 }
-        : { x: (ALLY.xs[ALLY.xs.length - 1] + ENEMY.xs[0]) / 2, y: BAND.top / 2 };
+        : { x: (ALLY.xs[ALLY.xs.length - 1] + ENEMY.field.left) / 2, y: BAND.top / 2 };
       const where = this.overAt(at.x, at.y);
       if (start.mode === "held") {
         this.held = start.card;
@@ -457,7 +452,8 @@ export class BattleScene extends Phaser.Scene {
     if (!ref || !unit) return;
     const { allies, enemies } = this.vm;
     if (!sameUnit) this.drawHoverFx(ref);
-    const cx = (ref.side === "ally" ? ALLY : ENEMY).xs[ref.i];
+    // 유닛 가운데 (적은 몸 크기만큼 자리가 달라서 그려진 범위에서 읽어요, 0158)
+    const cx = unit.bounds.x + unit.bounds.w / 2;
     const tip = mark === undefined ? undefined : unit.marks[mark]?.tip;
     // 필드 층 맨 위(손패 띠 아래)에 그려요
     this.hoverTip = gather(this, 0, 0, () => {
@@ -725,6 +721,7 @@ export class BattleScene extends Phaser.Scene {
           return v;
         });
       });
+      placeEnemies(this.vm.enemies);
       this.vm.enemies.forEach((e, i) => {
         const ref = { side: "enemy", i } as const;
         unit(ref, () => {
