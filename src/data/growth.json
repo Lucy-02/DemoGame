@@ -1,6 +1,6 @@
 {
   "$comment": "판 안 성장 (결정 0157). 숫자는 모두 임시값이에요(tools/runsim.ts --growth로 잡음). levels = 레벨마다의 누적 경험. 성체 줄이 둘이면 갈래 고르기(0027): opens.cards = 그 판에서 받은 그 갈래 카드 수, main = 갈래의 주 성장(작업 가정)",
-  "levels": [0, 20, 70, 140, 215, 290],
+  "levels": [0, 20, 60, 90, 215, 290],
   "level_hp": 2,
   "exp": { "normal": 10, "elite": 25, "boss": 50 },
   "stage_main_bonus": 2,
