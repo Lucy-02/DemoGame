@@ -65,6 +65,7 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
       loadIcon(scene, e.weakTo, WEAK_ON_ICON);
     }
     if (e.intent) loadIcon(scene, e.intent.icon, INTENT.icon);
+    if (e.intent?.also) loadIcon(scene, e.intent.also, INTENT.also);
     if (e.intent?.target === "random") loadIcon(scene, RANDOM_ICON, INTENT.face);
     statuses(e.statuses);
     for (const t of e.traits ?? []) loadIcon(scene, t.icon, I.status.icon);
@@ -583,6 +584,7 @@ function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false):
       ...(order ? [order] : []), { t: "icon", id: it.icon, w: INTENT.icon, h: INTENT.icon, tint: iconTint }, amountNode,
       ...(mult.length ? [text(`×${mult.join("×")}`, T.intentMult, P.ink3)] : []),
       ...(target ? [target] : []),
+      ...(it.also ? [{ t: "icon" as const, id: it.also, w: INTENT.also, h: INTENT.also, tint: P.ink2 }] : []),
     ],
   };
 }

@@ -114,9 +114,10 @@ export interface AllyVM {
 export type IntentTarget = UnitFace | "all" | "random" | "none";
 
 export type IntentVM =
-  | { kind: "attack" | "charge" | "defend" | "buff"; order?: number; icon: IconId; amount: string; target: IntentTarget }
-  | { kind: "debuff"; order?: number; icon: IconId; amount: string; target: IntentTarget };
+  | { kind: "attack" | "charge" | "defend" | "buff"; order?: number; icon: IconId; amount: string; target: IntentTarget; also?: IconId }
+  | { kind: "debuff"; order?: number; icon: IconId; amount: string; target: IntentTarget; also?: IconId };
 // order: 이번 턴 순서표 번호. 차징 중처럼 이번 턴에 행동하지 않으면 없어요
+// also: 대표 효과와 함께 오는 둘째 효과의 기호 (알약 끝에 작게, 0169). 기호가 없는 효과는 가리켜서 문장으로 읽어요
 
 export interface EnemyVM {
   art: IconId;

@@ -345,10 +345,12 @@ function intentOf(b: Battle, e: BEnemy, order: OrderEntry[]): IntentVM | undefin
   const at = n < 0 ? undefined : n + 1;
   const target = main ? targetOf(b, main, b.slots.find((x) => x.uid === e.uid && !x.done)) : "none";
   const amount = main ? amountOf(b, e, main) : "";
-  if (it.kind === "charge" || it.kind === "chargeReady") return { kind: "charge", order: at, icon: CHARGE_ICON, amount, target };
   const icon = (main && ACTION_ICON[main.type]) ?? CHARGE_ICON;
-  if (it.kind === "debuff") return { kind: "debuff", order: at, icon, amount, target };
-  return { kind: it.kind, order: at, icon, amount, target };
+  // 둘째 효과: 대표 효과와 기호가 다른 첫 행동 (0169)
+  const also = move.actions.flatMap((a) => (a === main ? [] : [ACTION_ICON[a.type]])).find((id) => id && id !== icon);
+  if (it.kind === "charge" || it.kind === "chargeReady") return { kind: "charge", order: at, icon: CHARGE_ICON, amount, target, also };
+  if (it.kind === "debuff") return { kind: "debuff", order: at, icon, amount, target, also };
+  return { kind: it.kind, order: at, icon, amount, target, also };
 }
 
 function targetOf(b: Battle, a: EnemyAction, slot?: EnemySlot): IntentTarget {

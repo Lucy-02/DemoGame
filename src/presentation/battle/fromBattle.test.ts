@@ -96,6 +96,15 @@ describe("전투 화면 VM", () => {
     expect(seen).toBeGreaterThan(20);
   });
 
+  it("의도 알약은 대표 효과와 다른 둘째 효과의 기호를 끝에 하나 붙여요 (0169)", () => {
+    // 그늘 새끼: 첫 행동이 피해 + 약화
+    const b = new BattleSession(run(), ["small_shade"]).battle;
+    expect(battleVM(b).enemies[0].intent).toMatchObject({ icon: "fx-damage", also: "kw-weak" });
+    // 효과가 하나뿐이면 붙이지 않아요
+    const one = new BattleSession(run(), ["wisp"]).battle;
+    expect(battleVM(one).enemies[0].intent?.also).toBeUndefined();
+  });
+
   it("차징 중인 적의 `브레이크 가능`은 브레이크 카드가 있는 파티에만 떠요 (0169)", () => {
     const lines = (party: string[]) => {
       const b = new BattleSession(new Run({ seed: 7, frontId: party[0], adult: false, unlockAll: false, party }), ["moss_slime"]).battle;

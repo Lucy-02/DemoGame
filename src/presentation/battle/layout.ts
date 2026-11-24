@@ -146,6 +146,8 @@ export const INTENT = {
   order: 18, orderDebuffRadius: 5,
   /** .intent .ic 15 */
   icon: 15,
+  /** 둘째 효과 기호: 대표 기호와 같은 크기 (0169, Lucy 2026-11-24) */
+  also: 15,
   /** .face 18, 바깥 테 1.5 */
   face: 18, faceRing: 1.5,
   /** .intent.on inset 1.5 ink (가리킨 유닛과 이어진 의도) */
