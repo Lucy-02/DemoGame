@@ -533,7 +533,7 @@ function enemyInfo(scene: Phaser.Scene, e: EnemyVM, i: number, pv: EnemyOutcomeV
     ...e.statuses.map(statusChip),
   ];
   const at = spotOf(i);
-  // 깎일 구간과 조준 중의 HP 수: 놓은 카드까지(조준 중이면 든 카드까지) 미리 돌려 본 이번 턴의 몫 (0168)
+  // 깎일 구간과 조준 중의 HP 수: 놓은 카드까지(조준 중이면 든 카드까지) 미리 돌려 본 이번 턴의 몫 (0169)
   const gone = Math.min(e.hp, pv ? (pv.loss ?? e.hp - pv.hp.to) : (e.loss ?? 0));
   return drawInfo(scene, at.x, ENEMY.feet, { max: e.maxHp, keep: e.hp - gone, gone }, { n: pv ? e.hp - gone : e.hp, pv: !!pv }, chips, false, at.bar);
 }

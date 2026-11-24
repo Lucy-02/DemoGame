@@ -73,7 +73,7 @@ describe("전투 화면 VM", () => {
     expect(b.planned.length).toBeGreaterThan(0);
   });
 
-  it("적 HP 막대의 깎일 구간은 놓은 카드를 실제로 재생한 값과 같아요 (무작위 대상 · 치명 제외, 0168)", () => {
+  it("적 HP 막대의 깎일 구간은 놓은 카드를 실제로 재생한 값과 같아요 (무작위 대상 · 치명 제외, 0169)", () => {
     const bad: string[] = [];
     let seen = 0;
     for (const enc of ENCOUNTERS) {
@@ -96,7 +96,7 @@ describe("전투 화면 VM", () => {
     expect(seen).toBeGreaterThan(20);
   });
 
-  it("차징 중인 적의 `브레이크 가능`은 브레이크 카드가 있는 파티에만 떠요 (0168)", () => {
+  it("차징 중인 적의 `브레이크 가능`은 브레이크 카드가 있는 파티에만 떠요 (0169)", () => {
     const lines = (party: string[]) => {
       const b = new BattleSession(new Run({ seed: 7, frontId: party[0], adult: false, unlockAll: false, party }), ["moss_slime"]).battle;
       b.enemies[0].charging = true;

@@ -317,10 +317,10 @@ function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[], turn: Forecast): Ene
 /** 브레이크 카드 (차징을 끊는 효과가 있는 카드) */
 export const isBreak = (b: Battle, c: BCard) => b.cardDefOf(c).effects.some((o) => o.op === "ram" || o.op === "breakCharging");
 
-/** 이번 전투에서 아직 쓸 수 있는 카드 가운데 브레이크가 있는지. 없는 파티에는 `브레이크 가능`을 띄우지 않아요 (0168) */
+/** 이번 전투에서 아직 쓸 수 있는 카드 가운데 브레이크가 있는지. 없는 파티에는 `브레이크 가능`을 띄우지 않아요 (0169) */
 const canBreak = (b: Battle) => [...b.draw, ...b.hand, ...b.discard, ...b.hold.held, ...b.planned.flatMap((p) => (p.card ? [p.card] : []))].some((c) => isBreak(b, c));
 
-/** 유닛 풀이 (정본 H1): 행동 이름 · 효과문, 차징 중이고 브레이크 카드가 있으면 이름 줄에 `브레이크 가능` (0067 · 0168) */
+/** 유닛 풀이 (정본 H1): 행동 이름 · 효과문, 차징 중이고 브레이크 카드가 있으면 이름 줄에 `브레이크 가능` (0067 · 0169) */
 function tipLines(b: Battle, e: BEnemy): RichText[] {
   const it = b.intent(e);
   const action = it.kind === "skip" ? richText(it.text) : [{ text: `${it.name} · ` }, ...richText(it.text)];
