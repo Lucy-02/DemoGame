@@ -1,6 +1,6 @@
 // 덱에서 카드 한 장 고르기 (Lucy 2026-11-17, 공용 UI 기획 r6): 큰 정령 줄 없이 덱 보기 창 틀(얼굴 머리 + 덱 장수 + 카드 줄)에서 골라요.
 // 상점 빼기 · 휴식 강화 · 이벤트(빼기 · 강화 · 복제)가 같이 써요. 고르기 → 확인 두 단계, 창은 내용을 감싸고 화면 한가운데.
-// 빼기는 고른 카드에 − 표식, 강화 · 복제는 고른 카드 오른쪽에 화살표 + 바뀐 카드를 끼워 전→후를 보여요. 아홉 장을 넘는 줄은 덱 보기처럼 접어 내려요.
+// 빼기는 고른 카드에 − 표식, 강화 · 복제는 고른(누른) 카드 오른쪽에 화살표 + 바뀐 카드를 끼워 전→후를 보여요. 아홉 장을 넘는 줄은 덱 보기처럼 접어 내려요.
 // 취소 · 확인(또는 돌아가기)은 마지막 줄 아래 정해진 자리예요. 말풍선은 첫 줄만 카드 위, 둘째 줄부터는 윗줄을 가리지 않게 카드 옆.
 import type * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
@@ -89,7 +89,8 @@ export function drawDeckPick(scene: Phaser.Scene, o: DeckPickOptions) {
     };
     for (const c of row) {
       put(c);
-      if (upgrade && focus === c.uid && c.after) {
+      // 올리기만 해서는 끼우지 않아요: 옆 카드가 밀리면 누르려던 카드가 달아나요 (Lucy 2026-11-24)
+      if (upgrade && o.pick === c.uid && c.after) {
         x += arrow;
         put(c, true);
       }
@@ -168,7 +169,7 @@ export function drawDeckPick(scene: Phaser.Scene, o: DeckPickOptions) {
         if (!on) return;
         if (o.mode === "remove") drawRemoveMark(scene, cx, cy);
         // 바뀐 카드가 옆에 끼면 말풍선은 그 카드가 맡아요
-        if (!(upgrade && s.c.after)) tip();
+        if (!(upgrade && s.c.after && o.pick === s.c.uid)) tip();
       };
       if (on) late.push(draw);
       else draw();
