@@ -1,7 +1,7 @@
 // 규칙 데이터(정령·카드) → 런 화면 값 (카드, 정령 줄). 고정 장면과, 런에 연결할 때 함께 써요.
 import { C, ELEMENT_NAME, EQUIP_RARITY_NAME, RARITY_NAME, baseCardId, canUpgradeCard, cardDef, equipDef, equipName, isUpgradedId, spiritDef, upgradedId } from "../../core/data";
 import { levelProgress } from "../../core/growth";
-import { baseStat, equipSlots, maxHpOf, resonanceCap, resonanceOf, round, scale } from "../../core/stats";
+import { baseStat, equipSlots, maxHpOf, resonanceLimit, resonanceOf, round, scale } from "../../core/stats";
 import { signatureSwapOf } from "../../core/run";
 import { castAmount, castDamage, describeCard, describeEquipTier, describeSignatureSwap, type CastMult } from "../../core/text";
 import type { CardDef, CardOp, DeckCard, EquipTier, RunEquip, RunSpirit, Stage } from "../../core/types";
@@ -111,7 +111,7 @@ export function equipVM(e: RunEquip, stage: Stage): EquipVM {
   const def = equipDef(e.id);
   return {
     id: e.id, name: equipName(e.id), rarity: def.rarity, rarityName: EQUIP_RARITY_NAME[def.rarity],
-    resonance: resonanceOf(e), cap: Math.min(resonanceCap(stage), def.tiers.length),
+    resonance: resonanceOf(e), cap: resonanceLimit(stage, e.id),
   };
 }
 

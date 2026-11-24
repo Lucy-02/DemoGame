@@ -46,7 +46,7 @@
 - 범용 6개(`generic.json`)와 보스 3개(`boss.json`)도 들어 있어요. 효과는 `EQUIP_PASSIVES`: `start_block`, `start_block_return`, `first_hit`, `longest_card_hit`, `linger_once`, `linger_turn`, `first_card_time`, `first_card_time_opening`, `crit_vs_full`, `crit_vs_healthy`, `first_card_cost`, `time_cut`, `carry_block`. 방패는 조건부 능력치(`hpBelow`, `hurt`)만 써요. 테스트 `src/core/battle.equipment.test.ts`.
 - 활의 "덜 줄어듦"은 누가 건 상태인지 가리지 않고 적의 화상 · 약화 · 취약에 적용돼요. 쓰러졌다 돌아올 때의 HP는 `stats.ts`의 `returnHp()`가 정해요.
 - 보상 흐름: 정예는 `rollBattleReward("elite")` → `giveRewardEquipment`(꼭 받아요. 받을 정령이 모두 칸이 꽉 찼을 때만 `skipRewardEquipment`), 보스는 `rollBossEquipment()` → `giveEquipment`. 판이 끝나면 장비는 사라져요(0159).
-- 0159: 장비는 판 안에서만 써요. 정예 보상의 공명 올리기는 제안이고 아직 없어요.
+- 0159 · 0170: 장비는 판 안에서만 써요. 정예 보상의 장비 차례에 새 장비 대신 지닌 장비의 공명을 1 올릴 수 있어요(`Run.raisable` · `raiseRewardResonance`, 세션 명령 `raise`). 공명은 `stats.resonanceLimit`(정령 단계의 상한 · 장비의 단계 수)까지만 올라요. 화면에는 아직 없어요.
 - 남은 것: 장비와 기술 카드의 이름 · 그림(Lucy), 문구(`locales/<lang>/equipment.json`), 보상 화면과 session 연결.
 
 ### 2단계 시도본 (참고만)

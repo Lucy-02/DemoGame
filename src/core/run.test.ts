@@ -172,6 +172,44 @@ describe("장비 칸 · 바꿔 끼기 · 대표 카드 변형 (0055 · 0056)", (
     expect(r.spirit("fire_fox").equipment).toEqual([{ id: "test_spear", resonance: 2 }]);
   });
 
+  it("공명은 정령 단계의 상한까지만 올라요. 상한이면 같은 장비를 넘길 수 있어요 (0159)", () => {
+    const LONG: EquipDef = { id: "test_long", owner: "fire_fox", rarity: "exclusive", tiers: [{}, {}, {}] };
+    EQUIPMENT.push(LONG);
+    const r = run(3);
+    for (let i = 0; i < 3; i++) r.giveEquipment("test_long", "fire_fox");
+    // 유체의 상한은 2예요
+    expect(r.spirit("fire_fox").equipment).toEqual([{ id: "test_long", resonance: 2 }]);
+    expect(r.raisable()).toEqual([]);
+    const reward = r.rollBattleReward("elite");
+    reward.equipment = { equipId: "test_long" };
+    reward.equipDone = false;
+    expect(r.canSkipRewardEquipment(reward)).toBe(true);
+    r.spirit("fire_fox").stage = "adult";
+    expect(r.canSkipRewardEquipment(reward)).toBe(false);
+    expect(r.raisable()).toEqual([{ spirit: "fire_fox", equipId: "test_long" }]);
+  });
+
+  it("정예 보상에서 새 장비 대신 지닌 장비의 공명을 올려요. 새 장비는 사라져요 (0159)", () => {
+    EQUIPMENT.push(SPEAR, ELITE_ANY);
+    const r = run(3);
+    const reward = r.rollBattleReward("elite");
+    reward.equipment = { equipId: "test_elite_any" };
+    reward.equipDone = false;
+    // 지닌 장비가 없으면 올릴 것도 없어요
+    expect(r.canRaiseRewardResonance(reward)).toBe(false);
+    r.giveEquipment("test_spear", "fire_fox");
+    expect(r.canRaiseRewardResonance(reward)).toBe(true);
+    expect(r.withResonance("fire_fox", "test_spear").equipment).toEqual([{ id: "test_spear", resonance: 2 }]);
+    expect(r.spirit("fire_fox").equipment).toEqual([{ id: "test_spear", resonance: 1 }]);
+    r.raiseRewardResonance(reward, "fire_fox", "test_spear");
+    expect(r.spirit("fire_fox").equipment).toEqual([{ id: "test_spear", resonance: 2 }]);
+    expect(reward.equipDone).toBe(true);
+    expect(r.spirits.flatMap((s) => s.equipment.map((e) => e.id))).toEqual(["test_spear"]);
+    // 한 보상에 한 번, 단계 수를 넘지 않아요
+    expect(() => r.raiseRewardResonance(reward, "fire_fox", "test_spear")).toThrow();
+    expect(() => r.withResonance("fire_fox", "test_spear")).toThrow();
+  });
+
   it("전용 무기는 대표 카드 한 장을 갈래의 기술로 바꿔요. 덱 장수는 그대로예요", () => {
     EQUIPMENT.push(SPEAR);
     const r = run(3);

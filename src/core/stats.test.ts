@@ -5,7 +5,7 @@ import { EQUIP_PASSIVES } from "./battle/passives";
 import { C, EQUIPMENT } from "./data";
 import { Rng } from "./rng";
 import { Run } from "./run";
-import { activeTiers, critStat, equipSlots, maxHpOf, resolveStat, resonanceCap } from "./stats";
+import { activeTiers, critStat, equipSlots, maxHpOf, resolveStat, resonanceCap, resonanceLimit } from "./stats";
 import type { EquipDef, RunSpirit } from "./types";
 import { equipProblems } from "./validate";
 
@@ -83,7 +83,10 @@ describe("능력치 층", () => {
 
   it("단계별 칸 수 · 공명 상한, 데이터 검사", () => {
     expect([equipSlots("baby"), equipSlots("adult"), equipSlots("awakened")]).toEqual([1, 1, 2]);
-    expect([resonanceCap("baby"), resonanceCap("awakened")]).toEqual([1, 3]);
+    expect([resonanceCap("baby"), resonanceCap("awakened")]).toEqual([2, 3]);
+    // 닿을 수 있는 공명은 정령 단계의 상한과 장비의 단계 수 가운데 작은 쪽이에요 (0159)
+    EQUIPMENT.push(FIXTURE);
+    expect([resonanceLimit("baby", "test_charm"), resonanceLimit("adult", "test_charm")]).toEqual([2, 3]);
     const spiritIds = new Set(["fire_fox"]);
     EQUIP_PASSIVES.test_passive = {};
     expect(equipProblems(FIXTURE, spiritIds)).toEqual([]);
