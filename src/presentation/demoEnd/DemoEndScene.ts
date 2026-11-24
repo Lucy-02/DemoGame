@@ -5,9 +5,9 @@ import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
 import { drawBackdrop } from "../run/backdrop";
 import { RUN_END } from "../run/layout";
+import { linkSlot } from "../run/linkSlot";
 import { COPY as RUN_END_COPY } from "../runEnd/copy";
 import { P, button, text } from "../spirits/views/parts";
-import { withAlpha } from "../style/color";
 import { ms } from "../style/ease";
 import { render, size, type Node } from "../style/flex";
 import { gather } from "../style/gather";
@@ -39,20 +39,13 @@ export class DemoEndScene extends Phaser.Scene {
 
   create() {
     drawBackdrop(this);
-    const B = R.button, O = R.only;
+    const B = R.button;
     const parts: Phaser.GameObjects.Container[] = [];
     const part = (node: Node, y: number) => parts.push(gather(this, 0, 0, () => { render(this, node, R.x, y); }));
     const title = text(COPY.title, T.eventName, P.ink);
     part(title, R.top);
     // 링크 자리 둘: 버튼과 같은 크기의 점선 칸
-    const slots: Node = {
-      t: "row", gap: B.gap,
-      children: COPY.slots.map((label): Node => ({
-        t: "row", w: B.w, h: B.h, radius: B.radius, justify: "center", align: "center",
-        style: { ring: { width: O.ring, color: withAlpha(P.ink, O.lineAlpha), dash: O.dash } },
-        children: [text(label, T.record, P.ink3Spirit)],
-      })),
-    };
+    const slots: Node = { t: "row", gap: B.gap, children: COPY.slots.map(linkSlot) };
     part(slots, R.top + size(title).h + R.gap);
     const label = this.data_?.next === "again" ? RUN_END_COPY.again : RUN_END_COPY.garden;
     part(button(label, { size: TR.button, h: B.h, w: B.w, radius: B.radius, plate: true, onClick: () => this.next() }), B.y);

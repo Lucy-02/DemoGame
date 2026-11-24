@@ -196,7 +196,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           return;
         }
         if (opts.screen === "runEnd") {
-          const data: RunEndSceneData = { scene: opts.scene };
+          const data: RunEndSceneData = { scene: opts.scene, wishlist: opts.demo };
           game.scene.add(RUN_END_SCENE, RunEndScene, true, data);
           return;
         }

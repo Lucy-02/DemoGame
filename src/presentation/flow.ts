@@ -345,7 +345,7 @@ export class GameFlow implements LegacyFlow {
     // 데모에서 이긴 판은 어느 버튼이든 데모 끝을 거쳐 그 버튼이 가던 곳으로 가요 (0101)
     const demoEnd = !!this.opts.demo && record.victory;
     const to = (next: NonNullable<DemoEndSceneData["next"]>, then: () => void) => () => (demoEnd ? this.demoEnd(next, then) : then());
-    const data: RunEndSceneData = { record, onGarden: to("garden", () => this.finish()), onAgain: to("again", () => this.depart()) };
+    const data: RunEndSceneData = { record, wishlist: !!this.opts.demo, onGarden: to("garden", () => this.finish()), onAgain: to("again", () => this.depart()) };
     this.go(RUN_END_SCENE, data);
   }
 
