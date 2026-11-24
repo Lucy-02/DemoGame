@@ -73,6 +73,40 @@ describe("전투 화면 VM", () => {
     expect(b.planned.length).toBeGreaterThan(0);
   });
 
+  it("적 HP 막대의 깎일 구간은 놓은 카드를 실제로 재생한 값과 같아요 (무작위 대상 · 치명 제외, 0168)", () => {
+    const bad: string[] = [];
+    let seen = 0;
+    for (const enc of ENCOUNTERS) {
+      const b = new BattleSession(run(), enc.enemies).battle;
+      for (let turn = 1; turn <= 6 && b.result === "ongoing"; turn++) {
+        placeAll(b, turn);
+        const random = b.planned.some((p) => p.card && b.cardDefOf(p.card).effects.some((op) => op.op === "randomHits"));
+        const alive = b.aliveEnemies();
+        const vm = battleVM(b);
+        const real = playTurn(b);
+        if (random) continue;
+        alive.forEach((e, i) => {
+          const shown = vm.enemies[i].loss ?? 0;
+          if (shown > 0) seen++;
+          if (shown !== (real.foe[e.uid] ?? 0)) bad.push(`${enc.id} ${turn}턴 ${e.def.id}: 깎일 HP ${shown}, 실제 ${real.foe[e.uid] ?? 0}`);
+        });
+      }
+    }
+    expect(bad).toEqual([]);
+    expect(seen).toBeGreaterThan(20);
+  });
+
+  it("차징 중인 적의 `브레이크 가능`은 브레이크 카드가 있는 파티에만 떠요 (0168)", () => {
+    const lines = (party: string[]) => {
+      const b = new BattleSession(new Run({ seed: 7, frontId: party[0], adult: false, unlockAll: false, party }), ["moss_slime"]).battle;
+      b.enemies[0].charging = true;
+      const vm = battleVM(b);
+      return [...vm.enemies[0].tip!.lines.slice(1).map((l) => l.map((x) => x.text).join("")), ...vm.order.slots.flatMap((x) => x.tip?.chips?.map((c) => c.text) ?? [])];
+    };
+    expect(lines(["fire_fox", "mist_cat", "glass_salamander"])).not.toContain("브레이크 가능");
+    expect(lines(["magma_ibex", "mist_cat", "glass_salamander"]).filter((t) => t === "브레이크 가능").length).toBeGreaterThan(0);
+  });
+
   it("해방을 놓은 뒤 같은 턴에 놓는 카드의 숫자는 실제 타격과 같아요", () => {
     const r = run();
     r.spirit("fire_fox").stage = "awakened";
@@ -216,6 +250,8 @@ function playTurn(b: Battle, watch?: Planned) {
     }
   };
   const hit: Record<string, number> = {}, lost: Record<string, number> = {};
+  const foe: Record<number, number> = {};
+  const foeHp = new Map(b.enemies.map((e) => [e.uid, e.hp]));
   const hp = new Map(b.spirits.map((s) => [s.id, s.hp]));
   const downedBefore = b.spirits.filter((s) => s.downed).map((s) => s.id);
   const hurt = b.hurtSpirit.bind(b);
@@ -232,6 +268,7 @@ function playTurn(b: Battle, watch?: Planned) {
     } finally {
       b.rng.next = next;
       for (const s of b.spirits) lost[s.id] = Math.max(0, hp.get(s.id)! - s.hp);
+      for (const e of b.enemies) foe[e.uid] = Math.max(0, (foeHp.get(e.uid) ?? e.hp) - e.hp);
     }
   };
   b.endTurn();
@@ -240,7 +277,7 @@ function playTurn(b: Battle, watch?: Planned) {
   b.hurtSpirit = hurt;
   b["replay"] = replay;
   b["resolvePlanned"] = resolve;
-  return { hit, lost, downedBefore, card };
+  return { hit, lost, foe, downedBefore, card };
 }
 
 describe("놓은 카드 되돌리기 (0127)", () => {

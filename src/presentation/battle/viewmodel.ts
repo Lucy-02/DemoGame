@@ -123,6 +123,8 @@ export interface EnemyVM {
   hp: number;
   maxHp: number;
   block?: number;
+  /** 놓은 카드까지 미리 돌려 본 이번 턴에 깎일 HP: HP 막대에 깎일 구간을 늘 그려요 (0168) */
+  loss?: number;
   element: IconId;
   /** 약점 속성. 바람·무속성처럼 약점이 없으면 비움 (0028). 있으면 약점 배지를 늘 그리고, 맞는 속성 카드를 들면 켜요 */
   weakTo?: IconId;
@@ -246,6 +248,8 @@ export interface EnemyOutcomeVM {
   hits: number[];
   block?: Change;
   hp: Change;
+  /** 이 카드까지 놓으면 이번 턴에 깎일 HP (막대의 깎일 구간). 없으면 이 카드로 깎이는 만큼 */
+  loss?: number;
   /** 차징이 끊기면 의도 알약·순서표에 끊김 표시 */
   cut?: boolean;
 }

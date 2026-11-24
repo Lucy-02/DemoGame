@@ -524,7 +524,6 @@ function allyInfo(scene: Phaser.Scene, a: AllyVM, i: number, pv?: IncomingChange
 }
 
 function enemyInfo(scene: Phaser.Scene, e: EnemyVM, i: number, pv: EnemyOutcomeVM | undefined, weakOn: boolean): InfoView {
-  const hp = pv ? pv.hp.to : e.hp;
   const chips: Chip[] = [
     ...(e.traits ?? []).map(traitChip),
     elementChip(scene, e.element),
@@ -534,7 +533,9 @@ function enemyInfo(scene: Phaser.Scene, e: EnemyVM, i: number, pv: EnemyOutcomeV
     ...e.statuses.map(statusChip),
   ];
   const at = spotOf(i);
-  return drawInfo(scene, at.x, ENEMY.feet, { max: e.maxHp, keep: hp, gone: pv ? pv.hp.from - pv.hp.to : 0 }, { n: hp, pv: !!pv }, chips, false, at.bar);
+  // 깎일 구간과 조준 중의 HP 수: 놓은 카드까지(조준 중이면 든 카드까지) 미리 돌려 본 이번 턴의 몫 (0168)
+  const gone = Math.min(e.hp, pv ? (pv.loss ?? e.hp - pv.hp.to) : (e.loss ?? 0));
+  return drawInfo(scene, at.x, ENEMY.feet, { max: e.maxHp, keep: e.hp - gone, gone }, { n: pv ? e.hp - gone : e.hp, pv: !!pv }, chips, false, at.bar);
 }
 
 /** 무작위 대상 기호 (카드의 무작위 표식과 같음) */

@@ -34,7 +34,7 @@ export const TERMS: readonly Term[] = [
   { id: "taunt", name: "도발", group: "status", icon: "kw-taunt", inText: true, what: "적이 하나만 노리는 공격을 대신 받습니다.", when: START_TURN },
   { id: "empower", name: "기세", group: "status", icon: "kw-strength", what: "이번 턴에 입히는 타격 피해가 수치만큼 늘어납니다.", when: START_TURN },
 
-  { id: "block", name: "방어도", group: "card", icon: "fx-block", what: "받는 피해를 방어도만큼 막습니다.", when: START_TURN },
+  { id: "block", name: "방어도", group: "card", icon: "fx-block", inText: true, what: "받는 피해를 방어도만큼 막습니다.", when: START_TURN },
   { id: "wall", name: "벽", group: "card", what: "벽으로 얻은 방어도는 다른 아군이 받는 피해도 대신 막습니다." },
   { id: "exhaust", name: "소멸", group: "card", icon: "prop-exhaust", inText: true, what: "사용하면 이번 전투에서 사라집니다." },
   { id: "persist", name: "지속", group: "card", icon: "prop-persist", what: "사용하면 전투가 끝날 때까지 효과가 이어집니다." },
