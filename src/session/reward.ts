@@ -44,9 +44,9 @@ export class RewardSession {
       : source.cardIds.map((cardId) => ({ cardId, learners: run.learnersOf(cardId).map((s) => s.id) }));
   }
 
-  /** 남은 다시 뽑기 (0157). 전투 보상의 카드를 고르기 전에만 써요 */
-  get rerolls(): number {
-    return this.source.kind === "battle" && !this.finished && this.run.canRerollReward(this.source.reward) ? this.run.rerolls : 0;
+  /** 다시 뽑기 (0157 · 0171): 다시 뽑기를 받고 떠난 판의 전투 보상에서, 카드를 고르기 전에만 있어요. left가 0이면 다 쓴 거예요 */
+  get reroll(): { left: number } | undefined {
+    return this.source.kind === "battle" && !this.finished && this.run.rerollsGranted > 0 ? { left: this.run.rerolls } : undefined;
   }
 
   /** 이번에 받은 골드 (이미 런에 들어가 있어요) */

@@ -65,6 +65,7 @@ export function resultVM(s: RewardSession): ResultVM {
     })),
     skipGold: s.skipGold,
     lanes,
+    reroll: s.reroll,
     equip: s.equipId ? equipOffer(s.run, s.equipId, lanes) : undefined,
   };
 }

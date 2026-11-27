@@ -168,6 +168,10 @@ describe("판 (0157)", () => {
     const next = run.rollBattleReward("battle");
     run.rerollRewardCards(next);
     expect(run.canRerollReward(next)).toBe(false);
+    // 다 써도 받고 떠난 수는 그대로예요 (화면이 흐려진 버튼을 남겨요)
+    expect(run.rerolls).toBe(0);
+    expect(run.rerollsGranted).toBe(2);
+    expect(new Run({ ...opts, garden: g }).rerollsGranted).toBe(0);
     expect(C.reward.reroll_max).toBe(3);
   });
 

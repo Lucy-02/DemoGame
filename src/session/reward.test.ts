@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { newGarden } from "../core/garden";
 import { Run } from "../core/run";
 import { maxHpOf } from "../core/stats";
 import { RewardSession } from "./reward";
@@ -27,6 +28,25 @@ describe("보상 세션", () => {
     expect(s.skipGold).toBeGreaterThan(0);
     s.dispatch({ kind: "skip" });
     expect(run.gold).toBe(gold + s.skipGold!);
+  });
+
+  it("다시 뽑기 (0157 · 0171): 받고 떠난 판의 전투 보상에만 있고, 다 쓰면 0으로 남아요", () => {
+    const plain = newRun();
+    expect(new RewardSession(plain, { kind: "battle", reward: plain.rollBattleReward("battle") }).reroll).toBeUndefined();
+    const g = newGarden(1);
+    const garden = { ...g, spirits: g.spirits.map((s, i) => (i < 1 ? { ...s, cleared: [s.personality] } : s)) };
+    const run = new Run({ seed: 5, frontId: "fire_fox", adult: false, unlockAll: true, garden });
+    const s = new RewardSession(run, { kind: "battle", reward: run.rollBattleReward("battle") });
+    expect(s.reroll).toEqual({ left: 1 });
+    expect(s.dispatch({ kind: "reroll" })).toBe(true);
+    expect(s.offers).toHaveLength(3);
+    expect(s.phase).toBe("cards");
+    expect(s.reroll).toEqual({ left: 0 });
+    expect(s.dispatch({ kind: "reroll" })).toBe(false);
+    // 카드 묶음(이벤트)과 고른 뒤에는 없어요
+    expect(new RewardSession(run, { kind: "cards", cardIds: [s.offers[0].cardId] }).reroll).toBeUndefined();
+    s.dispatch({ kind: "skip" });
+    expect(s.reroll).toBeUndefined();
   });
 
   it("카드 묶음: 배울 수 있는 정령 중에 골라요, 넘겨도 골드는 없어요", () => {

@@ -21,6 +21,8 @@ export interface ResultVM {
   /** 넘기면 받는 골드. 없으면 버튼에 골드를 붙이지 않아요 (이벤트 카드) */
   skipGold?: number;
   lanes: LaneVM[];
+  /** 다시 뽑기 (0171): 남은 수. 받지 않고 떠난 판에는 없어요 */
+  reroll?: { left: number };
   /** 정예 장비. 카드 다음에 골라요 (0051 · 0064) */
   equip?: EquipOfferVM;
 }

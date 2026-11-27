@@ -16,6 +16,10 @@ export const SKIP = {
   todo: { size: 18 }, gold: { coin: 16, gap: 4, ml: 2 },
 };
 
+/** 다시 뽑기 (라운드 H1, Lucy 2026-11-27): 넘기기 옆 같은 판, 사이는 카드 사이와 같게. 남은 수는 글 뒤에 한 칸 띄워서.
+ *  다 쓰면 흐려진 채 남아요. 말풍선은 버튼 위. 값은 임시예요 */
+export const REROLL = { gap: REWARD.gap, countMl: 8, off: 0.36, tipGap: 12 };
+
 /** 정예 장비 줄 (0051 자리 · 0064 Q2-A 모양): 카드 아래 31, 높이 96 radius 14, padding 0 26 0 12 gap 18. 폭은 왼쪽 열 폭
  *  .tile 64×64 radius 10 (그림 inset 4) · .stx gap 4 · .strip.on 테 accHi + 바깥 4px accHi .14 · 기호 15 gap 6 */
 export const STRIP = {

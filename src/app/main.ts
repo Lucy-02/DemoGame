@@ -2,7 +2,7 @@
 // 기본은 저장에 이어진 게임이에요: 메인 화면에서 판을 떠나 끝내고 돌아와요 (session/game.ts, presentation/flow.ts).
 // 아래는 화면 하나를 고정 장면으로 여는 개발용이에요.
 // ?screen=battle 은 정본 기준 새 전투 화면(?scene=aim 처럼 고정 장면 고르기). ?screen=spirits 는 정령 관리(?scene=fresh|mixed&select=&tab=&closed).
-// ?screen=result 는 전투 결과(?scene=normal&hover=<카드 key|skip>&taken=<카드 key|skip>).
+// ?screen=result 는 전투 결과(?scene=normal|reroll|rerollSpent|elite…&hover=<카드 key|skip|reroll>&taken=<카드 key|skip>).
 // ?screen=shop 은 상점(?scene=normal|poor&hover=<카드 id|heal>).
 // ?screen=rest 는 휴식(?scene=normal|full&hover=rest|upgrade|upgrade:<카드 id>).
 // ?screen=event 는 이벤트(?scene=<이벤트 id>&hover=<선택지 번호>|pick:<선택지 번호>).
