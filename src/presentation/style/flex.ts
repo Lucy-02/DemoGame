@@ -55,6 +55,8 @@ export interface IconNode extends Margins {
   tint?: string;
   /** 기호 잉크 가운데를 상자 가운데에 맞추고 픽셀에 붙여요. y = 세로만, xy = 가로도 */
   fit?: "y" | "xy";
+  /** 위아래로 뒤집어요 (펼친 칩의 화살표). fit과 같이 쓰지 않아요 */
+  flipY?: boolean;
 }
 
 export interface ImageNode extends Margins {
@@ -196,7 +198,7 @@ export function place(
     }
     case "icon":
       if (n.fit) iconFit(scene, x, y, n.id, n.w, n.tint, n.fit);
-      else drawIcon(scene, x, y, n.id, n.w, n.h, n.tint);
+      else drawIcon(scene, x, y, n.id, n.w, n.h, n.tint).setFlipY(!!n.flipY);
       return;
     case "image": {
       const key = n.round ? roundTexture(scene, n.key, W) : n.key;

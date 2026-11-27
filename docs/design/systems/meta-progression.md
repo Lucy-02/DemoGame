@@ -57,5 +57,5 @@
 
 - 됨: 하나로 시작(`startGarden`), 깃들기 후보 둘과 고르기(`joinOffer` · `join`), 후보마다 다른 성격(`joinCandidates`, 0076 12), 첫 판 끝(`endRun`) · 첫 보스(`grantBattle`)에 깃들기, 가진 인원으로 출전, 인원별 적 세기(`Run.enemyScale`).
 - 됨(0157 · 0159): 판 안 성장(`core/growth.ts`, 정령 상태는 `RunSpirit`의 `exp` · `level` · `stage` · `branch` · `deed`), 정원에는 줄 · 성격 · 완주로 연 성격(`GardenSpirit.cleared`)만, 다시 뽑기(`rerollsOf` · `Run.rerollRewardCards`), 성격 고르기(`choosePersonality`). 뒤 막 출발 · 장비 남기기 · 재료 · 먹이기 코드는 지웠어요. 저장은 정원 · 판 모두 2판이고 옛 저장은 올려 읽어요.
-- 됨: 다시 뽑기 버튼(전투 보상 `넘기기` 옆, 라운드 H1, `RewardSession.reroll`).
-- 남음: 공명 올리기 · 열린 성격 고르기를 화면에 잇기(라운드 H 정리안을 고른 뒤), 판 안에서 정령 화면 열기, 막 보스 깃듦(0032, 줄이 늘 때).
+- 됨(라운드 H 섞기): 다시 뽑기 버튼(전투 보상 `넘기기` 옆, `RewardSession.reroll`), 공명 줄(정예 장비 차례, `EquipOfferVM.raise`), 열린 성격 고르기(출전 준비 성격 칩, 떠날 때 `choosePersonality`), 판 결과의 열림 칩과 다시 뽑기 수.
+- 남음: 공명 줄 놓기 · 열린 성격 펼침은 Lucy 고르기 대기(정리안), 판 안에서 정령 화면 열기, 막 보스 깃듦(0032, 줄이 늘 때).

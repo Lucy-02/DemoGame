@@ -9,7 +9,7 @@
 // ?screen=runEnd 는 판 결과(?scene=victory|first|defeat). ?screen=demoEnd 는 데모 끝(?scene=garden|again).
 // ?screen=home 은 타이틀 겸 메인 화면(?scene=first|full|running&hover=<줄 id>).
 // ?screen=join 은 깃들기(?scene=first|second&select=<후보 id>&hover=chip&taken=<후보 id>: 깃든 끝 상태).
-// ?screen=depart 는 출전 준비(?scene=three|two&select=<앞열로 바꿀 정령 id>&hover=<정령 id>|strong).
+// ?screen=depart 는 출전 준비(?scene=three|two&select=<앞열로 바꿀 정령 id>&hover=<정령 id>|strong|chip:<정령 id>|open:<정령 id>|opt:<정령 id>:<성격 id>).
 // ?screen=menu 는 판 안 메뉴(?scene=menu|confirm&hover=settings|toHome|giveUp), ?screen=settings 는 설정 창(?hover=speed|shake). 둘 다 전투 고정 장면 위에 떠요.
 // ?screen=glossary 는 용어 모음 창(?hover=<용어 id>). 전투 고정 장면 위에 떠요.
 // 개발 빌드에서만: window.session · window.game 으로 세션과 장면을 볼 수 있고(자동 점검 tools/screenBot.ts가 써요), ?seed= 로 새 판 · 새 정원의 시드를 고정해요.

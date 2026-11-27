@@ -180,11 +180,12 @@ function info(l: LaneVM, lit?: StatId, hpTo = l.hp, equip?: LaneEquipState, maxT
         ],
       },
       ...(noStats ? [] : [{ t: "row", gap: S.gap, align: "center", children: STAT_IDS.map(stat) } as Node]),
-      ...(l.unlocked.length ? [{
+      // 칩 줄: 새로 열린 카드(기호 + 이름), 이 판으로 열린 성격(글만)
+      ...(l.unlocked.length || l.opened ? [{
         t: "row", gap: C.rowGap,
-        children: l.unlocked.map((name): Node => ({
+        children: [...l.unlocked.map((name) => ({ name, icon: true })), ...(l.opened ? [{ name: l.opened, icon: false }] : [])].map((c): Node => ({
           t: "row", h: C.h, pad: [0, C.padX, 0, C.padX], radius: C.radius, gap: C.gap, align: "center", style: { fill: withAlpha(P.acc, C.alpha) },
-          children: [{ t: "icon", id: "g-cardnew", w: C.icon, h: C.icon, tint: P.accHi }, text(name, T.level, P.accHi)],
+          children: [...(c.icon ? [{ t: "icon" as const, id: "g-cardnew", w: C.icon, h: C.icon, tint: P.accHi }] : []), text(c.name, T.level, P.accHi)],
         })),
       } as Node] : []),
     ],

@@ -6,7 +6,7 @@ import { cardVM } from "../run/fromCore";
 import { spiritArt } from "../spiritArt";
 import { COPY } from "./copy";
 import { ROLE_ICON } from "../spirits/fromGarden";
-import type { FaceVM, JoinCandVM, JoinVM } from "./viewmodel";
+import type { FaceVM, JoinCandVM, JoinVM, PersonalityVM } from "./viewmodel";
 
 export function faceOf(id: string): FaceVM | null {
   const a = spiritArt(id, "baby");
@@ -20,13 +20,18 @@ export function signatureCard(id: string): string {
   return card.id;
 }
 
+/** 떠날 때는 유체라 성격 효과가 아직 없어요: "성체부터" */
+export function personalityVM(id: string): PersonalityVM {
+  const per = personalityDef(id);
+  return { id, name: per.name, desc: per.desc, note: COPY.personalityFrom };
+}
+
 export function joinCandVM(id: string, personality: string): JoinCandVM {
   const def = spiritDef(id);
-  const per = personalityDef(personality);
   const art = spiritArt(id, "baby");
   return {
     id, name: def.name, element: ELEMENT_ICON[def.element] ?? ELEMENT_ICON.none, role: ROLE_ICON[def.role],
-    personality: { name: per.name, desc: per.desc, note: COPY.personalityFrom },
+    personality: personalityVM(personality),
     card: cardVM(signatureCard(id), id), art, face: faceOf(id) ?? undefined,
   };
 }

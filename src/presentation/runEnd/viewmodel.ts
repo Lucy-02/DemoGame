@@ -10,6 +10,8 @@ export interface RunEndVM {
   gold: number;
   /** 배운 카드와 배운 정령 */
   cards: { card: CardVM; owner: string }[];
-  /** 정령 줄: 그 판에서 자란 마지막 모습 (0157) */
+  /** 정령 줄: 그 판에서 자란 마지막 모습 (0157). 완주로 성격이 열렸으면 칩이 붙어요 (0171) */
   lanes: LaneVM[];
+  /** 완주한 줄이 늘어 다시 뽑기가 늘었을 때만 (0157): 다음 판부터 받는 수 a→b */
+  reroll?: { from: number; to: number };
 }

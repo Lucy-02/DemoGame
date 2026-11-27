@@ -5,14 +5,16 @@ import type { Crop } from "../spirits/artFit";
 
 export interface FaceVM { id: string; key: string; crop: Crop }
 
+/** 성격 칩과 호버 풀이. note = 성체가 되기 전이면 붙는 한 줄 */
+export interface PersonalityVM { id: string; name: string; desc: string; note?: string }
+
 export interface JoinCandVM {
   id: string;
   name: string;
   /** 속성 · 역할 기호 id */
   element: string;
   role: string;
-  /** 성격 칩과 호버 풀이 (성체가 되기 전이면 note) */
-  personality: { name: string; desc: string; note?: string };
+  personality: PersonalityVM;
   /** 대표 카드 */
   card: CardVM;
   /** 본그림 (유체). 없으면 실루엣 */

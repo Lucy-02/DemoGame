@@ -25,7 +25,7 @@ import { DEFAULT_JOIN, JOINS } from "./fixtures";
 import { BEAT, CAND, CHIP, CTA, PIPS, TIP } from "./layout";
 import type { FaceVM, JoinCandVM, JoinVM } from "./viewmodel";
 import { SIL_ICON, drawSpiritArt } from "./views/art";
-import { chip } from "./views/chip";
+import { chip, personalityTip } from "./views/chip";
 
 export const JOIN_SCENE = "join";
 
@@ -79,7 +79,7 @@ export class JoinScene extends Phaser.Scene {
 
   preload() {
     const sizes: [string, number, number?][] = [
-      [SIL_ICON, CAND.sil.w, CAND.sil.h], ["g-cardnew", CHIP.icon],
+      [SIL_ICON, CAND.sil.w, CAND.sil.h],
       ...this.vm.cands.flatMap((c): [string, number][] => [[c.element, CAND.info.icon], [c.role, CAND.info.icon], [c.element, BEAT.hero.icon], [c.role, BEAT.hero.icon]]),
     ];
     for (const [id, w, h] of sizes) loadIcon(this, id, w, h);
@@ -274,14 +274,9 @@ function drawInfo(scene: Phaser.Scene, c: JoinCandVM, x: number, chipHot: boolea
 }
 
 function drawPersonalityTip(scene: Phaser.Scene, c: JoinCandVM, r: Rect) {
-  const p = c.personality;
   drawTooltip(scene, {
     skin: GLASS,
-    content: [
-      { kind: "title", text: p.name },
-      { kind: "text", role: "body", text: [{ text: p.desc }] },
-      ...(p.note ? [{ kind: "text" as const, role: "body" as const, text: [{ text: p.note }] }] : []),
-    ],
+    content: personalityTip(c.personality),
     // 칩 오른쪽 끝에 맞춰 왼쪽 아래로 (오른쪽 대표 카드를 덮지 않게)
     at: { left: clampLeft(r.x + r.w - GLASS.w, GLASS.w, FRAME.w, GRID.gutter), top: r.y + r.h + TIP.gap },
   });

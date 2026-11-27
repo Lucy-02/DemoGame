@@ -43,6 +43,8 @@ export interface LaneVM {
   badges: IconId[];
   /** 새로 열린 카드 이름 */
   unlocked: string[];
+  /** 이 판으로 열린 성격 칩 (판 결과, 0171): `고집 열림` */
+  opened?: string;
   /** 장비 칸. 길이 = 지닐 수 있는 수, 빈 칸은 null (0064) */
   slots: (EquipVM | null)[];
   /** 이 정령의 덱 장수 (상점: 카드를 살 때 a→b로 보여요) */
