@@ -254,6 +254,10 @@
 
 ## 판 밖 도움 라운드 H (2026-11-27, BRIEF "판 밖 도움 라운드 H")
 - Lucy 11/27: 섞기(다시 뽑기 H1 · 공명 올리기 H3 · 성격 고르기 H1) → 정리안
+- **정리안 (Lucy 고르기 대기)**: https://claude.ai/artifact/1nizMVJppBb895MfowWKRs · 프레임 /mnt/project-files/design/round-h/hm/
+  - 갈리는 곳 ①: 공명 줄 가(반 폭 둘 나란히, f4a~f6a) / 나(온 폭 둘 위아래, 카드가 56 올라감, f4b~f6b)
+  - 갈리는 곳 ②: 열린 성격 펼침 가(칩 아래 줄, 능력치 줄 가림, f8a) / 나(칩 옆으로, 한 줄에 넷까지, f8b)
+  - 다시 뽑기 버튼(f1~f3)은 구현함. 구현 캡처 /mnt/project-files/design/round-h/impl/
 다시 뽑기 · 공명 올리기 · 열린 성격 고르기를 확정된 화면 위에 더하는 세 안. 안마다 같은 아홉 프레임(f1~f3 전투 보상의 다시 뽑기 · f4~f6 정예 장비 차례 · f7~f8 출전 준비 · f9 완주한 판의 결과).
 - H1 버튼 줄에: https://claude.ai/artifact/3LPwYPo3KBqaNm3CJxMPnu
 - H2 바뀌는 것 곁에: https://claude.ai/artifact/7aFoEonbYS3X3L2bWNfCfQ
