@@ -21,6 +21,8 @@ export type RewardCommand =
   | { kind: "reroll" }
   /** 장비를 이 정령에게. 칸이 꽉 찼으면 replace(지닌 장비 id)를 내려놓아요 */
   | { kind: "equip"; spirit: string; replace?: string }
+  /** 새 장비 대신 지닌 장비의 공명을 1 올려요 (0159) */
+  | { kind: "raise"; spirit: string; equipId: string }
   | { kind: "skipEquip" };
 
 /** 지금 고를 차례인 것 */
@@ -77,9 +79,14 @@ export class RewardSession {
     return this.source.kind === "battle" && this.phase === "equip" && this.run.canSkipRewardEquipment(this.source.reward);
   }
 
+  /** 새 장비 대신 공명을 올릴 수 있는 지닌 장비 (0159). 장비를 고를 때만 있어요 */
+  get raisable(): { spirit: string; equipId: string }[] {
+    return this.source.kind === "battle" && this.phase === "equip" && this.run.canRaiseRewardResonance(this.source.reward) ? this.run.raisable() : [];
+  }
+
   /** 명령을 적용했으면 true */
   dispatch(cmd: RewardCommand): boolean {
-    if (cmd.kind === "equip" || cmd.kind === "skipEquip") return this.dispatchEquip(cmd);
+    if (cmd.kind === "equip" || cmd.kind === "skipEquip" || cmd.kind === "raise") return this.dispatchEquip(cmd);
     if (this.finished) return false;
     if (cmd.kind === "reroll") {
       if (this.source.kind !== "battle" || !this.run.canRerollReward(this.source.reward)) return false;
@@ -100,13 +107,18 @@ export class RewardSession {
     return true;
   }
 
-  private dispatchEquip(cmd: Extract<RewardCommand, { kind: "equip" | "skipEquip" }>): boolean {
+  private dispatchEquip(cmd: Extract<RewardCommand, { kind: "equip" | "skipEquip" | "raise" }>): boolean {
     const id = this.equipId;
     if (this.source.kind !== "battle" || this.phase !== "equip" || !id) return false;
     const { run, source: { reward } } = this;
     if (cmd.kind === "skipEquip") {
       if (!run.canSkipRewardEquipment(reward)) return false;
       run.skipRewardEquipment(reward);
+      return true;
+    }
+    if (cmd.kind === "raise") {
+      if (!this.raisable.some((r) => r.spirit === cmd.spirit && r.equipId === cmd.equipId)) return false;
+      run.raiseRewardResonance(reward, cmd.spirit, cmd.equipId);
       return true;
     }
     if (!run.equipTakers(id).some((s) => s.id === cmd.spirit)) return false;

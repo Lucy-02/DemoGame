@@ -2,7 +2,7 @@ import { C, CARDS, ENCOUNTERS, EQUIPMENT, EVENTS, GROWTH, PERSONALITIES, SPIRITS
 import { rerollsOf, toRunSpirit, type Garden } from "./garden";
 import { addDeed, canEvolve, evolve, evolveChoices, freshSpirit, gainExp, isCardUnlocked, spiritAt, spiritUnlocks, type BattleTier, type EvolveCheck } from "./growth";
 import { Rng } from "./rng";
-import { equipSlots, maxHpOf, resonanceOf } from "./stats";
+import { equipSlots, maxHpOf, resonanceLimit, resonanceOf } from "./stats";
 import { ENEMY_TRAITS } from "./types";
 import type { CardDef, DeckCard, DeedDef, Element, EncounterDef, EnemyScale, EnemyTrait, EquipDef, EventDef, EventOutcome, Obtain, Rarity, RunEquip, RunSpirit, SpiritDef, Stage } from "./types";
 
@@ -619,11 +619,43 @@ export class Run {
     reward.equipDone = true;
   }
 
-  /** 정예 장비는 꼭 받아요 (0051). 받을 정령이 모두 지닌 것을 내려놓아야 할 때만 넘길 수 있어요 (0056) */
+  /** 지닌 장비 가운데 공명을 더 올릴 수 있는 것 (0159): 정령 단계의 상한과 장비의 단계 수 안에서 */
+  raisable(): { spirit: string; equipId: string }[] {
+    return this.spirits.flatMap((s) => s.equipment.filter((e) => e.resonance < resonanceLimit(s.stage, e.id)).map((e) => ({ spirit: s.id, equipId: e.id })));
+  }
+
+  /** 정예 보상에서 새 장비 대신 지닌 장비의 공명을 올릴 수 있나 (0159) */
+  canRaiseRewardResonance(reward: BattleReward): boolean {
+    return !!reward.equipment && !reward.equipDone && this.raisable().length > 0;
+  }
+
+  /** 지닌 장비의 공명을 1 올린 뒤의 정령 (런은 바꾸지 않아요). 화면의 미리보기와 `raiseRewardResonance`가 같이 써요 */
+  withResonance(spiritId: string, equipId: string): RunSpirit {
+    if (!this.raisable().some((r) => r.spirit === spiritId && r.equipId === equipId)) throw new Error(`${spiritId}의 ${equipId}는 공명을 올릴 수 없어요`);
+    const s = this.spirit(spiritId);
+    const after: RunSpirit = { ...s, equipment: s.equipment.map((e) => (e.id === equipId ? { ...e, resonance: e.resonance + 1 } : { ...e })) };
+    after.hp = Math.min(s.hp, maxHpOf(after));
+    return after;
+  }
+
+  /** 정예 보상: 새 장비를 받지 않고 지닌 장비 하나의 공명을 1 올려요 (0159). 새 장비는 사라져요 */
+  raiseRewardResonance(reward: BattleReward, spiritId: string, equipId: string) {
+    if (!reward.equipment || reward.equipDone) throw new Error("줄 장비가 없어요");
+    const after = this.withResonance(spiritId, equipId);
+    const s = this.spirit(spiritId);
+    s.equipment = after.equipment;
+    s.hp = after.hp;
+    reward.equipDone = true;
+  }
+
+  /**
+   * 정예 장비는 꼭 받아요 (0051). 받아도 달라지는 정령이 없을 때만 넘길 수 있어요:
+   * 받을 정령이 모두 지닌 것을 내려놓아야 하거나(0056), 같은 장비를 이미 공명 상한까지 지녔을 때(0159)
+   */
   canSkipRewardEquipment(reward: BattleReward): boolean {
     if (!reward.equipment || reward.equipDone) return false;
     const id = reward.equipment.equipId;
-    return this.equipTakers(id).every((s) => this.needsReplace(id, s.id));
+    return this.equipTakers(id).every((s) => this.needsReplace(id, s.id) || s.equipment.some((e) => e.id === id && e.resonance >= resonanceLimit(s.stage, id)));
   }
 
   skipRewardEquipment(reward: BattleReward) {
@@ -639,7 +671,7 @@ export class Run {
 
   /**
    * 장비를 정령에게 줘요 (0056). 다른 정령에게 옮기지 못해요.
-   * 같은 장비를 이미 지녔으면 공명이 1 올라요. 칸이 꽉 찼으면 replaceId를 내려놓고 받아요(내려놓은 장비는 사라져요).
+   * 같은 장비를 이미 지녔으면 공명이 1 올라요(정령 단계의 상한까지, 0159). 칸이 꽉 찼으면 replaceId를 내려놓고 받아요(내려놓은 장비는 사라져요).
    */
   giveEquipment(equipId: string, spiritId: string, replaceId?: string) {
     const s = this.spirit(spiritId);
@@ -658,7 +690,7 @@ export class Run {
     let equipment: RunEquip[] = s.equipment.map((e) => ({ ...e }));
     const held = equipment.find((e) => e.id === equipId);
     if (held) {
-      held.resonance = Math.min(held.resonance + 1, equipDef(equipId).tiers.length);
+      held.resonance = Math.max(held.resonance, Math.min(held.resonance + 1, resonanceLimit(s.stage, equipId)));
     } else {
       const fresh: RunEquip = { id: equipId, resonance: 1 };
       if (this.needsReplace(equipId, spiritId)) {

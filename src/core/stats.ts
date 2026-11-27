@@ -37,6 +37,9 @@ export const equipSlots = (stage: Stage) => GROWTH.equip_slots[stageRank(stage)]
 /** 공명 상한 (단계별) */
 export const resonanceCap = (stage: Stage) => GROWTH.equip_resonance_cap[stageRank(stage)];
 
+/** 이 단계의 정령이 이 장비로 닿을 수 있는 공명 (0159): 정령 단계의 상한과 장비의 단계 수 가운데 작은 쪽 */
+export const resonanceLimit = (stage: Stage, equipId: string) => Math.min(resonanceCap(stage), equipDef(equipId).tiers.length);
+
 /** 지금 공명. 장비의 단계 수를 넘지 않아요 */
 export function resonanceOf(e: RunEquip): number {
   return Math.min(Math.max(1, e.resonance), equipDef(e.id).tiers.length);

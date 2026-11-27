@@ -4,14 +4,15 @@
 //   판 단위 버릇만 바꿔 재기 (전투 봇은 그대로):
 //     --reward default|any|skip|branch|only:카드id   보상 카드: 가려 받기(기본) · 아무거나 · 전부 넘기기 · 갈래부터 열기(0157) · 이 카드만
 //     --path default|fight|avoid|elite|noelite 길: 기본 · 전투 먼저 · 전투 아닌 칸 먼저 · 정예 먼저 · 정예 피하기
-//   표: --policies (보상 × 길 승률) · --cards (카드별 받은 판 승률 · 이 카드만 받기) · --floors (끝난 층) · --elites (정예 값) · --growth (판 안 성장: 막마다의 레벨 · 단계, 0157)
+//     --equip default|new|raise 정예 장비: 빈 칸이 있으면 새 장비, 없으면 공명(기본) · 늘 새 장비 · 올릴 수 있으면 늘 공명 (0159)
+//   표: --policies (보상 × 길 승률) · --cards (카드별 받은 판 승률 · 이 카드만 받기) · --floors (끝난 층) · --elites (정예 값) · --resonance (판 안 공명: 정예 보상 정책 셋, 0159) · --growth (판 안 성장: 막마다의 레벨 · 단계, 0157)
 //   규칙을 바꾸지 않고 미리 재 보기: --whatif swap,noskipgold,earlyfights,upgraded,offer:3,start:3,winheal:10 (아래 WhatIf)
 // 봇은 실력이 다른 셋이에요. 숫자는 절댓값이 아니라 봇 사이 · 바꾸기 전후 비교로 읽어요 (`design/canon/BALANCE_BASELINE.md` 7절).
 //   basic  공격 카드부터 내고 보상은 아무거나 (골든 테스트와 같은 봇)
 //   smart  한 장씩 값을 매겨 놓고, 보상 · 이벤트 · 빼기를 가려 골라요 (기본)
 //   search 턴 안의 모든 순서를 돌려 보고 끝까지 굴려 고르는 탐색 봇 (느려요)
 import { Battle } from "../src/core/battle";
-import { C, CARDS, cardDef, spiritDef } from "../src/core/data";
+import { C, CARDS, GROWTH, cardDef, equipDef, spiritDef } from "../src/core/data";
 import { freshSpirit } from "../src/core/growth";
 import { Rng } from "../src/core/rng";
 import { Run, type MapNode, type RewardCard } from "../src/core/run";
@@ -46,12 +47,15 @@ export const PATH_MODES: PathMode[] = ["fight", "default", "avoid"];
  *   nojoin      혼자 떠난 판에 둘째 정령이 합류하지 않아요 (0156 전의 첫 판)
  *   cards:M     보상으로 나오는 카드(시작 덱에 없는 일반 · 고급 · 희귀)의 숫자를 M배 해요 (올림)
  *   foe:M       길 전투(잡몹 · 정예)의 적 피해를 M배 해요. 보스는 그대로
+ *   rescap:a/b/c 단계별(유체 · 성체 · 각성체) 공명 상한을 바꿔요 (growth.json equip_resonance_cap)
  *   mate:N      join과 같은 때에 정령 풀 밖의 임시 동료가 붙어요: 능력치 모두 기준값(10) · HP 20 · 무속성, 할퀴기 2 · 막기 2, 보상 카드 없음.
  *               코어에 없는 정령이라 안 쓰는 정령 정의 하나를 판 동안만 빌려 써요 (MATE_STAND_IN)
  */
-export interface WhatIf { nojoin?: boolean; cards?: number; foe?: number; mate?: number; join?: number; swap?: boolean; noskipgold?: boolean; earlyfights?: boolean; upgraded?: boolean; offer?: number; start?: number; winheal?: number }
+export interface WhatIf { nojoin?: boolean; cards?: number; foe?: number; mate?: number; join?: number; swap?: boolean; noskipgold?: boolean; earlyfights?: boolean; upgraded?: boolean; offer?: number; rescap?: number[]; start?: number; winheal?: number }
 
-export interface SimOptions { reward?: RewardMode; path?: PathMode; whatif?: WhatIf }
+/** 정예 보상의 장비: 빈 칸이 있으면 새 장비, 없으면 공명(기본) · 늘 새 장비 · 올릴 수 있으면 늘 공명 (0159) */
+export type EquipMode = "default" | "new" | "raise";
+export interface SimOptions { reward?: RewardMode; path?: PathMode; equip?: EquipMode; whatif?: WhatIf }
 export const BOT_KINDS: BotKind[] = ["basic", "smart", "search"];
 
 /** 판 단위 판단: 보상 · 이벤트 · 카드 빼기 */
@@ -115,6 +119,10 @@ export interface RunSimResult {
   /** 판 안 성장 (0157): 키운 때(막 · 층 · 정령 · 단계)와 막 보스를 만났을 때의 레벨 · 단계 */
   grew: { act: number; floor: number; id: string; to: Stage }[];
   atBoss: { act: number; level: number; exp: number; stages: Stage[] }[];
+  /** 정예 장비 보상 (0159): 막, 공명을 올릴 수 있었나, 올렸나 */
+  equips: { act: number; canRaise: boolean; raised: boolean }[];
+  /** 끝났을 때 지닌 장비의 공명 (장비마다) */
+  resonances: number[];
   /** 끝난 칸의 종류 (클리어면 boss) */
   endedType: string;
   /** 들어간 칸 수 (종류별) */
@@ -194,6 +202,7 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
   if (adult || awakened) for (const s of run.spirits) s.branch ??= branches[s.id];
   const grew: RunSimResult["grew"] = [];
   const atBoss: RunSimResult["atBoss"] = [];
+  const equips: RunSimResult["equips"] = [];
   // 키울 수 있으면 바로 키워요. 갈래는 --branch로 정한 것이 열렸으면 그것, 아니면 열린 것 가운데 첫째
   const growAll = () => {
     for (const id of run.evolvable()) {
@@ -261,10 +270,26 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
       }
     }
     if (reward.equipment && !reward.equipDone) {
-      // 받을 수 있는 정령 중 하나에게. 칸이 꽉 찼으면 먼저 지닌 것을 내려놓아요
       const equipId = reward.equipment.equipId;
-      const taker = rng.pick(run.equipTakers(equipId));
-      run.giveRewardEquipment(reward, taker.id, run.needsReplace(equipId, taker.id) ? taker.equipment[0].id : undefined);
+      const takers = run.equipTakers(equipId);
+      // 받으면 달라지는 정령: 빈 칸이 있거나, 같은 장비의 공명이 오르는 정령
+      const gains = takers.filter((s) => !run.needsReplace(equipId, s.id) && run.withEquipment(equipId, s.id).equipment.some((e, i) => e.resonance !== s.equipment[i]?.resonance));
+      const raisable = run.canRaiseRewardResonance(reward) ? run.raisable() : [];
+      const mode = sim.equip ?? "default";
+      const raise = raisable.length > 0 && (mode === "raise" || (mode === "default" && gains.length === 0));
+      equips.push({ act: run.act, canRaise: raisable.length > 0, raised: raise });
+      if (raise) {
+        // 전용 무기가 먼저예요 (기술 카드가 자라요)
+        const pick = raisable.find((r) => equipDef(r.equipId).owner) ?? rng.pick(raisable);
+        run.raiseRewardResonance(reward, pick.spirit, pick.equipId);
+      } else if (run.canSkipRewardEquipment(reward)) {
+        // 받아도 달라지는 정령이 없으면 넘겨요 (칸이 꽉 찼거나 공명 상한)
+        run.skipRewardEquipment(reward);
+      } else {
+        // 받을 수 있는 정령 중 하나에게. 칸이 꽉 찼으면 먼저 지닌 것을 내려놓아요
+        const taker = rng.pick(gains.length ? gains : takers);
+        run.giveRewardEquipment(reward, taker.id, run.needsReplace(equipId, taker.id) ? taker.equipment[0].id : undefined);
+      }
     }
   };
   for (let i = 0; i < (wi.start ?? 0); i++) { const r = run.rollBattleReward("battle"); run.gold -= r.gold; takeReward(r); }
@@ -297,7 +322,7 @@ function simulate(seed: number, kind: BotKind, party: string[] | undefined, adul
       if (node.type === "battle") mobTurns.push(turns);
       else if (node.type === "elite") eliteTurns.push(turns);
       if (node.type === "boss") bosses.push({ act: run.act, hpPct: before.bossHpPct, turns, won });
-      const tail = { battles, mobTurns, eliteTurns, act: run.act, actsCleared: run.act - (won && node.type === "boss" ? 0 : 1), bosses, offered, taken, skips, picks, nodes, endedType: node.type, grew, atBoss };
+      const tail = { battles, mobTurns, eliteTurns, act: run.act, actsCleared: run.act - (won && node.type === "boss" ? 0 : 1), bosses, offered, taken, skips, picks, nodes, endedType: node.type, grew, atBoss, equips, resonances: run.spirits.flatMap((s) => s.equipment.map((e) => e.resonance)) };
       if (node.type === "boss" && !(won && run.hasNextAct())) return { won, endedAt: won ? "clear" : enc.id, floor: node.floor, reachedBoss: true, ...before, bossTurns: turns, ...tail };
       if (!won) return { won: false, endedAt: enc.id, floor: node.floor, reachedBoss: bosses.length > 0, ...tail };
       // 이긴 전투의 경험 · 자람 조건을 받고(0157), 보상을 고른 뒤 키울 수 있으면 키워요 (화면의 순서와 같아요)
@@ -445,6 +470,28 @@ function growthTable(s: Setup) {
   }
 }
 
+/**
+ * 판 안 공명 표 (0159): 정예 보상에서 공명을 올릴 수 있었던 비율과, 판이 끝났을 때의 공명. 보상 정책(--equip) 셋을 견줘요.
+ * 상한(growth.json equip_resonance_cap)을 고칠 때 `--whatif rescap:a/b/c`와 함께 봐요.
+ */
+function resonanceTable(s: Setup) {
+  console.log(`\n판 안 공명 (n=${s.n}씩, 상한 ${GROWTH.equip_resonance_cap.join(" · ")})`);
+  for (const equip of ["new", "default", "raise"] as EquipMode[]) {
+    const rs = runAll(s, { equip });
+    const all = rs.flatMap((r) => r.equips);
+    const byAct = Array.from({ length: s.acts ?? 1 }, (_, i) => all.filter((e) => e.act === i + 1));
+    const res = rs.flatMap((r) => r.resonances);
+    const share = (n: number) => pct(res.filter((x) => x >= n).length / Math.max(1, res.length));
+    const far = rs.filter((r) => r.actsCleared >= 2);
+    const top = (n: number) => pct(far.filter((r) => r.resonances.some((x) => x >= n)).length / Math.max(1, far.length));
+    console.log(
+      `  ${equip.padEnd(8)} 클리어 ${winRate(rs)}  판마다 정예 장비 ${(all.length / s.n).toFixed(1)}번 · 올린 것 ${(all.filter((e) => e.raised).length / s.n).toFixed(2)}번  ` +
+      `올릴 수 있던 비율 막별 ${byAct.map((a) => (a.length ? pct(a.filter((e) => e.canRaise).length / a.length) : "-")).join(" · ")}  ` +
+      `끝난 판의 장비 공명 2+ ${share(2)} · 3 ${share(3)}  2막을 넘긴 판(${far.length}) 중 공명 2+ 있는 판 ${top(2)} · 3 있는 판 ${top(3)}`,
+    );
+  }
+}
+
 function report(label: string, s: Setup) {
   const { n, kind, acts } = s;
   const rs = runAll(s);
@@ -473,6 +520,7 @@ function parseWhatIf(arg: string): WhatIf {
   for (const part of arg.split(",").filter(Boolean)) {
     const [k, v] = part.split(":");
     if (k === "nojoin" || k === "swap" || k === "noskipgold" || k === "earlyfights" || k === "upgraded") out[k] = true;
+    else if (k === "rescap") out.rescap = v.split("/").map(Number);
     else if (k === "offer" || k === "start" || k === "winheal" || k === "join" || k === "mate" || k === "cards" || k === "foe") out[k] = Number(v);
     else throw new Error(`모르는 whatif: ${part}`);
   }
@@ -490,7 +538,8 @@ if (process.argv[1]?.endsWith("runsim.ts")) {
   const actsAt = args.indexOf("--acts");
   const acts = actsAt >= 0 ? Number(args.splice(actsAt, 2)[1]) : undefined;
   const opt = (name: string) => { const at = args.indexOf(name); return at >= 0 ? args.splice(at, 2)[1] : undefined; };
-  const sim: SimOptions = { reward: opt("--reward") as RewardMode | undefined, path: opt("--path") as PathMode | undefined, whatif: parseWhatIf(opt("--whatif") ?? "") };
+  const sim: SimOptions = { reward: opt("--reward") as RewardMode | undefined, path: opt("--path") as PathMode | undefined, equip: opt("--equip") as EquipMode | undefined, whatif: parseWhatIf(opt("--whatif") ?? "") };
+  if (sim.whatif?.rescap) GROWTH.equip_resonance_cap = sim.whatif.rescap;
   const simLabel = [sim.reward && `보상 ${sim.reward}`, sim.path && `길 ${sim.path}`, Object.keys(sim.whatif!).length && `whatif ${Object.entries(sim.whatif!).map(([k, v]) => (v === true ? k : `${k}:${v}`)).join(",")}`].filter(Boolean).join(" · ");
   if (simLabel) console.log(`[${simLabel}]`);
   const flags = new Set(args.filter((a) => a.startsWith("--")));
@@ -515,6 +564,7 @@ if (process.argv[1]?.endsWith("runsim.ts")) {
       if (flags.has("--floors")) floorTable(setup);
       if (flags.has("--elites")) eliteTable(setup);
       if (flags.has("--growth")) growthTable(setup);
+      if (flags.has("--resonance")) resonanceTable(setup);
     }
   }
 }

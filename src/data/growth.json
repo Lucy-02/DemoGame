@@ -6,7 +6,7 @@
   "stage_main_bonus": 2,
   "stage_hp_main_bonus": 6,
   "equip_slots": [1, 1, 2],
-  "equip_resonance_cap": [1, 2, 3],
+  "equip_resonance_cap": [2, 3, 3],
   "evolutions": [
     { "spirit": "fire_fox", "from": "baby", "to": "adult", "level": 4, "branch": "burst", "opens": { "cards": 1 }, "main": ["power", "focus"] },
     { "spirit": "fire_fox", "from": "baby", "to": "adult", "level": 4, "branch": "spread", "opens": { "cards": 1 }, "main": ["focus", "speed"] },

@@ -58,6 +58,26 @@ describe("보상 세션", () => {
     expect(s.done).toBe(true);
   });
 
+  it("정예 보상: 새 장비 대신 지닌 장비의 공명을 올릴 수 있어요 (0159)", () => {
+    const run = newRun();
+    const holder = run.spirits[0].id;
+    run.giveEquipment("bronze_helmet", holder);
+    const reward = run.rollBattleReward("elite");
+    reward.equipment = { equipId: "bone_sword" };
+    reward.equipDone = false;
+    const s = new RewardSession(run, { kind: "battle", reward });
+    // 카드를 고르기 전에는 못 올려요
+    expect(s.raisable).toEqual([]);
+    expect(s.dispatch({ kind: "raise", spirit: holder, equipId: "bronze_helmet" })).toBe(false);
+    s.dispatch({ kind: "skip" });
+    expect(s.raisable).toEqual([{ spirit: holder, equipId: "bronze_helmet" }]);
+    expect(s.dispatch({ kind: "raise", spirit: holder, equipId: "bone_sword" })).toBe(false);
+    expect(s.dispatch({ kind: "raise", spirit: holder, equipId: "bronze_helmet" })).toBe(true);
+    expect(run.spirit(holder).equipment).toEqual([{ id: "bronze_helmet", resonance: 2 }]);
+    expect(s.done).toBe(true);
+    expect(s.raisable).toEqual([]);
+  });
+
   it("정예 보상: 꽉 찬 정령은 내려놓을 장비를 정해야 받고, 모두 꽉 찼으면 넘길 수 있어요", () => {
     const run = newRun();
     for (const sp of run.spirits) run.giveEquipment("bronze_helmet", sp.id);
