@@ -21,6 +21,19 @@ function option(run: Run, equipId: string, before: RunSpirit, laneBefore: LaneVM
   };
 }
 
+/** 지닌 장비의 공명을 올리는 방법들 (0170): 정령마다 올릴 수 있는 칸 */
+function raiseOptions(run: Run, lanes: LaneVM[]): EquipOfferVM["raise"] {
+  const out: EquipOfferVM["raise"] = {};
+  for (const r of run.raisable()) {
+    const l = lanes.find((x) => x.id === r.spirit);
+    if (!l) continue;
+    const after = run.withResonance(r.spirit, r.equipId);
+    const slot = after.equipment.findIndex((e) => e.id === r.equipId);
+    (out[r.spirit] ??= []).push({ slot, equipId: r.equipId, after: laneWith(l, after), tip: { sheet: sheet(run, after.equipment[slot], after) } });
+  }
+  return out;
+}
+
 /** 정예 장비 하나를 파티가 받는 방법들 */
 export function equipOffer(run: Run, equipId: string, lanes: LaneVM[]): EquipOfferVM {
   const def = equipDef(equipId);
@@ -37,7 +50,7 @@ export function equipOffer(run: Run, equipId: string, lanes: LaneVM[]): EquipOff
   const owner = def.owner ? run.equipTakers(equipId)[0] : undefined;
   const plain = owner ? sheet(run, run.withEquipment(equipId, owner.id, owner.equipment[0]?.id).equipment.find((e) => e.id === equipId)!, owner) : sheet(run, fresh);
   return {
-    item: plain.item, gain: plain.chips, takers, tip: { sheet: plain },
+    item: plain.item, gain: plain.chips, takers, tip: { sheet: plain }, raise: raiseOptions(run, lanes),
     canSkip: Object.keys(takers).length > 0 && run.equipTakers(equipId).every((s) => run.needsReplace(equipId, s.id)),
   };
 }

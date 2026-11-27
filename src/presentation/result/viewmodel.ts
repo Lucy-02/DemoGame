@@ -38,6 +38,17 @@ export interface EquipOptionVM {
   tip: EquipTipVM;
 }
 
+/** 지닌 장비 하나의 공명을 1 올리는 방법 (0170) */
+export interface RaiseOptionVM {
+  /** 올릴 장비가 놓인 칸 */
+  slot: number;
+  equipId: string;
+  /** 올린 뒤의 줄 */
+  after: LaneVM;
+  /** 올린 뒤의 장비 */
+  tip: EquipTipVM;
+}
+
 export interface EquipOfferVM {
   item: EquipVM;
   /** 장비 줄 오른쪽: 주는 수치 */
@@ -46,6 +57,8 @@ export interface EquipOfferVM {
   tip: EquipTipVM;
   /** 받을 수 있는 정령 id → 방법들. 꽉 찬 정령은 칸마다 하나씩 */
   takers: Record<string, EquipOptionVM[]>;
+  /** 새 장비 대신 공명을 올릴 수 있는 정령 id → 칸들 (0170). 올릴 장비가 없으면 비어 있어요 */
+  raise: Record<string, RaiseOptionVM[]>;
   /** 받을 정령이 모두 꽉 찼을 때만 넘길 수 있어요 (0056) */
   canSkip: boolean;
 }
