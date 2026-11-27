@@ -14,6 +14,7 @@ import { cardWithFace } from "../run/cards";
 import { COPY as RUN_COPY } from "../run/copy";
 import { LANE_ICONS, drawLane } from "../run/lanes";
 import { RUN_END } from "../run/layout";
+import { linkSlot } from "../run/linkSlot";
 import { P, button, text } from "../spirits/views/parts";
 import { withAlpha } from "../style/color";
 import { box } from "../style/draw";
@@ -39,6 +40,8 @@ export interface RunEndSceneData {
   record?: RunRecord;
   /** 고정 장면 이름 (fixtures RUN_ENDS). record를 주면 무시해요 */
   scene?: string;
+  /** 데모의 진 판: 버튼 위에 위시리스트 링크 자리를 둬요 (0140). 이긴 판은 데모 끝 화면이 맡아요 */
+  wishlist?: boolean;
   onGarden?: (scene: Phaser.Scene) => void;
   onAgain?: (scene: Phaser.Scene) => void;
 }
@@ -90,7 +93,11 @@ export class RunEndScene extends Phaser.Scene {
         button(COPY.again, { size: TR.button, h: B.h, w: B.w, radius: B.radius, plate: !vm.victory, onClick: () => this.data_?.onAgain?.(this) }),
       ],
     };
-    part(() => { render(this, node, R.x, B.y); });
+    // 위시리스트 자리는 버튼과 한 덩어리로 나타나요 (따로 연출 없음, 0140)
+    part(() => {
+      if (this.data_?.wishlist && !vm.victory) render(this, linkSlot(RUN_COPY.wishlistSlot), R.x, B.y - B.gap - B.h);
+      render(this, node, R.x, B.y);
+    });
     revealInOrder(this, parts, ms(tokens.provisional.motion.screen.out.duration));
     Object.assign(window, { __screenReady: RUN_END_SCENE });
   }

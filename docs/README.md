@@ -14,6 +14,7 @@
 | 정령·카드 설계 | `design/canon/spirits/` (풀 표·시트·설계 노하우) | `design/canon/BALANCE_BASELINE.md`, `design/canon/naming/` |
 | 게임 안 문구 | `design/canon/text/TEXT_RULES.md` | `src/core/text.ts`, `src/core/korean.ts` |
 | 데모 공개 · 스팀 · 플레이테스트 | `docs/release/README.md` (지금 단계, Lucy 몫) | `STEAM.md`, `PLAYTEST.md`, `AI_DISCLOSURE.md`, `PITCH.md` |
+| 새 기획 · 조사 시작 | `docs/research/README.md` (조사 노트 색인) | 해당 주제의 결정 기록 |
 | 카드·정령 그림 | `design/card/art/PIPELINE.md` | `assets/PROVENANCE.md`, `docs/architecture/0002-spirit-puppet.md` |
 
 ## 폴더마다 맡는 일
