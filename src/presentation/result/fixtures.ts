@@ -32,25 +32,37 @@ function elite(equipId: string, party: Record<string, { stage: Stage; branch?: s
   };
 }
 
+const normal: ResultVM = {
+  gold: { total: 146, gained: 18 },
+  skipGold: C.reward.skip_gold,
+  cards: [
+    reward("ember_flick", fox.id),
+    reward("glass_shatter", salamander.id),
+    reward("chill_wave", cat.id),
+  ],
+  lanes: [
+    lane(fox, { exp: { before: 0.48, after: 0.62 } }),
+    lane(salamander, { exp: { before: 0.66, after: 0.8 }, down: true }),
+    lane(cat, { exp: { before: 0, after: 0.07 }, levelUp: true, badges: ["g-up", "g-cardnew"], unlocked: [cardName("frost_bite")] }),
+  ],
+};
+
 export const RESULTS: Record<string, ResultVM> = {
-  normal: {
-    gold: { total: 146, gained: 18 },
-    skipGold: C.reward.skip_gold,
-    cards: [
-      reward("ember_flick", fox.id),
-      reward("glass_shatter", salamander.id),
-      reward("chill_wave", cat.id),
-    ],
-    lanes: [
-      lane(fox, { exp: { before: 0.48, after: 0.62 } }),
-      lane(salamander, { exp: { before: 0.66, after: 0.8 }, down: true }),
-      lane(cat, { exp: { before: 0, after: 0.07 }, levelUp: true, badges: ["g-up", "g-cardnew"], unlocked: [cardName("frost_bite")] }),
-    ],
-  },
+  normal,
+  /** 다시 뽑기를 받고 떠난 판 (라운드 H1): 넘기기 옆에 남은 수와 함께 */
+  reroll: { ...normal, reroll: { left: 2 } },
+  /** 다시 뽑기를 다 썼어요: 흐려진 채 남아요 */
+  rerollSpent: { ...normal, reroll: { left: 0 } },
   /** 일반 장비를 셋 중 누구에게 (f1) */
   elite: elite("bone_sword", {
     fire_fox: { stage: "adult", branch: "burst", hp: 22 },
     glass_salamander: { stage: "awakened", branch: "hold", hp: 9, equipment: [kept("bronze_helmet")] },
+    mist_cat: { stage: "baby", hp: 17 },
+  }),
+  /** 지닌 장비가 없는 첫 정예: 공명 줄 없이 장비 줄 하나 (0170) */
+  eliteFirst: elite("bone_sword", {
+    fire_fox: { stage: "adult", branch: "burst", hp: 22 },
+    glass_salamander: { stage: "awakened", branch: "hold", hp: 9 },
     mist_cat: { stage: "baby", hp: 17 },
   }),
   /** 유니크 무기는 주인에게만, 대표 카드가 기술로 바뀌어요 (f1b) */

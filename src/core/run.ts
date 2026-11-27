@@ -592,6 +592,11 @@ export class Run {
     reward.cardsDone = true;
   }
 
+  /** 이 판이 떠날 때 받은 다시 뽑기 (0157). 0이면 화면에 다시 뽑기가 없어요 */
+  get rerollsGranted(): number {
+    return this.opts.garden ? rerollsOf(this.opts.garden) : 0;
+  }
+
   /** 보상 카드를 다시 뽑을 수 있나 (0157): 아직 고르지 않았고 다시 뽑기가 남았을 때 */
   canRerollReward(reward: BattleReward): boolean {
     return !reward.cardsDone && reward.cards.length > 0 && this.rerolls > 0;

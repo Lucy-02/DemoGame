@@ -5,6 +5,8 @@ export const COPY = {
   floor: (n: number) => `${n}층`,
   victory: "승리",
   defeat: "패배",
+  /** 완주로 열린 성격 칩 (0171, 명사형) */
+  opened: (name: string) => `${name} 열림`,
   garden: "정원으로",
   again: "다시 떠나기",
 };

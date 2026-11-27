@@ -24,6 +24,7 @@ import { gather } from "../style/gather";
 import { revealInOrder } from "../style/motion";
 import { preloadSpiritArt } from "../spiritArt";
 import { loadIcon } from "../style/icons";
+import { strokePlaceholder } from "../style/placeholder";
 import { COPY } from "./copy";
 import { runEndRecord } from "./fixtures";
 import { runEndVM } from "./fromRecord";
@@ -97,6 +98,18 @@ export class RunEndScene extends Phaser.Scene {
     part(() => {
       if (this.data_?.wishlist && !vm.victory) render(this, linkSlot(RUN_COPY.wishlistSlot), R.x, B.y - B.gap - B.h);
       render(this, node, R.x, B.y);
+      // 완주로 늘어난 다시 뽑기: 버튼 줄 옆에 a→b (기호는 아직 없어서 X 상자, TODO_ICON)
+      if (vm.reroll) {
+        const K = R.reroll;
+        const count: Node = {
+          t: "row", h: B.h, gap: K.gap, align: "center",
+          children: [
+            { t: "block", w: K.todo, h: K.todo, draw: (g, x, y, w, h) => strokePlaceholder(g, x, y, w, h, P.gold) },
+            { t: "row", gap: 0, align: "baseline", children: [text(`${vm.reroll.from}${RUN_COPY.arrow}`, T.onlyWas, P.ink3Spirit), text(String(vm.reroll.to), T.onlyNum, P.ink, { lh: 1 })] },
+          ],
+        };
+        render(this, count, R.x + size(node).w + K.ml, B.y);
+      }
     });
     revealInOrder(this, parts, ms(tokens.provisional.motion.screen.out.duration));
     Object.assign(window, { __screenReady: RUN_END_SCENE });

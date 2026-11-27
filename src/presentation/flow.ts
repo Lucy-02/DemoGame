@@ -114,7 +114,9 @@ export class GameFlow implements LegacyFlow {
         this.game.scene.stop(DEPART_SCENE);
         this.game.scene.resume(HOME_SCENE);
       },
-      onDepart: (front) => {
+      onDepart: (front, personalities = {}) => {
+        // 바꿔 고른 열린 성격은 떠날 때 정원에 적용돼요 (0157)
+        for (const [id, personality] of Object.entries(personalities)) this.session.garden.dispatch({ kind: "choosePersonality", id, personality });
         this.session.startRun(plan, front);
         this.resume();
       },

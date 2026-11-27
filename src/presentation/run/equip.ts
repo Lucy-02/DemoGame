@@ -6,7 +6,7 @@ import { rgba, withAlpha } from "../style/color";
 import { box, circle } from "../style/draw";
 import { canvasTexture } from "../style/gradient";
 import type { Node } from "../style/flex";
-import { EQUIP_MINI, EQUIP_SLOT } from "./layout";
+import { EQUIP_MINI, EQUIP_SLOT, LANE_PREVIEW } from "./layout";
 import type { EquipRarityId, EquipVM } from "./viewmodel";
 
 const P = tokens.provisional.palette;
@@ -57,16 +57,17 @@ export function drawRarityMark(
   }
 }
 
-/** 공명 점: 켜진 점은 채우고 나머지는 테만. vertical이면 아래에서 위로 쌓아요. (x, y) = 묶음 왼쪽 위 */
+/** 공명 점: 켜진 점은 채우고 나머지는 테만. 이번에 오르는 점(fresh)은 자두빛. vertical이면 아래에서 위로 쌓아요. (x, y) = 묶음 왼쪽 위 */
 export function drawPips(
-  g: Phaser.GameObjects.Graphics, item: Pick<EquipVM, "resonance" | "cap">, x: number, y: number,
+  g: Phaser.GameObjects.Graphics, item: Pick<EquipVM, "resonance" | "cap" | "fresh">, x: number, y: number,
   p: { d: number; gap: number; ring: number; offLine: number }, vertical: boolean,
 ) {
   for (let i = 0; i < item.cap; i++) {
     const at = vertical ? item.cap - 1 - i : i;
     const cx = x + p.d / 2 + (vertical ? 0 : at * (p.d + p.gap));
     const cy = y + p.d / 2 + (vertical ? at * (p.d + p.gap) : 0);
-    circle(g, cx, cy, p.d, i < item.resonance ? { fill: P.ink2 } : { ring: { width: p.ring, color: withAlpha(P.ink, p.offLine) } });
+    const on = i < item.resonance;
+    circle(g, cx, cy, p.d, on ? { fill: item.fresh && i === item.resonance - 1 ? P.accHi : P.ink2 } : { ring: { width: p.ring, color: withAlpha(P.ink, p.offLine) } });
   }
 }
 export const pipsSize = (cap: number, p: { d: number; gap: number }) => cap * p.d + Math.max(0, cap - 1) * p.gap;
@@ -74,12 +75,14 @@ export const pipsSize = (cap: number, p: { d: number; gap: number }) => cap * p.
 export interface SlotDraw {
   /** 칸에 든 장비 (ghost면 받을 장비가 비쳐 보여요) */
   item?: EquipVM | null;
-  /** cand: 받을 수 있는 칸 (점선). ghost: 받을 장비가 비친 칸 */
-  state?: "cand" | "ghost";
+  /** cand: 받을 수 있는 칸 (점선). ghost: 받을 장비가 비친 칸. raise: 공명을 올릴 수 있는 칸 (실선, 0170) */
+  state?: "cand" | "ghost" | "raise";
   /** 포인터가 올라와 있어요 */
   hot?: boolean;
   /** 이 장비를 내려놓고 받아요 */
   drop?: EquipVM;
+  /** 지금 고를 수 없는 칸: 흐려져요 */
+  dim?: boolean;
 }
 
 /** 장비 칸 하나 (왼쪽 위 x, y) */
@@ -93,13 +96,14 @@ export function drawEquipSlot(scene: Phaser.Scene, x: number, y: number, s: Slot
   const picked = s.state !== undefined;
   box(g, x, y, K.size, K.size, K.radius, {
     fill: s.state === "ghost" ? P.pvFill : s.item ? P.veil["05"] : undefined,
-    ring: picked ? { width: K.ring, color: P.accHi, dash: K.dash }
+    ring: picked ? { width: K.ring, color: P.accHi, dash: s.state === "raise" ? undefined : K.dash }
       : s.item ? { width: K.ring, color: P.veil["20"] }
       : { width: K.ring, color: withAlpha(P.ink, K.emptyLine), dash: K.dash },
   });
   if (!s.item) return;
-  drawEquipArt(scene, s.item.id, x + K.art.x, y + K.art.y, K.art.w, K.art.h, s.state === "ghost" ? K.ghostArt : 1);
-  const over = scene.add.graphics();
+  const alpha = s.dim ? LANE_PREVIEW.dim : 1;
+  drawEquipArt(scene, s.item.id, x + K.art.x, y + K.art.y, K.art.w, K.art.h, s.state === "ghost" ? K.ghostArt : alpha);
+  const over = scene.add.graphics().setAlpha(alpha);
   drawPips(over, s.item, x + K.size - K.pip.right - K.pip.d, y + (K.size - pipsSize(s.item.cap, K.pip)) / 2, K.pip, true);
   drawRarityMark(over, s.item.rarity, x + K.mark.x, y + K.mark.y);
   if (s.drop) {

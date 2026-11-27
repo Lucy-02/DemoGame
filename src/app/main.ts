@@ -2,14 +2,14 @@
 // 기본은 저장에 이어진 게임이에요: 메인 화면에서 판을 떠나 끝내고 돌아와요 (session/game.ts, presentation/flow.ts).
 // 아래는 화면 하나를 고정 장면으로 여는 개발용이에요.
 // ?screen=battle 은 정본 기준 새 전투 화면(?scene=aim 처럼 고정 장면 고르기). ?screen=spirits 는 정령 관리(?scene=fresh|mixed&select=&tab=&closed).
-// ?screen=result 는 전투 결과(?scene=normal&hover=<카드 key|skip>&taken=<카드 key|skip>).
+// ?screen=result 는 전투 결과(?scene=normal|reroll|rerollSpent|elite|eliteFirst…&hover=<카드 key|skip|reroll>&taken=<카드 key|skip>&select=raise: 공명 줄을 집음).
 // ?screen=shop 은 상점(?scene=normal|poor&hover=<카드 id|heal>).
 // ?screen=rest 는 휴식(?scene=normal|full&hover=rest|upgrade|upgrade:<카드 id>).
 // ?screen=event 는 이벤트(?scene=<이벤트 id>&hover=<선택지 번호>|pick:<선택지 번호>).
 // ?screen=runEnd 는 판 결과(?scene=victory|first|defeat). ?screen=demoEnd 는 데모 끝(?scene=garden|again).
 // ?screen=home 은 타이틀 겸 메인 화면(?scene=first|full|running&hover=<줄 id>).
 // ?screen=join 은 깃들기(?scene=first|second&select=<후보 id>&hover=chip&taken=<후보 id>: 깃든 끝 상태).
-// ?screen=depart 는 출전 준비(?scene=three|two&select=<앞열로 바꿀 정령 id>&hover=<정령 id>|strong).
+// ?screen=depart 는 출전 준비(?scene=three|two&select=<앞열로 바꿀 정령 id>&hover=<정령 id>|strong|chip:<정령 id>|open:<정령 id>|opt:<정령 id>:<성격 id>).
 // ?screen=menu 는 판 안 메뉴(?scene=menu|confirm&hover=settings|toHome|giveUp), ?screen=settings 는 설정 창(?hover=speed|shake). 둘 다 전투 고정 장면 위에 떠요.
 // ?screen=glossary 는 용어 모음 창(?hover=<용어 id>). 전투 고정 장면 위에 떠요.
 // 개발 빌드에서만: window.session · window.game 으로 세션과 장면을 볼 수 있고(자동 점검 tools/screenBot.ts가 써요), ?seed= 로 새 판 · 새 정원의 시드를 고정해요.

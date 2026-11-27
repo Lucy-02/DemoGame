@@ -71,6 +71,8 @@ export interface LaneEquipState {
   delta?: Partial<Record<StatId, number>>;
   /** 받으면 바뀌는 최대 HP */
   maxHpTo?: number;
+  /** 새 장비를 받는 대신 지닌 장비의 공명을 올려요 (0170): 올릴 수 있는 칸은 실선 테, 나머지 장비는 흐려져요 */
+  raise?: boolean;
 }
 
 /** 줄 i의 장비 칸 n개 중 k번째 칸의 왼쪽 위 (세로 가운데로 쌓아요) */
@@ -178,11 +180,12 @@ function info(l: LaneVM, lit?: StatId, hpTo = l.hp, equip?: LaneEquipState, maxT
         ],
       },
       ...(noStats ? [] : [{ t: "row", gap: S.gap, align: "center", children: STAT_IDS.map(stat) } as Node]),
-      ...(l.unlocked.length ? [{
+      // 칩 줄: 새로 열린 카드(기호 + 이름), 이 판으로 열린 성격(글만)
+      ...(l.unlocked.length || l.opened ? [{
         t: "row", gap: C.rowGap,
-        children: l.unlocked.map((name): Node => ({
+        children: [...l.unlocked.map((name) => ({ name, icon: true })), ...(l.opened ? [{ name: l.opened, icon: false }] : [])].map((c): Node => ({
           t: "row", h: C.h, pad: [0, C.padX, 0, C.padX], radius: C.radius, gap: C.gap, align: "center", style: { fill: withAlpha(P.acc, C.alpha) },
-          children: [{ t: "icon", id: "g-cardnew", w: C.icon, h: C.icon, tint: P.accHi }, text(name, T.level, P.accHi)],
+          children: [...(c.icon ? [{ t: "icon" as const, id: "g-cardnew", w: C.icon, h: C.icon, tint: P.accHi }] : []), text(c.name, T.level, P.accHi)],
         })),
       } as Node] : []),
     ],
@@ -257,9 +260,10 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
     l.slots.forEach((item, k) => {
       const at = slotAt(i, l.slots.length, k, y);
       const ghost = st.equip?.ghost?.slot === k ? st.equip.ghost : undefined;
+      const raise = st.equip?.raise, open = !!st.equip?.slots[k];
       const slot: SlotDraw = ghost
-        ? { item: ghost.item, state: "ghost", drop: ghost.drop, hot: ghost.hot }
-        : { item, state: st.equip?.slots[k] ? "cand" : undefined };
+        ? { item: ghost.item, state: raise ? "raise" : "ghost", drop: ghost.drop, hot: ghost.hot }
+        : { item, state: open ? (raise ? "raise" : "cand") : undefined, dim: raise && !open };
       drawEquipSlot(scene, at.x, at.y, slot);
     });
     // 덱 장수를 칸 아래에 보이는 줄(상점)은 칸이 위로 붙고, 아니면 줄 가운데에 놓여요 (장비 칸과 같은 가운데 줄)

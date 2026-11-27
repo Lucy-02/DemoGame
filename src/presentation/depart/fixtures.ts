@@ -1,19 +1,17 @@
 // 출전 준비 고정 장면 (?screen=depart&scene=three|two)
 import { newGarden, type Garden } from "../../core/garden";
-import { GROWTH } from "../../core/data";
 import { departVM } from "./fromGarden";
 import type { DepartVM } from "./viewmodel";
 
-/** 정령 셋: 유리 도롱뇽 Lv 3(장비, 새 카드) · 산양 Lv 2(지난 앞열) · 카멜레온 Lv 1 */
+/** 정령 셋 (라운드 H f7): 유리 도롱뇽 신중(열린 성격 셋) · 산양 용맹(지난 앞열, 열린 성격 하나) · 카멜레온 장난(열린 것 없음) */
 function garden(ids: string[]): Garden {
   const g = newGarden(7, ids);
-  const at = (lv: number) => GROWTH.levels[lv - 1];
-  return {
-    ...g, front: "magma_ibex",
-    spirits: g.spirits.map((s) => s.id === "glass_salamander"
-      ? { ...s, exp: at(3), seen: ["glass_salamander_lv3"], equipment: [{ id: "salamander_gauntlet", resonance: 1 }] }
-      : s.id === "magma_ibex" ? { ...s, exp: at(2) } : s),
+  const set: Record<string, { personality: string; cleared?: string[] }> = {
+    glass_salamander: { personality: "careful", cleared: ["stubborn", "sturdy", "cheerful"] },
+    magma_ibex: { personality: "brave", cleared: ["brave", "clever"] },
+    prism_chameleon: { personality: "playful" },
   };
+  return { ...g, front: "magma_ibex", spirits: g.spirits.map((s) => ({ ...s, ...set[s.id] })) };
 }
 
 export const DEPARTS: Record<string, DepartVM> = {

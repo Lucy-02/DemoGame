@@ -23,10 +23,10 @@ import { loadIcon } from "../style/icons";
 import { audioOf } from "../audio";
 import { DEFAULT_RESULT, RESULTS } from "./fixtures";
 import { resultVM } from "./fromReward";
-import { EQUIP_TIP, REWARD, STRIP, placeResult } from "./layout";
-import type { EquipOptionVM, ResultVM } from "./viewmodel";
-import { EQUIP_ICONS, drawEquipStrip, drawEquipTip } from "./views/equip";
-import { REWARD_ICONS, drawSkip } from "./views/reward";
+import { EQUIP_TIP, REROLL, REWARD, SKIP, STRIP, placeResult } from "./layout";
+import type { EquipOptionVM, RaiseOptionVM, ResultVM } from "./viewmodel";
+import { EQUIP_ICONS, drawEquipStrip, drawEquipTip, drawRaiseStrip } from "./views/equip";
+import { REWARD_ICONS, drawReroll, drawSkip } from "./views/reward";
 import { drawWindow } from "./views/window";
 
 export const RESULT_SCENE = "result";
@@ -39,10 +39,12 @@ export interface ResultSceneData {
   session?: RewardSession;
   /** 고정 장면 이름 (fixtures RESULTS) */
   scene?: string;
-  /** 시각 검증용: 이 카드(key)에 올린 상태, 또는 "skip" · "strip"(장비 줄) · "equip:<정령 id>:<칸>"(장비를 줄 칸) */
+  /** 시각 검증용: 이 카드(key)에 올린 상태, 또는 "skip" · "reroll"(다시 뽑기) · "strip"(장비 줄) · "equip:<정령 id>:<칸>"(장비를 줄 칸) */
   hover?: string;
   /** 시각 검증용: 이 카드(key)를 받은 상태, 또는 "skip" */
   taken?: string;
+  /** 시각 검증용: "raise"면 공명 줄을 집은 상태 (?select=raise) */
+  pick?: string;
   /** 싸우던 장면 위에 띄웠어요 (그 장면이 아래에 멈춰 있음). 아니면 빈 전투 무대를 깔아요 */
   over?: boolean;
   /** 다 고른 뒤에 불려요. 이 장면을 넘겨받아 다음 장면으로 넘어가요 */
@@ -50,7 +52,7 @@ export interface ResultSceneData {
 }
 
 type Hover =
-  | { kind: "card"; i: number } | { kind: "lane"; id: string } | { kind: "skip" }
+  | { kind: "card"; i: number } | { kind: "lane"; id: string } | { kind: "skip" } | { kind: "reroll" }
   /** 장비 줄 / 정령 id의 i번째 칸 */
   | { kind: "strip" } | { kind: "equip"; id: string; i: number };
 const sameHover = (a?: Hover, b?: Hover) =>
@@ -65,6 +67,8 @@ export class ResultScene extends Phaser.Scene {
   /** 집은 카드 (배울 정령을 고르는 중) */
   private held?: number;
   private taken?: ResultChoice;
+  /** 장비 차례에 집은 줄: 새 장비, 또는 공명 +1 (0170). 집은 것을 정령에게 줘요 */
+  private pick: "equip" | "raise" = "equip";
   /** 장비를 받은 정령, 또는 넘김 */
   private equipDone?: { spirit: string } | "skip";
   private onDone?: (scene: Phaser.Scene) => void;
@@ -86,12 +90,14 @@ export class ResultScene extends Phaser.Scene {
     const hovered = card(data.hover);
     const [what, spirit, slot] = (data.hover ?? "").split(":");
     this.hover = data.hover === "skip" ? { kind: "skip" }
+      : data.hover === "reroll" ? { kind: "reroll" }
       : data.hover === "strip" ? { kind: "strip" }
       : what === "equip" && spirit ? { kind: "equip", id: spirit, i: Number(slot ?? 0) }
       : hovered === undefined ? undefined : { kind: "card", i: hovered };
     const took = card(data.taken);
     this.taken = data.taken === "skip" ? "skip" : took === undefined ? undefined : { card: took, spirit: this.vm.cards[took].owners[0] };
     this.held = undefined;
+    this.pick = data.pick === "raise" ? "raise" : "equip";
     this.equipDone = undefined;
     this.onDone = data.onDone;
     this.input.enabled = true;
@@ -102,7 +108,7 @@ export class ResultScene extends Phaser.Scene {
   preload() {
     for (const [id, w] of [...LANE_ICONS, ...GOLD_ICONS, ...REWARD_ICONS, ...EQUIP_ICONS]) loadIcon(this, id, w);
     for (const c of this.vm.cards) preloadBigCard(this, c.card);
-    const options = [...Object.values(this.vm.equip?.takers ?? {}).flat(), ...(this.vm.equip ? [{ tip: this.vm.equip.tip }] : [])];
+    const options = [...Object.values(this.vm.equip?.takers ?? {}).flat(), ...Object.values(this.vm.equip?.raise ?? {}).flat(), ...(this.vm.equip ? [{ tip: this.vm.equip.tip }] : [])];
     for (const o of options) {
       if (o.tip.sheet.card) preloadHandCard(this, o.tip.sheet.card.vm);
     }
@@ -167,6 +173,26 @@ export class ResultScene extends Phaser.Scene {
     this.time.delayedCall(MOVE.duration, () => this.onDone?.(this));
   }
 
+  /** 보상 카드를 통째로 새로 받아요 (0157 · 0171). 새 카드 그림을 읽는 동안에는 입력을 받지 않아요. 고정 장면은 그대로예요 */
+  private reroll() {
+    if (this.phase !== "cards" || !this.vm.reroll?.left || !this.session?.dispatch({ kind: "reroll" })) return;
+    this.vm = resultVM(this.session);
+    this.held = undefined;
+    // 새로 뽑을 카드가 없으면 넘긴 것과 같아요
+    if (this.session.phase !== "cards") this.taken = "skip";
+    for (const c of this.vm.cards) preloadBigCard(this, c.card);
+    const go = () => {
+      this.input.enabled = true;
+      this.dirty = true;
+      if (this.phase === "done") this.onDone?.(this);
+    };
+    if (!this.load.list.size) return go();
+    this.input.enabled = false;
+    // 못 읽은 그림이 있어도 넘어가요 (그 그림만 빠져요)
+    this.load.once(Phaser.Loader.Events.COMPLETE, go);
+    this.load.start();
+  }
+
   /** 장비를 이 정령에게 줘요. option = 들어갈 칸 (꽉 찼으면 그 칸의 장비를 내려놓아요) */
   private giveEquip(spirit: string, option: EquipOptionVM) {
     if (this.phase !== "equip") return;
@@ -174,6 +200,21 @@ export class ResultScene extends Phaser.Scene {
     audioOf(this)?.play("equip");
     this.vm = { ...this.vm, lanes: this.vm.lanes.map((l) => (l.id === spirit ? option.after : l)) };
     this.finishEquip({ spirit });
+  }
+
+  /** 새 장비를 받지 않고 이 정령이 지닌 장비의 공명을 1 올려요 (0170) */
+  private raiseEquip(spirit: string, option: RaiseOptionVM) {
+    if (this.phase !== "equip") return;
+    if (this.session && !this.session.dispatch({ kind: "raise", spirit, equipId: option.equipId })) return;
+    audioOf(this)?.play("equip");
+    this.vm = { ...this.vm, lanes: this.vm.lanes.map((l) => (l.id === spirit ? option.after : l)) };
+    this.finishEquip({ spirit });
+  }
+
+  private setPick(pick: "equip" | "raise") {
+    if (this.phase !== "equip" || this.pick === pick) return;
+    this.pick = pick;
+    this.dirty = true;
   }
 
   private skipEquip() {
@@ -197,9 +238,12 @@ export class ResultScene extends Phaser.Scene {
     /** 말풍선은 다 그린 뒤 맨 위에 올려요 */
     let tip: (() => void) | undefined;
     const lane = (id?: string) => vm.lanes.find((l) => l.id === id);
-    const at = placeResult(vm.lanes.length, !!vm.equip);
+    // 공명을 올릴 장비가 있을 때만 공명 줄이 있어요. 없으면 장비 줄 하나 그대로예요
+    const canRaise = !!vm.equip && Object.keys(vm.equip.raise).length > 0;
+    const raising = canRaise && this.pick === "raise";
+    const at = placeResult(vm.lanes.length, vm.equip ? (canRaise ? 2 : 1) : 0);
     /** 정령 줄 말풍선이 가리면 안 되는 장비 줄 (주는 수치가 여기 보여요) */
-    const strip = { top: at.stripY, bottom: at.stripY + STRIP.h };
+    const strip = { top: at.strips[0]?.y ?? 0, bottom: (at.strips.at(-1)?.y ?? 0) + STRIP.h };
     this.cameras.main.setScroll(at.scroll.x, at.scroll.y);
     if (!this.over) drawStage(this).setScrollFactor(0);
     drawWindow(this, at.win);
@@ -244,27 +288,32 @@ export class ResultScene extends Phaser.Scene {
         }
       }
       if (equip) {
-        const options = equip.takers[l.id];
+        // 집은 줄에 따라: 새 장비를 받는 칸들, 또는 공명을 올릴 칸들
+        const options = raising
+          ? (equip.raise[l.id] ?? []).map((o) => ({ ...o, drop: undefined, give: () => this.raiseEquip(l.id, o) }))
+          : equip.takers[l.id]?.map((o) => ({ ...o, drop: o.tip.drop?.item, give: () => this.giveEquip(l.id, o) }));
         if (!options) st.dim = true;
+        else if (!options.length) st.equip = { slots: {}, raise: true };
         else {
           const over = hover?.kind === "equip" && hover.id === l.id ? options.find((o) => o.slot === hover.i)
             : hover?.kind === "lane" && hover.id === l.id ? options[0] : undefined;
           st.equip = {
+            raise: raising,
             slots: Object.fromEntries(options.map((o) => [o.slot, {
-              click: () => this.giveEquip(l.id, o),
+              click: o.give,
               over: () => this.setHover({ kind: "equip", id: l.id, i: o.slot }),
               out: () => this.leaveHover({ kind: "equip", id: l.id, i: o.slot }),
             }])),
           };
           // 줄 어디를 눌러도 받아요. 꽉 차서 내려놓을 칸이 여럿이면 칸을 눌러 정해요
           st.on = {
-            click: options.length === 1 ? () => this.giveEquip(l.id, options[0]) : undefined,
+            click: options.length === 1 ? options[0].give : undefined,
             over: () => this.setHover({ kind: "lane", id: l.id }),
             out: () => this.leaveHover({ kind: "lane", id: l.id }),
           };
           if (over) {
             st.hot = true;
-            st.equip.ghost = { slot: over.slot, item: over.tip.sheet.item, drop: over.tip.drop?.item, hot: true };
+            st.equip.ghost = { slot: over.slot, item: over.tip.sheet.item, drop: over.drop, hot: true };
             st.equip.delta = Object.fromEntries(STAT_IDS.map((k) => [k, over.after.stats[k] - l.stats[k]]).filter(([, d]) => d !== 0));
             if (over.after.maxHp !== l.maxHp) st.equip.maxHpTo = over.after.maxHp;
             const at = slotAt(i, l.slots.length, over.slot);
@@ -277,11 +326,14 @@ export class ResultScene extends Phaser.Scene {
 
     if (vm.equip && phase !== "done") {
       const offer = vm.equip;
-      drawEquipStrip(this, offer, phase === "equip", { x: at.col.x, y: at.stripY, w: at.col.w }, {
+      const on = phase === "equip";
+      drawEquipStrip(this, offer, !on ? "off" : raising ? "idle" : "picked", at.strips[0], {
         over: () => this.setHover({ kind: "strip" }),
         out: () => this.leaveHover({ kind: "strip" }),
+        click: on && canRaise ? () => this.setPick("equip") : undefined,
       });
-      if (hover?.kind === "strip") tip = () => drawEquipTip(this, offer.tip, { kind: "below", right: at.col.x + at.col.w, top: at.stripY + STRIP.h + EQUIP_TIP.belowStrip });
+      if (canRaise) drawRaiseStrip(this, !on ? "off" : raising ? "picked" : "idle", at.strips[1], { click: on ? () => this.setPick("raise") : undefined });
+      if (hover?.kind === "strip") tip = () => drawEquipTip(this, offer.tip, { kind: "below", right: at.col.x + at.col.w, top: strip.bottom + EQUIP_TIP.belowStrip });
     }
 
     // 보상 카드: 왼→오 = 줄 위→아래
@@ -317,6 +369,13 @@ export class ResultScene extends Phaser.Scene {
         out: () => this.leaveHover({ kind: "skip" }),
         click: () => this.take("skip"),
       });
+      if (vm.reroll) {
+        tip = drawReroll(this, vm.reroll.left, hover?.kind === "reroll", { x: at.col.x + SKIP.w + REROLL.gap, y: at.skipY }, {
+          over: () => this.setHover({ kind: "reroll" }),
+          out: () => this.leaveHover({ kind: "reroll" }),
+          click: () => this.reroll(),
+        }) ?? tip;
+      }
     } else if (equip?.canSkip) {
       // 받을 정령이 모두 꽉 찼을 때만 장비를 넘길 수 있어요 (0056). 받는 것은 없어요
       drawSkip(this, undefined, hover?.kind === "skip", { x: at.col.x, y: at.skipY }, {

@@ -123,7 +123,7 @@ export async function startGame(parent: string, opts: GameOptions = {}): Promise
           return;
         }
         if (opts.screen === "result") {
-          const data: ResultSceneData = { scene: opts.scene, hover: opts.hover, taken: opts.taken };
+          const data: ResultSceneData = { scene: opts.scene, hover: opts.hover, taken: opts.taken, pick: opts.select };
           game.scene.add(RESULT_SCENE, ResultScene, true, data);
           return;
         }

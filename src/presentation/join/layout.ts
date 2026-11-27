@@ -16,9 +16,13 @@ export const CAND = {
   card: { w: 150 },
 };
 
-/** .chip 높이 30 radius 15 padding 0 12 gap 6 · 바탕 veil .08 테 1 glass-line · 호버 테 ink2 바탕 veil .14 · 앞 기호 16
- *  성격 칩과 새 카드 칩이 같은 조각이에요 (0078 고칠 점 4) */
-export const CHIP = { h: 30, radius: 15, padX: 12, gap: 6, ring: 1, icon: 16 };
+/** .chip 높이 30 radius 15 padding 0 12 · 바탕 veil .08 테 1 glass-line · 호버 테 ink2 바탕 veil .14
+ *  깃들기와 출전 준비의 성격 칩이 같은 조각이에요 (0078 고칠 점 4) */
+export const CHIP = {
+  h: 30, radius: 15, padX: 12, ring: 1,
+  /** 고를 것이 있는 칩 (라운드 H1): 뒤에 화살표 14, 글과 사이 3, 오른쪽 여백 7. 값은 임시예요 */
+  caret: { size: 14, gap: 3, padR: 7 },
+};
 
 /** .cta 아래 38 가운데, 높이 52 최소 폭 200 padding 0 30 radius 12 · 판은 정본 plateStyle(0054 밝은 유리 판)
  *  .focus 바깥 4 떨어진 테 2 ink2 */

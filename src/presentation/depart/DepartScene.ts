@@ -1,15 +1,17 @@
 // 출전 준비 (0076 14 · 0078 J1): 정령이 둘 이상이면 판마다 떠나기 전에 떠요. 메인 화면 위 가운데 유리 틀 하나.
 // 가진 정령이 같은 크기 자리 칸으로 나란하고, 앞열은 자두빛 테 + 깃발 기호 하나예요. 칸을 누르면 앞열이 바뀌어요 (기본은 지난 판의 앞열).
-// 위에는 오늘 센 기운 칩(기호만, 이름은 호버). 칸마다 이름 · Lv, 속성 · 역할 기호, 새 카드 칩, 능력치, 작은 장비 칸.
+// 위에는 오늘 센 기운 칩(기호만, 이름은 호버). 칸마다 이름 · Lv, 속성 · 역할 기호, 성격 칩, 능력치, 작은 장비 칸.
+// 열린 성격이 있는 칩은 누르면 칩 아래로 펼쳐지고, 하나를 고르면 그 성격으로 떠나요 (0157 · 0171 · 라운드 H1). 떠나기 전까지는 되돌릴 수 있어요.
 // `취소`(Esc)는 메인 화면으로, `떠나기`(첫 포커스, Enter)는 고른 앞열로 판을 시작해요.
 import { crossPaint, fadeInScene } from "../style/motion";
 import * as Phaser from "phaser";
 import { tokens } from "../../design/tokens";
-import { chip } from "../join/views/chip";
+import { CARET_ICON, chip, personalityTip } from "../join/views/chip";
+import type { PersonalityVM } from "../join/viewmodel";
 import { SIL_ICON as SIL, drawSpiritArt } from "../join/views/art";
 import { CHIP } from "../join/layout";
 import { COPY as RUN_COPY, STAT_ICON } from "../run/copy";
-import { miniSlotNode, preloadEquipArt } from "../run/equip";
+import { miniSlotNode, preloadEquipArt, type Rect } from "../run/equip";
 import { EQUIP_MINI, FRAME, INFO } from "../run/layout";
 import { STAT_IDS } from "../run/viewmodel";
 import { preloadSpiritArt } from "../spiritArt";
@@ -39,21 +41,37 @@ export interface DepartSceneData {
   vm?: DepartVM;
   /** 시각 검증용: 이 정령을 앞열로 바꾼 상태 */
   select?: string;
-  /** 시각 검증용: 이 정령 칸, 또는 "strong"(센 기운 칩)에 올린 상태 */
+  /** 시각 검증용: 이 정령 칸, 또는 "strong"(센 기운 칩) · "chip:<정령 id>"(성격 칩)에 올린 상태.
+   *  "open:<정령 id>" = 열린 성격을 펼친 상태, "opt:<정령 id>:<성격 id>" = 펼치고 그 성격에 올린 상태 */
   hover?: string;
-  /** 떠나기: 고른 앞열 */
-  onDepart?: (front: string) => void;
+  /** 떠나기: 고른 앞열, 바꿔 고른 성격 (정령 id → 성격 id, 바꾼 정령만) */
+  onDepart?: (front: string, personalities: Record<string, string>) => void;
   /** 취소 */
   onCancel?: () => void;
 }
 
-type Hover = { kind: "seat"; id: string } | { kind: "strong" };
+type Hover = { kind: "seat"; id: string } | { kind: "strong" } | { kind: "chip"; id: string } | { kind: "option"; id: string; p: string };
+const hoverKey = (h?: Hover) => (h ? [h.kind, "id" in h ? h.id : "", "p" in h ? h.p : ""].join(":") : "");
+
+/** 자리 칸의 성격 칩이 그릴 것. at = 그린 칩의 자리를 받아 입력을 붙여요 */
+interface SeatPick {
+  now: PersonalityVM;
+  rest: PersonalityVM[];
+  open: boolean;
+  chipHot: boolean;
+  optionHot?: string;
+  at: (r: Rect, what: "chip" | PersonalityVM) => void;
+}
 
 export class DepartScene extends Phaser.Scene {
   private vm!: DepartVM;
   private front!: string;
   private hover?: Hover;
-  private onDepart?: (front: string) => void;
+  /** 바꿔 고른 성격 (정령 id → 성격 id). 떠날 때 정원에 적용돼요 */
+  private chosen: Record<string, string> = {};
+  /** 열린 성격을 펼친 자리 */
+  private open?: string;
+  private onDepart?: (front: string, personalities: Record<string, string>) => void;
   private onCancel?: () => void;
   private dirty = false;
 
@@ -65,7 +83,13 @@ export class DepartScene extends Phaser.Scene {
     this.vm = data.vm ?? DEPARTS[data.scene ?? DEFAULT_DEPART] ?? DEPARTS[DEFAULT_DEPART];
     const has = (id?: string) => this.vm.seats.some((s) => s.id === id);
     this.front = has(data.select) ? data.select! : this.vm.front;
-    this.hover = data.hover === "strong" ? { kind: "strong" } : has(data.hover) ? { kind: "seat", id: data.hover! } : undefined;
+    const [what, who, pid] = (data.hover ?? "").split(":");
+    this.open = (what === "open" || what === "opt") && has(who) ? who : undefined;
+    this.hover = data.hover === "strong" ? { kind: "strong" }
+      : what === "chip" && has(who) ? { kind: "chip", id: who }
+      : what === "opt" && has(who) && pid ? { kind: "option", id: who, p: pid }
+      : has(data.hover) ? { kind: "seat", id: data.hover! } : undefined;
+    this.chosen = {};
     this.onDepart = data.onDepart;
     this.onCancel = data.onCancel;
     this.dirty = false;
@@ -73,7 +97,7 @@ export class DepartScene extends Phaser.Scene {
 
   preload() {
     const icons: [string, number, number?][] = [
-      ["g-flag", SEAT.flag.icon], ["g-close", BTN.icon], ["g-cardnew", CHIP.icon], [this.vm.strong.icon, STRONG.icon],
+      ["g-flag", SEAT.flag.icon], ["g-close", BTN.icon], [CARET_ICON, CHIP.caret.size], [this.vm.strong.icon, STRONG.icon],
       [SIL, SEAT.art.sil.w, SEAT.art.sil.h],
       ...STAT_IDS.map((k): [string, number] => [STAT_ICON[k], INFO.stats.icon]),
       ...this.vm.seats.flatMap((s): [string, number][] => [[s.element, SEAT.meta.icon], [s.role, SEAT.meta.icon]]),
@@ -86,8 +110,9 @@ export class DepartScene extends Phaser.Scene {
   create() {
     this.input.setPollAlways();
     const keys = this.input.keyboard;
-    keys?.on("keydown-ESC", () => this.onCancel?.());
-    keys?.on("keydown-ENTER", () => this.onDepart?.(this.front));
+    // Esc는 펼친 성격을 먼저 접고, 접혀 있으면 취소예요
+    keys?.on("keydown-ESC", () => (this.open ? this.toggle(this.open) : this.onCancel?.()));
+    keys?.on("keydown-ENTER", () => this.depart());
     this.paint();
     fadeInScene(this);
     Object.assign(window, { __screenReady: DEPART_SCENE });
@@ -101,19 +126,44 @@ export class DepartScene extends Phaser.Scene {
   }
 
   private setHover(h?: Hover) {
-    const same = h?.kind === this.hover?.kind && (h as { id?: string })?.id === (this.hover as { id?: string })?.id;
-    if (same) return;
+    if (hoverKey(h) === hoverKey(this.hover)) return;
     this.hover = h;
     this.dirty = true;
   }
 
   private leave(h: Hover) {
-    if (h.kind === this.hover?.kind && (h as { id?: string }).id === (this.hover as { id?: string }).id) this.setHover(undefined);
+    if (hoverKey(h) === hoverKey(this.hover)) this.setHover(undefined);
+  }
+
+  private depart() {
+    this.onDepart?.(this.front, this.chosen);
+  }
+
+  /** 이 자리의 이번 판 성격과, 바꿔 고를 수 있는 나머지 */
+  private personalityOf(s: SeatVM) {
+    const all = [s.personality, ...s.opened];
+    const now = all.find((p) => p.id === this.chosen[s.id]) ?? s.personality;
+    return { now, rest: all.filter((p) => p !== now) };
+  }
+
+  /** 열린 성격을 펼치거나 접어요 */
+  private toggle(id?: string) {
+    this.open = this.open === id ? undefined : id;
+    this.dirty = true;
+  }
+
+  private choose(s: SeatVM, p: PersonalityVM) {
+    const { [s.id]: _, ...rest } = this.chosen;
+    this.chosen = p === s.personality ? rest : { ...rest, [s.id]: p.id };
+    this.open = undefined;
+    this.hover = undefined;
+    this.dirty = true;
   }
 
   private setFront(id: string) {
-    if (this.front === id) return;
+    if (this.front === id && !this.open) return;
     this.front = id;
+    this.open = undefined;
     this.dirty = true;
   }
 
@@ -129,8 +179,8 @@ export class DepartScene extends Phaser.Scene {
 
     // 메인 화면을 덮는 막 + 틀
     box(this.add.graphics(), 0, 0, FRAME.w, FRAME.h, 0, { fill: P.scrim });
-    // 막 아무 데나 눌러도 아무 일 없어요 (아래 메인 화면이 받지 않게)
-    this.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive();
+    // 막 아무 데나 눌러도 아래 메인 화면이 받지 않아요. 펼친 성격은 접혀요
+    this.add.zone(0, 0, FRAME.w, FRAME.h).setOrigin(0, 0).setInteractive().on("pointerup", () => this.open && this.toggle(this.open));
     const sh = shadowTexture(this, w, h, WIN.radius, { y: WIN.shadow.y, blur: WIN.shadow.blur, color: P.tipShadow });
     this.add.image(x - sh.margin, y - sh.margin, sh.key).setOrigin(0, 0);
     box(this.add.graphics(), x, y, w, h, WIN.radius, { fill: P.glassD, ring: { width: WIN.ring, color: P.glassLine } });
@@ -145,14 +195,38 @@ export class DepartScene extends Phaser.Scene {
 
     // 자리 칸
     const seatY = y + pt + WIN.top + WIN.topGap;
+    let tip: (() => void) | undefined;
     vm.seats.forEach((s, i) => {
       const sx = x + pl + i * (SEAT.w + SEAT.gap);
-      const hot = this.hover?.kind === "seat" && this.hover.id === s.id;
-      drawSeat(this, s, sx, seatY, this.front === s.id, hot);
+      const h = this.hover;
+      const mine = h && "id" in h && h.id === s.id ? h : undefined;
+      const { now, rest } = this.personalityOf(s);
+      const open = this.open === s.id;
+      const spots: { r: Rect; what: "chip" | PersonalityVM }[] = [];
+      // 깃발이 비치는 것은 칸에 올렸을 때만이에요 (칩은 앞열을 바꾸지 않아요)
+      drawSeat(this, s, sx, seatY, this.front === s.id, mine?.kind === "seat", {
+        now, rest, open, chipHot: mine?.kind === "chip", optionHot: mine?.kind === "option" ? mine.p : undefined,
+        at: (r, what) => spots.push({ r, what }),
+      });
       this.add.zone(sx, seatY, SEAT.w, SEAT.h).setOrigin(0, 0).setInteractive({ useHandCursor: true })
         .on("pointerover", () => this.setHover({ kind: "seat", id: s.id }))
         .on("pointerout", () => this.leave({ kind: "seat", id: s.id }))
         .on("pointerup", () => this.setFront(s.id));
+      // 칩 입력은 칸 입력 위에 놓여요
+      for (const { r, what } of spots) {
+        const hover: Hover = what === "chip" ? { kind: "chip", id: s.id } : { kind: "option", id: s.id, p: what.id };
+        const can = what !== "chip" || rest.length > 0;
+        this.add.zone(r.x, r.y, r.w, r.h).setOrigin(0, 0).setInteractive({ useHandCursor: can })
+          .on("pointerover", () => this.setHover(hover))
+          .on("pointerout", () => this.leave(hover))
+          .on("pointerup", () => (what === "chip" ? can && this.toggle(s.id) : this.choose(s, what)));
+      }
+      // 풀이: 접힌 칩에 올리면 이번 판 성격, 펼친 줄에서는 올린 성격 (펼친 줄 아래)
+      const shown = mine?.kind === "option" ? rest.find((p) => p.id === mine.p) : mine?.kind === "chip" && !open ? now : undefined;
+      if (shown && spots.length) {
+        const bottom = Math.max(...spots.map((x) => x.r.y + x.r.h));
+        tip = () => drawTooltip(this, { skin: GLASS, content: personalityTip(shown), at: { left: spots[0].r.x, top: bottom + SEAT.pick.tipGap } });
+      }
     });
 
     // 취소 · 떠나기 (오른쪽 맞춤)
@@ -166,8 +240,9 @@ export class DepartScene extends Phaser.Scene {
     const o = BTN.focus.offset;
     box(this.add.graphics(), gx - o, by - o, gw + o * 2, BTN.h + o * 2, BTN.radius + o, { ring: { width: BTN.focus.width, color: P.ink2 } });
     this.add.zone(cx, by, cw, BTN.h).setOrigin(0, 0).setInteractive({ useHandCursor: true }).on("pointerup", () => this.onCancel?.());
-    this.add.zone(gx, by, gw, BTN.h).setOrigin(0, 0).setInteractive({ useHandCursor: true }).on("pointerup", () => this.onDepart?.(this.front));
+    this.add.zone(gx, by, gw, BTN.h).setOrigin(0, 0).setInteractive({ useHandCursor: true }).on("pointerup", () => this.depart());
 
+    tip?.();
     if (this.hover?.kind === "strong") {
       drawTooltip(this, {
         skin: GLASS,
@@ -206,7 +281,7 @@ function button(label: string, go: boolean): BoxNode {
 }
 
 /** 자리 칸 하나 (.seat) */
-function drawSeat(scene: Phaser.Scene, s: SeatVM, x: number, y: number, front: boolean, hot: boolean) {
+function drawSeat(scene: Phaser.Scene, s: SeatVM, x: number, y: number, front: boolean, hot: boolean, pick: SeatPick) {
   const K = SEAT;
   box(scene.add.graphics(), x, y, K.w, K.h, K.radius, { fill: P.floor });
   const G = K.glow;
@@ -230,8 +305,27 @@ function drawSeat(scene: Phaser.Scene, s: SeatVM, x: number, y: number, front: b
   const E = K.equip, mini = EQUIP_MINI.s32;
   const slots: Node = { t: "row", gap: E.gap, children: s.slots.map((e) => miniSlotNode(scene, e, mini, { pips: true })) };
   render(scene, slots, x + K.w - E.right - size(slots).w, y + E.top);
-  // 이름 · Lv, 기호, 새 카드 칩, 능력치
+  // 이름 · Lv, 기호, 성격 칩, 능력치. 열린 성격을 펼치면 능력치 자리에 칩들이 놓여요 (넘치면 아래로 줄을 더해요)
   const M = K.meta, S = INFO.stats;
+  const spot = (node: BoxNode, what: "chip" | PersonalityVM): Node => {
+    const ns = size(node);
+    return { t: "block", w: ns.w, h: ns.h, draw: (_g, cx, cy) => {
+      render(scene, node, cx, cy);
+      pick.at({ x: cx, y: cy, w: ns.w, h: ns.h }, what);
+    } };
+  };
+  const rows: Node[][] = [[]];
+  let used = 0;
+  for (const p of pick.rest) {
+    const node = chip(p.name, { hot: pick.optionHot === p.id });
+    const w = size(node).w;
+    if (rows.at(-1)!.length && used + K.pick.gap + w > K.w - M.x * 2) {
+      rows.push([]);
+      used = 0;
+    }
+    used += (rows.at(-1)!.length ? K.pick.gap : 0) + w;
+    rows.at(-1)!.push(spot(node, p));
+  }
   render(scene, {
     t: "col", gap: M.gap, align: "start",
     children: [
@@ -240,8 +334,8 @@ function drawSeat(scene: Phaser.Scene, s: SeatVM, x: number, y: number, front: b
         { t: "icon", id: s.element, w: M.icon, h: M.icon, tint: P.ink2 },
         { t: "icon", id: s.role, w: M.icon, h: M.icon, tint: P.ink2 },
       ] },
-      s.newCard ? chip(s.newCard, { icon: "g-cardnew" }) : { t: "block", w: 0, h: M.chipH },
-      { t: "row", gap: S.gap, align: "center", children: STAT_IDS.map((k): Node => ({
+      spot(chip(pick.now.name, { hot: pick.chipHot, caret: pick.rest.length > 0, open: pick.open }), "chip"),
+      pick.open ? { t: "col", gap: K.pick.rowGap, children: rows.map((r): Node => ({ t: "row", gap: K.pick.gap, children: r })) } : { t: "row", gap: S.gap, align: "center", children: STAT_IDS.map((k): Node => ({
         t: "row", gap: S.iconGap, align: "center",
         children: [{ t: "icon", id: STAT_ICON[k], w: S.icon, h: S.icon, tint: P.stat[k] }, text(String(s.stats[k]), TR.stat, P.ink2)],
       })) },

@@ -251,3 +251,18 @@
 - T4 살펴보고 사기: https://claude.ai/artifact/7ugHGY3e5ozVcGT6jZ6dab
 - 프레임: /mnt/project-files/shop-round-t/t1~t4/ (0 뼈대 · 1 들어왔을 때 · 2 공용 카드 집음 · 3 전용 카드 가리킴 · 4 치료 가리킴 · 5 빼기 창 · 6 거의 다 산 뒤 · 7 정령 하나), 소스와 재료 /mnt/project-files/shop-round-t/src.tgz
 - 카드는 L1(카드 리디자인) 그대로. 배경은 임시 들판 좌판, 색 · 크기는 임시 값
+
+## 판 밖 도움 라운드 H (2026-11-27, BRIEF "판 밖 도움 라운드 H")
+- Lucy 11/27: 섞기(다시 뽑기 H1 · 공명 올리기 H3 · 성격 고르기 H1) → 정리안
+- **정리안 (Lucy 11/27: ① 나 · ② 가 → 0172)**: https://claude.ai/artifact/1nizMVJppBb895MfowWKRs · 프레임 /mnt/project-files/design/round-h/hm/
+  - 갈리는 곳 ①: 공명 줄 가(반 폭 둘 나란히, f4a~f6a) / 나(온 폭 둘 위아래, 카드가 56 올라감, f4b~f6b)
+  - 갈리는 곳 ②: 열린 성격 펼침 가(칩 아래 줄, 능력치 줄 가림, f8a) / 나(칩 옆으로, 한 줄에 넷까지, f8b)
+  - 다시 뽑기 버튼(f1~f3)은 구현함. 구현 캡처 /mnt/project-files/design/round-h/impl/
+다시 뽑기 · 공명 올리기 · 열린 성격 고르기를 확정된 화면 위에 더하는 세 안. 안마다 같은 아홉 프레임(f1~f3 전투 보상의 다시 뽑기 · f4~f6 정예 장비 차례 · f7~f8 출전 준비 · f9 완주한 판의 결과).
+- H1 버튼 줄에: https://claude.ai/artifact/3LPwYPo3KBqaNm3CJxMPnu
+- H2 바뀌는 것 곁에: https://claude.ai/artifact/7aFoEonbYS3X3L2bWNfCfQ
+- H3 물건 둘 가운데: https://claude.ai/artifact/PQe7asBjitnorNiwNABdfH
+- 프레임과 소스: /mnt/project-files/design/round-h/h1~h3/ (f1~f9.jpg, index.html), 바탕 캡처 /mnt/project-files/design/round-h/assets/
+- 바탕은 지금 구현의 캡처, 더한 조각만 그렸어요. 다시 뽑기 · 공명 기호는 `TODO_ICON`, 색 · 크기는 임시 값
+- 안마다 걸린 점: H1은 넘기기가 없는 장비 차례에 버튼이 둘째 자리에 홀로 서요. H2는 칸이 꽉 찼을 때 한 칸에 새 장비 받기와 공명 올리기가 겹쳐 `+1` 표지를 따로 눌러요. H3은 장비 줄이 반 폭 둘로 바뀌어요(0064 줄 폭과 다름).
+- 열린 것: 다시 뽑기 풀이의 말투(효과문 합니다체로 그림, 버튼 호버 안내라면 해요체), 고르는 동안 자리 칸의 능력치 줄이 가려지는 것(H1 · H2)

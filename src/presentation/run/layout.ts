@@ -159,4 +159,6 @@ export const RUN_END = {
   thumb: { w: 46, gap: 6 },
   /** 버튼 아랫선 = 마지막 정령 줄 아랫선 (LANE.y + 3·h + 2·gap) */
   button: { w: 166, h: GRID.buttonH, gap: 16, radius: 12, y: LANE.y + LANE.h * 3 + LANE.gap * 2 - GRID.buttonH },
+  /** 완주로 늘어난 다시 뽑기 (라운드 H1 f9): 버튼 줄 옆 22, 기호 자리 18(TODO_ICON) + a→b. 값은 임시예요 */
+  reroll: { ml: 22, todo: 18, gap: 10 },
 };

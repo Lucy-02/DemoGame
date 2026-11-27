@@ -16,7 +16,9 @@ export const SEAT = {
   /** 작은 장비 칸 (0064 · EQUIP_MINI.s32): 오른쪽 16 위 16 */
   equip: { right: 16, top: 16, gap: 8 },
   /** .meta left 22 top 286 gap 7 · 이름 · Lv gap 8 · 기호 22 gap 12 · 칩 자리 30 */
-  meta: { x: 22, y: 286, gap: 7, nameGap: 8, icon: 22, iconGap: 12, chipH: 30 },
+  meta: { x: 22, y: 286, gap: 7, nameGap: 8, icon: 22, iconGap: 12 },
+  /** 열린 성격 펼침 (라운드 H1 · 정리안 f8 가): 칩 아래 줄, 칩 사이 6 줄 사이 7. 말풍선은 그 아래 8. 값은 임시예요 */
+  pick: { gap: 6, rowGap: 7, tipGap: 8 },
 };
 
 /** .strong 높이 40 padding 0 10 0 8 radius 12 gap 10 · 바탕 veil .06 테 glass-line · TODO_ICON 자리 28 X 상자 · 속성 기호 26 */
