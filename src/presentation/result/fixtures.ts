@@ -59,6 +59,12 @@ export const RESULTS: Record<string, ResultVM> = {
     glass_salamander: { stage: "awakened", branch: "hold", hp: 9, equipment: [kept("bronze_helmet")] },
     mist_cat: { stage: "baby", hp: 17 },
   }),
+  /** 지닌 장비가 없는 첫 정예: 공명 줄 없이 장비 줄 하나 (0170) */
+  eliteFirst: elite("bone_sword", {
+    fire_fox: { stage: "adult", branch: "burst", hp: 22 },
+    glass_salamander: { stage: "awakened", branch: "hold", hp: 9 },
+    mist_cat: { stage: "baby", hp: 17 },
+  }),
   /** 유니크 무기는 주인에게만, 대표 카드가 기술로 바뀌어요 (f1b) */
   eliteUnique: elite("fox_spear", {
     fire_fox: { stage: "adult", branch: "burst", hp: 22 },

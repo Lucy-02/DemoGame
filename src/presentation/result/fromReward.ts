@@ -29,7 +29,14 @@ function raiseOptions(run: Run, lanes: LaneVM[]): EquipOfferVM["raise"] {
     if (!l) continue;
     const after = run.withResonance(r.spirit, r.equipId);
     const slot = after.equipment.findIndex((e) => e.id === r.equipId);
-    (out[r.spirit] ??= []).push({ slot, equipId: r.equipId, after: laneWith(l, after), tip: { sheet: sheet(run, after.equipment[slot], after) } });
+    // 오르는 점은 줄의 칸과 말풍선에서 자두빛이에요
+    const fresh = <T extends { fresh?: boolean }>(item: T): T => ({ ...item, fresh: true });
+    const lane = laneWith(l, after), raised = sheet(run, after.equipment[slot], after);
+    (out[r.spirit] ??= []).push({
+      slot, equipId: r.equipId,
+      after: { ...lane, slots: lane.slots.map((e, k) => (e && k === slot ? fresh(e) : e)) },
+      tip: { sheet: { ...raised, item: fresh(raised.item) } },
+    });
   }
   return out;
 }

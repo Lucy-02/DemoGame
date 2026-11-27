@@ -26,6 +26,8 @@ export const STRIP = {
   above: 31, h: 96, radius: 14, padL: 12, padR: 26, gap: 18,
   tile: { size: 64, radius: 10, inset: 4 }, textGap: 4, hot: { outer: 4, alpha: 0.14 },
   gain: { icon: 15, gap: 6, between: 16 }, off: 0.5,
+  /** 공명 줄 (라운드 H3 · 정리안): 새 장비 줄 아래 12, 같은 판. 그림 칸에 세로 점 셋(지름 10, 사이 7). 값은 임시예요 */
+  between: 12, dots: { d: 10, gap: 7, ring: 1 },
 };
 
 /** 전투 위 창 (라운드 X1, Lucy 2026-11-15 "창을 좀 더 키워도"): 정령 줄은 줄이지 않고 그대로, 창이 내용을 감싸요.
@@ -39,19 +41,19 @@ export interface ResultPlace {
   col: { x: number; w: number };
   goldY: number;
   cardsY: number;
-  /** 정예 장비 줄 */
-  stripY: number;
+  /** 정예 장비 줄, 공명을 올릴 장비가 있으면 그 아래 공명 줄 (0170) */
+  strips: { x: number; y: number; w: number }[];
   skipY: number;
   /** 창을 화면 가운데에 놓는 카메라 이동량 */
   scroll: { x: number; y: number };
 }
 
 /** 정령 줄 자리는 런 화면 격자 그대로 두고, 왼쪽 열을 그 옆에 붙인 뒤 창째로 화면 가운데에 놓아요.
- *  창 높이는 정령 줄 수를 따르되, 왼쪽 열(골드 · 카드 · 장비 줄 · 넘기기)이 들어갈 만큼은 돼요 */
-export function placeResult(lanes: number, elite: boolean): ResultPlace {
+ *  창 높이는 정령 줄 수를 따르되, 왼쪽 열(골드 · 카드 · 장비 줄 · 넘기기)이 들어갈 만큼은 돼요. strips = 카드 아래 줄 수 (0 · 1 · 2) */
+export function placeResult(lanes: number, strips: number): ResultPlace {
   const W = WINDOW;
   const lanesH = lanes * LANE.h + (lanes - 1) * LANE.gap;
-  const blockH = REWARD.h + (elite ? STRIP.above + STRIP.h : 0);
+  const blockH = REWARD.h + (strips ? STRIP.above + strips * STRIP.h + (strips - 1) * STRIP.between : 0);
   const h = Math.max(lanesH, GOLD.h + SKIP.h + blockH + W.minGap * 2);
   const colW = REWARD.w * 3 + REWARD.gap * 2;
   const x = LANE.x - W.colGap - colW;
@@ -60,7 +62,8 @@ export function placeResult(lanes: number, elite: boolean): ResultPlace {
   const cardsY = Math.round(top + GOLD.h + (skipY - top - GOLD.h - blockH) / 2);
   const win = { x: x - W.pad, y: top - W.pad, w: colW + W.colGap + LANE.w + W.pad * 2, h: h + W.pad * 2 };
   return {
-    win, col: { x, w: colW }, goldY: top, cardsY, stripY: cardsY + REWARD.h + STRIP.above, skipY,
+    win, col: { x, w: colW }, goldY: top, cardsY, skipY,
+    strips: Array.from({ length: strips }, (_, i) => ({ x, y: cardsY + REWARD.h + STRIP.above + i * (STRIP.h + STRIP.between), w: colW })),
     scroll: { x: Math.round(win.x + win.w / 2 - FRAME.w / 2), y: Math.round(win.y + win.h / 2 - FRAME.h / 2) },
   };
 }

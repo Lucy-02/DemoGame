@@ -71,6 +71,8 @@ export interface LaneEquipState {
   delta?: Partial<Record<StatId, number>>;
   /** 받으면 바뀌는 최대 HP */
   maxHpTo?: number;
+  /** 새 장비를 받는 대신 지닌 장비의 공명을 올려요 (0170): 올릴 수 있는 칸은 실선 테, 나머지 장비는 흐려져요 */
+  raise?: boolean;
 }
 
 /** 줄 i의 장비 칸 n개 중 k번째 칸의 왼쪽 위 (세로 가운데로 쌓아요) */
@@ -257,9 +259,10 @@ export function drawLane(scene: Phaser.Scene, l: LaneVM, i: number, st: LaneStat
     l.slots.forEach((item, k) => {
       const at = slotAt(i, l.slots.length, k, y);
       const ghost = st.equip?.ghost?.slot === k ? st.equip.ghost : undefined;
+      const raise = st.equip?.raise, open = !!st.equip?.slots[k];
       const slot: SlotDraw = ghost
-        ? { item: ghost.item, state: "ghost", drop: ghost.drop, hot: ghost.hot }
-        : { item, state: st.equip?.slots[k] ? "cand" : undefined };
+        ? { item: ghost.item, state: raise ? "raise" : "ghost", drop: ghost.drop, hot: ghost.hot }
+        : { item, state: open ? (raise ? "raise" : "cand") : undefined, dim: raise && !open };
       drawEquipSlot(scene, at.x, at.y, slot);
     });
     // 덱 장수를 칸 아래에 보이는 줄(상점)은 칸이 위로 붙고, 아니면 줄 가운데에 놓여요 (장비 칸과 같은 가운데 줄)

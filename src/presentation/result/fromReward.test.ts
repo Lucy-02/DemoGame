@@ -8,7 +8,7 @@ describe("정예 보상 화면 값", () => {
     expect(sal.map((o) => o.equipId)).toContain("bronze_helmet");
     for (const o of sal) {
       const before = RESULTS.eliteFull.lanes.find((l) => l.id === "glass_salamander")!.slots[o.slot]!;
-      expect(o.after.slots[o.slot]).toMatchObject({ id: o.equipId, resonance: before.resonance + 1 });
+      expect(o.after.slots[o.slot]).toMatchObject({ id: o.equipId, resonance: before.resonance + 1, fresh: true });
       expect(o.tip.sheet.item.resonance).toBe(before.resonance + 1);
     }
     // 지닌 장비가 없는 정령은 없어요

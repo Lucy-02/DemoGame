@@ -20,6 +20,8 @@ export interface EquipVM {
   /** 지금 공명과, 이 정령이 올릴 수 있는 상한 (공명 점 수) */
   resonance: number;
   cap: number;
+  /** 마지막 켜진 점이 이번에 오르는 공명이에요 (자두빛, 0170) */
+  fresh?: boolean;
 }
 
 export interface LaneVM {
