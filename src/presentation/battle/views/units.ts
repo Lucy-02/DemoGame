@@ -65,6 +65,7 @@ export function preloadUnits(scene: Phaser.Scene, vm: BattleVM) {
       loadIcon(scene, e.weakTo, WEAK_ON_ICON);
     }
     if (e.intent) loadIcon(scene, e.intent.icon, INTENT.icon);
+    if (e.intent?.also) loadIcon(scene, e.intent.also, INTENT.also);
     if (e.intent?.target === "random") loadIcon(scene, RANDOM_ICON, INTENT.face);
     statuses(e.statuses);
     for (const t of e.traits ?? []) loadIcon(scene, t.icon, I.status.icon);
@@ -524,7 +525,6 @@ function allyInfo(scene: Phaser.Scene, a: AllyVM, i: number, pv?: IncomingChange
 }
 
 function enemyInfo(scene: Phaser.Scene, e: EnemyVM, i: number, pv: EnemyOutcomeVM | undefined, weakOn: boolean): InfoView {
-  const hp = pv ? pv.hp.to : e.hp;
   const chips: Chip[] = [
     ...(e.traits ?? []).map(traitChip),
     elementChip(scene, e.element),
@@ -534,7 +534,9 @@ function enemyInfo(scene: Phaser.Scene, e: EnemyVM, i: number, pv: EnemyOutcomeV
     ...e.statuses.map(statusChip),
   ];
   const at = spotOf(i);
-  return drawInfo(scene, at.x, ENEMY.feet, { max: e.maxHp, keep: hp, gone: pv ? pv.hp.from - pv.hp.to : 0 }, { n: hp, pv: !!pv }, chips, false, at.bar);
+  // 깎일 구간과 조준 중의 HP 수: 놓은 카드까지(조준 중이면 든 카드까지) 미리 돌려 본 이번 턴의 몫 (0169)
+  const gone = Math.min(e.hp, pv ? (pv.loss ?? e.hp - pv.hp.to) : (e.loss ?? 0));
+  return drawInfo(scene, at.x, ENEMY.feet, { max: e.maxHp, keep: e.hp - gone, gone }, { n: pv ? e.hp - gone : e.hp, pv: !!pv }, chips, false, at.bar);
 }
 
 /** 무작위 대상 기호 (카드의 무작위 표식과 같음) */
@@ -582,6 +584,7 @@ function intentNode(scene: Phaser.Scene, it: IntentVM, cut = false, on = false):
       ...(order ? [order] : []), { t: "icon", id: it.icon, w: INTENT.icon, h: INTENT.icon, tint: iconTint }, amountNode,
       ...(mult.length ? [text(`×${mult.join("×")}`, T.intentMult, P.ink3)] : []),
       ...(target ? [target] : []),
+      ...(it.also ? [{ t: "icon" as const, id: it.also, w: INTENT.also, h: INTENT.also, tint: P.ink2 }] : []),
     ],
   };
 }

@@ -34,6 +34,8 @@ export interface Forecast {
   hit: Map<string, number>;
   /** 아군마다 이번 재생으로 깎일 HP (놓은 방어 · 회복까지 넣은 값) */
   lost: Map<string, number>;
+  /** 적마다 이번 재생으로 깎일 HP (적 uid). 무작위로 고르는 카드의 몫은 몰라서 빠져요 */
+  foe: Map<number, number>;
   /** 더 놓아 본 카드가 재생될 때 적마다 생긴 일 (적 uid). 그 카드가 재생되지 못하면 없어요 */
   card?: Map<number, CardOutcome>;
 }
@@ -709,7 +711,7 @@ export class Battle implements Engine {
    * play를 주면 그 카드를 사본에 더 놓아 보고, 그 카드가 재생될 때 적마다 생긴 일도 돌려줘요 (조준 결과 미리보기).
    */
   forecast(play?: { uid: number; target?: Ref }): Forecast {
-    const out: Forecast = { hit: new Map(), lost: new Map() };
+    const out: Forecast = { hit: new Map(), lost: new Map(), foe: new Map() };
     if (this.result !== "ongoing" || this.replaying) return out;
     const f = this.fork();
     if (play) {
@@ -722,6 +724,10 @@ export class Battle implements Engine {
     for (const s of this.aliveSpirits()) {
       const lost = s.hp - f.spirit(s.id).hp;
       if (lost > 0) out.lost.set(s.id, lost);
+    }
+    for (const e of this.aliveEnemies()) {
+      const lost = e.hp - f.enemy(e.uid).hp;
+      if (lost > 0) out.foe.set(e.uid, lost);
     }
     return out;
   }

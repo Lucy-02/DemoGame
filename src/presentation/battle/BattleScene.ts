@@ -8,7 +8,7 @@ import { darken } from "../style/opacity";
 import type { BattleSession } from "../../session/battle";
 import { bakeSpiritFace, preloadSpiritArt } from "../spiritArt";
 import { canonRest } from "./fixtures/canonRest";
-import { battleVM, cardKey, cardUid, refOf, releaseId } from "./fromBattle";
+import { battleVM, cardKey, isBreak, cardUid, refOf, releaseId } from "./fromBattle";
 import { tokens } from "../../design/tokens";
 import { ms } from "../style/ease";
 import { openRunMenu, playbackScale } from "../menu/hooks";
@@ -311,7 +311,7 @@ export class BattleScene extends Phaser.Scene {
     const b = this.session?.battle;
     if (!b || !this.guide || this.playback || this.pick) return;
     const charging = b.enemies.filter((e) => !e.dead && e.charging);
-    const breaks = b.hand.filter((c) => this.vm.plays[cardKey(c)] && b.cardDefOf(c).effects.some((o) => o.op === "ram" || o.op === "breakCharging"));
+    const breaks = b.hand.filter((c) => this.vm.plays[cardKey(c)] && isBreak(b, c));
     if (b.playedThisTurn.length > 0) this.guide.placed = true;
     const step = guideStep({
       turn: b.turn, placed: b.playedThisTurn.length > 0, charging: charging.length > 0,

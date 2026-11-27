@@ -42,7 +42,7 @@ export function battleVM(b: Battle, place?: string): BattleVM {
   const order = orderOf(b);
   const incoming = b.forecast();
   const allies = alive.map((s) => allyVM(b, s, incoming));
-  const enemies = b.enemies.filter((e) => !e.dead).map((e) => enemyVM(b, e, order));
+  const enemies = b.enemies.filter((e) => !e.dead).map((e) => enemyVM(b, e, order, incoming));
   const pick = pickOf(b);
   // 해방 카드: 아직 안 쓴 각성체 묶음 끝에 늘 붙어 있어요. 뽑지 않고 손패 장수에 세지 않아요 (0075)
   const releases = alive.filter((s) => !s.downed && !s.releaseUsed && s.run.stage === "awakened");
@@ -114,6 +114,7 @@ interface OrderEntry {
 
 function orderOf(b: Battle): OrderEntry[] {
   const slots = openSlots(b);
+  const breakable = canBreak(b);
   return slots.map((x, i) => {
     const e = b.enemy(x.uid);
     const move = b.moveQueue(e).find((m) => m.at === x.at)?.move ?? b.currentMove(e);
@@ -124,7 +125,7 @@ function orderOf(b: Battle): OrderEntry[] {
       title: e.def.name, kind: charge && COPY.order.charge,
       result: main?.type === "attack" ? { who: whoOf(b, main, x), value: amountOf(b, e, main) } : undefined,
       text: richText(b.intent(e).text),
-      chips: [{ text: COPY.order.n(i + 1) }, ...(charge ? [{ text: COPY.order.breakable, tone: "acc" as const }] : [])],
+      chips: [{ text: COPY.order.n(i + 1) }, ...(charge && breakable ? [{ text: COPY.order.breakable, tone: "acc" as const }] : [])],
     };
     return { uid: x.uid, slot: { key: `t${b.turn}:s${b.slots.indexOf(x)}`, n: i + 1, art: e.def.id, action: (main && ACTION_ICON[main.type]) ?? CHARGE_ICON, charge, enemy: enemy < 0 ? undefined : enemy, tip } };
   });
@@ -300,9 +301,10 @@ function weakTo(element: string): string | undefined {
   return atk ? ELEMENT_ICON[atk] : undefined;
 }
 
-function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[]): EnemyVM {
+function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[], turn: Forecast): EnemyVM {
   return {
     art: e.def.id, hp: e.hp, maxHp: e.maxHp, block: e.block || undefined,
+    loss: turn.foe.get(e.uid),
     element: ELEMENT_ICON[e.def.element] ?? ELEMENT_ICON.none, weakTo: weakTo(e.def.element),
     statuses: statusesOf(e),
     traits: traitsOf(e),
@@ -312,11 +314,17 @@ function enemyVM(b: Battle, e: BEnemy, order: OrderEntry[]): EnemyVM {
   };
 }
 
-/** 유닛 풀이 (정본 H1): 행동 이름 · 효과문, 차징 중이면 이름 줄에 `브레이크 가능` (0067) */
+/** 브레이크 카드 (차징을 끊는 효과가 있는 카드) */
+export const isBreak = (b: Battle, c: BCard) => b.cardDefOf(c).effects.some((o) => o.op === "ram" || o.op === "breakCharging");
+
+/** 이번 전투에서 아직 쓸 수 있는 카드 가운데 브레이크가 있는지. 없는 파티에는 `브레이크 가능`을 띄우지 않아요 (0169) */
+const canBreak = (b: Battle) => [...b.draw, ...b.hand, ...b.discard, ...b.hold.held, ...b.planned.flatMap((p) => (p.card ? [p.card] : []))].some((c) => isBreak(b, c));
+
+/** 유닛 풀이 (정본 H1): 행동 이름 · 효과문, 차징 중이고 브레이크 카드가 있으면 이름 줄에 `브레이크 가능` (0067 · 0169) */
 function tipLines(b: Battle, e: BEnemy): RichText[] {
   const it = b.intent(e);
   const action = it.kind === "skip" ? richText(it.text) : [{ text: `${it.name} · ` }, ...richText(it.text)];
-  return e.charging ? [action, BREAKABLE] : [action];
+  return e.charging && canBreak(b) ? [action, BREAKABLE] : [action];
 }
 const BREAKABLE: RichText = richText(COPY.order.breakable);
 
@@ -337,10 +345,12 @@ function intentOf(b: Battle, e: BEnemy, order: OrderEntry[]): IntentVM | undefin
   const at = n < 0 ? undefined : n + 1;
   const target = main ? targetOf(b, main, b.slots.find((x) => x.uid === e.uid && !x.done)) : "none";
   const amount = main ? amountOf(b, e, main) : "";
-  if (it.kind === "charge" || it.kind === "chargeReady") return { kind: "charge", order: at, icon: CHARGE_ICON, amount, target };
   const icon = (main && ACTION_ICON[main.type]) ?? CHARGE_ICON;
-  if (it.kind === "debuff") return { kind: "debuff", order: at, icon, amount, target };
-  return { kind: it.kind, order: at, icon, amount, target };
+  // 둘째 효과: 대표 효과와 기호가 다른 첫 행동 (0169)
+  const also = move.actions.flatMap((a) => (a === main ? [] : [ACTION_ICON[a.type]])).find((id) => id && id !== icon);
+  if (it.kind === "charge" || it.kind === "chargeReady") return { kind: "charge", order: at, icon: CHARGE_ICON, amount, target, also };
+  if (it.kind === "debuff") return { kind: "debuff", order: at, icon, amount, target, also };
+  return { kind: it.kind, order: at, icon, amount, target, also };
 }
 
 function targetOf(b: Battle, a: EnemyAction, slot?: EnemySlot): IntentTarget {
@@ -400,7 +410,7 @@ function outcomeVM(b: Battle, rest: Forecast, f: Forecast): OutcomeVM {
   const enemies: OutcomeVM["enemies"] = {};
   b.aliveEnemies().forEach((e, i) => {
     const o = f.card?.get(e.uid);
-    if (o) enemies[i] = { hits: o.hits, hp: o.hp, block: o.block.from === o.block.to ? undefined : o.block, cut: o.cut || undefined };
+    if (o) enemies[i] = { hits: o.hits, hp: o.hp, loss: f.foe.get(e.uid) ?? 0, block: o.block.from === o.block.to ? undefined : o.block, cut: o.cut || undefined };
   });
   const incoming = b.spirits.map((s) => {
     const from = rest.hit.get(s.id) ?? 0, to = f.hit.get(s.id) ?? 0;

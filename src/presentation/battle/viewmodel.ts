@@ -114,15 +114,18 @@ export interface AllyVM {
 export type IntentTarget = UnitFace | "all" | "random" | "none";
 
 export type IntentVM =
-  | { kind: "attack" | "charge" | "defend" | "buff"; order?: number; icon: IconId; amount: string; target: IntentTarget }
-  | { kind: "debuff"; order?: number; icon: IconId; amount: string; target: IntentTarget };
+  | { kind: "attack" | "charge" | "defend" | "buff"; order?: number; icon: IconId; amount: string; target: IntentTarget; also?: IconId }
+  | { kind: "debuff"; order?: number; icon: IconId; amount: string; target: IntentTarget; also?: IconId };
 // order: 이번 턴 순서표 번호. 차징 중처럼 이번 턴에 행동하지 않으면 없어요
+// also: 대표 효과와 함께 오는 둘째 효과의 기호 (알약 끝에 작게, 0169). 기호가 없는 효과는 가리켜서 문장으로 읽어요
 
 export interface EnemyVM {
   art: IconId;
   hp: number;
   maxHp: number;
   block?: number;
+  /** 놓은 카드까지 미리 돌려 본 이번 턴에 깎일 HP: HP 막대에 깎일 구간을 늘 그려요 (0169) */
+  loss?: number;
   element: IconId;
   /** 약점 속성. 바람·무속성처럼 약점이 없으면 비움 (0028). 있으면 약점 배지를 늘 그리고, 맞는 속성 카드를 들면 켜요 */
   weakTo?: IconId;
@@ -246,6 +249,8 @@ export interface EnemyOutcomeVM {
   hits: number[];
   block?: Change;
   hp: Change;
+  /** 이 카드까지 놓으면 이번 턴에 깎일 HP (막대의 깎일 구간). 없으면 이 카드로 깎이는 만큼 */
+  loss?: number;
   /** 차징이 끊기면 의도 알약·순서표에 끊김 표시 */
   cut?: boolean;
 }
