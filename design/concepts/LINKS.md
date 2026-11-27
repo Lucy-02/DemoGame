@@ -252,7 +252,8 @@
 - 프레임: /mnt/project-files/shop-round-t/t1~t4/ (0 뼈대 · 1 들어왔을 때 · 2 공용 카드 집음 · 3 전용 카드 가리킴 · 4 치료 가리킴 · 5 빼기 창 · 6 거의 다 산 뒤 · 7 정령 하나), 소스와 재료 /mnt/project-files/shop-round-t/src.tgz
 - 카드는 L1(카드 리디자인) 그대로. 배경은 임시 들판 좌판, 색 · 크기는 임시 값
 
-## 판 밖 도움 라운드 H (2026-11-27, BRIEF "판 밖 도움 라운드 H", Lucy 고르기 대기)
+## 판 밖 도움 라운드 H (2026-11-27, BRIEF "판 밖 도움 라운드 H")
+- Lucy 11/27: 섞기(다시 뽑기 H1 · 공명 올리기 H3 · 성격 고르기 H1) → 정리안
 다시 뽑기 · 공명 올리기 · 열린 성격 고르기를 확정된 화면 위에 더하는 세 안. 안마다 같은 아홉 프레임(f1~f3 전투 보상의 다시 뽑기 · f4~f6 정예 장비 차례 · f7~f8 출전 준비 · f9 완주한 판의 결과).
 - H1 버튼 줄에: https://claude.ai/artifact/3LPwYPo3KBqaNm3CJxMPnu
 - H2 바뀌는 것 곁에: https://claude.ai/artifact/7aFoEonbYS3X3L2bWNfCfQ
